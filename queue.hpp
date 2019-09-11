@@ -22,43 +22,48 @@ public:
         end = start.get();
         }
 
-    void push(T& value)
-    {
+    void push( const value_type value )
+        {
         end = end->push(value);
-    }
+        }
+
+    void push( value_type && value )
+        {
+        end = end->push( std::move( value ) );
+        }
 
     void pop()
-    {
-        if(start->popAndDone())
         {
+        if(start->popAndDone())
+            {
             start = start->nextNode();
+            }
         }
-    }
 
     const_reference front() const
-    {
+        {
         return start->front();
-    }
+        }
 
     const_reference back() const
-    {
+        {
         return end->back();
-    }
+        }
 
     reference front()
-    {
+        {
         return start->front();
-    }
+        }
 
     reference back()
-    {
+        {
         return end->back();
-    }
+        }
 
     bool empty() const
-    {
+        {
         return start.get() == end && start->empty();
-    }
+        }
 
 private:
     class QueueNode
@@ -70,7 +75,7 @@ private:
             data.reserve(ARRAYSIZE);
             }
 
-        QueueNode* push(T& value)
+        QueueNode* push(const value_type & value)
             {
             if(data.size() == ARRAYSIZE)
                 {
@@ -81,6 +86,21 @@ private:
             else
                 {
                 data.push_back(value);
+                return this;
+                }
+            }
+
+        QueueNode* push(value_type&& value)
+            {
+            if(data.size() == ARRAYSIZE)
+                {
+                next = std::unique_ptr<QueueNode>(new QueueNode());
+                next->push(std::move(value));
+                return next.get();
+                }
+            else
+                {
+                data.push_back(std::move(value));
                 return this;
                 }
             }

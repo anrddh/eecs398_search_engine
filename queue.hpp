@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <memory>
-#include <iostream>
 
 namespace fb 
 {
@@ -19,7 +18,8 @@ public:
 
     Queue()
         {
-        start = end = std::make_shared<QueueNode>();
+        start = std::unique_ptr<QueueNode>(new QueueNode());
+        end = start.get();
         }
 
     void push(T& value)
@@ -29,7 +29,10 @@ public:
 
     void pop()
     {
-        start = start->pop();
+        if(start->popAndDone())
+        {
+            start = start->nextNode();
+        }
     }
 
     const_reference front() const
@@ -54,47 +57,50 @@ public:
 
     bool empty() const
     {
-        return start == end && start->empty();
+        return start.get() == end && start->empty();
     }
 
 private:
-    class QueueNode : std::enable_shared_from_this<QueueNode>
+    class QueueNode
     {
     public:
         QueueNode():
             next(nullptr), current(0)
             {
-            std::cout << "making new array" << std::endl;
             data.reserve(ARRAYSIZE);
             }
 
-        std::shared_ptr<QueueNode> push(T& value)
+        QueueNode* push(T& value)
             {
             if(data.size() == ARRAYSIZE)
                 {
-                    std::cout << "Current node full" << std::endl;
-                next = std::make_shared<QueueNode>();
+                next = std::unique_ptr<QueueNode>(new QueueNode());
                 next->push(value);
-                return next;
+                return next.get();
                 }
             else
                 {
                 data.push_back(value);
-                return this->shared_from_this();
+                return this;
                 }
             }
 
-        std::shared_ptr<QueueNode> pop()
+        bool popAndDone()
             {
             ++current;
             if(current == ARRAYSIZE)
                 {
-                return next;
+                return true;
                 }
             else
                 {
-                return this->shared_from_this();
+                return false;
                 }
+            }
+
+        std::unique_ptr<QueueNode> nextNode()
+            {
+                return std::move(next);
             }
 
         bool empty()
@@ -124,12 +130,12 @@ private:
 
     private:
         std::vector<T> data;
-        std::shared_ptr<QueueNode> next;
+        std::unique_ptr<QueueNode> next;
         int current;
     };
 
-    std::shared_ptr<QueueNode> start;
-    std::shared_ptr<QueueNode> end;
+    std::unique_ptr<QueueNode> start;
+    QueueNode* end;
 
 };
 

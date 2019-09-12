@@ -14,34 +14,77 @@ namespace fb {
  * An implementation of the unique_ptr type from the C++ Standard
  * Template Library.
  */
-template <typename T, typename Deleter = default_delete<T>>
-class unique_ptr : public impl::unique_ptr_base<T, Deleter> {
-    using impl::unique_ptr_base<T, Deleter>::def_const_ptr;
-    using impl::unique_ptr_base<T, Deleter>::owner;
-    using impl::unique_ptr_base<T, Deleter>::get_deleter;
-    using impl::unique_ptr_base<T, Deleter>::get;
-
+template <typename T, typename Deleter = DefaultDelete<T>>
+class UniquePtr {
   public:
-    using typename impl::unique_ptr_base<T, Deleter>::pointer;
-    using typename impl::unique_ptr_base<T, Deleter>::element_type;
-    using typename impl::unique_ptr_base<T, Deleter>::deleter_type;
+    using Pointer = T *;
+    using ElementType = T;
+    using DeleterType = Deleter;
+private:
+    static constexpr bool defConstPtr =
+        std::is_default_constructible_v<DeleterType> &&
+        !std::is_pointer_v<DeleterType>;
+  public:
+    constexpr UniquePtr(std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
-    constexpr unique_ptr(std::enable_if_t<def_const_ptr, int> = 0) noexcept {}
+    constexpr UniquePtr(std::nullptr_t,
+                        std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
-    constexpr unique_ptr(std::nullptr_t,
-                         std::enable_if_t<def_const_ptr, int> = 0) noexcept {}
+    constexpr explicit UniquePtr(
+        Pointer p, std::enable_if_t<defConstPtr, int> = 0) noexcept
+        : owner{p} {}
 
-    constexpr explicit unique_ptr(
-        pointer p, std::enable_if_t<def_const_ptr, int> = 0) noexcept
-        : impl::unique_ptr_base<T, Deleter>(p, nullptr) {}
+
+    // copies disallowed
+    UniquePtr(UniquePtr &) = delete;
+    UniquePtr &operator=(UniquePtr &) = delete;
+
+    // move constructor
+    constexpr UniquePtr(UniquePtr &&rhs) noexcept
+        : owner{rhs.release()}, deleter{rhs.getDeleter()} {}
+
+    // move assignment operator
+    [[nodiscard]] constexpr UniquePtr &
+    operator=(UniquePtr &&rhs) noexcept {
+        owner = rhs.release();
+        deleter = rhs.getDeleter();
+    }
+
+    ~UniquePtr() noexcept {
+        if (get())
+            getDeleter()(get());
+    }
+
+    constexpr Pointer release() noexcept {
+        return std::exchange(owner, nullptr);
+    }
+
+    constexpr void swap(UniquePtr &other) noexcept {
+        std::swap(owner, other.owner);
+        std::swap(deleter, other.deleter);
+    }
+
+    [[nodiscard]] constexpr Pointer get() const noexcept { return owner; }
+
+    [[nodiscard]] constexpr const DeleterType &getDeleter() const noexcept {
+        return deleter;
+    }
+
+    [[nodiscard]] constexpr DeleterType &getDeleter() noexcept {
+        return deleter;
+    }
+
+    explicit constexpr operator bool() const noexcept {
+        return get() != nullptr;
+    }
 
     /*
      * Modifiers
      */
-    constexpr void reset(pointer new_ptr = pointer()) noexcept {
-        auto old_ptr = std::exchange(owner, new_ptr);
-        if (old_ptr)
-            get_deleter()(old_ptr);
+    constexpr void reset(Pointer newPtr = Pointer()) noexcept {
+        auto oldPtr = std::exchange(owner, newPtr);
+        if (oldPtr)
+            getDeleter()(oldPtr);
     }
 
     [[nodiscard]] constexpr std::add_lvalue_reference_t<T> operator*() const
@@ -49,46 +92,50 @@ class unique_ptr : public impl::unique_ptr_base<T, Deleter> {
         return *get();
     }
 
-    [[nodiscard]] constexpr pointer operator->() const noexcept {
+    [[nodiscard]] constexpr Pointer operator->() const noexcept {
         return get();
     }
+
+  protected:
+    Pointer owner{};
+    DeleterType deleter{};
 };
 
 template <typename T, typename Deleter>
-class unique_ptr<T[], Deleter> : public impl::unique_ptr_base<T, Deleter> {
-    using impl::unique_ptr_base<T, Deleter>::get;
-    using impl::unique_ptr_base<T, Deleter>::def_const_ptr;
+class UniquePtr<T[], Deleter> : public impl::UniquePtrBase<T, Deleter> {
+    using impl::UniquePtrBase<T, Deleter>::get;
+    using impl::UniquePtrBase<T, Deleter>::defConstPtr;
 
-  public:
-    using impl::unique_ptr_base<T, Deleter>::pointer;
-    using impl::unique_ptr_base<T, Deleter>::element_type;
-    using impl::unique_ptr_base<T, Deleter>::deleter_type;
+public:
+    using impl::UniquePtrBase<T, Deleter>::Pointer;
+    using impl::UniquePtrBase<T, Deleter>::ElementType;
+    using impl::UniquePtrBase<T, Deleter>::DeleterType;
 
-    constexpr unique_ptr(std::enable_if_t<def_const_ptr, int> = 0) noexcept {}
+    constexpr UniquePtr(std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
-    constexpr unique_ptr(std::nullptr_t,
-                         std::enable_if_t<def_const_ptr, int> = 0) noexcept {}
+    constexpr UniquePtr(std::nullptr_t,
+                        std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
     T &operator[](std::size_t i) const { return get()[i]; }
 };
 
 template <typename T, typename... Args>
-[[nodiscard]] constexpr unique_ptr<T> make_unique(Args &&... args) {
-    return unique_ptr<T>(new T(std::forward(args)...));
+[[nodiscard]] constexpr UniquePtr<T> makeUnique(Args &&... args) {
+    return UniquePtr<T>(new T(std::forward(args)...));
 }
 
-template <typename T>[[nodiscard]] unique_ptr<T> make_unique(std::size_t size) {
-    return unique_ptr<T>(new std::remove_extent_t<T>[size]());
+template <typename T>[[nodiscard]] UniquePtr<T> makeUnique(std::size_t size) {
+    return UniquePtr<T>(new std::remove_extent_t<T>[size]());
 }
 
-template <typename T>[[nodiscard]] unique_ptr<T> make_unique_default_init() {
-    return unique_ptr<T>(new T);
+template <typename T>[[nodiscard]] UniquePtr<T> makeUniqueDefaultInit() {
+    return UniquePtr<T>(new T);
 }
 
 template <typename CharT, typename Traits, typename Y, typename D>
 constexpr std::basic_ostream<CharT, Traits> &
 operator<<(std::basic_ostream<CharT, Traits> &os,
-           const unique_ptr<Y, D> &p) noexcept {
+           const UniquePtr<Y, D> &p) noexcept {
     os << p.get();
     return os;
 }

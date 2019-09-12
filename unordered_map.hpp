@@ -18,11 +18,10 @@ template < class Key, class T > class unordered_map_element
 public:
    Key key;
    T value;
-   bool in_use;
    unordered_map_element< Key, T > *next;
 
-   unordered_map_element( ) : in_use(false), next(nullptr) { }
-   unordered_map_element( Key key, T value ) : key(key), value(value), in_use(true), next(nullptr) { }
+   unordered_map_element( ) : next(nullptr) { }
+   unordered_map_element( Key key, T value ) : key(key), value(value), next(nullptr) { }
 };
 
 template < class Key, class T, class Hash = std::hash< Key >,
@@ -40,6 +39,19 @@ private:
       return hash( key ) % numBuckets;
    }
    
+   // Helper for subscript operator, returns a pointer to the value for the given key
+   T *get(Key key)
+   {
+       int index = getIndex(key);
+       unordered_map_element< Key, T > *current = data[index];
+       while (current)
+       {
+           if (pred(current->key, key)) return &(current->value);
+           current = current->next;
+       }
+       return nullptr;
+   }
+
 public:   
    //default constructor
    explicit unordered_map( ) 
@@ -123,20 +135,6 @@ public:
       return return_value;
    }
    
-   // Helper for subscript operator, returns a pointer to the value for the given key
-   // Should probably become private, that's a TODO
-   T *get ( Key key )
-   {
-      int index = getIndex( key );
-      unordered_map_element< Key, T > *current = data[ index ];
-      while ( current )
-      {
-         if ( pred( current->key, key ) ) return &(current->value);
-         current = current->next;
-      }
-      return nullptr;
-   }
-   
    // Adds an element to the unordered_map
    T &add ( Key key, T value )
    {
@@ -163,7 +161,6 @@ public:
 
       int index = getIndex( key );
       unordered_map_element< Key, T > *current = data[ index ];
-      //if ( !current->in_use ) current = nullptr;
       while ( current )
       {
          if ( pred( current->key, key ) )
@@ -175,7 +172,6 @@ public:
       }
       ++numElements;
       current = data[ index ];
-      //if ( !current->in_use ) current = nullptr;
       unordered_map_element< Key, T > *new_element = new unordered_map_element< Key, T >( key, value );
       new_element->next = current;
       data[ index ] = new_element;

@@ -17,6 +17,7 @@ public:
     typedef const T& const_reference;
 
     Queue()
+        : numElements(0)
         {
         start = std::unique_ptr<QueueNode>(new QueueNode());
         end = start.get();
@@ -25,11 +26,13 @@ public:
     void push( const value_type value )
         {
         end = end->push(value);
+        ++numElements;
         }
 
     void push( value_type && value )
         {
         end = end->push( std::move( value ) );
+        ++numElements;
         }
 
     void pop()
@@ -38,6 +41,7 @@ public:
             {
             start = start->nextNode();
             }
+        --numElements;
         }
 
     const_reference front() const
@@ -62,7 +66,13 @@ public:
 
     bool empty() const
         {
-        return start.get() == end && start->empty();
+        // return start.get() == end && start->empty();
+        return numElements == 0;
+        }
+
+    int size() const
+        {
+        return numElements;
         }
 
 private:
@@ -107,6 +117,8 @@ private:
 
         bool popAndDone()
             {
+            if( empty() )
+                throw;
             ++current;
             if(current == ARRAYSIZE)
                 {
@@ -156,6 +168,7 @@ private:
 
     std::unique_ptr<QueueNode> start;
     QueueNode* end;
+    int numElements;
 
 };
 

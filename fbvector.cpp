@@ -50,7 +50,7 @@ namespace fb{
 
 			//TO DO: move and initializer constructor?
 
-			//assignment operator
+			//copy assignment operator
 			Vector& operator=(const Vector &v){
 				if(&v == this){
 					return *this;
@@ -65,10 +65,15 @@ namespace fb{
 				return *this;
 			}
 
+			//TO DO: move and init list assignment operator
+
 			//destructor
 			~Vector(){
 				delete[] arr;
 			}
+
+
+			//TO DO: iterators
 
 			bool empty(){
 				if(size == 0){
@@ -84,6 +89,8 @@ namespace fb{
 			size_t size(){
 				return size;
 			}
+
+			//TO DO: max_size()
 
 			T& operator[](size_t n){
 				return arr[n];
@@ -194,60 +201,80 @@ namespace fb{
 				arr = new T[1];
 			}
 
-			//relational operators
-			bool operator==(const Vector<T> &lhs, const Vector<T> &rhs){
-				if(lhs.size == rhs.size){
-					for(size_t i = 0; i < lhs.size; ++i){
-						if(lhs.arr[i] != rhs.arr[i]){
-							return false;
-						}
-					}
-					return true;
-				}
-				return false;
-			}
+			//TO DO: insert, erase, emplace, emplace_back
 
-			bool operator!=(const Vector<T> &lhs, const Vector<T> &rhs){
-				return !(lhs == rhs);
-			}
-
-			bool operator<(const Vector<T> &lhs, const Vector<T> &rhs){
-				size_t smaller;
-				if(lhs.size < rhs.size){
-					smaller = lhs.size;
-				}else{
-					smaller = rhs.size;
-				}
-
-				for(size_t i = 0; i < smaller; ++i){
-					if(lhs.arr[i] >= rhs.arr[i]){
-						return false;
-					}
-				}
-				//will only exit loop if all elements are equal up to the smaller vector
-				if(lhs.size <= rhs.size){
-					return true;
-				}
-
-				return false;
-			}
-
-			bool operator>(const Vector<T> &lhs, const Vector<T> &rhs){
-				return (rhs < lhs);
-			}
-
-			bool operator<=(const Vector<T> &lhs, const Vector<T> &rhs){
-				return !(lhs > rhs);
-			}
-
-			bool operator>=(const Vector<T> &lhs, const Vector<T> &rhs){
-				return !(lhs < rhs);
-			}
-
-			void swap(Vector<T> &lhs, Vector<T> &rhs){
-				T* temp = rhs.arr;
-				rhs.arr = lhs.arr;
-				lhs.arr = temp;
+			void swap(Vector<T> &v){
+				T* temp = v.arr;
+				size_t temp_size = v.size;
+				size_t temp_capacity = v.capacity;
+				v.arr = arr;
+				v.size = size;
+				v.capacity = capacity;
+				arr = temp;
+				size = temp_size;
+				capacity = temp_capacity;
 			}
 	};
+
+	//relational operators
+	bool operator==(const Vector<T> &lhs, const Vector<T> &rhs){
+		if(lhs.size == rhs.size){
+			for(size_t i = 0; i < lhs.size; ++i){
+				if(lhs.arr[i] != rhs.arr[i]){
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	bool operator!=(const Vector<T> &lhs, const Vector<T> &rhs){
+		return !(lhs == rhs);
+	}
+
+	bool operator<(const Vector<T> &lhs, const Vector<T> &rhs){
+		size_t smaller;
+		if(lhs.size < rhs.size){
+			smaller = lhs.size;
+		}else{
+			smaller = rhs.size;
+		}
+
+		for(size_t i = 0; i < smaller; ++i){
+			if(lhs.arr[i] >= rhs.arr[i]){
+				return false;
+			}
+		}
+		//will only exit loop if all elements are equal up to the smaller vector
+		if(lhs.size <= rhs.size){
+			return true;
+		}
+
+		return false;
+	}
+
+	bool operator>(const Vector<T> &lhs, const Vector<T> &rhs){
+		return (rhs < lhs);
+	}
+
+	bool operator<=(const Vector<T> &lhs, const Vector<T> &rhs){
+		return !(lhs > rhs);
+	}
+
+	bool operator>=(const Vector<T> &lhs, const Vector<T> &rhs){
+		return !(lhs < rhs);
+	}
+
+	void swap(Vector<T> &lhs, Vector<T> &rhs){
+		T* temp = lhs.arr;
+		size_t temp_size = lhs.size;
+		size_t temp_capacity = lhs.size;
+		lhs.arr = rhs.arr;
+		lhs.size = rhs.size;
+		lhs.capacity = rhs.capacity;
+		rhs.arr = temp;
+		rhs.size = temp_size;
+		rhs.capacity = temp_capacity;
+	}
 }

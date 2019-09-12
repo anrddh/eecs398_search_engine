@@ -37,6 +37,8 @@ public:
 
     void pop()
         {
+        if( empty() )
+            throw;
         if(start->popAndDone())
             {
             start = start->nextNode();
@@ -117,8 +119,6 @@ private:
 
         bool popAndDone()
             {
-            if( empty() )
-                throw;
             ++current;
             if(current == ARRAYSIZE)
                 {

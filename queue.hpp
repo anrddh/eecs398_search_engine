@@ -23,6 +23,20 @@ public:
         end = start.get();
         }
 
+    Queue(const Queue & other)
+        : numElements(other.numElements) 
+        {
+            start = std::unique_ptr<QueueNode> (new QueueNode(*(other.start)));
+            end = start.get();
+            while(end->nextptr() != nullptr)
+                end = end->nextptr();
+        }
+
+    Queue(Queue && other)
+        : start(std::move(other.start)), end(other.end), numElements(other.numElements)
+        {
+        }
+
     void push( const value_type value )
         {
         end = end->push(value);
@@ -41,7 +55,7 @@ public:
             throw;
         if(start->popAndDone())
             {
-            start = start->nextNode();
+            start = start->moveNext();
             }
         --numElements;
         }
@@ -87,6 +101,16 @@ private:
             data.reserve(ARRAYSIZE);
             }
 
+        QueueNode(const QueueNode & other):
+            current(other.current)
+            {
+            data = other.data;
+            if( next != nullptr)
+                next = std::unique_ptr<QueueNode> (new QueueNode(*(other.next)));
+            else
+                next = nullptr;
+            }
+
         QueueNode* push(const value_type & value)
             {
             if(data.size() == ARRAYSIZE)
@@ -130,9 +154,14 @@ private:
                 }
             }
 
-        std::unique_ptr<QueueNode> nextNode()
+        std::unique_ptr<QueueNode> moveNext()
             {
                 return std::move(next);
+            }
+
+        QueueNode* nextptr()
+            {
+                return next.get();
             }
 
         bool empty()

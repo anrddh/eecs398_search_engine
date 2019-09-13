@@ -1,14 +1,13 @@
 //Sharon Ye 9-12-2019
 //implementation of STL vector
-
-
 namespace fb{
+	typedef unsigned long size_t;
 	template <typename T>
 
 	class Vector{
 		private:
-			size_t capacity;
-			size_t size;
+			size_t cap;
+			size_t _size;
 			T *arr;
 		public:
 			struct out_of_bounds_exception{};
@@ -16,34 +15,34 @@ namespace fb{
 			//default constructor
 			Vector(){
 				arr = new T[1];
-				size = 0;
-				capacity = 1;
+				_size = 0;
+				cap = 1;
 			}
 
 			//fill constructor
 			Vector(size_t n, const T val){
 				arr = new T[n];
-				size = n;
-				capacity = n;
+				_size = n;
+				cap = n;
 			}
 
 			//range constructor
 			typedef T* iterator;
 			Vector(iterator first, iterator last){
-				size = last-first;
-				capacity = size;
-				arr = new T[size];
-				for(size_t i = 0; i < size; ++i){
+				_size = last-first;
+				cap = _size;
+				arr = new T[_size];
+				for(size_t i = 0; i < _size; ++i){
 					arr[i] = *(first + i);
 				}
 			}
 
 			//copy constructor
 			Vector(const Vector &v){
-				arr = new T[v.size];
-				size = v.size;
-				capacity = v.size;
-				for(size_t i = 0; i < v.size; ++i){
+				arr = new T[v._size];
+				_size = v._size;
+				cap = v._size;
+				for(size_t i = 0; i < v._size; ++i){
 					arr[i] = v[i];
 				}
 			}
@@ -56,10 +55,10 @@ namespace fb{
 					return *this;
 				}
 				delete[] arr;
-				arr = new T[v.size];
-				size = v.size;
-				capacity = v.size;
-				for(size_t i = 0; i < v.size; ++i){
+				arr = new T[v._size];
+				_size = v._size;
+				cap = v._size;
+				for(size_t i = 0; i < v._size; ++i){
 					arr[i] = v[i];
 				}
 				return *this;
@@ -76,96 +75,98 @@ namespace fb{
 			//TO DO: iterators
 
 			bool empty(){
-				if(size == 0){
+				if(_size == 0){
 					return true;
 				}
 				return false;
 			}
 
 			size_t capacity(){
-				return capacity;
+				return cap;
 			}
 
 			size_t size(){
-				return size;
+				return _size;
 			}
 
-			//TO DO: max_size()
+			//TO DO: max__size()
 
 			T& operator[](size_t n){
 				return arr[n];
 			}
 
 			T& at(size_t n){
-				if(n >= size){
-					throw out_of_bounds_exception;
+				if(n >= _size){
+					throw out_of_bounds_exception();
 				}
 				return arr[n];
 			}
 
 			void pop_back(){
-				--size;
+				--_size;
 			}
 
+			//TO DO: fix initialized memory
 			void push_back(T val){
-				if(size == capacity){
-					capacity = 2*capacity;
-					T* p = new[capacity];
-					for(size_t i = 0; i < size; ++i){
+				if(_size == cap){
+					cap = 2*cap;
+					T* p = new T[cap];
+					for(size_t i = 0; i < _size; ++i){
 						p[i] = arr[i];
 					}
-					p[size] = val;
+					p[_size] = val;
 					delete[] arr;
 					arr = p;
-					++size;
+					++_size;
 					return;
 				}
-				arr[size] = val;
-				++size;
+				arr[_size] = val;
+				++_size;
 			}
 
+			//TO DO: fix initialized memory
 			void reserve(size_t n){
-				if(n > capacity){
-					T* p = new[n];
-					for(size_t i = 0; i < size; ++i){
+				if(n > cap){
+					T* p = new T[n];
+					for(size_t i = 0; i < _size; ++i){
 						p[i] = arr[i];
 					}
-					capacity = n;
+					cap = n;
 					delete[] arr;
 					arr = p;
 				}
 			}
 
-			void resize(size_t n, T val = T()){
-				if(n < size){
-					for(size_t i = 0; i <= size-n; ++i){
+			void re_size(size_t n, T val = T()){
+				if(n < _size){
+					for(size_t i = 0; i <= _size-n; ++i){
 						pop_back();
 					}
 				}
 
-				if(n > size && n <= capacity){
-					for(size_t i = size; i < n; ++i){
+				if(n > _size && n <= cap){
+					for(size_t i = _size; i < n; ++i){
 						arr[i] = val;
 					}
 				}
 
-				if(n > size && n > capacity){
+				if(n > _size && n > cap){
 					T* p = new T[n];
-					for(size_t i = 0; i < size; ++i){
+					for(size_t i = 0; i < _size; ++i){
 						p[i] = arr[i];
 					}
-					for(size_t i = size; i < n; ++i){
+					for(size_t i = _size; i < n; ++i){
 						p[i] = val;
 					}
-					size = n;
-					capacity = n;
+					_size = n;
+					cap = n;
 					delete[] arr;
 					arr = p;
 				}
 			}
 
 			void shrink_to_fit(){
-				capacity = size;
+				cap = _size;
 			}
 
 			T& front(){
@@ -173,7 +174,7 @@ namespace fb{
 			}
 
 			T& back(){
-				return arr[size-1];
+				return arr[_size-1];
 			}
 
 			T* data(){
@@ -181,23 +182,23 @@ namespace fb{
 			}
 
 			void assign(size_t n, const T val){
-				resize(n, val);
+				re_size(n, val);
 			}
 
 			void assign(iterator first, iterator last){
-				size = last-first;
-				capacity = size;
+				_size = last-first;
+				cap = _size;
 				delete[] arr;
-				arr = new T[size];
-				for(size_t i = 0; i < size; ++i){
+				arr = new T[_size];
+				for(size_t i = 0; i < _size; ++i){
 					arr[i] = *(first + i);
 				}
 			}
 
 			void clear(){
 				delete[] arr;
-				size = 0;
-				capacity = 0;
+				_size = 0;
+				cap = 0;
 				arr = new T[1];
 			}
 
@@ -205,21 +206,22 @@ namespace fb{
 
 			void swap(Vector<T> &v){
 				T* temp = v.arr;
-				size_t temp_size = v.size;
-				size_t temp_capacity = v.capacity;
+				size_t temp__size = v._size;
+				size_t temp_cap = v.cap;
 				v.arr = arr;
-				v.size = size;
-				v.capacity = capacity;
+				v._size = _size;
+				v.cap = cap;
 				arr = temp;
-				size = temp_size;
-				capacity = temp_capacity;
+				_size = temp__size;
+				cap = temp_cap;
 			}
 	};
 
+	template <typename T>
 	//relational operators
 	bool operator==(const Vector<T> &lhs, const Vector<T> &rhs){
-		if(lhs.size == rhs.size){
-			for(size_t i = 0; i < lhs.size; ++i){
+		if(lhs._size == rhs._size){
+			for(size_t i = 0; i < lhs._size; ++i){
 				if(lhs.arr[i] != rhs.arr[i]){
 					return false;
 				}
@@ -229,16 +231,18 @@ namespace fb{
 		return false;
 	}
 
+	template <typename T>
 	bool operator!=(const Vector<T> &lhs, const Vector<T> &rhs){
 		return !(lhs == rhs);
 	}
 
+	template <typename T>
 	bool operator<(const Vector<T> &lhs, const Vector<T> &rhs){
 		size_t smaller;
-		if(lhs.size < rhs.size){
-			smaller = lhs.size;
+		if(lhs._size < rhs._size){
+			smaller = lhs._size;
 		}else{
-			smaller = rhs.size;
+			smaller = rhs._size;
 		}
 
 		for(size_t i = 0; i < smaller; ++i){
@@ -247,34 +251,38 @@ namespace fb{
 			}
 		}
 		//will only exit loop if all elements are equal up to the smaller vector
-		if(lhs.size <= rhs.size){
+		if(lhs._size <= rhs._size){
 			return true;
 		}
 
 		return false;
 	}
 
+	template <typename T>
 	bool operator>(const Vector<T> &lhs, const Vector<T> &rhs){
 		return (rhs < lhs);
 	}
 
+	template <typename T>
 	bool operator<=(const Vector<T> &lhs, const Vector<T> &rhs){
 		return !(lhs > rhs);
 	}
 
+	template <typename T>
 	bool operator>=(const Vector<T> &lhs, const Vector<T> &rhs){
 		return !(lhs < rhs);
 	}
 
+	template <typename T>
 	void swap(Vector<T> &lhs, Vector<T> &rhs){
 		T* temp = lhs.arr;
-		size_t temp_size = lhs.size;
-		size_t temp_capacity = lhs.size;
+		size_t temp__size = lhs._size;
+		size_t temp_cap = lhs._size;
 		lhs.arr = rhs.arr;
-		lhs.size = rhs.size;
-		lhs.capacity = rhs.capacity;
+		lhs._size = rhs._size;
+		lhs.cap = rhs.cap;
 		rhs.arr = temp;
-		rhs.size = temp_size;
-		rhs.capacity = temp_capacity;
+		rhs._size = temp__size;
+		rhs.cap = temp_cap;
 	}
 }

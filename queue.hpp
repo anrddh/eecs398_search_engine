@@ -19,8 +19,8 @@ public:
     Queue()
         : numElements(0)
         {
-        start = std::unique_ptr<QueueNode>(new QueueNode());
-        end = start.get();
+        start = nullptr;
+        end = nullptr;
         }
 
     Queue(const Queue & other)
@@ -37,26 +37,40 @@ public:
         {
         }
 
-    void push( const value_type value )
+    void push( const value_type & value )
         {
-        end = end->push(value);
+        if( empty() )
+            makeFirstNode();
         ++numElements;
+
+        end = end->push( value );
         }
 
     void push( value_type && value )
         {
-        end = end->push( std::move( value ) );
+        if( empty() )
+            makeFirstNode();
         ++numElements;
+
+        end = end->push( std::move( value ) );
         }
+
+    template<class ... Args>
+    void emplace( Args&&... args) 
+        {
+        if( empty() )
+            makeFirstNode();
+        ++numElements;
+
+        end = end->emplace( std::forward< Args >( args )... );
+        }
+
 
     void pop()
         {
         if( empty() )
             throw;
-        if(start->popAndDone())
-            {
-            start = start->moveNext();
-            }
+        start->popAndMoveNext(start);
         --numElements;
         }
 
@@ -82,7 +96,6 @@ public:
 
     bool empty() const
         {
-        // return start.get() == end && start->empty();
         return numElements == 0;
         }
 
@@ -92,6 +105,13 @@ public:
         }
 
 private:
+
+    void makeFirstNode()
+        {
+            start = std::unique_ptr<QueueNode>(new QueueNode());
+            end = start.get();
+        }
+
     class QueueNode
     {
     public:
@@ -141,22 +161,29 @@ private:
                 }
             }
 
-        bool popAndDone()
+        template<class ... Args>
+        QueueNode* emplace( Args&&... args) 
+            {
+            if(data.size() == ARRAYSIZE)
+                {
+                next = std::unique_ptr<QueueNode>(new QueueNode());
+                next->emplace(std::forward< Args >( args )...);
+                return next.get();
+                }
+            else
+                {
+                data.emplace_back(std::forward< Args >( args )...);
+                return this;
+                }
+            }
+
+        void popAndMoveNext(std::unique_ptr<QueueNode>& start)
             {
             ++current;
             if(current == ARRAYSIZE)
                 {
-                return true;
+                start = std::move(next);
                 }
-            else
-                {
-                return false;
-                }
-            }
-
-        std::unique_ptr<QueueNode> moveNext()
-            {
-                return std::move(next);
             }
 
         QueueNode* nextptr()

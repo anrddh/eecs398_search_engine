@@ -6,9 +6,7 @@
 namespace fb 
 {
 
-const int ARRAYSIZE = 16;
-
-template <class T>
+template <class T, int ArraySize = 32>
 class Queue
 {
 public:
@@ -118,7 +116,7 @@ private:
         QueueNode():
             next(nullptr), current(0)
             {
-            data.reserve(ARRAYSIZE);
+            data.reserve(ArraySize);
             }
 
         QueueNode(const QueueNode & other):
@@ -133,7 +131,7 @@ private:
 
         QueueNode* push(const value_type & value)
             {
-            if(data.size() == ARRAYSIZE)
+            if(data.size() == ArraySize)
                 {
                 next = std::unique_ptr<QueueNode>(new QueueNode());
                 next->push(value);
@@ -148,7 +146,7 @@ private:
 
         QueueNode* push(value_type&& value)
             {
-            if(data.size() == ARRAYSIZE)
+            if(data.size() == ArraySize)
                 {
                 next = std::unique_ptr<QueueNode>(new QueueNode());
                 next->push(std::move(value));
@@ -164,7 +162,7 @@ private:
         template<class ... Args>
         QueueNode* emplace( Args&&... args) 
             {
-            if(data.size() == ARRAYSIZE)
+            if(data.size() == ArraySize)
                 {
                 next = std::unique_ptr<QueueNode>(new QueueNode());
                 next->emplace(std::forward< Args >( args )...);
@@ -180,7 +178,7 @@ private:
         void popAndMoveNext(std::unique_ptr<QueueNode>& start)
             {
             ++current;
-            if(current == ARRAYSIZE)
+            if(current == ArraySize)
                 {
                 start = std::move(next);
                 }

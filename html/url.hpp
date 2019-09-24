@@ -14,11 +14,11 @@ public:
    //Creates a url object from url
    url(const std::string &in_url){
       int index = 0;
-      for ( ; in_url[index] != ':'; ++index){
+      for ( ; index < in_url.size() && in_url[index] != ':'; ++index){
          protocol += in_url[index];
       }
       index += 3; //skip over the "://"
-      for ( ; in_url[index] != '/'; ++index){
+      for ( ; index < in_url.size() && in_url[index] != '/'; ++index){
          hostname += in_url[index];
       }
       for ( ; index < in_url.size(); ++index){

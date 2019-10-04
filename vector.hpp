@@ -1,220 +1,337 @@
 //Sharon Ye 9-12-2019
 //implementation of STL vector
-namespace fb{
+namespace FB{
 	typedef unsigned long size_t;
 	template <typename T>
 
 	class Vector{
+	private:
+		size_t cap;
+		size_t _size;
+		T *arr;
+	public:
+		//bidirectional random access iterator
+		class Iterator{
 		private:
-			size_t cap;
-			size_t _size;
-			T *arr;
+			T *ptr;
+			friend class Vector;
 		public:
-			struct out_of_bounds_exception{};
-
 			//default constructor
-			Vector(){
-				arr = new T[1];
-				_size = 0;
-				cap = 1;
-			}
-
-			//fill constructor
-			Vector(size_t n, const T val){
-				arr = new T[n];
-				_size = n;
-				cap = n;
-			}
-
-			//range constructor
-			typedef T* iterator;
-			Vector(iterator first, iterator last){
-				_size = last-first;
-				cap = _size;
-				arr = new T[_size];
-				for(size_t i = 0; i < _size; ++i){
-					arr[i] = *(first + i);
+			Iterator(): ptr(nullptr){}
+			
+			//constructor
+			Iterator(Vector<T> &vec, bool begin_or_end){
+				if(begin_or_end){
+					ptr = vec.arr;
+				}else{
+					ptr = vec.arr + vec._size;
 				}
 			}
-
-			//copy constructor
-			Vector(const Vector &v){
-				arr = new T[v._size];
-				_size = v._size;
-				cap = v._size;
-				for(size_t i = 0; i < v._size; ++i){
-					arr[i] = v[i];
-				}
-			}
-
-			//TO DO: move and initializer constructor?
-
-			//copy assignment operator
-			Vector& operator=(const Vector &v){
-				if(&v == this){
-					return *this;
-				}
-				delete[] arr;
-				arr = new T[v._size];
-				_size = v._size;
-				cap = v._size;
-				for(size_t i = 0; i < v._size; ++i){
-					arr[i] = v[i];
-				}
+								
+			Iterator& operator++(){
+				++ptr;
 				return *this;
 			}
 
-			//TO DO: move and init list assignment operator
-
-			//destructor
-			~Vector(){
-				delete[] arr;
+			Iterator& operator--(){
+				--ptr;
+				return *this;
 			}
 
-
-			//TO DO: iterators
-
-			bool empty(){
-				if(_size == 0){
-					return true;
-				}
-				return false;
+			Iterator& operator+=(int jump){
+				ptr += jump;
+				return *this;
 			}
 
-			size_t capacity(){
-				return cap;
+			Iterator& operator-=(int jump){
+				ptr -= jump;
+				return *this;
 			}
 
-			size_t size(){
-				return _size;
+			T& operator*(){
+				return *ptr;
 			}
 
-			//TO DO: max__size()
-
-			T& operator[](size_t n){
-				return arr[n];
+			bool operator==(const Iterator &rhs){
+				return ptr == rhs.ptr;
 			}
 
-			T& at(size_t n){
-				if(n >= _size){
-					throw out_of_bounds_exception();
-				}
-				return arr[n];
+			bool operator!=(const Iterator &rhs){
+				return ptr != rhs.ptr;
+			}
+		};
+
+		class Reverse_Iterator{
+		private:
+			T *ptr;
+			friend class Vector;
+		public:
+			//default constructor
+			Reverse_Iterator(): ptr(nullptr){}
+			//constructor
+			Reverse_Iterator(Vector &vec, bool begin_or_end){
+				//want reverse beginning
+				if(begin_or_end){	
+					ptr = vec.arr + vec._size - 1;
+				}else{ //want reverse end
+					ptr = vec.arr - 1;
+				}	
 			}
 
-			void pop_back(){
-				--_size;
+			Reverse_Iterator& operator++(){
+				--ptr;
+				return *this;
 			}
 
-			//TO DO: fix initialized memory
-			void push_back(T val){
-				if(_size == cap){
-					cap = 2*cap;
-					T* p = new T[cap];
-					for(size_t i = 0; i < _size; ++i){
-						p[i] = arr[i];
-					}
-					p[_size] = val;
-					delete[] arr;
-					arr = p;
-					++_size;
-					return;
-				}
-				arr[_size] = val;
-				++_size;
+			Reverse_Iterator& operator--(){
+				++ptr;
+				return *this;
 			}
 
-			//TO DO: fix initialized memory
-			void reserve(size_t n){
-				if(n > cap){
-					T* p = new T[n];
-					for(size_t i = 0; i < _size; ++i){
-						p[i] = arr[i];
-					}
-					cap = n;
-					delete[] arr;
-					arr = p;
-				}
+			Reverse_Iterator& operator+=(int jump){
+				ptr -= jump;
+				return *this;
 			}
 
-			void re_size(size_t n, T val = T()){
-				if(n < _size){
-					for(size_t i = 0; i <= _size-n; ++i){
-						pop_back();
-					}
-				}
-
-				if(n > _size && n <= cap){
-					for(size_t i = _size; i < n; ++i){
-						arr[i] = val;
-					}
-				}
-
-				if(n > _size && n > cap){
-					T* p = new T[n];
-					for(size_t i = 0; i < _size; ++i){
-						p[i] = arr[i];
-					}
-					for(size_t i = _size; i < n; ++i){
-						p[i] = val;
-					}
-					_size = n;
-					cap = n;
-					delete[] arr;
-					arr = p;
-				}
+			Reverse_Iterator& operator-=(int jump){
+				ptr += jump;
+				return *this;
 			}
 
-			void shrink_to_fit(){
-				cap = _size;
+			T& operator*(){
+				return *ptr;
 			}
 
-			T& front(){
-				return arr[0];
+			bool operator==(const Reverse_Iterator &rhs){
+				return ptr == rhs.ptr;
 			}
 
-			T& back(){
-				return arr[_size-1];
+			bool operator!=(const Reverse_Iterator &rhs){
+				return ptr != rhs.ptr;
 			}
+		};
 
-			T* data(){
-				return arr;
+		struct out_of_bounds_exception{};
+
+		//default constructor
+		Vector(){
+			arr = new T[1];
+			_size = 0;
+			cap = 1;
+		}
+
+		//fill constructor
+		Vector(size_t n, const T val){
+			arr = new T[n];
+			_size = n;
+			cap = n;
+		}
+
+		//range constructor
+		typedef T* iterator;
+		Vector(iterator first, iterator last){
+			_size = last-first;
+			cap = _size;
+			arr = new T[_size];
+			for(size_t i = 0; i < _size; ++i){
+				arr[i] = *(first + i);
 			}
+		}
 
-			void assign(size_t n, const T val){
-				re_size(n, val);
+		//copy constructor
+		Vector(const Vector &v){
+			arr = new T[v._size];
+			_size = v._size;
+			cap = v._size;
+			for(size_t i = 0; i < v._size; ++i){
+				arr[i] = v[i];
 			}
+		}
 
-			void assign(iterator first, iterator last){
-				_size = last-first;
-				cap = _size;
-				delete[] arr;
-				arr = new T[_size];
+		//TO DO: move and initializer constructor?
+
+		//copy assignment operator
+		Vector& operator=(const Vector &v){
+			if(&v == this){
+				return *this;
+			}
+			delete[] arr;
+			arr = new T[v._size];
+			_size = v._size;
+			cap = v._size;
+			for(size_t i = 0; i < v._size; ++i){
+				arr[i] = v[i];
+			}
+			return *this;
+		}
+
+		//TO DO: move and init list assignment operator
+
+		//destructor
+		~Vector(){
+			delete[] arr;
+		}
+
+
+		//TO DO: remaining iterators
+		Iterator begin(){
+			return Iterator(this, true);
+		}
+
+		Iterator end(){
+			return Iterator(this, false);
+		}
+
+		Reverse_Iterator rbegin(){
+			return Reverse_Iterator(this, true);
+		}
+
+		Reverse_Iterator rend(){
+			return Reverse_Iterator(this, false);
+		}
+
+
+		bool empty(){
+			if(_size == 0){
+				return true;
+			}
+			return false;
+		}
+
+		size_t capacity(){
+			return cap;
+		}
+
+		size_t size(){
+			return _size;
+		}
+
+		//TO DO: max__size()
+
+		T& operator[](size_t n){
+			return arr[n];
+		}
+
+		T& at(size_t n){
+			if(n >= _size){
+				throw out_of_bounds_exception();
+			}
+			return arr[n];
+		}
+
+		void pop_back(){
+			--_size;
+		}
+
+		//TO DO: fix initialized memory
+		void push_back(T val){
+			if(_size == cap){
+				cap = 2*cap;
+				T* p = new T[cap];
 				for(size_t i = 0; i < _size; ++i){
-					arr[i] = *(first + i);
+					p[i] = arr[i];
+				}
+				p[_size] = val;
+				delete[] arr;
+				arr = p;
+				++_size;
+				return;
+			}
+			arr[_size] = val;
+			++_size;
+		}
+
+		//TO DO: fix initialized memory
+		void reserve(size_t n){
+			if(n > cap){
+				T* p = new T[n];
+				for(size_t i = 0; i < _size; ++i){
+					p[i] = arr[i];
+				}
+				cap = n;
+				delete[] arr;
+				arr = p;
+			}
+		}
+
+		void re_size(size_t n, T val = T()){
+			if(n < _size){
+				for(size_t i = 0; i <= _size-n; ++i){
+					pop_back();
 				}
 			}
 
-			void clear(){
+			if(n > _size && n <= cap){
+				for(size_t i = _size; i < n; ++i){
+					arr[i] = val;
+				}
+			}
+
+			if(n > _size && n > cap){
+				T* p = new T[n];
+				for(size_t i = 0; i < _size; ++i){
+					p[i] = arr[i];
+				}
+				for(size_t i = _size; i < n; ++i){
+					p[i] = val;
+				}
+				_size = n;
+				cap = n;
 				delete[] arr;
-				_size = 0;
-				cap = 0;
-				arr = new T[1];
+				arr = p;
 			}
+		}
 
-			//TO DO: insert, erase, emplace, emplace_back
+		void shrink_to_fit(){
+			cap = _size;
+		}
 
-			void swap(Vector<T> &v){
-				T* temp = v.arr;
-				size_t temp__size = v._size;
-				size_t temp_cap = v.cap;
-				v.arr = arr;
-				v._size = _size;
-				v.cap = cap;
-				arr = temp;
-				_size = temp__size;
-				cap = temp_cap;
+		T& front(){
+			return arr[0];
+		}
+
+		T& back(){
+			return arr[_size-1];
+		}
+
+		T* data(){
+			return arr;
+		}
+
+		void assign(size_t n, const T val){
+			re_size(n, val);
+		}
+
+		void assign(iterator first, iterator last){
+			_size = last-first;
+			cap = _size;
+			delete[] arr;
+			arr = new T[_size];
+			for(size_t i = 0; i < _size; ++i){
+				arr[i] = *(first + i);
 			}
+		}
+
+		void clear(){
+			delete[] arr;
+			_size = 0;
+			cap = 0;
+			arr = new T[1];
+		}
+
+		//TO DO: insert, erase, emplace, emplace_back
+
+		void swap(Vector<T> &v){
+			T* temp = v.arr;
+			size_t temp__size = v._size;
+			size_t temp_cap = v.cap;
+			v.arr = arr;
+			v._size = _size;
+			v.cap = cap;
+			arr = temp;
+			_size = temp__size;
+			cap = temp_cap;
+		}
 	};
 
 	template <typename T>

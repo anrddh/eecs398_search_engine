@@ -7,6 +7,95 @@
 namespace fb
 {
 
+struct View {
+    const char *p = nullptr;
+    std::size_t s = 0;
+};
+
+std::ostream& operator<<(std::ostream &os, View &v) {
+    for (size_t i = 0; i < v.s; ++i) {
+        os << v.p[i];
+    }
+
+    return os;
+}
+
+class ParsedUrl
+   {
+   public:
+      const std::string url;
+
+      View Service, Host, Port, Path;
+       bool success = false;
+
+      ParsedUrl( std::string url_ ) : url(std::move(url_))
+         {
+         Service.p = url.c_str();
+         const char Colon = ':', Slash = '/';
+
+         std::size_t p = url.find(':');
+         if (p == std::string::npos || !p) {
+            Path.p = url.c_str();
+            Path.s = url.size();
+            success = true;
+            return;
+         }
+
+         Service.s = p++;
+
+         /*
+           TODO: If Service does not belong to allowed_services, we exit.
+          */
+
+         if ( url[p] == Slash )
+             p++;
+         if ( url[p] == Slash )
+             p++;
+
+         Host.p = url.c_str() + p;
+
+         // check for stl algorithms
+         for ( ; p < url.size() && url[p] != Slash && url[p] != Colon; ++p )
+             ;
+
+         Host.s = url.c_str() + p - Host.p;
+
+         if (p < url.size() && url[p] == Colon) {
+           // Port specified.  Skip over the colon and
+           // the port number.
+             ++p;
+             Port.p = url.c_str() + p;
+             for (; p < url.size() && url[p] != Slash; ++p)
+                 ;
+             Port.s = url.c_str() + p - Port.p;
+         }
+
+         Path.p = url.c_str() + p;
+         Path.s = url.size() - p;
+         success = true;
+      }
+
+      ~ParsedUrl( )
+         {
+         delete[ ] pathBuffer;
+         }
+
+   private:
+      char *pathBuffer;
+      constexpr static std::array<const char *, 2> allowed_services = {"https", "http"};
+   };
+
+   std::ostream& operator << ( std::ostream& os, ParsedUrl &testguy )
+      {
+      os << "complete: " << testguy.url << std::endl
+         << "service: " << testguy.Service << std::endl
+         << "host: " << testguy.Host << std::endl
+         << "port: " << testguy.Port << std::endl
+         << "path: " << testguy.Path << std::endl;
+      return os;
+      }
+
+
 // take in string and a container, vector for now, and append newly found urls
 // to the given container.
 void extractURL( const std::string & line, std::vector< std::string > & urls )

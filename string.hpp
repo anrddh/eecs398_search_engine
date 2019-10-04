@@ -191,9 +191,15 @@ public:
     }
 
 	String & operator += (const char *rhs) {
-        realloc_mem(1);
-        buf[buf_size++] = rhs;
+        int rhs_len = strlen(rhs);
+        realloc_mem(rhs_len);
+
+        for (int i = 0; i < rhs_len; ++i)
+            buf[i + buf_size] = rhs[i];
+
+        buf_size += rhs_len;
         buf[buf_size] = 0;
+
         return *this;
     }
 
@@ -213,6 +219,10 @@ public:
 
 private:
 	static char a_null_byte;	// to hold a null byte for empty string representation
+
+    union {
+
+    } buf_un;
 
     // default alloc to null byte
     char *buf    { &a_null_byte };

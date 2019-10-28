@@ -16,24 +16,25 @@ namespace fb {
  */
 template <typename T, typename Deleter = DefaultDelete<T>>
 class UniquePtr {
-  public:
+public:
     using Pointer = T *;
     using ElementType = T;
     using DeleterType = Deleter;
+
 private:
     static constexpr bool defConstPtr =
         std::is_default_constructible_v<DeleterType> &&
         !std::is_pointer_v<DeleterType>;
-  public:
+
+public:
     constexpr UniquePtr(std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
-    constexpr UniquePtr(std::nullptr_t,
+    constexpr UniquePtr(NullPtrT,
                         std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
     constexpr explicit UniquePtr(
         Pointer p, std::enable_if_t<defConstPtr, int> = 0) noexcept
         : owner{p} {}
-
 
     // copies disallowed
     UniquePtr(UniquePtr &) = delete;
@@ -55,6 +56,7 @@ private:
             getDeleter()(get());
     }
 
+    /* Modifiers */
     constexpr Pointer release() noexcept {
         return std::exchange(owner, nullptr);
     }
@@ -64,6 +66,13 @@ private:
         std::swap(deleter, other.deleter);
     }
 
+    constexpr void reset(Pointer newPtr = Pointer()) noexcept {
+        auto oldPtr = std::exchange(owner, newPtr);
+        if (oldPtr)
+            getDeleter()(oldPtr);
+    }
+
+    /* Observers */
     [[nodiscard]] constexpr Pointer get() const noexcept { return owner; }
 
     [[nodiscard]] constexpr const DeleterType &getDeleter() const noexcept {
@@ -76,15 +85,6 @@ private:
 
     explicit constexpr operator bool() const noexcept {
         return get() != nullptr;
-    }
-
-    /*
-     * Modifiers
-     */
-    constexpr void reset(Pointer newPtr = Pointer()) noexcept {
-        auto oldPtr = std::exchange(owner, newPtr);
-        if (oldPtr)
-            getDeleter()(oldPtr);
     }
 
     [[nodiscard]] constexpr std::add_lvalue_reference_t<T> operator*() const
@@ -103,17 +103,20 @@ private:
 
 template <typename T, typename Deleter>
 class UniquePtr<T[], Deleter> : public impl::UniquePtrBase<T, Deleter> {
-    using impl::UniquePtrBase<T, Deleter>::get;
-    using impl::UniquePtrBase<T, Deleter>::defConstPtr;
+public:
+    using Pointer = T *;
+    using ElementType = T;
+    using DeleterType = Deleter;
+
+private:
+    static constexpr bool defConstPtr =
+        std::is_default_constructible_v<DeleterType> &&
+        !std::is_pointer_v<DeleterType>;
 
 public:
-    using impl::UniquePtrBase<T, Deleter>::Pointer;
-    using impl::UniquePtrBase<T, Deleter>::ElementType;
-    using impl::UniquePtrBase<T, Deleter>::DeleterType;
-
     constexpr UniquePtr(std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
-    constexpr UniquePtr(std::nullptr_t,
+    constexpr UniquePtr(NullPtrT,
                         std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
     T &operator[](std::size_t i) const { return get()[i]; }

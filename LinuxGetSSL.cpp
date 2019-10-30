@@ -325,6 +325,8 @@ int main( int argc, char *argv[ ] ) {
    while ( url.length( ) != 0 )
       {
       url = PrintHtmlGetRedirect( url );
+
+      // If there is a loop, probably a bad website.
       if(visitedURLs.find( url ) != visitedURLs.end( ) )
         break;
       visitedURLs.insert( url );

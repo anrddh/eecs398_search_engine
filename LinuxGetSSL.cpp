@@ -320,14 +320,14 @@ int main( int argc, char *argv[ ] ) {
 
    std::set<std::string> visitedURLs;
 
-   visitedURLs.insert(url);
+   visitedURLs.insert( url );
 
-   while ( url.length() != 0 )
+   while ( url.length( ) != 0 )
       {
       url = PrintHtmlGetRedirect( url );
-      if(visitedURLs.find(url) != visitedURLs.end())
+      if(visitedURLs.find( url ) != visitedURLs.end( ) )
         break;
-      visitedURLs.insert(url);
+      visitedURLs.insert( url );
       }
 }
 

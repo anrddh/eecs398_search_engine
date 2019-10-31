@@ -1,0 +1,23 @@
+URL POOL
+
+The url pool is used to maintain the frontier and allow threads to access the frontier.
+In order to distribute stress on servers we modify the selection algorithm described in class.
+
+- Original algorithm
+In class, we would pick n urls, and then choose the top k urls. 
+
+- Modification
+In order to increase concurrency, we partition the urls into NUM_BINS many parts (fixed number).
+For each url, we will hash it, and based on its hash mod NUM_BINS, we will place it into one of
+the url pools. Each thread will be dedicated to parsing a specific pool. To get a new url, we 
+will randomly choose n urls and obtain the highest ranking of the first k urls. Then of the n
+urls, we will select urls with ranking greater than or equal to the highest ranking of the first
+k urls.
+
+- Details
+Each thread will locally cache couple of urls selected from the url pool.
+If there are not enough urls, then we use busy wait. (We assume that our url pool will be
+"very big most of the times").
+
+TODOs
+If the url pool contains too many urls, then we will throw away urls with low rankings

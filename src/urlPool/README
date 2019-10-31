@@ -21,3 +21,5 @@ If there are not enough urls, then we use busy wait. (We assume that our url poo
 
 TODOs
 If the url pool contains too many urls, then we will throw away urls with low rankings
+Make the parsed urls global
+Add save method for the frontier

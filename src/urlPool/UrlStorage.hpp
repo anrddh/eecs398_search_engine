@@ -9,7 +9,6 @@
 #ifndef UrlStorage_hpp
 #define UrlStorage_hpp
 
-#include "url_pool.hpp"
 #include "TestUrl.h"
 #include <mutex>
 #include <map>
@@ -22,9 +21,11 @@
 // randomly chosen urls. We only return the urls with ranking
 // greater or equal that higest ranking.
 constexpr int NUM_TRY = 16;
-constexpr int NUM_SAMPLE = 4; // TODO we will only choose the top one!
+constexpr int NUM_SAMPLE = 4;
 static_assert(NUM_SAMPLE < NUM_TRY, "Invalid number of samples!");
 
+// Pool of urls. Keeps track of what has already been parsed or
+// needs to be parsed
 class UrlStorage {
 public:
     UrlStorage();
@@ -37,6 +38,7 @@ private:
     std::vector<Url_t> to_parse;
     std::mutex parsed_m;
     std::unordered_set<Url_t> parsed;
+    std::mutex local_seed_m;
     unsigned int local_seed;
 };
 

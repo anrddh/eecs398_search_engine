@@ -13,6 +13,7 @@
 
 using namespace std;
 
+// Each UrlStorage object is given a random seed
 mutex rand_mtx;
 unsigned int seed = 0;
 
@@ -39,9 +40,11 @@ void UrlStorage::add_url(Url_t url) {
 vector<Url_t> UrlStorage::get_url() {
     int rand_num[NUM_TRY];
     std::set<int> urls_to_take;
+    local_seed_m.lock();
     for (int i = 0; i < NUM_TRY; ++i) {
         rand_num[i] = rand_r(&local_seed);
     }
+    local_seed_m.unlock();
     
     lock_guard<mutex> to_parse_lock(to_parse_m);
     if (to_parse.size() < NUM_TRY) {

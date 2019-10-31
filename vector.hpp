@@ -1,405 +1,250 @@
-//Sharon Ye 9-12-2019
-//implementation of STL vector
-namespace FB{
-	typedef unsigned long size_t;
-	template <typename T>
+typedef unsigned long size_t;
+template<typename T>
+class Vector
+   {
+   private:
+      size_t cap = 0;
+      size_t _size = 0;
+      T *arr = nullptr;
+   public:
+      // Default Constructor
+      // REQUIRES: Nothing
+      // MODIFIES: *this
+      // EFFECTS: Constructs an empty vector with capacity 0
+      Vector( ) { }
 
-	class Vector{
-	private:
-		size_t cap;
-		size_t _size;
-		T *arr;
-	public:
-		//bidirectional random access iterator
-		class Iterator{
-		private:
-			T *ptr;
-			friend class Vector;
-		public:
-			//default constructor
-			Iterator(): ptr(nullptr){}
-			
-			//constructor
-			Iterator(Vector<T> &vec, bool begin_or_end){
-				if(begin_or_end){
-					ptr = vec.arr;
-				}else{
-					ptr = vec.arr + vec._size;
-				}
-			}
-								
-			Iterator& operator++(){
-				++ptr;
-				return *this;
-			}
+      // Destructor
+      // REQUIRES: Nothing
+      // MODIFIES: Destroys *this
+      // EFFECTS: Performs any neccessary clean up operations
+      ~Vector( )
+         {
+         delete[ ] arr;
+         }
 
-			Iterator& operator--(){
-				--ptr;
-				return *this;
-			}
+      // Resize Constructor
+      // REQUIRES: Nothing
+      // MODIFIES: *this
+      // EFFECTS: Constructs a vector with size n,
+      //    all default constructed
+      Vector( size_t n ) : cap( n ), _size( n ), arr( new T[ n ]( ) )
+         {}
 
-			Iterator& operator+=(int jump){
-				ptr += jump;
-				return *this;
-			}
+      // Fill Constructor
+      // REQUIRES: Capacity > 0
+      // MODIFIES: *this
+      // EFFECTS: Creates a vector with size n, all assigned to val
+      Vector( size_t n, const T& val )
+            : cap( n ), _size ( n ), arr ( new T[ n ] )
+         {
+         for ( size_t i = 0;  i < _size;  ++i )
+            arr[ i ] = val;
+         }
 
-			Iterator& operator-=(int jump){
-				ptr -= jump;
-				return *this;
-			}
+      // Copy Constructor
+      // REQUIRES: Nothing
+      // MODIFIES: *this
+      // EFFECTS: Creates a clone of the vector v
+      Vector( const Vector<T>& v )
+      {
+         arr = new T[v._size];
+         _size = v._size;
+         cap = v._size;
+         for(size_t i = 0; i < v._size; ++i){
+            arr[i] = v[i];
+         }
+      }
 
-			T& operator*(){
-				return *ptr;
-			}
+      // Assignment operator
+      // REQUIRES: Nothing
+      // MODIFIES: *this
+      // EFFECTS: Duplicates the state of v to *this
+      Vector operator=( const Vector<T>& v )
+         {
+            if(&v == this){
+               return *this;
+            }
+            delete[] arr;
+            arr = new T[v._size];
+            _size = v._size;
+            cap = v._size;
+            for(size_t i = 0; i < v._size; ++i){
+               arr[i] = v[i];
+            }
+            return *this;
+         }
 
-			bool operator==(const Iterator &rhs){
-				return ptr == rhs.ptr;
-			}
+      // Move Constructor
+      // REQUIRES: Nothing
+      // MODIFIES: *this, leaves v in a default constructed state
+      // EFFECTS: Takes the data from v into a newly constructed vector
+      Vector( Vector<T>&& v )
+         {
+            _size = v._size;
+            cap = v.cap;
+            arr = v.arr;
+            v.arr = nullptr;
+            v._size = 0;
+            v.cap = 0;
+         }
 
-			bool operator!=(const Iterator &rhs){
-				return ptr != rhs.ptr;
-			}
-		};
+      // Move Assignment Operator
+      // REQUIRES: Nothing
+      // MODIFIES: *this, leaves vin a default constructed state
+      // EFFECTS: Takes the data from v in constant time
+      Vector operator=( Vector<T>&& v )
+         {
+            if(arr){
+               delete[] arr;
+            }
+            _size = v._size;
+            cap = v.cap;
+            arr = v.arr;
+            v.arr = nullptr;
+            v._size = 0;
+            v.cap = 0;
+         }
 
-		class Reverse_Iterator{
-		private:
-			T *ptr;
-			friend class Vector;
-		public:
-			//default constructor
-			Reverse_Iterator(): ptr(nullptr){}
-			//constructor
-			Reverse_Iterator(Vector &vec, bool begin_or_end){
-				//want reverse beginning
-				if(begin_or_end){	
-					ptr = vec.arr + vec._size - 1;
-				}else{ //want reverse end
-					ptr = vec.arr - 1;
-				}	
-			}
+      // REQUIRES: new_capacity > capacity()
+      // MODIFIES: capacity()
+      // EFFECTS: Ensures that the vector can contain size() = new_capacity
+      //    elements before having to reallocate
+      void reserve( size_t n )
+         {
+         if(n > cap) {
+            T* p = new T[n];
+            for(size_t i = 0; i < _size; ++i){
+               p[i] = arr[i];
+            }
+            cap = n;
+            delete[] arr;
+            arr = p;
+         }
+         }
 
-			Reverse_Iterator& operator++(){
-				--ptr;
-				return *this;
-			}
+      // REQUIRES: new_capacity > capacity()
+      // MODIFIES: capacity()
+      // EFFECTS: Ensures that the vector can contain size() = new_capacity
+      //    elements before having to reallocate
+      void resize( size_t n )
+         {
+         if ( n <= cap )
+            {
+            _size = n;
+            return;
+            }
+         else
+            {
+            T* p = new T[ n ];
 
-			Reverse_Iterator& operator--(){
-				++ptr;
-				return *this;
-			}
+            for( size_t i = 0;  i < _size;  ++i )
+               p[ i ] = arr[ i ];
 
-			Reverse_Iterator& operator+=(int jump){
-				ptr -= jump;
-				return *this;
-			}
+            cap = n;
+            _size = n;
+            delete[ ] arr;
+            arr = p;
+            }
+         }
 
-			Reverse_Iterator& operator-=(int jump){
-				ptr += jump;
-				return *this;
-			}
+      // REQUIRES: Nothing
+      // MODIFIES: Nothing
+      // EFFECTS: Returns the number of elements in the vector
+      size_t size( ) const
+         {
+         return _size;
+         }
 
-			T& operator*(){
-				return *ptr;
-			}
+      // REQUIRES: Nothing
+      // MODIFIES: Nothing
+      // EFFECTS: Returns the maximum size the vector can attain before resizing
+      size_t capacity( ) const
+         {
+         return cap;
+         }
 
-			bool operator==(const Reverse_Iterator &rhs){
-				return ptr == rhs.ptr;
-			}
+      // REQUIRES: 0 <= i < size()
+      // MODIFIES: Allows modification of data[i]
+      // EFFECTS: Returns a mutable reference to the i'th element
+      T& operator[ ] ( size_t i )
+         {
+            return arr[i];
+         }
 
-			bool operator!=(const Reverse_Iterator &rhs){
-				return ptr != rhs.ptr;
-			}
-		};
+      // REQUIRES: 0 <= i < size()
+      // MODIFIES: Nothing
+      // EFFECTS: Get a const reference to the ith element
+      const T& operator[ ] ( size_t i ) const
+         {
+            return arr[i];
+         }
 
-		struct out_of_bounds_exception{};
+      // REQUIRES: Nothing
+      // MODIFIES: this, size(), capacity()
+      // EFFECTS: Appends the element x to the vector, allocating
+      //    additional space if neccesary
+      void pushBack( const T& val )
+         {
+            if(_size == cap){
+               if(cap == 0){
+                  ++cap;
+               }
+               cap = 2*cap;
+               T* p = new T[cap];
+               for(size_t i = 0; i < _size; ++i){
+                  p[i] = arr[i];
+               }
+               p[_size] = val;
+               delete[] arr;
+               arr = p;
+               ++_size;
+               return;
+            }
+            arr[_size] = val;
+            ++_size;
+         }
 
-		//default constructor
-		Vector(){
-			arr = new T[1];
-			_size = 0;
-			cap = 1;
-		}
+      // REQUIRES: Nothing
+      // MODIFIES: this, size()
+      // EFFECTS: Removes the last element of the vector,
+      //    leaving capacity unchanged
+      void popBack( )
+         {
+         --_size;
+         }
 
-		//fill constructor
-		Vector(size_t n, const T val){
-			arr = new T[n];
-			_size = n;
-			cap = n;
-		}
+      // REQUIRES: Nothing
+      // MODIFIES: Allows mutable access to the vector's contents
+      // EFFECTS: Returns a mutable random access iterator to the
+      //    first element of the vector
+      T* begin( )
+         {
+         return arr;
+         }
 
-		//range constructor
-		typedef T* iterator;
-		Vector(iterator first, iterator last){
-			_size = last-first;
-			cap = _size;
-			arr = new T[_size];
-			for(size_t i = 0; i < _size; ++i){
-				arr[i] = *(first + i);
-			}
-		}
+      // REQUIRES: Nothing
+      // MODIFIES: Allows mutable access to the vector's contents
+      // EFFECTS: Returns a mutable random access iterator to
+      //    one past the last valid element of the vector
+      T* end( )
+         {
+         return arr+_size;
+         }
 
-		//copy constructor
-		Vector(const Vector &v){
-			arr = new T[v._size];
-			_size = v._size;
-			cap = v._size;
-			for(size_t i = 0; i < v._size; ++i){
-				arr[i] = v[i];
-			}
-		}
+      // REQUIRES: Nothing
+      // MODIFIES: Nothing
+      // EFFECTS: Returns a random access iterator to the first element of the vector
+      const T* begin( ) const
+         {
+         return arr;
+         }
 
-		//TO DO: move and initializer constructor?
-
-		//copy assignment operator
-		Vector& operator=(const Vector &v){
-			if(&v == this){
-				return *this;
-			}
-			delete[] arr;
-			arr = new T[v._size];
-			_size = v._size;
-			cap = v._size;
-			for(size_t i = 0; i < v._size; ++i){
-				arr[i] = v[i];
-			}
-			return *this;
-		}
-
-		//TO DO: move and init list assignment operator
-
-		//destructor
-		~Vector(){
-			delete[] arr;
-		}
-
-
-		//TO DO: remaining iterators
-		Iterator begin(){
-			return Iterator(this, true);
-		}
-
-		Iterator end(){
-			return Iterator(this, false);
-		}
-
-		Reverse_Iterator rbegin(){
-			return Reverse_Iterator(this, true);
-		}
-
-		Reverse_Iterator rend(){
-			return Reverse_Iterator(this, false);
-		}
-
-
-		bool empty(){
-			if(_size == 0){
-				return true;
-			}
-			return false;
-		}
-
-		size_t capacity(){
-			return cap;
-		}
-
-		size_t size(){
-			return _size;
-		}
-
-		//TO DO: max__size()
-
-		T& operator[](size_t n){
-			return arr[n];
-		}
-
-		T& at(size_t n){
-			if(n >= _size){
-				throw out_of_bounds_exception();
-			}
-			return arr[n];
-		}
-
-		void pop_back(){
-			--_size;
-		}
-
-		//TO DO: fix initialized memory
-		void push_back(T val){
-			if(_size == cap){
-				cap = 2*cap;
-				T* p = new T[cap];
-				for(size_t i = 0; i < _size; ++i){
-					p[i] = arr[i];
-				}
-				p[_size] = val;
-				delete[] arr;
-				arr = p;
-				++_size;
-				return;
-			}
-			arr[_size] = val;
-			++_size;
-		}
-
-		//TO DO: fix initialized memory
-		void reserve(size_t n){
-			if(n > cap){
-				T* p = new T[n];
-				for(size_t i = 0; i < _size; ++i){
-					p[i] = arr[i];
-				}
-				cap = n;
-				delete[] arr;
-				arr = p;
-			}
-		}
-
-		void re_size(size_t n, T val = T()){
-			if(n < _size){
-				for(size_t i = 0; i <= _size-n; ++i){
-					pop_back();
-				}
-			}
-
-			if(n > _size && n <= cap){
-				for(size_t i = _size; i < n; ++i){
-					arr[i] = val;
-				}
-			}
-
-			if(n > _size && n > cap){
-				T* p = new T[n];
-				for(size_t i = 0; i < _size; ++i){
-					p[i] = arr[i];
-				}
-				for(size_t i = _size; i < n; ++i){
-					p[i] = val;
-				}
-				_size = n;
-				cap = n;
-				delete[] arr;
-				arr = p;
-			}
-		}
-
-		void shrink_to_fit(){
-			cap = _size;
-		}
-
-		T& front(){
-			return arr[0];
-		}
-
-		T& back(){
-			return arr[_size-1];
-		}
-
-		T* data(){
-			return arr;
-		}
-
-		void assign(size_t n, const T val){
-			re_size(n, val);
-		}
-
-		void assign(iterator first, iterator last){
-			_size = last-first;
-			cap = _size;
-			delete[] arr;
-			arr = new T[_size];
-			for(size_t i = 0; i < _size; ++i){
-				arr[i] = *(first + i);
-			}
-		}
-
-		void clear(){
-			delete[] arr;
-			_size = 0;
-			cap = 0;
-			arr = new T[1];
-		}
-
-		//TO DO: insert, erase, emplace, emplace_back
-
-		void swap(Vector<T> &v){
-			T* temp = v.arr;
-			size_t temp__size = v._size;
-			size_t temp_cap = v.cap;
-			v.arr = arr;
-			v._size = _size;
-			v.cap = cap;
-			arr = temp;
-			_size = temp__size;
-			cap = temp_cap;
-		}
-	};
-
-	template <typename T>
-	//relational operators
-	bool operator==(const Vector<T> &lhs, const Vector<T> &rhs){
-		if(lhs._size == rhs._size){
-			for(size_t i = 0; i < lhs._size; ++i){
-				if(lhs.arr[i] != rhs.arr[i]){
-					return false;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-
-	template <typename T>
-	bool operator!=(const Vector<T> &lhs, const Vector<T> &rhs){
-		return !(lhs == rhs);
-	}
-
-	template <typename T>
-	bool operator<(const Vector<T> &lhs, const Vector<T> &rhs){
-		size_t smaller;
-		if(lhs._size < rhs._size){
-			smaller = lhs._size;
-		}else{
-			smaller = rhs._size;
-		}
-
-		for(size_t i = 0; i < smaller; ++i){
-			if(lhs.arr[i] >= rhs.arr[i]){
-				return false;
-			}
-		}
-		//will only exit loop if all elements are equal up to the smaller vector
-		if(lhs._size <= rhs._size){
-			return true;
-		}
-
-		return false;
-	}
-
-	template <typename T>
-	bool operator>(const Vector<T> &lhs, const Vector<T> &rhs){
-		return (rhs < lhs);
-	}
-
-	template <typename T>
-	bool operator<=(const Vector<T> &lhs, const Vector<T> &rhs){
-		return !(lhs > rhs);
-	}
-
-	template <typename T>
-	bool operator>=(const Vector<T> &lhs, const Vector<T> &rhs){
-		return !(lhs < rhs);
-	}
-
-	template <typename T>
-	void swap(Vector<T> &lhs, Vector<T> &rhs){
-		T* temp = lhs.arr;
-		size_t temp__size = lhs._size;
-		size_t temp_cap = lhs._size;
-		lhs.arr = rhs.arr;
-		lhs._size = rhs._size;
-		lhs.cap = rhs.cap;
-		rhs.arr = temp;
-		rhs._size = temp__size;
-		rhs.cap = temp_cap;
-	}
-}
+      // REQUIRES: Nothing
+      // MODIFIES: Nothing
+      // EFFECTS: Returns a random access iterator to
+      //    one past the last valid element of the vector
+      const T* end( ) const
+         {
+         return arr+_size;
+         }
+   };

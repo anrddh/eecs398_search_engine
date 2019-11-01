@@ -3,6 +3,9 @@
 #include "memory.hpp"
 #include "stddef.hpp"
 
+#include "iterator/data.hpp"
+#include "iterator/size.hpp"
+
 namespace fb {
     struct InputIteratorTag {};
     struct OutputIteratorTag {};

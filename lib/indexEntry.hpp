@@ -1,4 +1,7 @@
 #pragma once
+#include <cstdint>
+#include <cstddef>
+#include <cassert>
 
 namespace fb {
 // bit layout (first byte)
@@ -8,118 +11,179 @@ namespace fb {
 // length = 10 -> 4 bytes
 // length = 11 -> 8 bytes
 
-struct IndexEntry {
-   constexpr uint8_t length_bits = 0b01100000;
-   constexpr uint8_t has_header_bits = 0b10000000;
-   constexpr uint8_t header_bits = 0b00011110;
+uint8_t BOLD_FLAG = 0b1000;
+uint8_t ITALICS_FLAG = 0b0100;
+uint8_t HEADER_FLAG = 0b0010;
+uint8_t ANCHOR_FLAG = 0b0001;
 
-   constexpr uint8_t 1_byte_no_header_bits = 0x1f; // 5 bits
-   constexpr uint16_t 2_byte_no_header_bits = 0x1fff; // 13 bits
-   constexpr uint32_t 2_byte_no_header_bits = 0x1fffffff; // 29 bits
-   constexpr uint64_t 2_byte_no_header_bits = 0x1fffffffffffffff; // 61 bits
-
-   constexpr uint8_t 1_byte_yes_header_bits = 0x01; // 1 bit
-   constexpr uint16_t 2_byte_yes_header_bits = 0x01ff; // 9 bits
-   constexpr uint32_t 2_byte_yes_header_bits = 0x01ffffff; // 25 bits
-   constexpr uint64_t 2_byte_yes_header_bits = 0x01ffffffffffffff; // 57 bits
-
-   void get_delta(uint8_t& num_bytes, size_t& delta) {
-      num_bytes = *((uint8_t *) this) & length_bits;
-      num_bytes = num_bytes >>> 5;
-      if ( *((uint8_t *) this) & has_header_bits) {
-         switch (num_bytes) {
-            case 0:
-               num_bytes = 1;
-               delta = *((uint8_t *) this) & 1_byte_no_header_bits;
-               return;
-            case 1:
-               num_bytes = 2;
-               delta = *((uint16_t *) this) & 2_byte_no_header_bits;
-               return;
-            case 2:
-               num_bytes = 4;
-               delta = *((uint32_t *) this) & 4_byte_no_header_bits;
-               return;
-            case 3:
-               num_bytes = 8;
-               delta = *((uint64_t *) this) & 8_byte_no_header_bits;
-               return;
-            defualt:
-               assert(false);
-         }
-      } else {
-         switch (num_bytes) {
-            case 0:
-               num_bytes = 1;
-               delta = *((uint8_t *) this) & 1_byte_yes_header_bits;
-               return;
-            case 1:
-               num_bytes = 2;
-               delta = *((uint16_t *) this) & 2_byte_yes_header_bits;
-               return;
-            case 2:
-               num_bytes = 4;
-               delta = *((uint32_t *) this) & 4_byte_yes_header_bits;
-               return;
-            case 3:
-               num_bytes = 8;
-               delta = *((uint64_t *) this) & 8_byte_yes_header_bits;
-               return;
-            defualt:
-               assert(false);
-         }
-      }
-   }
-
-   constexpr uint16_t 2byte_size_header = 0x2000;
-   constexpr uint32_t 4byte_size_header = 0x40000000;
-   constexpr uint32_t 8byte_size_header = 0x6000000000000000;
-
-   constexpr uint8_t bold_flag = 0b00010000;
-   constexpr uint8_t italics_flag = 0b00001000;
-   constexpr uint8_t headers_flag = 0b00000100;
-   constexpr uint8_t anchors_flag = 0b00000010;
-
-   // To modify header, do the following
-   // ex to specify bold_flag and italics flag
-   // add_value( some number, bold_flag | italics);
-   void add_value(size_t value, uint8_t header = 0) {
-      if ( !header ) {
-         if ( value <= 1_byte_no_header_bits ) {
-            *((uint8_t*) this) = value;
-            return;
-         }
-         if ( value <= 2_byte_no_header_bits ) {
-            *((uint16_t*) this) = value & 2byte_size_header;
-            return;
-         }
-         if ( value <= 4_byte_no_header_bits ) {
-            *((uint32_t*) this) = value & 4byte_size_header;
-            return;
-         }
-
-         *((uint64_t*) this) = value & 8byte_size_header;
-         return;
-      } else {
-         *((uint8_t*) this) = *((uint8_t*) this) & header;
-         if ( value <= 1_byte_yes_header_bits ) {
-            *((uint8_t*) this) = value;
-            return;
-         }
-         if ( value <= 2_byte_yes_header_bits ) {
-            *((uint16_t*) this) = value & 2byte_size_header;
-            return;
-         }
-         if ( value <= 4_byte_yes_header_bits ) {
-            *((uint32_t*) this) = value & 4byte_size_header;
-            return;
-         }
-
-         *((uint64_t*) this) = value & 8byte_size_header;
-         return;
-      }
-   }
+struct headerByte {
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
 };
+
+static_assert(sizeof(headerByte) == 1);
+
+struct oneByteNoHeader {
+   static constexpr int sizeEncoding = 0;
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
+   uint8_t value: 5; // max value 0x1f
+};
+
+static_assert(sizeof(oneByteNoHeader) == 1);
+
+struct twoByteNoHeader {
+   static constexpr int sizeEncoding = 1;
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
+   uint16_t value: 13; // max value 0x1fff
+};
+
+static_assert(sizeof(twoByteNoHeader) == 2);
+
+struct fourByteNoHeader {
+   static constexpr int sizeEncoding = 2;
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
+   uint32_t value: 29; // max value 0x1f ff ff ff
+};
+
+static_assert(sizeof(fourByteNoHeader) == 4);
+
+struct eightByteNoHeader {
+   static constexpr int sizeEncoding = 3;
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
+   uint64_t value: 61; // max value 0x1f ff ff ff ff ff ff ff
+};
+
+static_assert(sizeof(eightByteNoHeader) == 8);
+
+struct twoByteWithHeader {
+   static constexpr int sizeEncoding = 1;
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
+   uint8_t header: 4;
+   uint16_t value: 9; // max value 0x01 ff
+};
+
+static_assert(sizeof(twoByteWithHeader) == 2);
+
+
+struct fourByteWithHeader {
+   static constexpr int sizeEncoding = 2;
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
+   uint8_t header: 4;
+   uint32_t value: 25; // max value 0x01 ff ff ff
+};
+
+static_assert(sizeof(fourByteWithHeader) == 4);
+
+struct eightByteWithHeader {
+   static constexpr int sizeEncoding = 3;
+   uint8_t hasHeader: 1;
+   uint8_t size: 2;
+   uint8_t header: 4;
+   uint64_t value: 57; // max value 0x01 ff ff ff ff ff ff ff
+};
+
+static_assert(sizeof(eightByteWithHeader) == 8);
+
+constexpr uint64_t oneByteNoHeaderMaxVal = 0x1f;
+constexpr uint64_t twoByteNoHeaderMaxVal = 0x1fff;
+constexpr uint64_t fourByteNoHeaderMaxVal = 0x1fffffff;
+constexpr uint64_t eightByteNoHeaderMaxVal = 0x1fffffffffffffff;
+
+constexpr uint64_t twoByteHeaderMaxVal = 0x01ff;
+constexpr uint64_t fourByteHeaderMaxVal = 0x01ffffff;
+constexpr uint64_t eightByteHeaderMaxVal = 0x01ffffffffffffff;
+
+template <typename castType>
+inline char* add_num_no_header(char* curr, size_t num) {
+   ((castType*) curr)->hasHeader = 0;
+   ((castType*) curr)->size = castType::sizeEncoding;
+   ((castType*) curr)->value = num;
+   return curr + sizeof(castType);
+}
+
+template <typename castType>
+inline char* add_num_with_header(char* curr, size_t num, uint8_t header) {
+   ((castType*) curr)->hasHeader = 1;
+   ((castType*) curr)->size = castType::sizeEncoding;
+   ((castType*) curr)->header = header;
+   ((castType*) curr)->value = num;
+   return curr + sizeof(castType);
+}
+
+inline char* add_num(char* curr, size_t num, uint8_t header = 0) {
+   if (header) {
+      if (num <= twoByteHeaderMaxVal) {
+         return add_num_with_header<twoByteWithHeader>(curr, num, header);
+      }
+
+      if (num <= fourByteHeaderMaxVal) {
+         return add_num_with_header<fourByteWithHeader>(curr, num, header);
+      }
+
+      return add_num_with_header<eightByteWithHeader>(curr, num, header);
+   } else {
+      if (num <= oneByteNoHeaderMaxVal) {
+         return add_num_no_header<oneByteNoHeader>(curr, num);
+      }
+
+      if (num <= twoByteNoHeaderMaxVal) {
+         return add_num_no_header<twoByteNoHeader>(curr, num);
+      }
+
+      if (num <= fourByteNoHeaderMaxVal) {
+         return add_num_no_header<fourByteNoHeader>(curr, num);
+      }
+
+      return add_num_no_header<eightByteNoHeader>(curr, num);
+   }
+}
+
+template <typename castType>
+inline char* read_number_no_header(char* curr, uint64_t &num, uint8_t &header) {
+   header = 0;
+   num = ((castType*) curr)->value;
+   return curr + sizeof(castType);
+}
+
+template <typename castType>
+inline char* read_number_with_header(char* curr, uint64_t &num, uint8_t &header) {
+   header = ((castType*) curr)->header;
+   num = ((castType*) curr)->value;
+   return curr + sizeof(castType);
+}
+
+char* read_number(char* curr, uint64_t &num, uint8_t &header) {
+   if (((headerByte*) curr)->hasHeader) {
+      switch (((headerByte*) curr)->size) {
+         case 1:
+            return read_number_with_header<twoByteWithHeader>(curr, num, header);
+         case 2:
+            return read_number_with_header<fourByteWithHeader>(curr, num, header);
+         case 3:
+            return read_number_with_header<eightByteWithHeader>(curr, num, header);
+         default:
+            assert(false);
+      } 
+   } else {
+      switch (((headerByte*) curr)->size) {
+         case 0:
+            return read_number_no_header<oneByteNoHeader>(curr, num, header);
+         case 1:
+            return read_number_no_header<twoByteNoHeader>(curr, num, header);
+         case 2:
+            return read_number_no_header<fourByteNoHeader>(curr, num, header);
+         case 3:
+            return read_number_no_header<eightByteNoHeader>(curr, num, header);
+         default:
+            assert(false);
+      }
+   }
 }
 
 }; // Namespace fb

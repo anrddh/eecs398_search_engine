@@ -1,44 +1,36 @@
-typedef unsigned long size_t;
-template<typename T>
-class Vector
-   {
-   private:
-      size_t cap = 0;
-      size_t _size = 0;
-      T *arr = nullptr;
-   public:
-      // Default Constructor
-      // REQUIRES: Nothing
-      // MODIFIES: *this
-      // EFFECTS: Constructs an empty vector with capacity 0
-      Vector( ) { }
+#pragma once
 
-      // Destructor
-      // REQUIRES: Nothing
-      // MODIFIES: Destroys *this
-      // EFFECTS: Performs any neccessary clean up operations
-      ~Vector( )
-         {
-         delete[ ] arr;
-         }
+#include "stddef.hpp"
 
-      // Resize Constructor
-      // REQUIRES: Nothing
-      // MODIFIES: *this
-      // EFFECTS: Constructs a vector with size n,
-      //    all default constructed
-      Vector( size_t n ) : cap( n ), _size( n ), arr( new T[ n ]( ) )
-         {}
+namespace fb {
 
-      // Fill Constructor
-      // REQUIRES: Capacity > 0
-      // MODIFIES: *this
-      // EFFECTS: Creates a vector with size n, all assigned to val
-      Vector( size_t n, const T& val )
-            : cap( n ), _size ( n ), arr ( new T[ n ] )
-         {
-         for ( size_t i = 0;  i < _size;  ++i )
-            arr[ i ] = val;
+    template <typename T>
+    class Vector {
+    private:
+        T *arr = nullptr;
+        SizeT _size = 0;
+        SizeT cap = 0;
+    public:
+        // Default Constructor
+        // REQUIRES: Nothing
+        // MODIFIES: *this
+        // EFFECTS: Constructs an empty vector with capacity 0
+        Vector( ) { }
+
+        // Resize Constructor
+        // REQUIRES: Nothing
+        // MODIFIES: *this
+        // EFFECTS: Constructs a vector with size n,
+        //    all default constructed
+        Vector(SizeT n) : cap(n), _size(n), arr(new T[n]()) {}
+
+        // Fill Constructor
+        // REQUIRES: Capacity > 0
+        // MODIFIES: *this
+        // EFFECTS: Creates a vector with size n, all assigned to val
+        Vector(SizeT n, const T &val) : cap(n), _size(n), arr(new T[n]) {
+            for (SizeT i = 0; i < _size; ++i)
+                arr[ i ] = val;
          }
 
       // Copy Constructor
@@ -50,7 +42,7 @@ class Vector
          arr = new T[v._size];
          _size = v._size;
          cap = v._size;
-         for(size_t i = 0; i < v._size; ++i){
+         for (SizeT i = 0; i < v._size; ++i) {
             arr[i] = v[i];
          }
       }
@@ -68,7 +60,7 @@ class Vector
             arr = new T[v._size];
             _size = v._size;
             cap = v._size;
-            for(size_t i = 0; i < v._size; ++i){
+            for (SizeT i = 0; i < v._size; ++i) {
                arr[i] = v[i];
             }
             return *this;
@@ -105,15 +97,23 @@ class Vector
             v.cap = 0;
          }
 
+        // Destructor
+        // REQUIRES: Nothing
+        // MODIFIES: Destroys *this
+        // EFFECTS: Performs any neccessary clean up operations
+        ~Vector() { delete[] arr; }
+
+
+
       // REQUIRES: new_capacity > capacity()
       // MODIFIES: capacity()
       // EFFECTS: Ensures that the vector can contain size() = new_capacity
       //    elements before having to reallocate
-      void reserve( size_t n )
+      void reserve( SizeT n )
          {
          if(n > cap) {
             T* p = new T[n];
-            for(size_t i = 0; i < _size; ++i){
+            for (SizeT i = 0; i < _size; ++i) {
                p[i] = arr[i];
             }
             cap = n;
@@ -126,7 +126,7 @@ class Vector
       // MODIFIES: capacity()
       // EFFECTS: Ensures that the vector can contain size() = new_capacity
       //    elements before having to reallocate
-      void resize( size_t n )
+      void resize( SizeT n )
          {
          if ( n <= cap )
             {
@@ -137,7 +137,7 @@ class Vector
             {
             T* p = new T[ n ];
 
-            for( size_t i = 0;  i < _size;  ++i )
+            for( SizeT i = 0;  i < _size;  ++i )
                p[ i ] = arr[ i ];
 
             cap = n;
@@ -150,7 +150,7 @@ class Vector
       // REQUIRES: Nothing
       // MODIFIES: Nothing
       // EFFECTS: Returns the number of elements in the vector
-      size_t size( ) const
+      SizeT size( ) const
          {
          return _size;
          }
@@ -158,7 +158,7 @@ class Vector
       // REQUIRES: Nothing
       // MODIFIES: Nothing
       // EFFECTS: Returns the maximum size the vector can attain before resizing
-      size_t capacity( ) const
+      SizeT capacity( ) const
          {
          return cap;
          }
@@ -166,7 +166,7 @@ class Vector
       // REQUIRES: 0 <= i < size()
       // MODIFIES: Allows modification of data[i]
       // EFFECTS: Returns a mutable reference to the i'th element
-      T& operator[ ] ( size_t i )
+      T& operator[ ] ( SizeT i )
          {
             return arr[i];
          }
@@ -174,7 +174,7 @@ class Vector
       // REQUIRES: 0 <= i < size()
       // MODIFIES: Nothing
       // EFFECTS: Get a const reference to the ith element
-      const T& operator[ ] ( size_t i ) const
+      const T& operator[ ] ( SizeT i ) const
          {
             return arr[i];
          }
@@ -191,7 +191,7 @@ class Vector
                }
                cap = 2*cap;
                T* p = new T[cap];
-               for(size_t i = 0; i < _size; ++i){
+               for (SizeT i = 0; i < _size; ++i) {
                   p[i] = arr[i];
                }
                p[_size] = val;
@@ -248,3 +248,6 @@ class Vector
          return arr+_size;
          }
    };
+
+
+}

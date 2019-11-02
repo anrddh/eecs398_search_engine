@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stddef.hpp"
+#include "iterator.hpp"
 
 namespace fb {
 
@@ -11,6 +12,18 @@ namespace fb {
         SizeT _size = 0;
         SizeT cap = 0;
     public:
+        using ValueType = T;
+        using SizeType = SizeT;
+        using DifferenceType = PtrDiffT;
+        using Reference = T &;
+        using ConstReference = const Reference;
+        using Pointer = T *;
+        using ConstPointer = const Pointer;
+        using Iterator = Pointer;
+        using ConstIterator = const Iterator;
+        using ReverseIterator = fb::ReverseIterator<Iterator>;
+        using ConstReverseIterator = const ReverseIterator;
+
         // Default Constructor
         // REQUIRES: Nothing
         // MODIFIES: *this

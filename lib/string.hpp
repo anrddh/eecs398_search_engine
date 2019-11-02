@@ -49,35 +49,35 @@ namespace fb {
             return buf[pos];
         }
 
-        Reference operator[](SizeType pos) {
+        [[nodiscard]] Reference operator[](SizeType pos) {
             return buf[pos];
         }
 
-        ConstReference operator[](SizeType pos) const {
+        [[nodiscard]] ConstReference operator[](SizeType pos) const {
             return buf[pos];
         }
 
-        Reference front() {
+        [[nodiscard]] Reference front() {
             return buf.front();
         }
 
-        ConstReference front() const {
+        [[nodiscard]] ConstReference front() const {
             return buf.front();
         }
 
-        Reference back() {
+        [[nodiscard]] Reference back() {
             return buf.back();
         }
 
-        ConstReference back() const {
+        [[nodiscard]] ConstReference back() const {
             return buf.back();
         }
 
-        Pointer data() noexcept {
+        [[nodiscard]] Pointer data() noexcept {
             return buf.data();
         }
 
-        ConstPointer data() const noexcept {
+        [[nodiscard]] ConstPointer data() const noexcept {
             return buf.data();
         }
 
@@ -112,6 +112,10 @@ namespace fb {
             buf.shrink_to_fit();
         }
 
+        /* Operations */
+        void clear() noexcept {
+            buf.clear();
+        }
 
         //      /* Return a String starting with i and extending for len
         //      characters The substring must be contained within the string.

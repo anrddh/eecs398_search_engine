@@ -1,7 +1,7 @@
 #pragma once
 
+#include "../stddef.hpp"
 #include "default_delete.hpp"
-#include "unique_ptr_base.hpp"
 
 #include <cstddef>
 #include <iosfwd>
@@ -96,13 +96,14 @@ public:
         return get();
     }
 
-  protected:
+private:
     Pointer owner{};
     DeleterType deleter{};
 };
 
+
 template <typename T, typename Deleter>
-class UniquePtr<T[], Deleter> : public impl::UniquePtrBase<T, Deleter> {
+class UniquePtr<T[], Deleter> {
 public:
     using Pointer = T *;
     using ElementType = T;
@@ -120,6 +121,10 @@ public:
                         std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
     T &operator[](std::size_t i) const { return get()[i]; }
+
+private:
+    Pointer owner{};
+    DeleterType deleter{};
 };
 
 template <typename T, typename... Args>
@@ -127,11 +132,13 @@ template <typename T, typename... Args>
     return UniquePtr<T>(new T(std::forward(args)...));
 }
 
-template <typename T>[[nodiscard]] UniquePtr<T> makeUnique(std::size_t size) {
+template <typename T>
+[[nodiscard]] UniquePtr<T> makeUnique(std::size_t size) {
     return UniquePtr<T>(new std::remove_extent_t<T>[size]());
 }
 
-template <typename T>[[nodiscard]] UniquePtr<T> makeUniqueDefaultInit() {
+template <typename T>
+[[nodiscard]] UniquePtr<T> makeUniqueDefaultInit() {
     return UniquePtr<T>(new T);
 }
 

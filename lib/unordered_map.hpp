@@ -1,6 +1,6 @@
 //#pragma once
 
-#include <functional>
+#include "functional.hpp"
 #include <vector>
 
 #define INITIAL_SIZE 1024
@@ -14,7 +14,7 @@ enum class Map_Status {
     Ghost
 };
 
-template<typename K, typename V, typename Hasher = std::hash<K>, typename Pred = std::equal_to<K>>
+template<typename K, typename V, typename Hasher = Hash<K>, typename Pred = EqualTo<K>>
 class unordered_map {
     using Status = Map_Status;
 public:
@@ -129,7 +129,7 @@ public:
                     num_elements++;
                     return buckets[original_hash].val;
                 }
-            }  
+            }
         }else{
             //bucket is empty, so add key
             buckets[original_hash].key = key;
@@ -158,7 +158,7 @@ public:
             }
         }
         //key does not exist, so throw out of range exception
-        throw out_of_range;
+        throw out_of_range();
     }
 
     // insert returns whether inserted successfully
@@ -194,7 +194,7 @@ public:
                     num_elements++;
                     return true;
                 }
-            }  
+            }
         }else{
             //bucket is empty, so add key
             buckets[original_hash].key = key;
@@ -203,7 +203,7 @@ public:
             num_elements++;
             return true;
         }
-        
+
     }
     // erase returns the number of items remove (0 or 1)
     size_t erase(const K& key) {
@@ -238,7 +238,7 @@ public:
     }
     //Sets all buckets to empty, leaving map with size of 0
     void clear() {
-        for (auto& i : bucket s) {
+        for (auto& i : buckets) {
             i.status = Status::Empty;
         }
         num_elements = 0;
@@ -290,8 +290,8 @@ private:
     size_t num_ghosts = 0;
     float max_load = 0.5;
     std::vector<Bucket> buckets;
-    Hasher hash = std::hash<K>();
-    Pred pred = std::equal_to<K>();
+    Hasher hash = fb::Hash<K>();
+    Pred pred = fb::EqualTo<K>();
 
     void rehash_and_grow(size_t n) {
         std::vector<Bucket> temp = buckets;

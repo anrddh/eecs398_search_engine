@@ -1,22 +1,22 @@
 //#pragma once
 
-#include <functional>
+#include "functional.hpp"
 #include <vector>
 
 #define INITIAL_SIZE 1024
 
 namespace fb {
 
-    // A bucket's status tells you whether it's filled, empty, or contains a ghost.
-    enum class Set_Status {
-        Empty,
-        Filled,
-        Ghost
-    };
+// A bucket's status tells you whether it's filled, empty, or contains a ghost.
+enum class Set_Status {
+    Empty,
+    Filled,
+    Ghost
+};
 
-    template<typename K, typename Hasher = std::hash<K>, typename Pred = std::equal_to<K>>
-    class unordered_set {
-    public:
+template<typename K, typename Hasher = Hash<K>, typename Pred = EqualTo<K>>
+class unordered_set {
+public:
         // A bucket has a status and a key
         struct Bucket {
             Set_Status status = Set_Status::Empty;
@@ -290,8 +290,8 @@ namespace fb {
         size_t num_ghosts = 0;
         float max_load = 0.5;
         std::vector<Bucket> buckets;
-        Hasher hash = std::hash<K>();
-        Pred pred = std::equal_to<K>();
+        Hasher hash = Hash<K>();
+        Pred pred = EqualTo<K>();
 
         void rehash_and_grow(size_t n) {
             std::vector<Bucket> temp = buckets;

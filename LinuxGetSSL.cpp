@@ -9,8 +9,12 @@
 #include <assert.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <set>
 
+// URL wrapper class 
 class ParsedUrl
    {
    public:
@@ -54,25 +58,45 @@ class ParsedUrl
       ~ParsedUrl( ) 
          {
          };
+
+      // print function for debugging
+      void print( )
+         {
+         std::cout << "Complete Url = " << CompleteUrl << std::endl;
+         std::cout << "Service = " << Service
+               << ", Host = " << Host << ", Port = " << Port 
+               << ", Path = " << Path << std::endl;
+         }
    };
 
+// Default port for https
 const std::string ParsedUrl::defaultPort = "443";
 
-class BufferPrinter
+// Wrapper class to handle writing
+// Handles chunked encoding
+class BufferWriter
 {
    public:
       bool chunked;
       size_t chunkSize;
       std::string chunkSizeString;
+      int fd;
 
-      BufferPrinter( bool chunkedIn )
+      BufferWriter( bool chunkedIn, const std::string &filename )
       : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" ) 
          {
+            fd = creat( filename.c_str( ), 0666 );
          }
 
-      void truncateFront()
+      ~BufferWriter( )
          {
-         if ( chunkSizeString.length() >= 2)
+            close( fd );
+         }
+
+      // get rid of \r\n in front
+      void truncateFront( )
+         {
+         if ( chunkSizeString.length() >= 2 )
             {
             if ( chunkSizeString[ 0 ] == '\r' && chunkSizeString[ 1 ] == '\n' )
                {
@@ -81,9 +105,11 @@ class BufferPrinter
             }
          }
 
-      bool truncateBack()
+      // get rid of \r\n at the back of the string
+      // and get the string that represents size of the chunk
+      bool truncateBack( )
          {
-         if ( chunkSizeString.length() >= 2)
+         if ( chunkSizeString.length() >= 2 )
             {
             if ( chunkSizeString[chunkSizeString.length( ) - 2 ] == '\r' 
                   && chunkSizeString[chunkSizeString.length( ) - 1 ] == '\n' )
@@ -96,14 +122,17 @@ class BufferPrinter
          return false;
          }
 
+      // main print function
       void print( char buffer[ ], int bytes )
       {
          if ( chunked )
             {
             for ( int i = 0;  i < bytes;  ++i )
                {
+               // if chunk exhausted
                if ( chunkSize == 0 )
                   {
+                  // find the next chunk size
                   chunkSizeString.push_back( buffer[ i ] );
                   truncateFront( );
                   if ( truncateBack( ) )
@@ -112,24 +141,27 @@ class BufferPrinter
                      chunkSizeString = "";
                      }
                   }
+               // write until chunk exhausted
                else
                   {
-                  std::cout << buffer[ i ];
+                  write( fd, buffer + i, 1 );
                   --chunkSize;
                   }
                }
             }
          else
-            write( 1, buffer, bytes );
+            write( fd, buffer, bytes );
       }
    };
 
+// Wrapper class to handle http
 class ConnectionWrapper
    {
    public:
       ParsedUrl &url;
       int socketFD;
 
+      // http connection
       ConnectionWrapper( ParsedUrl &url_in )
       : url(url_in) 
          {
@@ -172,15 +204,16 @@ class ConnectionWrapper
 
    };
 
+// Wrapper class to handle https
 class SSLWrapper : public ConnectionWrapper
    {
    public:
       SSLWrapper( ParsedUrl &url_in )
       : ConnectionWrapper( url_in ) 
          {
-
+         // Add SSL layer around http
          SSL_library_init( );
-         OpenSSL_add_all_algorithms();
+         OpenSSL_add_all_algorithms( );
 
          ctx = SSL_CTX_new( SSLv23_method( ) );
          assert( ctx );
@@ -189,10 +222,16 @@ class SSLWrapper : public ConnectionWrapper
 
          SSL_set_fd( ssl, socketFD );
 
-         int r = SSL_set_tlsext_host_name(ssl, url_in.Host.c_str());
+         // Needed for SNI websites
+         int r = SSL_set_tlsext_host_name( ssl, url_in.Host.c_str( ) );
          r = SSL_connect( ssl );
 
-         assert( r == 1 );
+         // exit 1 for now
+         if ( r != 1 )
+            {
+            std::cerr << "SSL connect failed for " << url_in.CompleteUrl << std::endl;
+            exit( 1 );
+            }
          }
 
       virtual int read( char *buffer )
@@ -217,15 +256,8 @@ class SSLWrapper : public ConnectionWrapper
       SSL *ssl;
    };
 
-void printParsedUrl( const ParsedUrl &url )
-   {
-   std::cout << "Complete Url = " << url.CompleteUrl << std::endl;
-   std::cout << "Service = " << url.Service
-         << ", Host = " << url.Host << ", Port = " << url.Port 
-         << ", Path = " << url.Path << std::endl;
-   }
-
-std::string GetGetMessage( const ParsedUrl &url )
+// GetMessage
+const std::string GetGetMessage( const ParsedUrl &url )
    {
    std::string getMessage = 
          "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n"
@@ -237,8 +269,10 @@ std::string GetGetMessage( const ParsedUrl &url )
    return getMessage;
    }
 
-// Get the header, print 
-std::string parseHeader( ConnectionWrapper *connector, BufferPrinter &printer )
+// Get relevant information from the header
+// print received message after the header if no redirect 
+// return the URL to redirect to if necessary
+std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
 {
    char buffer [ 10240 ];
    int bytes;
@@ -247,22 +281,26 @@ std::string parseHeader( ConnectionWrapper *connector, BufferPrinter &printer )
    bool pastHeader = false;
 
    const std::string redirectIndicator = "Location: ";
-   const std::string chunkedIndicator = "Transfer-Encoding: chunked";
+   const std::string chunkedIndicator = "chunked";
    std::string redirectUrl = "";
 
    while ( ( bytes =  connector->read(buffer)) > 0 )
    {
-      // printer.print( buffer, bytes );
+      // build up header
       for ( int i = 0;  i < bytes;  ++i )
       {
       header.push_back( buffer[ i ] );
+
+      // if end of header reached
       if ( std::string( header.end( ) - 4, header.end( ) ) == endHeader )
          {
+         // check for chunked
          if ( header.find( chunkedIndicator ) != std::string::npos )
             {
-            printer.chunked = true;
+            writer.chunked = true;
             }
 
+         // check for redirect
          size_t startRedirectUrl = header.find( redirectIndicator );
          if ( startRedirectUrl != std::string::npos )
             {
@@ -273,9 +311,8 @@ std::string parseHeader( ConnectionWrapper *connector, BufferPrinter &printer )
             }
          else
          {
-            // std::cout << header << std::endl;
-            printer.print( buffer + i + 1, bytes - i - 1 );
-            // printer.print( buffer, bytes );
+            // print the remaining message if no need to redirect
+            writer.print( buffer + i + 1, bytes - i - 1 );
          }
          
          pastHeader = true;
@@ -288,24 +325,24 @@ std::string parseHeader( ConnectionWrapper *connector, BufferPrinter &printer )
    return redirectUrl;
 }
 
-ConnectionWrapper * connectionWrapperFactory( ParsedUrl &url )
+// Helper function to get the correct ConnectionWrapper
+ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
 {
    if ( url.Service == "http" )
-   {
       return new ConnectionWrapper( url );
-   }
    else
-   {
       return new SSLWrapper( url );
-   }
 }
 
+// Esatblish connection with the url
+// If redirect, return the redirect url
+// Else, write the recieved content to a file
 std::string PrintHtmlGetRedirect( const std::string &url_in )
 {
       // Parse the URL
    ParsedUrl url( url_in );
 
-   ConnectionWrapper *connector = connectionWrapperFactory( url );
+   ConnectionWrapper *connector = ConnectionWrapperFactory( url );
 
    // Send a GET message
    std::string getMessage = GetGetMessage( url );
@@ -317,31 +354,38 @@ std::string PrintHtmlGetRedirect( const std::string &url_in )
    char buffer [ 10240 ];
    int bytes;
 
-   BufferPrinter printer( false );
+   // temporary filename
+   std::string filename = "html_filename";
+   BufferWriter writer( false , filename );
 
-   std::string redirectUrl = parseHeader( connector, printer );
+   // Check for redirect and other relevant header info
+   std::string redirectUrl = parseHeader( connector, writer );
    
+   // If no redirect, write the content
    if ( redirectUrl == "" )
       {
       while ( ( bytes =  connector->read(buffer)) > 0 )
          {
-         printer.print( buffer, bytes );
+         writer.print( buffer, bytes );
          }
       }
 
+   // clean up
    delete connector;
 
    return redirectUrl;
 }
 
-
-
-int main( int argc, char *argv[ ] ) {
-   std::string url = argv[ 1 ];
-
+// Write the url information to a file
+// handling redirect appropriately
+// If redirect creates a loop, do nothing
+void PrintHtml( const std::string &url_in )
+{
    std::set<std::string> visitedURLs;
 
-   visitedURLs.insert( url );
+   visitedURLs.insert( url_in );
+
+   std::string url = url_in;
 
    while ( url.length( ) != 0 )
       {
@@ -349,8 +393,14 @@ int main( int argc, char *argv[ ] ) {
 
       // If there is a loop, probably a bad website.
       if(visitedURLs.find( url ) != visitedURLs.end( ) )
-        break;
+         break;
+
       visitedURLs.insert( url );
       }
+}
+
+int main( int argc, char *argv[ ] ) {
+   std::string url = argv[ 1 ];
+   PrintHtml( url );
 }
 

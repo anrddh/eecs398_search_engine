@@ -22,6 +22,6 @@ namespace fb {
 
     template <typename E>
     constexpr const E * data(std::initializer_list<E> il) noexcept {
-        returnn il.begin();
+        return il.begin();
     }
 };

@@ -89,28 +89,28 @@ namespace fb {
         }
 
         [[nodiscard]] constexpr ReverseIterator rbegin() const noexcept {
-            return end() - 1;
+            return ReverseIterator(end());
         }
 
         [[nodiscard]] constexpr ConstReverseIterator crbegin() const noexcept {
-            return cend() - 1;
+            return ConstReverseIterator(cend());
         }
 
         [[nodiscard]] constexpr ReverseIterator rend() const noexcept {
-            return begin() - 1;
+            return ReverseIterator(begin());
         }
 
         [[nodiscard]] constexpr ConstReverseIterator crend() const noexcept {
-            return cbegin() - 1;
+            return ConstReverseIterator(cbegin());
         }
 
         /* Element access */
         [[nodiscard]] constexpr Reference front() const noexcept {
-            return *cbegin();
+            return data()[0];
         }
 
         [[nodiscard]] constexpr Reference back() const noexcept {
-            return *(cend() - 1);
+            return data()[size() - 1];
         }
 
         [[nodiscard]] constexpr Reference operator[](IndexType idx) const noexcept {
@@ -181,12 +181,12 @@ namespace fb {
     };
 
     template <typename T, SizeT N>
-    constexpr View<T,N>::Iterator begin(View<T,N> s) noexcept {
+    constexpr typename View<T,N>::Iterator begin(View<T,N> s) noexcept {
         return s.begin();
     }
 
     template <typename T, SizeT N>
-    constexpr View::Iterator end(View<T,N> s) noexcept {
+    constexpr typename View<T,N>::Iterator end(View<T,N> s) noexcept {
         return s.end();
     }
 

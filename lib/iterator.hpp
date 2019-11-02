@@ -1,6 +1,5 @@
 #pragma once
 
-#include "memory.hpp"
 #include "stddef.hpp"
 
 #include "iterator/data.hpp"
@@ -26,6 +25,7 @@ namespace fb {
 
     template <typename T>
     class IteratorTraits<T *> {
+    public:
         using DifferenceType = PtrDiffT;
         using ValueType = T;
         using Pointer = T *;
@@ -35,6 +35,7 @@ namespace fb {
 
     template <typename T>
     class IteratorTraits<const T *> {
+    public:
         using DifferenceType = PtrDiffT;
         using ValueType = T;
         using Pointer = const T *;
@@ -46,11 +47,11 @@ namespace fb {
     class ReverseIterator {
     public:
         using IteratorType = Iter;
-        using IteratorCategory = IteratorTraits<Iter>::IteratorCategory;
-        using ValueType = IteratorTraits<Iter>::ValueType;
-        using DifferenceType = IteratorTraits<Iter>::DifferenceType;
-        using Pointer = IteratorTraits<Iter>::Pointer;
-        using Reference = IteratorTraits<Iter>::Reference;
+        using IteratorCategory = typename IteratorTraits<Iter>::IteratorCategory;
+        using ValueType = typename IteratorTraits<Iter>::ValueType;
+        using DifferenceType = typename IteratorTraits<Iter>::DifferenceType;
+        using Pointer = typename IteratorTraits<Iter>::Pointer;
+        using Reference = typename IteratorTraits<Iter>::Reference;
 
         constexpr ReverseIterator() : current() {}
         constexpr explicit ReverseIterator(IteratorType x) : current(x) {}
@@ -69,7 +70,9 @@ namespace fb {
         }
 
         constexpr Reference operator*() const {
-            return *(--base());
+            auto tmp = current;
+            --tmp;
+            return *tmp;
         }
 
         constexpr Pointer operator->() const {
@@ -120,7 +123,7 @@ namespace fb {
             return *this;
         }
 
-    protected:
+        //protected:
         Iter current;
     };
 

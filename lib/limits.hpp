@@ -6,7 +6,7 @@
 
 namespace fb {
     template <typename T>
-    class numeric_limits {
+    class NumericLimits {
     public:
         static constexpr T max() noexcept {
             return T();
@@ -14,7 +14,7 @@ namespace fb {
     };
 
     template <>
-    class numeric_limits<unsigned long> {
+    class NumericLimits<unsigned long> {
     public:
         static constexpr unsigned long max() noexcept {
             return ULONG_MAX;
@@ -22,7 +22,7 @@ namespace fb {
     };
 
     template <>
-    class numeric_limits<long> {
+    class NumericLimits<long> {
     public:
         static constexpr long max() noexcept {
             return LONG_MAX;

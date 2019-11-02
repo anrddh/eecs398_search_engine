@@ -178,7 +178,9 @@ class SSLWrapper : public ConnectionWrapper
       SSLWrapper( ParsedUrl &url_in )
       : ConnectionWrapper( url_in ) 
          {
+
          SSL_library_init( );
+         OpenSSL_add_all_algorithms();
 
          ctx = SSL_CTX_new( SSLv23_method( ) );
          assert( ctx );
@@ -187,9 +189,10 @@ class SSLWrapper : public ConnectionWrapper
 
          SSL_set_fd( ssl, socketFD );
 
-         int sslConnectResult = SSL_connect( ssl );
+         int r = SSL_set_tlsext_host_name(ssl, url_in.Host.c_str());
+         r = SSL_connect( ssl );
 
-         assert( sslConnectResult == 1 );
+         assert( r == 1 );
          }
 
       virtual int read( char *buffer )
@@ -234,21 +237,75 @@ std::string GetGetMessage( const ParsedUrl &url )
    return getMessage;
    }
 
+// Get the header, print 
+std::string parseHeader( ConnectionWrapper *connector, BufferPrinter &printer )
+{
+   char buffer [ 10240 ];
+   int bytes;
+   const std::string endHeader = "\r\n\r\n";
+   std::string header = "    ";
+   bool pastHeader = false;
+
+   const std::string redirectIndicator = "Location: ";
+   const std::string chunkedIndicator = "Transfer-Encoding: chunked";
+   std::string redirectUrl = "";
+
+   while ( ( bytes =  connector->read(buffer)) > 0 )
+   {
+      // printer.print( buffer, bytes );
+      for ( int i = 0;  i < bytes;  ++i )
+      {
+      header.push_back( buffer[ i ] );
+      if ( std::string( header.end( ) - 4, header.end( ) ) == endHeader )
+         {
+         if ( header.find( chunkedIndicator ) != std::string::npos )
+            {
+            printer.chunked = true;
+            }
+
+         size_t startRedirectUrl = header.find( redirectIndicator );
+         if ( startRedirectUrl != std::string::npos )
+            {
+            size_t endRedirectUrl = header.find( "\r\n", startRedirectUrl );
+            redirectUrl = header.substr(
+                  startRedirectUrl + redirectIndicator.length( ),
+                  endRedirectUrl - startRedirectUrl - redirectIndicator.length( ) );
+            }
+         else
+         {
+            // std::cout << header << std::endl;
+            printer.print( buffer + i + 1, bytes - i - 1 );
+            // printer.print( buffer, bytes );
+         }
+         
+         pastHeader = true;
+         break;
+         }
+      }
+      if ( pastHeader )
+         break;
+   }
+   return redirectUrl;
+}
+
+ConnectionWrapper * connectionWrapperFactory( ParsedUrl &url )
+{
+   if ( url.Service == "http" )
+   {
+      return new ConnectionWrapper( url );
+   }
+   else
+   {
+      return new SSLWrapper( url );
+   }
+}
+
 std::string PrintHtmlGetRedirect( const std::string &url_in )
 {
       // Parse the URL
    ParsedUrl url( url_in );
 
-   ConnectionWrapper *connector;
-
-   if ( url.Service == "http" )
-   {
-      connector = new ConnectionWrapper( url );
-   }
-   else
-   {
-      connector = new SSLWrapper( url );
-   }
+   ConnectionWrapper *connector = connectionWrapperFactory( url );
 
    // Send a GET message
    std::string getMessage = GetGetMessage( url );
@@ -259,61 +316,25 @@ std::string PrintHtmlGetRedirect( const std::string &url_in )
    // Read from the socket
    char buffer [ 10240 ];
    int bytes;
-   bool pastHeader = false;
-   const std::string endHeader = "\r\n\r\n";
-   std::string header = "    ";
 
-   bool redirect = false;
-   const std::string redirectIndicator = "Location: ";
-   const std::string chunkedIndicator = "Transfer-Encoding: chunked";
-   std::string redirectUrl = "";
+   BufferPrinter printer( false );
 
-   BufferPrinter printer(false);
-
-   while ( ( bytes =  connector->read(buffer)) > 0 )
+   std::string redirectUrl = parseHeader( connector, printer );
+   
+   if ( redirectUrl == "" )
       {
-      if ( !pastHeader )
-         {
-         for ( int i = 0;  i < bytes;  ++i )
-            {
-            header.push_back( buffer[ i ] );
-            if ( std::string( header.end( ) - 4, header.end( ) ) == endHeader )
-               {
-               pastHeader = true;
-               if ( header.find( chunkedIndicator ) != std::string::npos )
-                  {
-                  printer.chunked = true;
-                  }
-
-               size_t startRedirectUrl = header.find( redirectIndicator );
-               if ( startRedirectUrl != std::string::npos )
-                  {
-                  redirect = true;
-                  size_t endRedirectUrl = header.find( "\r\n", startRedirectUrl );
-                  redirectUrl = header.substr(
-                        startRedirectUrl + redirectIndicator.length( ),
-                        endRedirectUrl - startRedirectUrl - redirectIndicator.length( ) );
-                  break;
-                  }
-
-               printer.print( buffer + i + 1, bytes - i - 1 );
-               break;
-               }
-            }
-         }
-      else
+      while ( ( bytes =  connector->read(buffer)) > 0 )
          {
          printer.print( buffer, bytes );
          }
-
-      if ( redirect )
-         break;
       }
 
    delete connector;
 
    return redirectUrl;
 }
+
+
 
 int main( int argc, char *argv[ ] ) {
    std::string url = argv[ 1 ];

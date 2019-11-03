@@ -1,7 +1,7 @@
 //#pragma once
 
 #include "functional.hpp"
-#include <vector>
+#include "vector.hpp"
 
 #define INITIAL_SIZE 1024
 
@@ -289,12 +289,12 @@ private:
     size_t num_elements = 0;
     size_t num_ghosts = 0;
     float max_load = 0.5;
-    std::vector<Bucket> buckets;
+    Vector<Bucket> buckets;
     Hasher hash = fb::Hash<K>();
     Pred pred = fb::EqualTo<K>();
 
     void rehash_and_grow(size_t n) {
-        std::vector<Bucket> temp = buckets;
+        Vector<Bucket> temp = buckets;
         buckets.clear();
         num_elements = 0;
         num_ghosts = 0;

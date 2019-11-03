@@ -1,11 +1,10 @@
 //Created by Chandler Meyers 11/1/2019
 #pragma once
 
-#include <string>
+#include "string.hpp"
 #include "stddef.hpp"
 #define INITIAL_SIZE 1024
 
-typedef std::string String;
 //Implementation of features typically from std::functional
 //Add things to this as needed
 

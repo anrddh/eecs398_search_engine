@@ -1,7 +1,7 @@
 //#pragma once
 
 #include "functional.hpp"
-#include <vector>
+#include "vector.hpp"
 
 #define INITIAL_SIZE 1024
 
@@ -14,7 +14,7 @@ namespace fb {
         Ghost
     };
 
-    template<typename K, typename Hasher = std::hash<K>, typename Pred = std::equal_to<K>>
+    template<typename K, typename Hasher = Hash<K>, typename Pred = EqualTo<K>>
     class unordered_set {
     public:
         // A bucket has a status and a key
@@ -289,12 +289,12 @@ namespace fb {
         size_t num_elements = 0;
         size_t num_ghosts = 0;
         float max_load = 0.5;
-        std::vector<Bucket> buckets;
-        Hasher hash = std::hash<K>();
-        Pred pred = std::equal_to<K>();
+        Vector<Bucket> buckets;
+        Hasher hash = Hash<K>();
+        Pred pred = EqualTo<K>();
 
         void rehash_and_grow(size_t n) {
-            std::vector<Bucket> temp = buckets;
+            Vector<Bucket> temp = buckets;
             buckets.clear();
             num_elements = 0;
             num_ghosts = 0;

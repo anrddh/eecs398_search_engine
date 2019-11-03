@@ -3,7 +3,6 @@
 #include "../stddef.hpp"
 #include "default_delete.hpp"
 
-#include <cstddef>
 #include <iosfwd>
 #include <type_traits>
 #include <utility>
@@ -32,21 +31,22 @@ public:
     constexpr UniquePtr(NullPtrT,
                         std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
-    constexpr explicit UniquePtr(
-        Pointer p, std::enable_if_t<defConstPtr, int> = 0) noexcept
-        : owner{p} {}
+    constexpr explicit UniquePtr(Pointer p,
+                                 std::enable_if_t<defConstPtr, int> = 0)
+        noexcept : owner{p} {}
 
-    // copies disallowed
-    UniquePtr(UniquePtr &) = delete;
-    UniquePtr &operator=(UniquePtr &) = delete;
+    constexpr explicit UniquePtr(Pointer p, DeleterType d)
+        : owner{p}, deleter{std::move(d)} {}
 
     // move constructor
-    constexpr UniquePtr(UniquePtr &&rhs) noexcept
-        : owner{rhs.release()}, deleter{rhs.getDeleter()} {}
+    constexpr
+    UniquePtr(UniquePtr &&rhs,
+              std::enable_if_t<std::is_move_constructible_v<DeleterType>,int>
+                  = 0)
+        noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
 
     // move assignment operator
-    [[nodiscard]] constexpr UniquePtr &
-    operator=(UniquePtr &&rhs) noexcept {
+    [[nodiscard]] constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
         owner = rhs.release();
         deleter = rhs.getDeleter();
     }
@@ -61,15 +61,15 @@ public:
         return std::exchange(owner, nullptr);
     }
 
-    constexpr void swap(UniquePtr &other) noexcept {
-        std::swap(owner, other.owner);
-        std::swap(deleter, other.deleter);
-    }
-
     constexpr void reset(Pointer newPtr = Pointer()) noexcept {
         auto oldPtr = std::exchange(owner, newPtr);
         if (oldPtr)
             getDeleter()(oldPtr);
+    }
+
+    constexpr void swap(UniquePtr &other) noexcept {
+        std::swap(owner, other.owner);
+        std::swap(deleter, other.deleter);
     }
 
     /* Observers */
@@ -87,8 +87,7 @@ public:
         return get() != nullptr;
     }
 
-    [[nodiscard]] constexpr std::add_lvalue_reference_t<T> operator*() const
-        noexcept {
+    [[nodiscard]] constexpr std::add_lvalue_reference_t<T> operator*() const {
         return *get();
     }
 
@@ -120,7 +119,63 @@ public:
     constexpr UniquePtr(NullPtrT,
                         std::enable_if_t<defConstPtr, int> = 0) noexcept {}
 
-    T &operator[](std::size_t i) const { return get()[i]; }
+    template <typename U>
+    constexpr explicit UniquePtr(U p) noexcept
+        : owner{p} {}
+
+    constexpr explicit UniquePtr(Pointer p, DeleterType d)
+        : owner{p}, deleter{std::move(d)} {}
+
+    // move constructor
+    constexpr
+    UniquePtr(UniquePtr &&rhs,
+              std::enable_if_t<std::is_move_constructible_v<DeleterType>,int>
+                  = 0)
+        noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
+
+    // move assignment operator
+    [[nodiscard]] constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
+        owner = rhs.release();
+        deleter = rhs.getDeleter();
+    }
+
+    ~UniquePtr() noexcept {
+        if (get())
+            getDeleter()(get());
+    }
+
+    /* Modifiers */
+    constexpr Pointer release() noexcept {
+        return std::exchange(owner, nullptr);
+    }
+
+    constexpr void reset(Pointer newPtr = Pointer()) noexcept {
+        auto oldPtr = std::exchange(owner, newPtr);
+        if (oldPtr)
+            getDeleter()(oldPtr);
+    }
+
+    constexpr void swap(UniquePtr &other) noexcept {
+        std::swap(owner, other.owner);
+        std::swap(deleter, other.deleter);
+    }
+
+    /* Observers */
+    [[nodiscard]] constexpr Pointer get() const noexcept { return owner; }
+
+    [[nodiscard]] constexpr const DeleterType &getDeleter() const noexcept {
+        return deleter;
+    }
+
+    [[nodiscard]] constexpr DeleterType &getDeleter() noexcept {
+        return deleter;
+    }
+
+    explicit constexpr operator bool() const noexcept {
+        return get() != nullptr;
+    }
+
+    T &operator[](SizeT i) const { return get()[i]; }
 
 private:
     Pointer owner{};
@@ -128,13 +183,13 @@ private:
 };
 
 template <typename T, typename... Args>
-[[nodiscard]] constexpr UniquePtr<T> makeUnique(Args &&... args) {
-    return UniquePtr<T>(new T(std::forward(args)...));
+[[nodiscard]] UniquePtr<T> makeUnique(Args &&... args) {
+    return UniquePtr<T>(new T(std::forward<Args>(args)...));
 }
 
 template <typename T>
-[[nodiscard]] UniquePtr<T> makeUnique(std::size_t size) {
-    return UniquePtr<T>(new std::remove_extent_t<T>[size]());
+[[nodiscard]] UniquePtr<T[]> makeUnique(SizeT size) {
+    return UniquePtr<T[]>(new std::remove_extent_t<T>[size]());
 }
 
 template <typename T>

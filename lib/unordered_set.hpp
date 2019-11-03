@@ -7,16 +7,16 @@
 
 namespace fb {
 
-// A bucket's status tells you whether it's filled, empty, or contains a ghost.
-enum class Set_Status {
-    Empty,
-    Filled,
-    Ghost
-};
+    // A bucket's status tells you whether it's filled, empty, or contains a ghost.
+    enum class Set_Status {
+        Empty,
+        Filled,
+        Ghost
+    };
 
-template<typename K, typename Hasher = Hash<K>, typename Pred = EqualTo<K>>
-class unordered_set {
-public:
+    template<typename K, typename Hasher = std::hash<K>, typename Pred = std::equal_to<K>>
+    class unordered_set {
+    public:
         // A bucket has a status and a key
         struct Bucket {
             Set_Status status = Set_Status::Empty;
@@ -156,7 +156,7 @@ public:
                 }
             }
             //key does not exist, so throw out of range exception
-            throw out_of_range;
+            throw out_of_range();
         }
 
         // insert returns whether inserted successfully
@@ -290,8 +290,8 @@ public:
         size_t num_ghosts = 0;
         float max_load = 0.5;
         std::vector<Bucket> buckets;
-        Hasher hash = Hash<K>();
-        Pred pred = EqualTo<K>();
+        Hasher hash = std::hash<K>();
+        Pred pred = std::equal_to<K>();
 
         void rehash_and_grow(size_t n) {
             std::vector<Bucket> temp = buckets;

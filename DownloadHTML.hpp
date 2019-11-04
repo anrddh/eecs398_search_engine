@@ -179,30 +179,29 @@ class ConnectionWrapper
          // Create a TCP/IP socket
          socketFD = socket( address->ai_family,
                address->ai_socktype, address->ai_protocol );
-         // assert( socketFD != -1 );
          if ( socketFD == -1 )
-            recordFailedLink();
+            recordFailedLink( );
 
          // Connect the socket to the host address
          int connectResult = connect( socketFD,
                address->ai_addr, address->ai_addrlen );
-         // assert( connectResult == 0 );
          if ( connectResult != 0 )
-            recordFailedLink();
+            recordFailedLink( );
 
          freeaddrinfo( address );
          }
 
-      void recordFailedLink()
+      void recordFailedLink( )
          {
          int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
-         ::write( fd, (url.CompleteUrl + "\n").c_str(), url.CompleteUrl.length() + 1 );
+         ::write( fd, ( url.CompleteUrl + "\n" ).c_str( ),
+               url.CompleteUrl.length( ) + 1 );
          close( fd );
-         std::cout << "Failed connecting to link: " << url.CompleteUrl << std::endl;
-         exit(1);
+         std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
+         exit( 1 );
          }
 
-      virtual ~ConnectionWrapper ()
+      virtual ~ConnectionWrapper( )
          {
          close( socketFD );
          }
@@ -231,23 +230,23 @@ class SSLWrapper : public ConnectionWrapper
          OpenSSL_add_all_algorithms( );
 
          ctx = SSL_CTX_new( SSLv23_method( ) );
-         // assert( ctx );
          if ( !ctx )
-            recordFailedLink();
+            recordFailedLink( );
+
          ssl = SSL_new( ctx );
-         // assert( ssl );
          if ( !ssl )
-            recordFailedLink();
+            recordFailedLink( );
 
          SSL_set_fd( ssl, socketFD );
 
          // Needed for SNI websites
          int r = SSL_set_tlsext_host_name( ssl, url_in.Host.c_str( ) );
-         r = SSL_connect( ssl );
-
-         // exit 1 for now
          if ( r != 1 )
-            recordFailedLink();
+            recordFailedLink( );
+
+         r = SSL_connect( ssl );
+         if ( r != 1 )
+            recordFailedLink( );
          }
 
       virtual int read( char *buffer )
@@ -260,7 +259,7 @@ class SSLWrapper : public ConnectionWrapper
          return SSL_write( ssl, message.c_str( ), message.length( ) );
       }
 
-      virtual ~SSLWrapper()
+      virtual ~SSLWrapper( )
          {     
          SSL_shutdown( ssl );
          SSL_free( ssl );

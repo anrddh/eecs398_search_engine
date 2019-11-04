@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../stddef.hpp"
+#include "../type_traits.hpp"
 #include "default_delete.hpp"
 
 #include <iosfwd>
@@ -23,16 +24,16 @@ public:
 private:
     static constexpr bool defConstPtr =
         std::is_default_constructible_v<DeleterType> &&
-        !std::is_pointer_v<DeleterType>;
+        !IsPointerV<DeleterType>;
 
 public:
-    constexpr UniquePtr(std::enable_if_t<defConstPtr, int> = 0) noexcept {}
+    constexpr UniquePtr(EnableIfT<defConstPtr, int> = 0) noexcept {}
 
     constexpr UniquePtr(NullPtrT,
-                        std::enable_if_t<defConstPtr, int> = 0) noexcept {}
+                        EnableIfT<defConstPtr, int> = 0) noexcept {}
 
     constexpr explicit UniquePtr(Pointer p,
-                                 std::enable_if_t<defConstPtr, int> = 0)
+                                 EnableIfT<defConstPtr, int> = 0)
         noexcept : owner{p} {}
 
     constexpr explicit UniquePtr(Pointer p, DeleterType d)
@@ -41,7 +42,7 @@ public:
     // move constructor
     constexpr
     UniquePtr(UniquePtr &&rhs,
-              std::enable_if_t<std::is_move_constructible_v<DeleterType>,int>
+              EnableIfT<std::is_move_constructible_v<DeleterType>,int>
                   = 0)
         noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
 
@@ -111,13 +112,13 @@ public:
 private:
     static constexpr bool defConstPtr =
         std::is_default_constructible_v<DeleterType> &&
-        !std::is_pointer_v<DeleterType>;
+        IsPointerV<DeleterType>;
 
 public:
-    constexpr UniquePtr(std::enable_if_t<defConstPtr, int> = 0) noexcept {}
+    constexpr UniquePtr(EnableIfT<defConstPtr, int> = 0) noexcept {}
 
     constexpr UniquePtr(NullPtrT,
-                        std::enable_if_t<defConstPtr, int> = 0) noexcept {}
+                        EnableIfT<defConstPtr, int> = 0) noexcept {}
 
     template <typename U>
     constexpr explicit UniquePtr(U p) noexcept
@@ -129,7 +130,7 @@ public:
     // move constructor
     constexpr
     UniquePtr(UniquePtr &&rhs,
-              std::enable_if_t<std::is_move_constructible_v<DeleterType>,int>
+              EnableIfT<std::is_move_constructible_v<DeleterType>,int>
                   = 0)
         noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
 
@@ -183,13 +184,13 @@ private:
 };
 
 template <typename T, typename... Args>
-[[nodiscard]] UniquePtr<T> makeUnique(Args &&... args) {
+[[nodiscard]] EnableIfT<!IsArrayV<T>, UniquePtr<T>> makeUnique(Args &&... args) {
     return UniquePtr<T>(new T(std::forward<Args>(args)...));
 }
 
 template <typename T>
-[[nodiscard]] UniquePtr<T[]> makeUnique(SizeT size) {
-    return UniquePtr<T[]>(new std::remove_extent_t<T>[size]());
+[[nodiscard]] EnableIfT<IsArrayV<T>, UniquePtr<T>> makeUnique(SizeT size) {
+    return UniquePtr<T>(new RemoveExtentT<T>[size]());
 }
 
 template <typename T>

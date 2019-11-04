@@ -21,8 +21,8 @@ cc_library(
 # -- BELOW HERE IS TEMPORARY -- #
 
 cc_binary(
-    name = "linux_get_ssl",
-    srcs = ["LinuxGetSSL.cpp"],
+    name = "download_html",
+    srcs = ["DownloadHTML.cpp", "DownloadHTML.hpp"],
     deps = [
         ":openssl",
     ],

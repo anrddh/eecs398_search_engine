@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <iostream>
 #include <unistd.h>
@@ -337,7 +339,7 @@ ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
 // Esatblish connection with the url
 // If redirect, return the redirect url
 // Else, write the recieved content to a file
-std::string PrintHtmlGetRedirect( const std::string &url_in )
+std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &filename )
 {
       // Parse the URL
    ParsedUrl url( url_in );
@@ -355,7 +357,6 @@ std::string PrintHtmlGetRedirect( const std::string &url_in )
    int bytes;
 
    // temporary filename
-   std::string filename = "html_filename";
    BufferWriter writer( false , filename );
 
    // Check for redirect and other relevant header info
@@ -379,7 +380,7 @@ std::string PrintHtmlGetRedirect( const std::string &url_in )
 // Write the url information to a file
 // handling redirect appropriately
 // If redirect creates a loop, do nothing
-void PrintHtml( const std::string &url_in )
+void PrintHtml( const std::string &url_in, const std::string &filename )
 {
    std::set<std::string> visitedURLs;
 
@@ -389,7 +390,7 @@ void PrintHtml( const std::string &url_in )
 
    while ( url.length( ) != 0 )
       {
-      url = PrintHtmlGetRedirect( url );
+      url = PrintHtmlGetRedirect( url, filename );
 
       // If there is a loop, probably a bad website.
       if(visitedURLs.find( url ) != visitedURLs.end( ) )
@@ -398,9 +399,3 @@ void PrintHtml( const std::string &url_in )
       visitedURLs.insert( url );
       }
 }
-
-int main( int argc, char *argv[ ] ) {
-   std::string url = argv[ 1 ];
-   PrintHtml( url );
-}
-

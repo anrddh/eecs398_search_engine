@@ -1,20 +1,19 @@
 #pragma once
 
-#include <string>
+#include <assert.h>
+#include <fcntl.h>
 #include <iostream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <string.h>
-#include <assert.h>
-#include <openssl/ssl.h>
 #include <openssl/err.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <openssl/ssl.h>
 #include <set>
+#include <string.h>
+#include <string>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 // URL wrapper class 
 class ParsedUrl

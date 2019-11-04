@@ -179,14 +179,27 @@ class ConnectionWrapper
          // Create a TCP/IP socket
          socketFD = socket( address->ai_family,
                address->ai_socktype, address->ai_protocol );
-         assert( socketFD != -1 );
+         // assert( socketFD != -1 );
+         if ( socketFD == -1 )
+            recordFailedLink();
 
          // Connect the socket to the host address
          int connectResult = connect( socketFD,
                address->ai_addr, address->ai_addrlen );
-         assert( connectResult == 0 );
+         // assert( connectResult == 0 );
+         if ( connectResult != 0 )
+            recordFailedLink();
 
          freeaddrinfo( address );
+         }
+
+      void recordFailedLink()
+         {
+         int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
+         ::write( fd, (url.CompleteUrl + "\n").c_str(), url.CompleteUrl.length() + 1 );
+         close( fd );
+         std::cout << "Failed connecting to link: " << url.CompleteUrl << std::endl;
+         exit(1);
          }
 
       virtual ~ConnectionWrapper ()
@@ -218,9 +231,13 @@ class SSLWrapper : public ConnectionWrapper
          OpenSSL_add_all_algorithms( );
 
          ctx = SSL_CTX_new( SSLv23_method( ) );
-         assert( ctx );
+         // assert( ctx );
+         if ( !ctx )
+            recordFailedLink();
          ssl = SSL_new( ctx );
-         assert( ssl );
+         // assert( ssl );
+         if ( !ssl )
+            recordFailedLink();
 
          SSL_set_fd( ssl, socketFD );
 
@@ -230,10 +247,7 @@ class SSLWrapper : public ConnectionWrapper
 
          // exit 1 for now
          if ( r != 1 )
-            {
-            std::cerr << "SSL connect failed for " << url_in.CompleteUrl << std::endl;
-            exit( 1 );
-            }
+            recordFailedLink();
          }
 
       virtual int read( char *buffer )

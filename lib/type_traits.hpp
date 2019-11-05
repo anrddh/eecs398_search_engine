@@ -37,6 +37,15 @@ namespace fb {
     };
     template <typename T> using RemoveCVT = typename RemoveCV<T>::type;
 
+    template <typename T> struct AddConst { using type = const T; };
+    template <typename T> using AddConstT = typename AddConst<T>::type;
+
+    template <typename T> struct AddVolatile { using type = volatile T; };
+    template <typename T> using AddVolatileT = typename AddVolatile<T>::type;
+
+    template <typename T> struct AddCV { using type = AddConstT<AddVolatileT<T>>; };
+    template <typename T> using AddCVT = typename AddCV<T>::type;
+
     /*  Primary type categories  */
     template <typename T> struct IsArray : FalseType {};
     template <typename T> struct IsArray<T[]> : TrueType {};

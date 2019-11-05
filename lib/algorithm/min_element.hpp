@@ -19,7 +19,7 @@ namespace fb {
     //}
 
     template <typename It,
-              typename Compare = less<IteratorTraits<It>::ValueType>>
+              typename Compare = Less<typename IteratorTraits<It>::ValueType>>
     constexpr It min_element(It begin, It end, Compare comp) {
         if (begin == end)
             return end;

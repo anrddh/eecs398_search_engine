@@ -6,25 +6,29 @@
 #include "algorithm.hpp"
 
 #include <initializer_list>
+#include <stdexcept>
 
 namespace fb {
 
     template <typename T>
 
     class Vector {
-        using UniqPtrType = UniquePtr<void *, decltype(operator delete[])>;
+        static constexpr auto Deleter = [](void *buf) {
+            operator delete[](buf);
+        };
+        using UniqPtrType = UniquePtr<void *, decltype(Deleter)>;
     public:
         using ValueType = T;
         using SizeType = SizeT;
         using DifferenceType = PtrDiffT;
         using Reference = T &;
-        using ConstReference = const Reference;
+        using ConstReference = AddConstT<Reference>;
         using Pointer = T *;
-        using ConstPointer = const Pointer;
+        using ConstPointer = AddConstT<Pointer>;
         using Iterator = Pointer;
-        using ConstIterator = const Iterator;
+        using ConstIterator = AddConstT<Iterator>;
         using ReverseIterator = fb::ReverseIterator<Iterator>;
-        using ConstReverseIterator = const ReverseIterator;
+        using ConstReverseIterator = AddConstT<ReverseIterator>;
 
         Vector( ) { }
 
@@ -88,14 +92,14 @@ namespace fb {
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= size_)
-                throw std::out_of_range{};
+                throw std::out_of_range("Vector: Reference at(SizeType pos)");
 
             return *this[pos];
         }
 
         ConstReference at(SizeType pos) const {
             if (pos >= size_)
-                throw std::out_of_range{};
+                throw std::out_of_range("Vector: ConstReference at(SizeType pos)");
 
             return *this[pos];
         }
@@ -200,7 +204,7 @@ namespace fb {
 
         /* Modifiers */
         void clear() noexcept {
-            destroy(begin, end());
+            destroy(begin(), end());
             size_ = 0;
         }
 
@@ -343,7 +347,7 @@ namespace fb {
         }
 
     private:
-        UniqPtrType buf { nullptr, operator delete[] };
+        UniqPtrType buf { nullptr, Deleter };
         SizeType size_ = 0;
         SizeType cap_ = 0;
 
@@ -353,7 +357,7 @@ namespace fb {
 
             auto newCap = cap_ ? 3 * cap_ / 2 : mem;
 
-            UniqPtrType newBuf(new[](newCap * sizeof(T)), operator delete[]);
+            UniqPtrType newBuf(operator new[](newCap * sizeof(T)), Deleter);
             uninitializedMove(begin(), end(), data());
 
             cap_ = newCap;

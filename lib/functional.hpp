@@ -2,7 +2,7 @@
 
 namespace fb {
     template <typename T = void>
-    struct less {
+    struct Less {
         constexpr bool operator()(const T &lhs, const T &rhs) const {
             return lhs < rhs;
         }

@@ -3,6 +3,8 @@
 #include "../iterator.hpp"
 #include "misc.hpp"
 
+#include <utility>
+
 namespace fb {
 
     template <typename T>
@@ -30,4 +32,45 @@ namespace fb {
         }
     }
 
+    template <typename It, typename T>
+    void uninitializedFill(It first, It last, const T &value)
+    {
+        auto current = first;
+        try {
+            while (current != last)
+                ::new (static_cast<void *>(addressof(*current++)))
+                      typename IteratorTraits<It>::ValueType(value);
+        }  catch (...) {
+            destroy(first, current);
+            throw;
+        }
+    }
+
+    template <typename It>
+    void uninitializedDefaultConstruct(It first, It last) {
+        auto current = first;
+        try {
+            while (current != last)
+                ::new (static_cast<void *>(addressof(*current++)))
+                      typename IteratorTraits<It>::ValueType;
+        }  catch (...) {
+            destroy(first, current);
+            throw;
+        }
+    }
+
+    template<class It, class DestIt>
+    DestIt uninitializedMove(It first, It last, DestIt dest) {
+        auto current = dest;
+        try {
+            while (first != last)
+                ::new (static_cast<void *>(addressof(*current++)))
+                      typename IteratorTraits<It>
+                      ::ValueType(std::move(*first++));
+            return current;
+        } catch (...) {
+            destroy(dest, current);
+            throw;
+        }
+    }
 };

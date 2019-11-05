@@ -2,13 +2,17 @@
 
 #include "stddef.hpp"
 #include "iterator.hpp"
-#include "memory/unique_ptr.hpp"
+#include "memory.hpp"
+#include "algorithm.hpp"
+
+#include <initializer_list>
 
 namespace fb {
 
-    template <typename T,
-              typename Allocator = >
+    template <typename T>
+
     class Vector {
+        using UniqPtrType = UniquePtr<void *, decltype(operator delete[])>;
     public:
         using ValueType = T;
         using SizeType = SizeT;
@@ -22,211 +26,324 @@ namespace fb {
         using ReverseIterator = fb::ReverseIterator<Iterator>;
         using ConstReverseIterator = const ReverseIterator;
 
-        // Default Constructor
-        // REQUIRES: Nothing
-        // MODIFIES: *this
-        // EFFECTS: Constructs an empty vector with capacity 0
         Vector( ) { }
 
-        Vector(SizeT n, const T &val) : cap(n), _size(n), arr(new T[n]) {
-            for (SizeT i = 0; i < _size; ++i)
-                arr[ i ] = val;
+        Vector(SizeT n, const T &val) : size_(n) {
+            alloc_mem(n);
+            uninitializedFill(begin(), end(), val);
          }
 
-        Vector(SizeT n)
-            : cap(n), _size(n), arr(new T[n]()) {}
+        Vector(SizeT n) : size_(n) {
+            alloc_mem(n);
+            uninitializedDefaultConstruct(begin(), end());
+        }
 
-        // Copy Constructor
-        // REQUIRES: Nothing
-      // MODIFIES: *this
-      // EFFECTS: Creates a clone of the vector v
-      Vector( const Vector<T>& v )
-      {
-         arr = new T[v._size];
-         _size = v._size;
-         cap = v._size;
-         for (SizeT i = 0; i < v._size; ++i) {
-            arr[i] = v[i];
-         }
-      }
+        Vector( const Vector<T>& v ) : size_(v.size()) {
+            alloc_mem(v.size());
+            uninitalizedCopy(v.begin(), v.end(), begin());
+        }
 
-      // Assignment operator
-      // REQUIRES: Nothing
-      // MODIFIES: *this
-      // EFFECTS: Duplicates the state of v to *this
-      Vector operator=( const Vector<T>& v )
-         {
-            if(&v == this){
-               return *this;
-            }
-            delete[] arr;
-            arr = new T[v._size];
-            _size = v._size;
-            cap = v._size;
-            for (SizeT i = 0; i < v._size; ++i) {
-               arr[i] = v[i];
-            }
-            return *this;
-         }
+        Vector( Vector<T>&& v ) noexcept
+            : size_(v.size()), cap_(v.cap()), buf(std::move(v.buf)) {
+           v.size_ = 0;
+           v.cap_ = 0;
+        }
 
-      // Move Constructor
-      // REQUIRES: Nothing
-      // MODIFIES: *this, leaves v in a default constructed state
-      // EFFECTS: Takes the data from v into a newly constructed vector
-      Vector( Vector<T>&& v )
-         {
-            _size = v._size;
-            cap = v.cap;
-            arr = v.arr;
-            v.arr = nullptr;
-            v._size = 0;
-            v.cap = 0;
-         }
+        template <typename It>
+        Vector (It first, It last) {
+            while (first != last)
+                pushBack(*first++);
+        }
 
-      // Move Assignment Operator
-      // REQUIRES: Nothing
-      // MODIFIES: *this, leaves vin a default constructed state
-      // EFFECTS: Takes the data from v in constant time
-      Vector operator=( Vector<T>&& v )
-         {
-            if(arr){
-               delete[] arr;
-            }
-            _size = v._size;
-            cap = v.cap;
-            arr = v.arr;
-            v.arr = nullptr;
-            v._size = 0;
-            v.cap = 0;
-         }
+        Vector(std::initializer_list<T> init)
+            : Vector(init.begin(), init.end()) {}
+
+        Vector & operator=( const Vector<T> v ) {
+            std::swap(buf, v.buf);
+            std::swap(size_, v.size_);
+            std::swap(cap_, v.cap_);
+        }
+
+        Vector operator=( Vector<T>&& v ) noexcept {
+            std::swap(buf, v.buf);
+            std::swap(size_, v.size_);
+            std::swap(cap_, v.cap_);
+        }
 
         ~Vector() = default;
 
+        void assign(SizeType count, const T &value) {
+            fill(begin(), begin() + count, value);
+        }
 
-      // REQUIRES: new_capacity > capacity()
-      // MODIFIES: capacity()
-      // EFFECTS: Ensures that the vector can contain size() = new_capacity
-      //    elements before having to reallocate
-      void reserve( SizeT n )
-         {
-         if(n > cap) {
-            T* p = new T[n];
-            for (SizeT i = 0; i < _size; ++i) {
-               p[i] = arr[i];
-            }
-            cap = n;
-            delete[] arr;
-            arr = p;
-         }
-         }
+        template <typename It>
+        void assign(It first, It last) {
+            copy(first, last, begin());
+        }
 
-      // REQUIRES: new_capacity > capacity()
-      // MODIFIES: capacity()
-      // EFFECTS: Ensures that the vector can contain size() = new_capacity
-      //    elements before having to reallocate
-      void resize( SizeT n )
-         {
-         if ( n <= cap )
-            {
-            _size = n;
-            return;
-            }
-         else
-            {
-            T* p = new T[ n ];
+        void assign(std::initializer_list<T> ilist) {
+            assign(ilist.begin(), ilist.end());
+        }
 
-            for( SizeT i = 0;  i < _size;  ++i )
-               p[ i ] = arr[ i ];
+        /*  Element access  */
+        Reference at(SizeType pos) {
+            if (pos >= size_)
+                throw std::out_of_range{};
 
-            cap = n;
-            _size = n;
-            delete[ ] arr;
-            arr = p;
-            }
-         }
+            return *this[pos];
+        }
 
-      // REQUIRES: Nothing
-      // MODIFIES: Nothing
-      // EFFECTS: Returns the number of elements in the vector
-      [[nodiscard]] constexpr SizeType size( ) const noexcept
-         {
-         return size_;
-         }
+        ConstReference at(SizeType pos) const {
+            if (pos >= size_)
+                throw std::out_of_range{};
 
-      // REQUIRES: Nothing
-      // MODIFIES: Nothing
-      // EFFECTS: Returns the maximum size the vector can attain before resizing
-      [[nodiscard]] constexpr SizeType capacity( ) const noexcept
-         {
-         return cap;
-         }
+            return *this[pos];
+        }
 
-      [[nodiscard]] T& operator[ ] ( SizeT i )
-         {
-         return data()[i];
-         }
+        Reference operator[](SizeType pos) {
+            return data()[pos];
+        }
 
-      const T& operator[ ] ( SizeT i ) const
-         {
-         return data()[i];
-         }
+        ConstReference operator[](SizeType pos) const {
+            return data()[pos];
+        }
 
-      // REQUIRES: Nothing
-      // MODIFIES: this, size(), capacity()
-      // EFFECTS: Appends the element x to the vector, allocating
-      //    additional space if neccesary
-      void pushBack( const T& val )
-         {
+        Reference front() {
+            return *this[0];
+        }
+
+        ConstReference front() const {
+            return *this[0];
+        }
+
+        Reference back() {
+            return *this[size() - 1];
+        }
+
+        ConstReference back() const {
+            return *this[size() - 1];
+        }
+
+        Pointer data() noexcept {
+            return static_cast<Pointer>(buf.get());
+        }
+
+        ConstPointer data() const noexcept {
+            return static_cast<ConstPointer>(buf.get());
+        }
+
+        /* Iterators */
+        Iterator begin() noexcept {
+            return data();
+        }
+
+        ConstIterator begin() const noexcept {
+            return data();
+        }
+
+        ConstIterator cbegin() const noexcept {
+            return data();
+        }
+
+        Iterator end() noexcept {
+            return data() + size();
+        }
+
+        ConstIterator end() const noexcept {
+            return data() + size();
+        }
+
+        ConstIterator cend() const noexcept {
+            return data() + size();
+        }
+
+        ReverseIterator rbegin() noexcept {
+            return ReverseIterator(end());
+        }
+
+        ConstReverseIterator rbegin() const noexcept {
+            return ConstReverseIterator(end());
+        }
+
+        ConstReverseIterator crbegin() const noexcept {
+            return ConstReverseIterator(cend());
+        }
+
+        ReverseIterator rend() noexcept {
+            return ReverseIterator(begin());
+        }
+
+        ConstReverseIterator rend() const noexcept {
+            return ConstReverseIterator(begin());
+        }
+
+        ConstReverseIterator crend() const noexcept {
+            return ConstReverseIterator(cbegin());
+        }
+
+        /* Capacity */
+        [[nodiscard]] constexpr bool empty() const noexcept {
+            return !size();
+        }
+
+        [[nodiscard]] constexpr SizeType size() const noexcept {
+            return size_;
+        }
+
+        void reserve(SizeT n) {
+            alloc_mem(n);
+        }
+
+        [[nodiscard]] constexpr SizeType capacity() const noexcept {
+            return cap_;
+        }
+
+        /* Modifiers */
+        void clear() noexcept {
+            destroy(begin, end());
+            size_ = 0;
+        }
+
+        Iterator insert(ConstIterator pos, const T &value) {
+            auto idx = distance(cbegin(), pos);
             alloc_mem(size() + 1);
-            if(_size == cap){
-               if(cap == 0){
-                  ++cap;
-               }
-               cap = 2*cap;
-               T* p = new T[cap];
-               for (SizeT i = 0; i < _size; ++i) {
-                  p[i] = arr[i];
-               }
-               p[_size] = val;
-               delete[] arr;
-               arr = p;
-               ++_size;
-               return;
+
+            for (auto i = size() - 1; i > idx; --i)
+                data()[i] = std::move(data()[i-1]);
+            data()[idx] = value;
+            ++size_;
+            return begin() + idx;
+        }
+
+        Iterator insert(ConstIterator pos, T &&value) {
+            auto idx = distance(cbegin(), pos);
+            alloc_mem(size() + 1);
+            for (auto i = size(); i > idx; --i)
+                data()[i] = std::move(data()[i-1]);
+            data()[idx] = std::move(value);
+            ++size_;
+            return begin() + idx;
+        }
+
+        Iterator insert(ConstIterator pos, SizeType count, const T &value) {
+            auto idx = distance(cbegin(), pos);
+            alloc_mem(size() + count);
+
+            for (auto i = size() + count - 1; i > (idx + count); --i)
+                data()[i] = std::move(data()[i-count]);
+
+            for (auto i = 0; i < count; ++i)
+                data()[i] = value;
+            size_ += count;
+            return begin() + idx;
+        }
+
+        template <typename It>
+        Iterator insert(ConstIterator pos, It first, It last) {
+            auto count = distance(first, last);
+
+            auto idx = distance(cbegin(), pos);
+            alloc_mem(size() + count);
+
+            for (auto i = size() + count - 1; i > (idx + count); --i)
+                data()[i] = std::move(data()[i-count]);
+
+            copy(first, last, begin() + idx);
+            size_ += count;
+            return begin() + idx;
+        }
+
+        Iterator insert(ConstIterator pos, std::initializer_list<T> ilist) {
+            return insert(pos, ilist.begin(), ilist.end());
+        }
+
+        template <typename ... Args>
+        Iterator emplace(ConstIterator pos, Args &&... args) {
+            auto idx = distance(cbegin(), pos);
+            alloc_mem(size() + 1);
+            for (auto i = size(); i > idx; --i)
+                data()[i] = std::move(data()[i-1]);
+            destroy(data() + idx);
+            new (data() + idx) T(std::forward<Args>(args)...);
+            ++size_;
+            return begin() + idx;
+        }
+
+        Iterator erase(ConstIterator pos) {
+            destroyAt(const_cast<Pointer>(pos));
+            auto idx = distance(cbegin(), pos);
+            --size_;
+            for (auto i = idx; i < size(); ++i)
+                data()[i] = std::move(data()[i+1]);
+            return ++pos;
+        }
+
+        Iterator erase(ConstIterator first, ConstIterator last) {
+            if (first == last)
+                return first;
+
+            auto count = distance(first,last);
+            destroy(first,last);
+            auto it = last;
+
+            while (first != last && it != end()) {
+                *first = std::move(*it);
+                ++it; ++first;
             }
-            arr[_size] = val;
-            ++_size;
-         }
 
-      // REQUIRES: Nothing
-      // MODIFIES: this, size()
-      // EFFECTS: Removes the last element of the vector,
-      //    leaving capacity unchanged
-      void popBack( )
-         {
-         --_size;
-         }
+            size_ -= count;
+            return last;
+        }
 
-      T* begin( )
-         {
-         return data();
-         }
+        void pushBack(const T &value) {
+            insert(end(), value);
+        }
 
-      T* end( )
-         {
-         return data() + size();
-         }
+        void pushBack(T &&value) {
+            insert(end(), std::move(value));
+        }
 
-      const T* begin( ) const
-         {
-         return data();
-         }
+        template <typename ... Args>
+        Reference emplaceBack(Args &&... args) {
+            emplace(end(), std::forward<Args>(args)...);
+        }
 
-      const T* end( ) const
-         {
-         return data() + size();
-         }
+        void popBack() {
+            erase(end() - 1);
+        }
+
+        void resize(SizeType count) {
+            if (count <= size()) {
+                destroy(begin() + count, end());
+                size_ = count;
+                return;
+            }
+
+            alloc_mem(count);
+            uninitializedDefaultConstruct(begin() + size_, begin() + count);
+            size_ = count;
+        }
+
+        void resize(SizeType count, const ValueType &value) {
+            if (count <= size()) {
+                destroy(begin() + count, end());
+                size_ = count;
+                return;
+            }
+
+            alloc_mem(count);
+            uninitializedFill(begin() + size_, begin() + count, value);
+            size_ = count;
+        }
+
+        void swap(Vector &other) noexcept {
+            swap(buf, other.buf);
+            swap(size_, other.size_);
+            swap(cap_, other.cap_);
+        }
+
     private:
-        UniquePtr<T[]> buf;
+        UniqPtrType buf { nullptr, operator delete[] };
         SizeType size_ = 0;
         SizeType cap_ = 0;
 
@@ -235,7 +352,12 @@ namespace fb {
                 return;
 
             auto newCap = cap_ ? 3 * cap_ / 2 : mem;
-            auto new_buf = makeUnique<char[]>(newCap * sizeof(T));
+
+            UniqPtrType newBuf(new[](newCap * sizeof(T)), operator delete[]);
+            uninitializedMove(begin(), end(), data());
+
+            cap_ = newCap;
+            buf = std::move(newBuf);
         }
    };
 

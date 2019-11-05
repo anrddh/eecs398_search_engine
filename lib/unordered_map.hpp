@@ -37,7 +37,7 @@ public:
     public:
         friend class UnorderedMap;
         Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
-        Iterator(Vector<Bucket> *owner, size_t index) : owner(owner), index(index) {
+        Iterator(Vector<Bucket> *owner, SizeT index) : owner(owner), index(index) {
             if (index > owner->size()) index = owner->size();
         }
         Iterator& operator=(const Iterator &rhs) {
@@ -76,7 +76,7 @@ public:
 
     private:
         Vector<Bucket> *owner;
-        size_t index;
+        SizeT index;
     };
 
     //Default constructor
@@ -85,12 +85,12 @@ public:
     }
 
     //Constructor that takes custom size, hash, and predicate
-    UnorderedMap(size_t sz, Hasher hash, Pred pred) : hash(hash), pred(pred) {
+    UnorderedMap(SizeT sz, Hasher hash, Pred pred) : hash(hash), pred(pred) {
         buckets.resize(sz);
     }
 
     //Returns the number of elements in the map
-    size_t size() const {
+    SizeT size() const {
         return num_elements;
     }
 
@@ -113,8 +113,8 @@ public:
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
-        size_t desired_bucket = hash(key) % buckets.size();
-        size_t original_hash = desired_bucket;
+        SizeT desired_bucket = hash(key) % buckets.size();
+        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -155,8 +155,8 @@ public:
         if (num_elements + num_ghosts > buckets.size() * max_load) {
             rehash_and_grow();
         }
-        size_t desired_bucket = hash(key) % buckets.size();
-        size_t original_hash = desired_bucket;
+        SizeT desired_bucket = hash(key) % buckets.size();
+        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if (buckets[desired_bucket].status != Status::Empty) {
             //search until an empty bucket
@@ -178,8 +178,8 @@ public:
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
-        size_t desired_bucket = hash(key) % buckets.size();
-        size_t original_hash = desired_bucket;
+        SizeT desired_bucket = hash(key) % buckets.size();
+        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -217,8 +217,8 @@ public:
 
     }
     // erase returns the number of items remove (0 or 1)
-    size_t erase(const K& key) {
-        size_t desired_bucket = hash(key) % buckets.size();
+    SizeT erase(const K& key) {
+        SizeT desired_bucket = hash(key) % buckets.size();
         //if the original bucket is empty, return
         if(buckets[desired_bucket].status == Status::Empty){
             return 0;
@@ -256,16 +256,16 @@ public:
         num_ghosts = 0;
     }
     //Returns the number of buckets
-    size_t bucket_count() {
+    SizeT bucket_count() {
         return buckets.size();
     }
     //Returns the number of elements in bucket n
-    size_t bucket_size(size_t n) {
+    SizeT bucket_size(SizeT n) {
         if (buckets[n].status == Status::Filled) return 1;
         return 0;
     }
     //Returns the index of the bucket for the given key
-    size_t bucket(const K k) {
+    SizeT bucket(const K k) {
         return hash(k) % buckets.size();
     }
     //Returns the current load factor
@@ -281,11 +281,11 @@ public:
         max_load = z;
     }
     //Sets the number of buckets in the container to n
-    void rehash(size_t n) {
+    void rehash(SizeT n) {
         rehash_and_grow(n);
     }
     //Set the number of buckets to contain n elements
-    void reserve(size_t n) {
+    void reserve(SizeT n) {
         rehash_and_grow(n);
     }
     //Returns the hash function
@@ -297,20 +297,20 @@ public:
         return pred;
     }
 private:
-    size_t num_elements = 0;
-    size_t num_ghosts = 0;
+    SizeT num_elements = 0;
+    SizeT num_ghosts = 0;
     float max_load = 0.5;
     Vector<Bucket> buckets;
     Hasher hash = fb::Hash<K>();
     Pred pred = fb::EqualTo<K>();
 
-    void rehash_and_grow(size_t n) {
+    void rehash_and_grow(SizeT n) {
         Vector<Bucket> temp = buckets;
         buckets.clear();
         num_elements = 0;
         num_ghosts = 0;
         buckets.resize(n);
-        for(size_t i = 0; i < temp.size(); i++){
+        for(SizeT i = 0; i < temp.size(); i++){
             if(temp[i].status == Status::Filled){
                 insert(temp[i].key, temp[i].val);
             }

@@ -1,11 +1,14 @@
 // Jin Soo Ihm September 10, 2019
 #pragma once
 
+//#include "vector.hpp"
+#include "functional.hpp"
 #include <vector>
-#include <functional>
+#include <functional> //std::swap, std::move
+#define Vector std::vector
 
 namespace fb {
-template< class T, class Container = std::vector< T >, class Compare = std::less< typename Container::value_type > >
+template< typename T, typename Container = Vector< T >, typename Compare = Less< typename Container::value_type > >
 class PriorityQueue
 {
 private:
@@ -34,7 +37,7 @@ private:
          std::swap( data[ i ], data[ ( i - 1 ) / 2 ] );
          i = ( i - 1 ) / 2;
          }
-      return;   
+      return;
       }
 
 public:
@@ -51,7 +54,7 @@ public:
       }
 
    PriorityQueue ( Compare comp )
-      : data( Container{ } ), compare(comp) 
+      : data( Container{ } ), compare(comp)
       {
       }
 

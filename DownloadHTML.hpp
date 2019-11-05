@@ -414,7 +414,7 @@ void PrintHtml( const std::string &url_in, const std::string &filename )
       url = PrintHtmlGetRedirect( url, filename );
 
       // If there is a loop, probably a bad website.
-      if(visitedURLs.find( url ) != visitedURLs.end( ) )
+      if( visitedURLs.find( url ) != visitedURLs.end( ) )
          break;
 
       visitedURLs.insert( url );

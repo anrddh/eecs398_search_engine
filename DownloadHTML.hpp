@@ -289,7 +289,7 @@ const std::string linkNotHTML = "LINK IS NOT HTML";
 // print received message after the header if no redirect 
 // return the URL to redirect to if necessary
 std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
-{
+   {
    char buffer [ 10240 ];
    int bytes;
    const std::string endHeader = "\r\n\r\n";
@@ -343,22 +343,22 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
          break;
    }
    return redirectUrl;
-}
+   }
 
 // Helper function to get the correct ConnectionWrapper
 ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
-{
+   {
    if ( url.Service == "http" )
       return new ConnectionWrapper( url );
    else
       return new SSLWrapper( url );
-}
+   }
 
 // Esatblish connection with the url
 // If redirect, return the redirect url
 // Else, write the recieved content to a file
 std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &filename )
-{
+   {
       // Parse the URL
    ParsedUrl url( url_in );
 
@@ -396,13 +396,13 @@ std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &
    delete connector;
 
    return redirectUrl;
-}
+   }
 
 // Write the url information to a file
 // handling redirect appropriately
 // If redirect creates a loop, do nothing
 void PrintHtml( const std::string &url_in, const std::string &filename )
-{
+   {
    std::set<std::string> visitedURLs;
 
    visitedURLs.insert( url_in );
@@ -419,4 +419,4 @@ void PrintHtml( const std::string &url_in, const std::string &filename )
 
       visitedURLs.insert( url );
       }
-}
+   }

@@ -298,7 +298,7 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
 
    const std::string redirectIndicator = "Location: ";
    const std::string chunkedIndicator = "chunked";
-   const std::string htmlIndicator = "Content-Type: text/html";
+   const std::string htmlIndicator = "text/html";
    std::string redirectUrl = "";
 
    while ( ( bytes =  connector->read(buffer)) > 0 )
@@ -315,7 +315,6 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
             writer.chunked = true;
 
          // check for redirect
-         // std::cout << header << std::endl;
          size_t startRedirectUrl = header.find( redirectIndicator );
          if ( startRedirectUrl != std::string::npos )
             {

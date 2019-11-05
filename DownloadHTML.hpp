@@ -86,12 +86,12 @@ class BufferWriter
       BufferWriter( bool chunkedIn, const std::string &filename )
       : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" ) 
          {
-            fd = creat( filename.c_str( ), 0666 );
+         fd = creat( filename.c_str( ), 0666 );
          }
 
       ~BufferWriter( )
          {
-            close( fd );
+         close( fd );
          }
 
       // get rid of \r\n in front

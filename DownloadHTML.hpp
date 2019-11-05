@@ -283,6 +283,8 @@ const std::string GetGetMessage( const ParsedUrl &url )
    return getMessage;
    }
 
+const std::string linkNotHTML = "LINK IS NOT HTML";
+
 // Get relevant information from the header
 // print received message after the header if no redirect 
 // return the URL to redirect to if necessary
@@ -296,6 +298,7 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
 
    const std::string redirectIndicator = "Location: ";
    const std::string chunkedIndicator = "chunked";
+   const std::string htmlIndicator = "Content-Type: text/html";
    std::string redirectUrl = "";
 
    while ( ( bytes =  connector->read(buffer)) > 0 )
@@ -310,9 +313,11 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
          {
          // check for chunked
          if ( header.find( chunkedIndicator ) != std::string::npos )
-            {
             writer.chunked = true;
-            }
+
+         // check if html
+         if ( header.find( htmlIndicator ) == std::string::npos )
+            return linkNotHTML;
 
          // check for redirect
          size_t startRedirectUrl = header.find( redirectIndicator );
@@ -325,6 +330,7 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
             }
          else
          {
+            std::cout << header << std::endl;
             // print the remaining message if no need to redirect
             writer.print( buffer + i + 1, bytes - i - 1 );
          }
@@ -374,12 +380,15 @@ std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &
    // Check for redirect and other relevant header info
    std::string redirectUrl = parseHeader( connector, writer );
    
-   // If no redirect, write the content
-   if ( redirectUrl == "" )
+   if ( redirectUrl != linkNotHTML )
       {
-      while ( ( bytes =  connector->read(buffer)) > 0 )
+      // If no redirect, write the content
+      if ( redirectUrl == "" )
          {
-         writer.print( buffer, bytes );
+         while ( ( bytes =  connector->read(buffer)) > 0 )
+            {
+            writer.print( buffer, bytes );
+            }
          }
       }
 

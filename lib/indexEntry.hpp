@@ -77,9 +77,9 @@ inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
 inline char* read_number( char* curr, uint64_t &num, uint8_t &header ) 
    {
-   if ( ( ( headerByte* ) curr )->hasHeader ) 
+   if ( ( ( fbImpl::headerByte* ) curr )->hasHeader ) 
       {
-      switch ( ( ( headerByte* ) curr )->size ) 
+      switch ( ( ( fbImpl::headerByte* ) curr )->size ) 
          {
          case 1:
             return fbImpl::read_number_with_header<fbImpl::twoByteWithHeader>( curr, num, header );
@@ -93,7 +93,7 @@ inline char* read_number( char* curr, uint64_t &num, uint8_t &header )
       } 
    else 
       {
-      switch ( ( ( headerByte* ) curr )->size ) 
+      switch ( ( ( fbImpl::headerByte* ) curr )->size ) 
          {
          case 0:
             return fbImpl::read_number_no_header<fbImpl::oneByteNoHeader>( curr, num, header );

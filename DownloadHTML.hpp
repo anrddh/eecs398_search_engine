@@ -296,7 +296,8 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
    std::string header = "    ";
    bool pastHeader = false;
 
-   const std::string redirectIndicator = "Location: ";
+   // some websites do not use capital case.
+   const std::string redirectIndicator = "ocation: ";
    const std::string chunkedIndicator = "chunked";
    const std::string htmlIndicator = "text/html";
    std::string redirectUrl = "";

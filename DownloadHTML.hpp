@@ -307,7 +307,6 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
       for ( int i = 0;  i < bytes;  ++i )
       {
       header.push_back( buffer[ i ] );
-
       // if end of header reached
       if ( std::string( header.end( ) - 4, header.end( ) ) == endHeader )
          {
@@ -315,11 +314,8 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
          if ( header.find( chunkedIndicator ) != std::string::npos )
             writer.chunked = true;
 
-         // check if html
-         if ( header.find( htmlIndicator ) == std::string::npos )
-            return linkNotHTML;
-
          // check for redirect
+         // std::cout << header << std::endl;
          size_t startRedirectUrl = header.find( redirectIndicator );
          if ( startRedirectUrl != std::string::npos )
             {
@@ -328,12 +324,15 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
                   startRedirectUrl + redirectIndicator.length( ),
                   endRedirectUrl - startRedirectUrl - redirectIndicator.length( ) );
             }
+         else if ( header.find( htmlIndicator ) == std::string::npos )
+            {
+            redirectUrl = linkNotHTML;
+            }
          else
-         {
-            std::cout << header << std::endl;
+            {
             // print the remaining message if no need to redirect
             writer.print( buffer + i + 1, bytes - i - 1 );
-         }
+            }
          
          pastHeader = true;
          break;

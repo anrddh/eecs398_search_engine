@@ -13,10 +13,13 @@ namespace fb {
     template <typename T>
 
     class Vector {
-        static constexpr auto Deleter = [](void *buf) {
-            operator delete[](buf);
+        struct Deleter {
+            void operator()(void *buf) {
+                operator delete[](buf);
+            }
         };
-        using UniqPtrType = UniquePtr<void *, decltype(Deleter)>;
+
+        using UniqPtrType = UniquePtr<void *, Deleter>;
     public:
         using ValueType = T;
         using SizeType = SizeT;
@@ -30,31 +33,31 @@ namespace fb {
         using ReverseIterator = fb::ReverseIterator<Iterator>;
         using ConstReverseIterator = AddConstT<ReverseIterator>;
 
-        Vector( ) { }
+        Vector( ) : buf(nullptr, Deleter()) { }
 
-        Vector(SizeT n, const T &val) : size_(n) {
+        Vector(SizeT n, const T &val) : Vector(), size_(n) {
             alloc_mem(n);
             uninitializedFill(begin(), end(), val);
          }
 
-        Vector(SizeT n) : size_(n) {
+        Vector(SizeT n) : Vector(), size_(n) {
             alloc_mem(n);
             uninitializedDefaultConstruct(begin(), end());
         }
 
-        Vector( const Vector<T>& v ) : size_(v.size()) {
+        Vector( const Vector<T>& v ) : Vector(), size_(v.size()) {
             alloc_mem(v.size());
             uninitalizedCopy(v.begin(), v.end(), begin());
         }
 
         Vector( Vector<T>&& v ) noexcept
-            : size_(v.size()), cap_(v.cap()), buf(std::move(v.buf)) {
+            : Vector(), size_(v.size()), cap_(v.cap()), buf(std::move(v.buf)) {
            v.size_ = 0;
            v.cap_ = 0;
         }
 
         template <typename It>
-        Vector (It first, It last) {
+        Vector (It first, It last) : Vector() {
             while (first != last)
                 pushBack(*first++);
         }
@@ -347,7 +350,7 @@ namespace fb {
         }
 
     private:
-        UniqPtrType buf { nullptr, Deleter };
+        UniqPtrType buf;
         SizeType size_ = 0;
         SizeType cap_ = 0;
 
@@ -357,7 +360,7 @@ namespace fb {
 
             auto newCap = cap_ ? 3 * cap_ / 2 : mem;
 
-            UniqPtrType newBuf(operator new[](newCap * sizeof(T)), Deleter);
+            UniqPtrType newBuf(operator new[](newCap * sizeof(T)), Deleter());
             uninitializedMove(begin(), end(), data());
 
             cap_ = newCap;

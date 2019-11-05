@@ -1,23 +1,27 @@
+//Edited by Chandler Meyers 11/5/2019
 //#pragma once
 
 #include "functional.hpp"
-#include "vector.hpp"
+//#include "vector.hpp"
+#include <vector>
+#define Vector std::vector
 
 #define INITIAL_SIZE 1024
 
 namespace fb {
 
 // A bucket's status tells you whether it's filled, empty, or contains a ghost.
-enum class Map_Status {
+enum class MapStatus {
     Empty,
     Filled,
     Ghost
 };
 
 template<typename K, typename V, typename Hasher = Hash<K>, typename Pred = EqualTo<K>>
-class unordered_map {
-    using Status = Map_Status;
+class UnorderedMap {
+    using Status = MapStatus;
 public:
+    friend class Iterator;
     // A bucket has a status, a key, and a value.
     struct Bucket {
         Status status = Status::Empty;
@@ -31,44 +35,39 @@ public:
     //Iterator type
     class Iterator {
     public:
-        friend class unordered_map;
-        Iterator() : current(nullptr), index(-1) {}
-        Iterator(size_t index) : current(&buckets[index]), index(index) {
-            if (index < buckets.size()) current = &buckets[index];
-            else current = nullptr;
+        friend class UnorderedMap;
+        Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
+        Iterator(Vector<Bucket> *owner, size_t index) : owner(owner), index(index) {
+            if (index > owner->size()) index = owner->size();
         }
-        Iterator(const Iterator &other) : current(other.current), index(other.index) {}
         Iterator& operator=(const Iterator &rhs) {
             if (rhs != *this) {
-                current = rhs.current;
+                owner = rhs.owner;
                 index = rhs.index;
             }
             return *this;
         }
 
         Iterator& operator++() {
-            index++;
-            if (index < buckets.size()) current = &buckets[index];
-            else current = nullptr;
+            while(index++, index < owner->size() && (*owner)[index].status != Status::Filled) ;
             return *this;
         }
 
         Iterator& operator--() {
-            index--;
-            current = &buckets[index];
+            while(index--, index >= 0 && (*owner)[index].status != Status::Filled) ;
             return *this;
         }
 
         V& operator*() {
-            return current->value;
+            return (*owner)[index].val;
         }
 
         V* operator->() {
-            return &current->value;
+            return &(*owner)[index].val;
         }
 
         bool operator==(const Iterator &other) const {
-            return !(current || other.current) || (current == other.current && index == other.index);
+            return !(owner || other.owner) || (owner == other.owner && index == other.index);
         }
 
         bool operator!=(const Iterator &other) const {
@@ -76,23 +75,35 @@ public:
         }
 
     private:
-        Bucket *current;
+        Vector<Bucket> *owner;
         size_t index;
     };
 
     //Default constructor
-    unordered_map() {
+    UnorderedMap() {
         buckets.resize(INITIAL_SIZE);
     }
 
     //Constructor that takes custom size, hash, and predicate
-    unordered_map(size_t sz, Hasher hash, Pred pred) : hash(hash), pred(pred) {
+    UnorderedMap(size_t sz, Hasher hash, Pred pred) : hash(hash), pred(pred) {
         buckets.resize(sz);
     }
 
     //Returns the number of elements in the map
     size_t size() const {
         return num_elements;
+    }
+
+    //Returns an iterator to the first element in the map
+    Iterator begin() {
+        int count = 0;
+        while (count < buckets.size() && buckets[count].status != Status::Filled) count++;
+        return Iterator(&buckets, count);
+    }
+
+    //Return an iterator "off the end" of the map
+    Iterator end() {
+        return Iterator(&buckets);
     }
 
     // returns a reference to the value in the bucket with the key, if it

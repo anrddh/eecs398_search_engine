@@ -2,15 +2,13 @@
 
 #include "stddef.hpp"
 #include "iterator.hpp"
+#include "memory/unique_ptr.hpp"
 
 namespace fb {
 
-    template <typename T>
+    template <typename T,
+              typename Allocator = >
     class Vector {
-    private:
-        T *arr = nullptr;
-        SizeT _size = 0;
-        SizeT cap = 0;
     public:
         using ValueType = T;
         using SizeType = SizeT;
@@ -30,24 +28,16 @@ namespace fb {
         // EFFECTS: Constructs an empty vector with capacity 0
         Vector( ) { }
 
-        // Resize Constructor
-        // REQUIRES: Nothing
-        // MODIFIES: *this
-        // EFFECTS: Constructs a vector with size n,
-        //    all default constructed
-        Vector(SizeT n) : cap(n), _size(n), arr(new T[n]()) {}
-
-        // Fill Constructor
-        // REQUIRES: Capacity > 0
-        // MODIFIES: *this
-        // EFFECTS: Creates a vector with size n, all assigned to val
         Vector(SizeT n, const T &val) : cap(n), _size(n), arr(new T[n]) {
             for (SizeT i = 0; i < _size; ++i)
                 arr[ i ] = val;
          }
 
-      // Copy Constructor
-      // REQUIRES: Nothing
+        Vector(SizeT n)
+            : cap(n), _size(n), arr(new T[n]()) {}
+
+        // Copy Constructor
+        // REQUIRES: Nothing
       // MODIFIES: *this
       // EFFECTS: Creates a clone of the vector v
       Vector( const Vector<T>& v )
@@ -110,12 +100,7 @@ namespace fb {
             v.cap = 0;
          }
 
-        // Destructor
-        // REQUIRES: Nothing
-        // MODIFIES: Destroys *this
-        // EFFECTS: Performs any neccessary clean up operations
-        ~Vector() { delete[] arr; }
-
+        ~Vector() = default;
 
 
       // REQUIRES: new_capacity > capacity()
@@ -163,33 +148,27 @@ namespace fb {
       // REQUIRES: Nothing
       // MODIFIES: Nothing
       // EFFECTS: Returns the number of elements in the vector
-      SizeT size( ) const
+      [[nodiscard]] constexpr SizeType size( ) const noexcept
          {
-         return _size;
+         return size_;
          }
 
       // REQUIRES: Nothing
       // MODIFIES: Nothing
       // EFFECTS: Returns the maximum size the vector can attain before resizing
-      SizeT capacity( ) const
+      [[nodiscard]] constexpr SizeType capacity( ) const noexcept
          {
          return cap;
          }
 
-      // REQUIRES: 0 <= i < size()
-      // MODIFIES: Allows modification of data[i]
-      // EFFECTS: Returns a mutable reference to the i'th element
-      T& operator[ ] ( SizeT i )
+      [[nodiscard]] T& operator[ ] ( SizeT i )
          {
-            return arr[i];
+         return data()[i];
          }
 
-      // REQUIRES: 0 <= i < size()
-      // MODIFIES: Nothing
-      // EFFECTS: Get a const reference to the ith element
       const T& operator[ ] ( SizeT i ) const
          {
-            return arr[i];
+         return data()[i];
          }
 
       // REQUIRES: Nothing
@@ -198,6 +177,7 @@ namespace fb {
       //    additional space if neccesary
       void pushBack( const T& val )
          {
+            alloc_mem(size() + 1);
             if(_size == cap){
                if(cap == 0){
                   ++cap;
@@ -226,41 +206,37 @@ namespace fb {
          --_size;
          }
 
-      // REQUIRES: Nothing
-      // MODIFIES: Allows mutable access to the vector's contents
-      // EFFECTS: Returns a mutable random access iterator to the
-      //    first element of the vector
       T* begin( )
          {
-         return arr;
+         return data();
          }
 
-      // REQUIRES: Nothing
-      // MODIFIES: Allows mutable access to the vector's contents
-      // EFFECTS: Returns a mutable random access iterator to
-      //    one past the last valid element of the vector
       T* end( )
          {
-         return arr+_size;
+         return data() + size();
          }
 
-      // REQUIRES: Nothing
-      // MODIFIES: Nothing
-      // EFFECTS: Returns a random access iterator to the first element of the vector
       const T* begin( ) const
          {
-         return arr;
+         return data();
          }
 
-      // REQUIRES: Nothing
-      // MODIFIES: Nothing
-      // EFFECTS: Returns a random access iterator to
-      //    one past the last valid element of the vector
       const T* end( ) const
          {
-         return arr+_size;
+         return data() + size();
          }
-   };
+    private:
+        UniquePtr<T[]> buf;
+        SizeType size_ = 0;
+        SizeType cap_ = 0;
 
+        void alloc_mem(SizeT mem) {
+            if (cap_ >= mem)
+                return;
+
+            auto newCap = cap_ ? 3 * cap_ / 2 : mem;
+            auto new_buf = makeUnique<char[]>(newCap * sizeof(T));
+        }
+   };
 
 }

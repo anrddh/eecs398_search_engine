@@ -50,6 +50,7 @@ public:
     [[nodiscard]] constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
         owner = rhs.release();
         deleter = rhs.getDeleter();
+        return *this;
     }
 
     ~UniquePtr() noexcept {

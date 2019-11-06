@@ -7,6 +7,7 @@
 
 #include <initializer_list>
 #include <stdexcept>
+#include <iostream>
 
 namespace fb {
 
@@ -19,7 +20,7 @@ namespace fb {
             }
         };
 
-        using UniqPtrType = UniquePtr<void *, Deleter>;
+        using UniqPtrType = UniquePtr<void, Deleter>;
     public:
         using ValueType = T;
         using SizeType = SizeT;
@@ -215,8 +216,12 @@ namespace fb {
             auto idx = distance(cbegin(), pos);
             alloc_mem(size() + 1);
 
-            for (auto i = size() - 1; i > idx; --i)
+            std::cout << "Inserting into idx: " << idx << std::endl
+                      << "Current size: " << size() << std::endl;
+
+            for (auto i = size(); i > idx; --i)
                 data()[i] = std::move(data()[i-1]);
+
             data()[idx] = value;
             ++size_;
             return begin() + idx;
@@ -358,10 +363,11 @@ namespace fb {
             if (cap_ >= mem)
                 return;
 
-            auto newCap = cap_ ? 3 * cap_ / 2 : mem;
+            auto newCap = (3 * mem) / 2;
 
             UniqPtrType newBuf(operator new[](newCap * sizeof(T)), Deleter());
-            uninitializedMove(begin(), end(), data());
+            uninitializedMove(begin(), end(), static_cast<T *>(newBuf.get()));
+            destroy(begin(), end());
 
             cap_ = newCap;
             buf = std::move(newBuf);

@@ -22,6 +22,12 @@ namespace fb {
     using TrueType = BoolConstant<true>;
     using FalseType = BoolConstant<false>;
 
+    /* Type relationships */
+    template <typename T, typename U> struct IsSame : FalseType {};
+    template <typename T> struct IsSame<T, T> : TrueType {};
+    template <typename T, typename U> inline constexpr bool IsSameV =
+        IsSame<T, U>::value;
+
     /* Const-volatility specifiers */
     template <typename T> struct RemoveConst          { using type = T; };
     template <typename T> struct RemoveConst<const T> { using type = T; };

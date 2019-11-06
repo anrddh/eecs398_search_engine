@@ -8,6 +8,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <iostream>
+#include <type_traits>
 
 namespace fb {
 
@@ -59,6 +60,7 @@ namespace fb {
 
         template <typename It>
         Vector (It first, It last) : Vector() {
+            // TODO: optimize if It is RandomAccessIterator
             while (first != last)
                 pushBack(*first++);
         }
@@ -67,18 +69,20 @@ namespace fb {
             : Vector(init.begin(), init.end()) {}
 
         Vector & operator=( const Vector<T> v ) {
-            std::swap(buf, v.buf);
-            std::swap(size_, v.size_);
-            std::swap(cap_, v.cap_);
+            swap(buf, v.buf);
+            swap(size_, v.size_);
+            swap(cap_, v.cap_);
         }
 
         Vector operator=( Vector<T>&& v ) noexcept {
-            std::swap(buf, v.buf);
-            std::swap(size_, v.size_);
-            std::swap(cap_, v.cap_);
+            swap(buf, v.buf);
+            swap(size_, v.size_);
+            swap(cap_, v.cap_);
         }
 
-        ~Vector() = default;
+        ~Vector() {
+            destroy(begin(),end());
+        }
 
         void assign(SizeType count, const T &value) {
             fill(begin(), begin() + count, value);
@@ -216,9 +220,6 @@ namespace fb {
             auto idx = distance(cbegin(), pos);
             alloc_mem(size() + 1);
 
-            std::cout << "Inserting into idx: " << idx << std::endl
-                      << "Current size: " << size() << std::endl;
-
             for (auto i = size(); i > idx; --i)
                 data()[i] = std::move(data()[i-1]);
 
@@ -241,23 +242,29 @@ namespace fb {
             auto idx = distance(cbegin(), pos);
             alloc_mem(size() + count);
 
-            for (auto i = size() + count - 1; i > (idx + count); --i)
+            for (auto i = size() + count - 1; i > (idx + count - 1); --i)
                 data()[i] = std::move(data()[i-count]);
 
             for (auto i = 0; i < count; ++i)
-                data()[i] = value;
+                data()[i + idx] = value;
+
             size_ += count;
             return begin() + idx;
         }
 
         template <typename It>
-        Iterator insert(ConstIterator pos, It first, It last) {
+        Iterator insert(ConstIterator pos,
+                        EnableIf<std::is_base_of_v<
+                        InputIteratorTag,
+                        typename IteratorTraits<It>::IteratorCategory
+                        >, It> first,
+                        It last) {
             auto count = distance(first, last);
 
             auto idx = distance(cbegin(), pos);
             alloc_mem(size() + count);
 
-            for (auto i = size() + count - 1; i > (idx + count); --i)
+            for (auto i = size() + count - 1; i > (idx + count - 1); --i)
                 data()[i] = std::move(data()[i-count]);
 
             copy(first, last, begin() + idx);
@@ -275,7 +282,7 @@ namespace fb {
             alloc_mem(size() + 1);
             for (auto i = size(); i > idx; --i)
                 data()[i] = std::move(data()[i-1]);
-            destroy(data() + idx);
+            destroyAt(data() + idx);
             new (data() + idx) T(std::forward<Args>(args)...);
             ++size_;
             return begin() + idx;
@@ -317,7 +324,7 @@ namespace fb {
 
         template <typename ... Args>
         Reference emplaceBack(Args &&... args) {
-            emplace(end(), std::forward<Args>(args)...);
+            return *emplace(end(), std::forward<Args>(args)...);
         }
 
         void popBack() {

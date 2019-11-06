@@ -1,8 +1,11 @@
+// By Jaeyoon Kim
+
 #pragma once
 #include <cstdint>
 #include <cstddef>
 #include <cassert>
 #include "indexEntryImpl.hpp" // where implementation details are hidden
+
 
 namespace fb {
 // bit layout (first byte)

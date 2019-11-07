@@ -43,17 +43,11 @@ int main ( int argc, char *argv[] ){
    std::string content( (std::istreambuf_iterator<char>(ifs) ),
               (std::istreambuf_iterator<char>()    ) );
    ifs.close();
-   auto parser = Parser(content);
+   auto parser = Parser(content, "domainnnn");
 
    auto retstr = parser.parse();
 
-   for(auto i : parser.urlAnchorText)
-   {
-      std::cout << "URL is: " << i.first << std::endl;
-      std::cout << "Anchor text:" << std::endl;
-      for(auto j : i.second)
-         std::cout << "\t" << j << std::endl;
-   }
+   parser.printUrls();
 
    std::ofstream outfile;
    outfile.open(filename += "tagless");

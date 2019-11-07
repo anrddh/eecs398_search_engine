@@ -7,7 +7,6 @@
 
 #include <initializer_list>
 #include <stdexcept>
-#include <iostream>
 #include <type_traits>
 
 namespace fb {
@@ -60,9 +59,9 @@ namespace fb {
         }
 
         template <typename It>
-        Vector (EnableIfT<std::is_base_of_v<InputIteratorTag,
-                        typename IteratorTraits<It>::IteratorCategory>,
-                It> first, It last) : Vector() {
+        Vector(EnableIfT<std::is_base_of_v<InputIteratorTag,
+               typename IteratorTraits<It>::IteratorCategory>,
+               It> first, It last) : Vector() {
             // TODO: optimize if It is RandomAccessIterator
             for (; first != last; ++first)
                 pushBack(*first);
@@ -255,15 +254,12 @@ namespace fb {
             return begin() + idx;
         }
 
-        /*
         template <typename It>
-        EnableIfT<std::is_base_of_v<
-                       InputIteratorTag,
-                       typename IteratorTraits<It>::IteratorCategory
-                      >, Iterator>
-        insert(ConstIterator pos,
-               It first,
-               It last) {
+        Iterator insert(ConstIterator pos,
+                        EnableIfT<
+                        std::is_base_of_v<InputIteratorTag,
+                        typename IteratorTraits<It>::IteratorCategory>,
+                        It> first, It last) {
             auto count = distance(first, last);
 
             auto idx = distance(cbegin(), pos);
@@ -276,13 +272,10 @@ namespace fb {
             size_ += count;
             return begin() + idx;
         }
-        */
 
-        /*
         Iterator insert(ConstIterator pos, std::initializer_list<T> ilist) {
-            return insert(pos, ilist.begin(), ilist.end());
+            return iterInsert(pos, ilist.begin(), ilist.end());
         }
-        */
 
         template <typename ... Args>
         Iterator emplace(ConstIterator pos, Args &&... args) {

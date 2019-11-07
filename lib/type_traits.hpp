@@ -75,4 +75,6 @@ namespace fb {
     template <typename T> struct EnableIf<true, T> { using type = T; };
     template <bool B, typename T = void> using EnableIfT = typename EnableIf<B,T>::type;
 
+    template <typename...> using VoidT = void;
+
 };

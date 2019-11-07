@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../stddef.hpp"
+#include "../type_traits.hpp"
+
+#include <type_traits>
 
 namespace fb {
 
@@ -11,8 +14,14 @@ namespace fb {
     struct RandomAccessIteratorTag : public BidirectionalIteratorTag {};
     struct ContiguousIteratorTag : public RandomAccessIteratorTag {};
 
+    template <typename, typename = VoidT<>> struct HasIterTypes : FalseType {};
+    template <typename T> struct HasIterTypes<T, VoidT<typename T::IteratorCategory>>
+        : TrueType {};
+
+    template <typename Iter, bool>
+    class IteratorTraitsHelper {};
     template <typename Iter>
-    class IteratorTraits {
+    class IteratorTraitsHelper<Iter, true> {
     public:
         using DifferenceType = typename Iter::DifferenceType;
         using ValueType = typename Iter::ValueType;
@@ -20,6 +29,10 @@ namespace fb {
         using Reference = typename Iter::Reference;
         using IteratorCategory = typename Iter::IteratorCategory;
     };
+
+    template <typename Iter>
+    class IteratorTraits
+        : public IteratorTraitsHelper<Iter, HasIterTypes<Iter>::value> {};
 
     template <typename T>
     class IteratorTraits<T *> {

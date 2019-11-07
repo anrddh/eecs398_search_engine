@@ -31,14 +31,15 @@ namespace fb {
         using Pointer = T *;
         using ConstPointer = AddConstT<Pointer>;
         using Iterator = Pointer;
-        using ConstIterator = AddConstT<Iterator>;
+        using ConstIterator = const T *;
         using ReverseIterator = fb::ReverseIterator<Iterator>;
-        using ConstReverseIterator = AddConstT<ReverseIterator>;
+        using ConstReverseIterator = fb::ReverseIterator<ConstIterator>;
 
         Vector( ) : buf(nullptr, Deleter()) { }
 
-        Vector(SizeT n, const T &val) : Vector(), size_(n) {
+        Vector(SizeT n, const T &val) : Vector() {
             alloc_mem(n);
+            size_ = n;
             uninitializedFill(begin(), end(), val);
          }
 
@@ -59,10 +60,12 @@ namespace fb {
         }
 
         template <typename It>
-        Vector (It first, It last) : Vector() {
+        Vector (EnableIfT<std::is_base_of_v<InputIteratorTag,
+                        typename IteratorTraits<It>::IteratorCategory>,
+                It> first, It last) : Vector() {
             // TODO: optimize if It is RandomAccessIterator
-            while (first != last)
-                pushBack(*first++);
+            for (; first != last; ++first)
+                pushBack(*first);
         }
 
         Vector(std::initializer_list<T> init)
@@ -229,7 +232,7 @@ namespace fb {
         }
 
         Iterator insert(ConstIterator pos, T &&value) {
-            auto idx = distance(cbegin(), pos);
+            auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + 1);
             for (auto i = size(); i > idx; --i)
                 data()[i] = std::move(data()[i-1]);
@@ -252,13 +255,15 @@ namespace fb {
             return begin() + idx;
         }
 
+        /*
         template <typename It>
-        Iterator insert(ConstIterator pos,
-                        EnableIf<std::is_base_of_v<
-                        InputIteratorTag,
-                        typename IteratorTraits<It>::IteratorCategory
-                        >, It> first,
-                        It last) {
+        EnableIfT<std::is_base_of_v<
+                       InputIteratorTag,
+                       typename IteratorTraits<It>::IteratorCategory
+                      >, Iterator>
+        insert(ConstIterator pos,
+               It first,
+               It last) {
             auto count = distance(first, last);
 
             auto idx = distance(cbegin(), pos);
@@ -271,10 +276,13 @@ namespace fb {
             size_ += count;
             return begin() + idx;
         }
+        */
 
+        /*
         Iterator insert(ConstIterator pos, std::initializer_list<T> ilist) {
             return insert(pos, ilist.begin(), ilist.end());
         }
+        */
 
         template <typename ... Args>
         Iterator emplace(ConstIterator pos, Args &&... args) {
@@ -294,24 +302,22 @@ namespace fb {
             --size_;
             for (auto i = idx; i < size(); ++i)
                 data()[i] = std::move(data()[i+1]);
-            return ++pos;
+            return begin() + idx;
         }
 
         Iterator erase(ConstIterator first, ConstIterator last) {
             if (first == last)
-                return first;
+                return begin() + distance(cbegin(), first);
 
+            auto idx = distance(cbegin(), first);
             auto count = distance(first,last);
             destroy(first,last);
-            auto it = last;
 
-            while (first != last && it != end()) {
-                *first = std::move(*it);
-                ++it; ++first;
-            }
+            for (auto first_it = begin() + idx; last != end(); ++last, ++first_it)
+                *first_it = std::move(*last);
 
             size_ -= count;
-            return last;
+            return begin() + idx + count;
         }
 
         void pushBack(const T &value) {

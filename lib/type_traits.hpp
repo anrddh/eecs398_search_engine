@@ -73,7 +73,6 @@ namespace fb {
     /*  Miscellaneous transformations  */
     template <bool B, typename T = void> struct EnableIf {};
     template <typename T> struct EnableIf<true, T> { using type = T; };
-    template <bool B, typename T = void>
-    using EnableIfT = typename EnableIf<B,T>::type;
+    template <bool B, typename T = void> using EnableIfT = typename EnableIf<B,T>::type;
 
 };

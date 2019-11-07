@@ -6,7 +6,6 @@
 #include "stddef.hpp"
 
 #include <string>
-#define String std::string
 
 #define INITIAL_SIZE 1024
 
@@ -32,10 +31,10 @@ SizeT fnvHash( const char *data, SizeT length )
 template <typename T>
 struct Hash;
 
-//Hash instance for String type
+//Hash instance for std::string type
 template <>
-struct Hash<String> {
-    SizeT operator() ( const String &data ) const {
+struct Hash<std::string> {
+    SizeT operator() ( const std::string &data ) const {
         return fnvHash( data.c_str(), data.size() );
     }
 };
@@ -69,7 +68,8 @@ template <class T> struct NotEqualTo {
 };
 
 //Less than predicate for template type which supports <
-template <class T> struct Less {
+template <class T> 
+struct Less {
     constexpr bool operator() (const T &lhs, const T &rhs) const {
         return lhs < rhs;
     }

@@ -10,10 +10,11 @@
 #include <string>
 #include <vector>
 #define Vector std::vector
-#define URL std::string
 #define String std::string
 
 namespace fb {
+
+using URL = String;
 
 //struct which contains info about a specific url
 struct UrlInfo {

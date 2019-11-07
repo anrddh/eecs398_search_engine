@@ -24,7 +24,7 @@ enum class OffsetStatus {
 };
 
 template<typename K = URL, typename V = SizeT, typename Hasher = Hash<K>>
-class UrlLookup {
+class OffsetLookup {
     using Status = OffsetStatus;
 public:
     friend class Iterator;
@@ -40,7 +40,7 @@ public:
     //Iterator type
     class Iterator {
     public:
-        friend class UrlLookup;
+        friend class OffsetLookup;
         Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
         Iterator(Vector<Bucket> *owner, size_t index) : owner(owner), index(index) {
             if (index > owner->size()) index = owner->size();
@@ -85,12 +85,12 @@ public:
     };
 
     //Default constructor
-    UrlLookup() {
+    OffsetLookup() {
         buckets.resize(INITIAL_SIZE);
     }
 
     //Constructor with owner, the one we should be using
-    UrlLookup(UrlPoolChunk *owner_) {
+    OffsetLookup(UrlPoolChunk *owner_) {
         buckets.resize(INITIAL_SIZE);
         owner = owner_;
     }

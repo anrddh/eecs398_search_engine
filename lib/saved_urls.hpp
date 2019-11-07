@@ -1,9 +1,20 @@
 // Created by Jaeyoon Kim 11/6/2019
 #pragma once
+#include "string.hpp"
 #include <atomic>
-#include <string>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+using namespace fb {
 
 constexpr MAXFILESIZE = 128e11; // 128 Giga bytes
+
+// Simple exception class for reporting String errors
+struct SavedUrls_exception {
+	SavedUrls_exception(const char* msg_) : msg(msg_)
+		{}
+	const char* msg;
+};
 
 // This is the class where one can save list of urls
 // ASSUMES that there won't be more than 128 Gb of urls
@@ -12,8 +23,19 @@ constexpr MAXFILESIZE = 128e11; // 128 Giga bytes
 // they are written to. 
 class SavedUrls {
 public:
-   SaveUrls( std::string filename_ ) : filename( filename_ ), cursor( 0 ) {
+   SaveUrls( String filename )  {
       int fd = open( filename.c_str(), O_RDWR );
+      struct stat sb;
+      if ( fstat(fd, &sb) == -1 ) 
+      {
+         throw SavedUrls_exception( (String("Failed to open file ") + filename).c_str() );
+      }
+
+      // TODO check for off by one error
+      // Because the null character doesn't count for file length (check if this is true)
+      // we need to go one past the end to write
+      cursor = sb.st_size + 1; 
+
       file_ptr = ( char* ) mmap(nullptr, MAXFILESIZE, PROT_WRITE, MAP_PRIVATE, fd, 0);
    }
 
@@ -21,6 +43,7 @@ public:
       // obtain the old previous value and increment it
       SizeT str_begin = cursor.fetch_add(url.len() + 1); 
       strcpy( file_ptr + str_begin, url.c_str() ); 
+      return str_begin;
    }
 
    inline char* get_str(SizeT offset) 
@@ -28,7 +51,7 @@ public:
       return file_ptr + offset; 
       }
 private:
-   std::string filename;
    std::atomic<SizeT> cursor;
    char* file_ptr;
 }
+};

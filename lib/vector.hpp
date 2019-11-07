@@ -81,7 +81,7 @@ namespace fb {
         }
 
         ~Vector() {
-            destroy(begin(),end());
+            fb::destroy(begin(),end());
         }
 
         void assign(SizeType count, const T &value) {
@@ -121,19 +121,19 @@ namespace fb {
         }
 
         Reference front() {
-            return *this[0];
+            return data()[0];
         }
 
         ConstReference front() const {
-            return *this[0];
+            return data()[0];
         }
 
         Reference back() {
-            return *this[size() - 1];
+            return data()[size() - 1];
         }
 
         ConstReference back() const {
-            return *this[size() - 1];
+            return data()[size() - 1];
         }
 
         Pointer data() noexcept {
@@ -217,7 +217,7 @@ namespace fb {
         }
 
         Iterator insert(ConstIterator pos, const T &value) {
-            auto idx = distance(cbegin(), pos);
+            auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + 1);
 
             for (auto i = size(); i > idx; --i)
@@ -374,11 +374,16 @@ namespace fb {
 
             UniqPtrType newBuf(operator new[](newCap * sizeof(T)), Deleter());
             uninitializedMove(begin(), end(), static_cast<T *>(newBuf.get()));
-            destroy(begin(), end());
+            fb::destroy(begin(), end());
 
             cap_ = newCap;
             buf = std::move(newBuf);
         }
    };
+
+    template <typename T>
+    void swap(Vector<T> &lhs, Vector<T> &rhs) noexcept(noexcept(lhs.swap(rhs))) {
+        lhs.swap(rhs);
+    }
 
 }

@@ -15,7 +15,7 @@ namespace fb {
     template <typename It>
     void destroy(It first, It last) {
         for (; first != last; ++first)
-            destroyAt(addressof(*first));
+            destroyAt(fb::addressof(*first));
     }
 
     template <typename It, typename DIt>
@@ -64,12 +64,12 @@ namespace fb {
         auto current = dest;
         try {
             while (first != last)
-                ::new (static_cast<void *>(addressof(*current++)))
+                ::new (static_cast<void *>(fb::addressof(*current++)))
                       typename IteratorTraits<It>
                       ::ValueType(std::move(*first++));
             return current;
         } catch (...) {
-            destroy(dest, current);
+            fb::destroy(dest, current);
             throw;
         }
     }

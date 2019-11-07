@@ -1,10 +1,14 @@
 #pragma once
 
-#include <iostream>
-
 #include "stddef.hpp"
 #include "vector.hpp"
 #include "string_view.hpp"
+#include "type_traits.hpp"
+
+#include <iostream>
+#include <type_traits>
+#include <initializer_list>
+#include <stdexcept>
 
 namespace fb {
     template <typename CharT>
@@ -13,14 +17,14 @@ namespace fb {
         using ValueType = CharT;
         using SizeType = SizeT;
         using DifferenceType = PtrDiffT;
-        using Reference = Vector<CharT>::Reference;
-        using ConstReference = Vector<CharT>::ConstReference;
-        using Pointer = Vector<CharT>::Pointer;
-        using ConstPointer = Vector<CharT>::ConstPointer;
-        using Iterator = Vector<CharT>::Iterator;
-        using ConstIterator = Vector<CharT>::ConstIterator;
-        using ReverseIterator = Vector<CharT>::ReverseIterator;
-        using ConstReverseIterator = Vector<CharT>::ConstReverseIterator;
+        using Reference = typename Vector<CharT>::Reference;
+        using ConstReference = typename Vector<CharT>::ConstReference;
+        using Pointer = typename Vector<CharT>::Pointer;
+        using ConstPointer = typename Vector<CharT>::ConstPointer;
+        using Iterator = typename Vector<CharT>::Iterator;
+        using ConstIterator = typename Vector<CharT>::ConstIterator;
+        using ReverseIterator = typename Vector<CharT>::ReverseIterator;
+        using ConstReverseIterator = typename Vector<CharT>::ConstReverseIterator;
 
         BasicString() = default;
 
@@ -86,6 +90,53 @@ namespace fb {
         }
 
         /* Iterators */
+        Iterator begin() noexcept {
+            return buf.begin();
+        }
+
+        ConstIterator begin() const noexcept {
+            return buf.begin();
+        }
+
+        ConstIterator cbegin() const noexcept {
+            return buf.cbegin();
+        }
+
+        Iterator end() noexcept {
+            return buf.end() - 1;
+        }
+
+        ConstIterator end() const noexcept {
+            return buf.end() - 1;
+        }
+
+        ConstIterator cend() const noexcept {
+            return buf.cend() - 1;
+        }
+
+        ReverseIterator rbegin() noexcept {
+            return buf.rbegin() + 1;
+        }
+
+        ConstReverseIterator rbegin() const noexcept {
+            return buf.rbegin() + 1;
+        }
+
+        ConstReverseIterator crbegin() const noexcept {
+            return buf.crbegin() + 1;
+        }
+
+        ReverseIterator rend() noexcept {
+            return buf.rend();
+        }
+
+        ConstReverseIterator rend() const noexcept {
+            return buf.rend();
+        }
+
+        ConstReverseIterator crend() const noexcept {
+            return buf.crend();
+        }
 
         /* Capacity */
         [[nodiscard]] bool empty() const noexcept {
@@ -96,10 +147,6 @@ namespace fb {
             return buf.size() ? buf.size() - 1 : 0;
         }
 
-        [[nodiscard]] SizeType max_size() const noexcept {
-            return buf.max_size() - 1;
-        }
-
         void reserve(SizeType new_cap) {
             buf.reserve(new_cap + 1);
         }
@@ -108,122 +155,139 @@ namespace fb {
             return buf.capacity() ? buf.capacity() - 1 : 0;
         }
 
-        void shrink_to_fit() {
-            buf.shrink_to_fit();
-        }
-
         /* Operations */
         void clear() noexcept {
             buf.clear();
         }
 
-        //      /* Return a String starting with i and extending for len
-        //      characters The substring must be contained within the string.
-        //      Values of i and len for valid input are as follows:
-        //      i >= 0 && len >= 0 && i <= size && (i + len) <= size.
-        //      If both i = size and len = 0, the input is valid and the result is
-        //      an empty string.  Throw exception if the input is invalid. */
-        //      String substring(int i, int len) const {
-        //        if (i < 0 || len < 0 || i > buf_size || (i + len) > buf_size)
-        //          throw String_exception("Substring bounds invalid");
-        //
-        //        String substr;
-        //        substr.alloc_mem(len + 1);
-        //        for (int j = 0; j < len; ++j)
-        //          substr += buf[j + i];
-        //        return substr;
-        //      }
-        //
-        //      // Modifiers Set to an empty string with minimum allocation by
-        //      // create/swap with an empty string.
-        //      void clear() {
-        //        String temp("");
-        //        swap(temp);
-        //      }
-        //
-        //      /* Remove the len characters starting at i; allocation is
-        //      unchanged.  The removed characters must be contained within the
-        //      String.  Valid values for i and len are the same as for
-        //      substring. */
-        //      void remove(int i, int len) {
-        //        if (i < 0 || len < 0 || i > size() || (i + len) > size())
-        //          throw String_exception("Remove bounds invalid");
-        //
-        //        for (int j = i + len; j < size(); ++j)
-        //          buf[j - len] = buf[j];
-        //        buf_size -= len;
-        //        buf[buf_size] = 0;
-        //      }
-        //
-        //      /* Insert the supplied source String before character i of this
-        //      String, pushing the rest of the contents back, reallocating as
-        //      needed.  If i == size, the inserted string is added to the end of
-        //      this String.  This function does not create any temporary String
-        //      objects.  It either directly inserts the new data into this
-        //      String's space if it is big enough, or allocates new space and
-        //      copies in the old data with the new data inserted.
-        //
-        //      This String retains the final allocation.
-        //      Throw exception if 0 <= i <= size is false.
-        //
-        //      The behavior of inserting a String into itself is not specified. */
-        //      void insert_before(int i, const String &src) {
-        //        if (!src.size())
-        //          return;
-        //
-        //        if (i < 0 || i > size())
-        //          throw String_exception("Insertion point out of range");
-        //
-        //        realloc_mem(src.size());
-        //
-        //        for (int j = size() - 1 + src.size(); j > i; --j)
-        //          buf[j] = buf[j - src.size()];
-        //
-        //        for (int j = 0; j < src.size(); ++j)
-        //          buf[i + j] = src[j];
-        //
-        //        buf_size += src.size();
-        //        buf[buf_size] = 0;
-        //      }
-        //
-        //      /* These concatenation operators add the rhs string data to the
-        //      lhs object.  They do not create any temporary String objects. They
-        //      either directly copy the rhs data into the lhs space if it is big
-        //      enough to hold the rhs, or allocate new space and copy the old lhs
-        //      data into it followed by the rhs data. The lhs object retains the
-        //      final memory allocation. If the rhs is a null byte or an empty
-        //      C-string or String, no change is made to lhs String. */
-        //      String &operator+=(char rhs) {
-        //        realloc_mem(1);
-        //        buf[buf_size++] = rhs;
-        //        buf[buf_size] = 0;
-        //        return *this;
-        //      }
-        //
-        //      String &operator+=(const char *rhs) {
-        //        int rhs_len = strlen(rhs);
-        //        realloc_mem(rhs_len);
-        //
-        //        for (int i = 0; i < rhs_len; ++i)
-        //          buf[i + buf_size] = rhs[i];
-        //
-        //        buf_size += rhs_len;
-        //        buf[buf_size] = 0;
-        //
-        //        return *this;
-        //      }
-        //
-        //      String &operator+=(const String &rhs) { return *this += rhs.c_str(); }
-        //
-        //      /* Swap the contents of this String with another one.  The member
-        //      variable values are interchanged, along with the pointers to the
-        //      allocated C-strings, but the two C-strings are neither copied nor
-        //      modified. No memory allocation/deallocation is done. */
-        //      void swap(String &other) noexcept {
-        //        std::swap(buf_size, other.buf_size);
-        //        std::swap(alloc, other.alloc);
-        //        std::swap(buf, other.buf);
-        //      }
+        BasicString & insert(SizeType index, SizeType count, CharT ch) {
+            if (index > size())
+                throw std::out_of_range("");
+            buf.insert(buf.begin() + index, count, ch);
+            return *this;
+        }
+
+        BasicString & insert(SizeType index, const BasicStringView<CharT> s) {
+            if (index > size())
+                throw std::out_of_range("");
+            return insert(index, s, s.size());
+        }
+
+        BasicString & insert(SizeType index,
+                             const BasicStringView<CharT> s,
+                             SizeType count) {
+            if (index > size())
+                throw std::out_of_range("");
+            buf.insert(buf.begin() + index, s.begin(), s.begin() + count);
+            return *this;
+        }
+
+        BasicString & insert(SizeType index, const BasicString &s) {
+            if (index > size())
+                throw std::out_of_range("");
+            buf.insert(buf.begin() + index, s.begin(), s.end());
+            return *this;
+        }
+
+        BasicString & insert(SizeType index, const BasicString &str,
+                             SizeType index_str, SizeType count = npos) {
+            if (index > size() || index_str > str.size())
+                throw std::out_of_range("");
+            return insert(index, str.substr(index_str, count));
+        }
+
+        Iterator insert(ConstIterator pos, CharT ch) {
+            return buf.insert(pos, ch);
+        }
+
+        Iterator insert(ConstIterator pos, SizeType count, CharT ch) {
+            return buf.insert(pos, count, ch);
+        }
+
+        template <typename It>
+        Iterator insert(ConstIterator pos,
+                        EnableIf<std::is_base_of_v<
+                        InputIteratorTag,
+                        typename IteratorTraits<It>::IteratorCategory
+                        >, It>
+                        first, It last) {
+            return buf.insert(pos, first, last);
+        }
+
+        Iterator insert(ConstIterator pos, std::initializer_list<CharT> ilist) {
+            return insert(pos, ilist.begin(), ilist.end());
+        }
+
+        Iterator erase(ConstIterator position) {
+            return buf.erase(position);
+        }
+
+        Iterator erase(ConstIterator first, ConstIterator last) {
+            return buf.erase(first, last);
+        }
+
+        void pushBack(CharT ch) {
+            insert(end() - 1, ch);
+        }
+
+        void popBack() {
+            erase(end() - 1);
+        }
+
+        BasicString & append(SizeType count, CharT ch) {
+            buf.insert(end(), count, ch);
+            return *this;
+        }
+
+        BasicString & append(const BasicStringView<CharT> str) {
+            buf.insert(end(), str.begin(), str.end());
+            return *this;
+        }
+
+        BasicString & append(const BasicString &str,
+                             SizeType pos,
+                             SizeType count = npos) {
+        }
+
+        /*
+basic_string& append( const CharT* s, size_type count );
+basic_string& append( const CharT* s );
+template< class InputIt >
+basic_string& append( InputIt first, InputIt last );
+basic_string& append( std::initializer_list<CharT> ilist );
+	(7) 	(since C++11)
+template < class T >
+basic_string& append( const T& t );
+	(8) 	(since C++17)
+template < class T >
+
+basic_string& append( const T& t, size_type pos,
+                      size_type count = npos );
+	(9) 	(since C++17)
+    */
+        BasicString substr(SizeType pos = 0, SizeType count = npos) const {
+            if (pos > size())
+                throw std::out_of_range("");
+            return BasicString(data() + pos, count);
+        }
+
+        void resize(SizeType count) {
+            buf.resize(count + 1);
+        }
+
+        void resize(SizeType count, CharT ch) {
+            if (count <= size()) {
+                buf.resize(count + 1);
+                buf.last() = 0;
+                return;
+            }
+
+
+        }
+
+        void swap(BasicString &other) noexcept {
+            swap(buf, other.buf);
+        }
 
     private:
         Vector<CharT> buf;

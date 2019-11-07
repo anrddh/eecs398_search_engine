@@ -11,11 +11,11 @@ namespace fb {
 // Note that each file will be mapping 128 Gb of virtual address
 // However, the pages will not be allocated for the files until
 // they are written to.
-class SavedUrls {
+class SavedStrings {
 public:
-   SavedUrls( std::string filename ) : disk_array( filename ) {}
+   SavedStrings( std::string filename ) : disk_array( filename ) {}
 
-   SizeT add_url( std::string url) {
+   SizeT add_string( std::string url) {
       // Make sure to increment the cursor before writing so that
       // other threads can work on the array as well
       // We also need to write the null byte
@@ -24,7 +24,7 @@ public:
       return str_begin;
    }
 
-   inline char* get_url(SizeT offset) 
+   inline char* get_string(SizeT offset) 
       { 
       return disk_array.file_ptr + offset; 
       }

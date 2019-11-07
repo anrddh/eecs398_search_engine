@@ -1,4 +1,5 @@
 // Created by Jaeyoon Kim 11/6/2019
+// Generalized into templates by Jaeyoon Kim 11/7/2019
 #pragma once
 #include "stddef.hpp"
 #include "Exception.hpp"
@@ -13,16 +14,18 @@
 
 namespace fb {
 
-// This is the class where one can save list of adj list
+// This is the class where one can save a vector into a contiguous region of memory
+// (It uses copy constructor thus it works best with small basic types)
 // ASSUMES that there won't be more than 128 Gb of urls
 // Note that each file will be mapping 128 Gb of virtual address
 // However, the pages will not be allocated for the files until
 // they are written to.
-class SavedAdjList {
+template <typename T>
+class SavedLists {
 public:
-   SavedAdjList( std::string filename ) : disk_array( filename ) {}
+   SavedLists( std::string filename ) : disk_array( filename ) {}
 
-   SizeT add_adj_list( Vector<SizeT> adj_list ) {
+   SizeT add_list( const Vector<T>& adj_list ) {
       // obtain the old previous value and increment it
       SizeT offset = disk_array.cursor->fetch_add( adj_list.size() ); 
       SizeT* ptr = disk_array.file_ptr + offset;
@@ -32,12 +35,12 @@ public:
       return offset;
    }
 
-   inline SizeT* get_adj_list(SizeT offset) 
+   inline T* get_list(SizeT offset) 
       { 
       return disk_array.file_ptr + offset; 
       }
 
 private:
-   SavedObj<SizeT> disk_array;
+   SavedObj<T> disk_array;
 };
 };

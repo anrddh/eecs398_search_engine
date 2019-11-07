@@ -5,6 +5,8 @@
 #include "saved_urls.hpp"
 #include "unordered_set.hpp"
 #include "url_pool.hpp"
+#include "offset_lookup.hpp"
+#include "mutex.hpp"
 //#include "string,hpp"
 //#include "vector.hpp"
 #include <string>
@@ -16,10 +18,15 @@ namespace fb {
 template <SizeT N>
 class StringPool {
 public:
-   StringPool( std::string filename );
+   StringPool( std::string filename ) : str_array( filename ) {}
+   
+   // Will find the offset (if this string was seen
    SizeT get_offset( std::string str );
-private:
 
+   char* access_offset( SizeT offset );
+private:
+   SavedStrings str_array;
+   Pair<offset_lookup, Mutex> offset_hashes[N];
 };
 
 }; //namespace fb

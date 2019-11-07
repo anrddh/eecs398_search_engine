@@ -113,6 +113,50 @@ public:
         return Iterator(&buckets);
     }
 
+    //Takes in a key, hash pair where the hash is the hash of the key
+    //It only looks at the hash, and finds that object. If it isnt found, it then
+    //creates the object using the key. In either case, it returns an iterator to the
+    //object.
+    V& find(const K& key, SizT hash){
+        if(num_elements+num_ghosts > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+        size_t desired_bucket = hash % buckets.size();
+        size_t original_hash = desired_bucket;
+        //if the bucket is not empty
+        if(buckets[desired_bucket].status != Status::Empty){
+            //search until an empty bucket
+            while(buckets[desired_bucket].status != Status::Empty){
+                //if a bucket has the key, return
+                if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)){
+                    return buckets[desired_bucket].val;
+                }
+                desired_bucket = (desired_bucket+1) % buckets.size();
+            }
+
+            //key does not exist, so find first available bucket and add it
+            while(true){
+                if(buckets[original_hash].status == Status::Filled){
+                    original_hash = (original_hash+1) % buckets.size();
+                }else{
+                    if(buckets[original_hash].status == Status::Ghost){
+                        num_ghosts--;
+                    }
+                    buckets[original_hash].val = owner->OffsetCreate(URL);
+                    buckets[original_hash].status = Status::Filled;
+                    num_elements++;
+                    return buckets[original_hash].val;
+                }
+            }
+        }else{
+            //bucket is empty, so add key
+            buckets[original_hash].val = owner->OffsetCreate(URL);
+            buckets[original_hash].status = Status::Filled;
+            num_elements++;
+            return buckets[original_hash].val;
+        }
+    }
+
     // returns a reference to the value in the bucket with the key, if it
     // already exists. Otherwise, insert it with a default value, and return
     // a reference to the resulting bucket.

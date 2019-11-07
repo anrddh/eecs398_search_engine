@@ -26,7 +26,6 @@ public:
       }
 private:
    pthread_mutex_t lock;
-
 };
 
 /* AutoLock is a synchronization tool that takes advantage of RAII

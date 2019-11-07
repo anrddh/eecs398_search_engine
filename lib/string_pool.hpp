@@ -7,10 +7,8 @@
 #include "url_pool.hpp"
 #include "offset_lookup.hpp"
 #include "mutex.hpp"
-//#include "string,hpp"
-//#include "vector.hpp"
+#include "utilities.hpp" // for pair
 #include <string>
-#include <vector>
 
 namespace fb {
 
@@ -27,6 +25,7 @@ public:
 private:
    SavedStrings str_array;
    Pair<offset_lookup, Mutex> offset_hashes[N];
+   Hash<std::string> hasher;
 };
 
 }; //namespace fb

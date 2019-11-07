@@ -6,7 +6,7 @@
 //  Copyright © 2019 Jaeyoon Kim. All rights reserved.
 //
 
-#include "UrlStorage.hpp"
+#include "frontierStorage.hpp"
 #include <stdlib.h>
 #include <iostream>
 #include <mutex>
@@ -46,38 +46,42 @@ vector<Url_t> UrlStorage::get_url() {
     }
     local_seed_m.unlock();
     
-    lock_guard<mutex> to_parse_lock(to_parse_m);
+    vector<Url_t> urls_to_return;
+    int max_ranking = 0; // Requires that any ranking of urls to be greater than 0
+    int max_idx;
+
+    to_parse_m.lock();
     if (to_parse.size() < NUM_TRY) {
         return {}; // empty url
     }
     
-    int max_ranking = 0;
-    int max_idx;
     // Find what to sample
+    // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
     for (int i = 0; i < NUM_SAMPLE; ++i) {
         if (max_ranking < to_parse[rand_num[i] % to_parse.size()].ranking) {
             max_ranking = to_parse[rand_num[i] % to_parse.size()].ranking;
             max_idx = rand_num[i] % to_parse.size();
         }
     }
+
+    urls_to_return.push_back( move(to_parse[max_idx]) );
+    to_parse[ max_idx ] = move(to_parse.back());
+    to_parse.pop_back();
     
-    urls_to_take.insert(max_idx);
-    
-    for (int i = NUM_SAMPLE; i < NUM_TRY; ++i) {
+    // We randomly check urls
+    // If their ranking is greater than or equal to max_ranking,
+    // then we will take them to be parsed
+    // Note that it is possible that same url might be checked multiple times
+    // However, this is not likely since there should be many urls in here each time
+    for ( int i = NUM_SAMPLE; i < NUM_TRY; ++i ) {
         if (to_parse[rand_num[i] % to_parse.size()].ranking >= max_ranking) {
-            urls_to_take.insert(rand_num[i] % to_parse.size());
+            urls_to_return.push_back( move( to_parse[rand_num[i] % to_parse.size()] ) );
+            to_parse[rand_num[i] % to_parse.size()] = move( to_parse.back() );
+            to_parse.pop_back();
         }
     }
-    
-    // Now take the chosen urls
-    // We should keep taking the highest index so that we don't ever copy
-    // a already taken url
-    vector<Url_t> urls_to_return;
-    for (auto it = urls_to_take.rbegin(); it != urls_to_take.rend(); ++it) {
-        urls_to_return.push_back(to_parse[*it]);
-        to_parse[*it] = to_parse.back();
-        to_parse.pop_back();
-    }
+
+    to_parse_m.unlock();
     
     return urls_to_return;
 }

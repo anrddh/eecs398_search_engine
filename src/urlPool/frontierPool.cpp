@@ -6,8 +6,8 @@
 //  Copyright © 2019 Jaeyoon Kim. All rights reserved.
 //
 
-#include "UrlPool.hpp"
-#include "UrlStorage.hpp"
+#include "frontierPool.hpp"
+#include "frontierStorage.hpp"
 #include <mutex>
 #include <iostream>
 

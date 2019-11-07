@@ -1,6 +1,7 @@
 // Created by Jaeyoon Kim 11/6/2019
 #pragma once
 #include "string.hpp"
+#include "Exception.hpp"
 #include <atomic>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -8,13 +9,6 @@
 using namespace fb {
 
 constexpr MAXFILESIZE = 128e11; // 128 Giga bytes
-
-// Simple exception class for reporting String errors
-struct SavedUrls_exception {
-	SavedUrls_exception(const char* msg_) : msg(msg_)
-		{}
-	const char* msg;
-};
 
 // This is the class where one can save list of urls
 // ASSUMES that there won't be more than 128 Gb of urls
@@ -28,7 +22,7 @@ public:
       struct stat sb;
       if ( fstat(fd, &sb) == -1 ) 
       {
-         throw SavedUrls_exception( (String("Failed to open file ") + filename).c_str() );
+         throw Exception( (String("Failed to open file ") + filename).c_str() );
       }
 
       // TODO check for off by one error

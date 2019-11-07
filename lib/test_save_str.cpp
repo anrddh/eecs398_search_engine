@@ -8,17 +8,17 @@ using namespace fb;
 
 int main() {
    try {
-   SavedUStrings file("test_file");
+   SavedStrings file( "test_file" );
 
    vector<SizeT> offsets;
 
-   offsets.push_back( file.add_url( "Hello world!" ));
-   offsets.push_back( file.add_url( "Testing this thing"));
-   offsets.push_back( file.add_url( "" ));
-   offsets.push_back( file.add_url( "after empty string" ));
+   offsets.push_back( file.add_str( "Hello world!" ));
+   offsets.push_back( file.add_str( "Testing this thing"));
+   offsets.push_back( file.add_str( "" ));
+   offsets.push_back( file.add_str( "after empty string" ));
 
    for ( auto offset : offsets ) {
-      cout << file.get_url( offset ) << endl;
+      cout << file.get_str( offset ) << endl;
    }
    
    } catch ( Exception& e) {

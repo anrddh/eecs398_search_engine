@@ -15,7 +15,7 @@ class SavedStrings {
 public:
    SavedStrings( std::string filename ) : disk_array( filename ) {}
 
-   SizeT add_string( std::string url) {
+   SizeT add_str( std::string url) {
       // Make sure to increment the cursor before writing so that
       // other threads can work on the array as well
       // We also need to write the null byte
@@ -24,7 +24,7 @@ public:
       return str_begin;
    }
 
-   inline char* get_string(SizeT offset) 
+   inline char* get_str(SizeT offset) 
       { 
       return disk_array.file_ptr + offset; 
       }

@@ -99,6 +99,14 @@ class ParsedUrl
       return os;
       }
 
+// Simple exception class for reporting String errors
+struct ParserException {
+   ParserException(const char* msg_) : msg(msg_)
+      {}
+   const char* msg;
+};
+
+
 class Parser
 {
 public:
@@ -131,13 +139,18 @@ public:
          return findResult->second;
    }
 
-   bool shouldIgnore( )
-   {
-      if( tagStack.back( ) == "script" )
-         return true;
-      return false;
-   }
+   bool contentEqual( const fb::SizeT start, const std::string & rhs )
+      {
+      if ( start + rhs.length( ) >= content.length( ) )
+         throw ParserException("Comparison out of range");
 
+      for ( size_t i = 0;  i < rhs.length( );  ++i )
+         {
+         if ( content[ start + i ] != rhs[ i ])
+            return false;
+         }
+      return true;
+      }
 
    Parser( const std::string & content_in )
    : content( content_in ) 
@@ -166,7 +179,7 @@ public:
                lastChar = ' ';
                }
             }
-         else if ( !shouldIgnore( ) )
+         else
             {
             if( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
                {
@@ -215,13 +228,13 @@ public:
          tagStack.push_back( tagName );
    }
 
-   fb::SizeT seekEndComment( fb::SizeT index )
+   // look for occurence of str in content
+   // and return the index of end of the occurence
+   fb::SizeT seekSubstr( fb::SizeT index, const std::string& str )
    {
-      while ( !( content[ index ] == '-' 
-            && content[ index + 1 ] == '-' 
-            &&  content[ index + 2 ] == '>' ) )
+      while ( !contentEqual( index, str ) )
          ++index;
-      return index + 2;
+      return index + str.length() - 1;
    }
 
    // handle tag and return the end index, which is index of ">".
@@ -232,28 +245,27 @@ public:
 
          i = skipSpacesForward( i );
 
-         if ( content[ i ] == '!' && content[ i + 1 ] == '-' )
-            return seekEndComment( i );
+         if ( contentEqual( i, "!-" ) )
+            return seekSubstr( i , "-->" );
 
          std::string tagName;
-         for ( ;  content[ i ] != ' ' && content[ i ] != '>';  ++i )
-               tagName += content[i];
+         for ( ;  content[ i ] != ' ' && content[ i ] != '>' && i < content.length( );  ++i )
+            tagName += content[ i ];
 
-         while ( content[ i ] != '>' )
-            ++i;
+         i = seekSubstr( i, ">" );
 
          size_t last_index = skipSpacesBackward( i - 1 );
-         // self closing tag
-         if ( content[ last_index ] == '/')
-         {
-            // std::cout << "this tag closes itself: " << std::string(content.begin() + start_index, content.begin() + i + 1) << std::endl;
-         }
-         else if ( tagName == "script" )
-            i = handleScript( i + 1 );
-         else if ( tagName == "a" )
-            i = handleAnchor( start_index, i + 1 );
-         else
-            setTag( tagName );
+         
+         // not self closing tag
+         if ( content[ last_index ] != '/')
+            {
+            if ( tagName == "script" )
+               i = handleScript( i + 1 );
+            else if ( tagName == "a" )
+               i = handleAnchor( start_index, i + 1 );
+            else
+               setTag( tagName );
+            }
 
          return i;
       }
@@ -268,27 +280,22 @@ public:
 
          std::string aTag = content.substr( tagStartIndex, tagEndIndex - tagStartIndex );
 
-         while( content[index] != '<' )
-            ++index;
+         index = seekSubstr( index, "<" );
 
          std::string anchorText = content.substr( tagEndIndex, index - tagEndIndex );
-
          std::string url = extractURL( aTag );
 
-         while ( !( content[ index ] == '<' 
-               && content[ index + 1 ] == '/' 
-               && content[ index + 2 ] == 'a' ) )
-            ++index;
+         index = seekSubstr( index, "</a" );
 
          // std::cout << "Whole tag until closing is:" << std::endl;
          // std::cout << content.substr(tagStartIndex, index + 3 - tagStartIndex) << std::endl;
          // std::cout << "URL is: "  << url << std::endl;
          // std::cout << "Anchor text is: " << anchorText << std::endl << std::endl;
 
-         urlAnchorText[ url ].push_back( anchorText );
+         if( url[0] != '#' )
+            urlAnchorText[ url ].push_back( anchorText );
 
-         while ( content[ index ] != '>' )
-            ++index;
+         index = seekSubstr( index, ">" );
 
          return index;
       }
@@ -297,16 +304,9 @@ public:
       fb::SizeT skipJSComment( fb::SizeT index )
          {
          if ( content[ index + 1 ] == '/' )
-            {
-            while ( content[ index ] != '\n' )
-               ++index;
-            }
+            index = seekSubstr( index, "\n" );
          if ( content[ index + 1 ] == '*' )
-            {
-            while ( !( content[ index ] == '*' && content[ index + 1 ] == '/' ) )
-               ++index;
-            ++index;
-            }
+            index = seekSubstr( index, "*/" ) + 1;
          return index + 1;
          }
 
@@ -351,12 +351,9 @@ public:
                // only look for end tag if not in quote and not in comment
                if( !inSingleQuote && !inDoubleQuote )
                   {
-                  std::string scriptEndTag = "</script";
-                  std::string contentSubstr = content.substr( index, scriptEndTag.length( ) );
-                  if( contentSubstr == scriptEndTag )
+                  if( contentEqual( index, "</script") )
                      {
-                     while( content[ index ] != '>' )
-                        ++index;
+                     index = seekSubstr( index, ">" );
                      break;
                      }
                   }

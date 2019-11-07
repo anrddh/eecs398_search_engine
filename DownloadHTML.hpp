@@ -175,29 +175,33 @@ class ConnectionWrapper
          int getaddrResult = getaddrinfo( url.Host.c_str( ),
                url.Port.c_str( ), &hints, &address );
 
+         if ( getaddrResult != 0 )
+            recordFailedLink( "getaddrResult" );
+
          // Create a TCP/IP socket
          socketFD = socket( address->ai_family,
                address->ai_socktype, address->ai_protocol );
          if ( socketFD == -1 )
-            recordFailedLink( );
+            recordFailedLink( "socket" );
 
          // Connect the socket to the host address
          int connectResult = connect( socketFD,
                address->ai_addr, address->ai_addrlen );
          if ( connectResult != 0 )
-            recordFailedLink( );
+            recordFailedLink( "connectResult" );
 
          freeaddrinfo( address );
          }
 
-      void recordFailedLink( )
+      void recordFailedLink( std::string msg )
          {
          int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
          ::write( fd, ( url.CompleteUrl + "\n" ).c_str( ),
                url.CompleteUrl.length( ) + 1 );
          close( fd );
          std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
-         exit( 1 );
+         std::cerr << "Failed at " << msg << std::endl;
+         throw 1;
          }
 
       virtual ~ConnectionWrapper( )
@@ -230,22 +234,22 @@ class SSLWrapper : public ConnectionWrapper
 
          ctx = SSL_CTX_new( SSLv23_method( ) );
          if ( !ctx )
-            recordFailedLink( );
+            recordFailedLink( "ssl ctx" );
 
          ssl = SSL_new( ctx );
          if ( !ssl )
-            recordFailedLink( );
+            recordFailedLink( "ssl" );
 
          SSL_set_fd( ssl, socketFD );
 
          // Needed for SNI websites
          int r = SSL_set_tlsext_host_name( ssl, url_in.Host.c_str( ) );
          if ( r != 1 )
-            recordFailedLink( );
+            recordFailedLink( "ssl set host name" );
 
          r = SSL_connect( ssl );
          if ( r != 1 )
-            recordFailedLink( );
+            recordFailedLink( "ssl connect" );
          }
 
       virtual int read( char *buffer )
@@ -275,7 +279,7 @@ const std::string GetGetMessage( const ParsedUrl &url )
    {
    std::string getMessage = 
          "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n"
-         "User-Agent: LinuxGetSsl/2.0 jinihm@umich.edu (Linux)\r\n"
+         "User-Agent: LinuxGetSsl/2.0 aniruddh@umich.edu (Linux)\r\n"
          "Accept: */*\r\n"
          "Accept-Encoding: identity\r\n"
          "Connection: close\r\n\r\n";
@@ -411,7 +415,8 @@ void PrintHtml( const std::string &url_in, const std::string &filename )
    while ( url.length( ) != 0 )
       {
       url = PrintHtmlGetRedirect( url, filename );
-
+      if ( url == linkNotHTML )
+         break;
       // If there is a loop, probably a bad website.
       if( visitedURLs.find( url ) != visitedURLs.end( ) )
          break;

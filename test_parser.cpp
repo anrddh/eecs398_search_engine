@@ -43,14 +43,14 @@ int main ( int argc, char *argv[] ){
    std::string content( (std::istreambuf_iterator<char>(ifs) ),
               (std::istreambuf_iterator<char>()    ) );
    ifs.close();
-   auto parser = Parser(content, "domainnnn");
+   auto parser = Parser(content, filename);
 
    auto retstr = parser.parse();
 
-   parser.printUrls();
+   // parser.printUrls();
 
    std::ofstream outfile;
-   outfile.open(filename += "tagless");
+   outfile.open("htmlstagless/" + filename.substr(6));
 
    outfile << retstr;
    outfile.close();

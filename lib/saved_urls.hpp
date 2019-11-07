@@ -10,7 +10,7 @@ namespace fb {
 // ASSUMES that there won't be more than 128 Gb of urls
 // Note that each file will be mapping 128 Gb of virtual address
 // However, the pages will not be allocated for the files until
-// they are written to. 
+// they are written to.
 class SavedUrls {
 public:
    SavedUrls( std::string filename ) : disk_array( filename ) {}

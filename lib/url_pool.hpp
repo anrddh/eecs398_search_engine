@@ -3,9 +3,13 @@
 
 #include "stddef.hpp"
 #include "saved_urls.hpp"
+#include "saved_adjlist.hpp"
 #include "unordered_set.hpp"
-//#include "string"
+//#include "string.hpp"
+//#include "vector.hpp"
 #include <string>
+#include <vector>
+#define Vector std::vector
 #define URL std::string
 #define String std::string
 
@@ -26,16 +30,9 @@ struct UrlInfo {
 //class which handles URL lookup, defined in url_lookup.hpp
 template<typename K, typename V, typename Hasher> class UrlLookup;
 
-// Compares a URL to the URL at offset
-bool OffsetCompare(URL key, SizeT offset);
-
-//Adds a URL to the URL List, returns its offset
-SizeT OffsetCreate(URL key);
-
 class UrlPoolChunk {
 private:
     //take this out later
-    typedef SavedAdjList (void *);
     typedef SavedAnchorText (void *);
 
     //UnorderedSet<URL> FrontierChunk;
@@ -46,10 +43,23 @@ private:
     UrlLookup UrlLookupChunk;
     SizeT ChunkId;
 
+    Vector<UrlInfo> UrlInfos;
+
     //If the URL is already in the URL List, it adds the anchor text
     void ProcessUrl(URL url, String anchor_text);
 
 public:
+
+    //Default Constructor
+    UrlPoolChunk(){
+        UrlLookupChunk = UrlLookup(this);
+    }
+
+    // Compares a URL to the URL at offset
+    bool OffsetCompare(URL key, SizeT offset);
+
+    //Adds a URL to the URL List, returns its offset
+    SizeT OffsetCreate(URL key);
 
     //Adds URLs and anchor text to the frontier, to be called by other pools chunks
     void AddToFronter(URL url, String anchor_text);

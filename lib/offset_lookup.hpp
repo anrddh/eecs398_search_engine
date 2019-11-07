@@ -24,7 +24,7 @@ enum class OffsetStatus {
 };
 
 template<typename K = URL, typename V = SizeT, typename Hasher = Hash<K>>
-class UrlLookup {
+class OffsetLookup {
     using Status = OffsetStatus;
 public:
     friend class Iterator;
@@ -40,7 +40,7 @@ public:
     //Iterator type
     class Iterator {
     public:
-        friend class UrlLookup;
+        friend class OffsetLookup;
         Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
         Iterator(Vector<Bucket> *owner, size_t index) : owner(owner), index(index) {
             if (index > owner->size()) index = owner->size();
@@ -85,12 +85,12 @@ public:
     };
 
     //Default constructor
-    UrlLookup() {
+    OffsetLookup() {
         buckets.resize(INITIAL_SIZE);
     }
 
     //Constructor with owner, the one we should be using
-    UrlLookup(UrlPoolChunk *owner_) {
+    OffsetLookup(UrlPoolChunk *owner_) {
         buckets.resize(INITIAL_SIZE);
         owner = owner_;
     }
@@ -111,6 +111,50 @@ public:
     //Return an iterator "off the end" of the map
     Iterator end() {
         return Iterator(&buckets);
+    }
+
+    //Takes in a key, hash pair where the hash is the hash of the key
+    //It only looks at the hash, and finds that object. If it isnt found, it then
+    //creates the object using the key. In either case, it returns an iterator to the
+    //object.
+    V& find(const K& key, SizT hash){
+        if(num_elements+num_ghosts > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+        size_t desired_bucket = hash % buckets.size();
+        size_t original_hash = desired_bucket;
+        //if the bucket is not empty
+        if(buckets[desired_bucket].status != Status::Empty){
+            //search until an empty bucket
+            while(buckets[desired_bucket].status != Status::Empty){
+                //if a bucket has the key, return
+                if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)){
+                    return buckets[desired_bucket].val;
+                }
+                desired_bucket = (desired_bucket+1) % buckets.size();
+            }
+
+            //key does not exist, so find first available bucket and add it
+            while(true){
+                if(buckets[original_hash].status == Status::Filled){
+                    original_hash = (original_hash+1) % buckets.size();
+                }else{
+                    if(buckets[original_hash].status == Status::Ghost){
+                        num_ghosts--;
+                    }
+                    buckets[original_hash].val = owner->OffsetCreate(URL);
+                    buckets[original_hash].status = Status::Filled;
+                    num_elements++;
+                    return buckets[original_hash].val;
+                }
+            }
+        }else{
+            //bucket is empty, so add key
+            buckets[original_hash].val = owner->OffsetCreate(URL);
+            buckets[original_hash].status = Status::Filled;
+            num_elements++;
+            return buckets[original_hash].val;
+        }
     }
 
     // returns a reference to the value in the bucket with the key, if it

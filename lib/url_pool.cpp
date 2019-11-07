@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #define Vector std::vector
-#define URL std::string
 #define String std::string
 
 namespace fb {

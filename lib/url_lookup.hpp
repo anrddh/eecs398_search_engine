@@ -89,6 +89,12 @@ public:
         buckets.resize(INITIAL_SIZE);
     }
 
+    //Constructor with owner, the one we should be using
+    UrlLookup(UrlPoolChunk *owner_) {
+        buckets.resize(INITIAL_SIZE);
+        owner = owner_;
+    }
+
 
     //Returns the number of elements in the map
     size_t size() const {
@@ -121,7 +127,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && OffsetCompare(key, buckets[desired_bucket].val)){
+                if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)){
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -135,7 +141,7 @@ public:
                     if(buckets[original_hash].status == Status::Ghost){
                         num_ghosts--;
                     }
-                    buckets[original_hash].val = OffsetCreate(URL);
+                    buckets[original_hash].val = owner->OffsetCreate(URL);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return buckets[original_hash].val;
@@ -143,7 +149,7 @@ public:
             }
         }else{
             //bucket is empty, so add key
-            buckets[original_hash].val = OffsetCreate(URL);
+            buckets[original_hash].val = owner->OffsetCreate(URL);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return buckets[original_hash].val;
@@ -161,7 +167,7 @@ public:
             //search until an empty bucket
             while (buckets[desired_bucket].status != Status::Empty) {
                 //if a bucket has the key, return
-                if (buckets[desired_bucket].status == Status::Filled && OffsetCompare(key, buckets[desired_bucket].val)) {
+                if (buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)) {
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket + 1) % buckets.size();
@@ -184,7 +190,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && OffsetCompare(key, buckets[desired_bucket].val){
+                if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val){
                     return false;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -221,7 +227,7 @@ public:
             return 0;
         }else{
             //if key at original bucket matches, remove and return
-            if(buckets[desired_bucket].status == Status::Filled && OffsetCompare(key, buckets[desired_bucket].val)){
+            if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)){
                 buckets[desired_bucket].status = Status::Ghost;
                 num_elements--;
                 num_ghosts++;
@@ -230,7 +236,7 @@ public:
                 //search until an empty bucket
                 while(buckets[desired_bucket].status != Status::Empty){
                     //if a bucket has the key, remove and return
-                    if(buckets[desired_bucket].status == Status::Filled && OffsetCompare(key,buckets[desired_bucket].val)){
+                    if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key,buckets[desired_bucket].val)){
                         buckets[desired_bucket].status = Status::Ghost;
                         num_elements--;
                         num_ghosts++;
@@ -295,6 +301,7 @@ private:
     float max_load = 0.5;
     Vector<Bucket> buckets;
     Hasher hash = fb::Hash<K>();
+    UrlPoolChunk *owner;
 
     void rehash_and_grow(size_t n) {
         Vector<Bucket> temp = buckets;

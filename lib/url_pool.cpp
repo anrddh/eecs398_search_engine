@@ -5,23 +5,39 @@
 #include "saved_urls.hpp"
 #include "unordered_set.hpp"
 #include "url_pool.hpp"
-//#include "string"
+//#include "string,hpp"
+//#include "vector.hpp"
 #include <string>
+#include <vector>
+#define Vector std::vector
 #define URL std::string
 #define String std::string
 
 namespace fb {
 
-void UrlPoolChunk::ProcessUrl(URL url, String anchor_text){
-
+// Compares a URL to the URL at offset
+bool OffsetCompare(URL key, SizeT offset){
+    //TODO
+    //this wont work until get_str returns a usable type for this
+    return key == UrlListChunk.get_str(offset);
 }
 
-void UrlPoolChunk::AddToFronter(URL url, String anchor_text){
+//Adds a URL to the URL List, returns its offset
+SizeT OffsetCreate(URL key){
+    return UrlListChunk.add_url(key);
+}
 
+//If the URL is already in the URL List, it adds the anchor text
+void UrlPoolChunk::ProcessUrl(URL url, String anchor_text){
+    //TODO
+}
+
+void UrlPoolChunk::AddToFrontier(URL url, String anchor_text){
+    //TODO
 }
 
 void UrlPoolChunk::Run(){
-
+    //TODO
 }
 
 //Wrapper global function for running URLPoolChunks

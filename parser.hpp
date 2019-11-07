@@ -131,156 +131,153 @@ public:
          return findResult->second;
    }
 
-   bool shouldIgnore()
+   bool shouldIgnore( )
    {
-      if(tagStack.back() == "script")
+      if( tagStack.back( ) == "script" )
          return true;
       return false;
    }
 
 
-   Parser(const std::string & content_in)
-   : content(content_in) 
+   Parser( const std::string & content_in )
+   : content( content_in ) 
    {
-      tagStack.push_back("DEFAULT");
+      tagStack.push_back( "DEFAULT" );
    }
 
-   bool isSpace(char c)
+   bool isSpace( char c )
    {
-      return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\v') || (c == '\f') || (c == '\r');
+      return ( c == ' ' ) || ( c == '\t' ) || ( c == '\n' ) || ( c == '\v' ) || ( c == '\f' ) || ( c == '\r' );
    }
 
-   std::string parse()
+   std::string parse( )
       {
       std::string returnString;
       fb::SizeT index = 0;
       char lastChar = '0';
-      while( index < content.length() )
+      while ( index < content.length( ) )
          {
-         if ( content[index] == '<' )
-         {
-            index = handleTag(index);
-            if(!isSpace(lastChar))
+         if ( content[ index ] == '<' )
             {
+            index = handleTag( index );
+            if ( !isSpace( lastChar ) )
+               {
                returnString += " ";
                lastChar = ' ';
+               }
             }
-         }
-         else if ( !shouldIgnore() )
-         {
-            if( !(isSpace(content[index]) && isSpace(lastChar)) )
+         else if ( !shouldIgnore( ) )
             {
-               returnString += content[index];
-               lastChar = content[index];
+            if( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
+               {
+               returnString += content[ index ];
+               lastChar = content[ index ];
+               }
             }
-         }
          ++index;
          }
       return returnString;
       }
 
+   // return the next index that is not a space
    fb::SizeT skipSpacesForward( fb::SizeT index )
       {
-      while(content[index] == ' ')
+      while ( content[ index ] == ' ' )
          ++index;
       return index;
       }
 
+   // return the previous index that is not a space
    fb::SizeT skipSpacesBackward( fb::SizeT index )
       {
-      while(content[index] == ' ')
+      while ( content[ index ] == ' ' )
          --index;
       return index;
       }
 
-   void setTag(std::string tagName)
+   // change tagStack appropriately 
+   // opening tag or closing tag
+   void setTag( std::string tagName )
    {
-      if(tagName[0] == '/')
+      if ( tagName[ 0 ] == '/' )
       {
          // TagType tagType = getTag(tagName.substr(1));
-         std::string tagType = tagName.substr(1);
-         if(tagStack.back() != tagType)
+         std::string tagType = tagName.substr( 1 );
+         if ( tagStack.back( ) != tagType )
          {
             // std::cout << "Tag do not match, something is wrong. Current tag: " << tagStack.back() << " read: " << tagType <<  std::endl;
          }
          else
-         {
-            tagStack.pop_back();
-         }
+            tagStack.pop_back( );
       }
       else
-      {
          // tagStack.push_back(getTag(tagName));
-         tagStack.push_back(tagName);
-      }
+         tagStack.push_back( tagName );
    }
 
    fb::SizeT seekEndComment( fb::SizeT index )
    {
-      while(!(content[index] == '-' && content[index + 1] == '-' &&  content[index + 2] == '>' ))
+      while ( !( content[ index ] == '-' 
+            && content[ index + 1 ] == '-' 
+            &&  content[ index + 2 ] == '>' ) )
          ++index;
       return index + 2;
    }
 
-   // handle tag and return the end index (inclusive)
+   // handle tag and return the end index, which is index of ">".
    // start_index is the index of "<"
    fb::SizeT handleTag( fb::SizeT start_index )
       {
          fb::SizeT i = start_index + 1;
 
-         i = skipSpacesForward(i);
+         i = skipSpacesForward( i );
 
-         if( content[i] == '!' && content[i + 1] == '-' )
-            return seekEndComment(i);
+         if ( content[ i ] == '!' && content[ i + 1 ] == '-' )
+            return seekEndComment( i );
 
          std::string tagName;
-         for( ; content[i] != ' ' && content[i] != '>'; ++i)
-            {
+         for ( ;  content[ i ] != ' ' && content[ i ] != '>';  ++i )
                tagName += content[i];
-            }
 
+         while ( content[ i ] != '>' )
+            ++i;
 
-         for( ; content[i] != '>'; ++i)
-         {
-
-         }
-
-         size_t last_index = skipSpacesBackward(i - 1);
+         size_t last_index = skipSpacesBackward( i - 1 );
          // self closing tag
-         if ( content[last_index] == '/')
+         if ( content[ last_index ] == '/')
          {
             // std::cout << "this tag closes itself: " << std::string(content.begin() + start_index, content.begin() + i + 1) << std::endl;
          }
          else if ( tagName == "script" )
-         {
-            i = handleScript(i + 1);
-         }
+            i = handleScript( i + 1 );
          else if ( tagName == "a" )
-         {
-            i = handleAnchor(start_index, i + 1);
-         }
+            i = handleAnchor( start_index, i + 1 );
          else
-         {
-            setTag(tagName);
-         }
+            setTag( tagName );
 
          return i;
       }
 
+      // Given the start and end indices open anchor tag
+      // figure out the link in the tag
+      // and get the anchor text, and add those to urlAnchorText
+      // return index of ">" of closing anchor tag
       fb::SizeT handleAnchor( fb::SizeT tagStartIndex, fb::SizeT tagEndIndex )
       {
          fb::SizeT index = tagEndIndex;
 
-         std::string aTag = content.substr(tagStartIndex, tagEndIndex - tagStartIndex);
+         std::string aTag = content.substr( tagStartIndex, tagEndIndex - tagStartIndex );
 
-         while(content[index] != '<')
+         while( content[index] != '<' )
             ++index;
 
-         std::string anchorText = content.substr(tagEndIndex, index - tagEndIndex);
+         std::string anchorText = content.substr( tagEndIndex, index - tagEndIndex );
 
-         std::string url = extractURL(aTag);
+         std::string url = extractURL( aTag );
 
-         while(!(content[index] == '<' && content[index + 1] == '/' && content[index + 2] == 'a' ))
+         while ( !( content[ index ] == '<' 
+               && content[ index + 1 ] == '/' 
+               && content[ index + 2 ] == 'a' ) )
             ++index;
 
          // std::cout << "Whole tag until closing is:" << std::endl;
@@ -288,80 +285,83 @@ public:
          // std::cout << "URL is: "  << url << std::endl;
          // std::cout << "Anchor text is: " << anchorText << std::endl << std::endl;
 
-         urlAnchorText[url].push_back(anchorText);
+         urlAnchorText[ url ].push_back( anchorText );
 
-         return index + 3;
-      }
+         while ( content[ index ] != '>' )
+            ++index;
 
-      fb::SizeT skipJSComment( fb::SizeT index )
-      {
-         if(content[index] == '/' && content[index + 1] == '/')
-            {
-            while(content[index] != '\n')
-               ++index;
-            ++index;
-            }
-         if(content[index] == '/' && content[index + 1] == '*')
-            {
-            while(!(content[index] == '*' && content[index + 1] == '/' ))
-               ++index;
-            ++index;
-            ++index;
-            }
          return index;
       }
 
+      // skip comment in java script and return index after the comments
+      fb::SizeT skipJSComment( fb::SizeT index )
+         {
+         if ( content[ index + 1 ] == '/' )
+            {
+            while ( content[ index ] != '\n' )
+               ++index;
+            }
+         if ( content[ index + 1 ] == '*' )
+            {
+            while ( !( content[ index ] == '*' && content[ index + 1 ] == '/' ) )
+               ++index;
+            ++index;
+            }
+         return index + 1;
+         }
+
+      // return the index of ">" of end of the closing tag of a script
       fb::SizeT handleScript( fb::SizeT index )
          {
          bool inSingleQuote = false;
          bool inDoubleQuote = false;
-         while(index < content.length())
+         while( index < content.length( ) )
             {
-            if(content[index - 1] != '\\' )
+            // handle escape character
+            if( content[ index - 1 ] != '\\' )
                {
-               char c = content[index];
-               if(c == '\'' && inSingleQuote)
-                  {
+               char c = content[ index ];
+               // exit single quote
+               if( c == '\'' && inSingleQuote )
                      inSingleQuote = false;
-                  }
-                  else if(c == '\"' && inDoubleQuote)
-                  {
+               // exit double quote
+               else if( c == '\"' && inDoubleQuote )
                      inDoubleQuote = false;
-                  }
-                  else
+               else
+                  {
+                  // not in quote
+                  if( !inSingleQuote && !inDoubleQuote )
                      {
-                     if(!inSingleQuote && !inDoubleQuote)
+                     // skip comment
+                     if( c == '/' && ( content[ index + 1 ] == '/' || content[ index + 1 ] == '*' ) )
                         {
-                        if(c == '/' && (content[index + 1] == '/' || content[index + 1] == '*' ))
-                        {
-                           index = skipJSComment(index);
-                           continue;
+                        index = skipJSComment( index );
+                        continue;
                         }
-                        if(c == '\'')
-                        {
-                           inSingleQuote = true;
-                        }
-                        else if(c == '\"')
-                        {
-                           inDoubleQuote = true;
-                        }
-                        }
+                     // enter single quote
+                     if( c == '\'' )
+                        inSingleQuote = true;
+                     // enter double quote
+                     else if( c == '\"' )
+                        inDoubleQuote = true;
                      }
                   }
+               }
       
-                  if(!inSingleQuote && !inDoubleQuote)
+               // only look for end tag if not in quote and not in comment
+               if( !inSingleQuote && !inDoubleQuote )
+                  {
+                  std::string scriptEndTag = "</script";
+                  std::string contentSubstr = content.substr( index, scriptEndTag.length( ) );
+                  if( contentSubstr == scriptEndTag )
                      {
-                     std::string scriptEndTag = "</script";
-                     std::string ssss = content.substr(index, scriptEndTag.length());
-                     if(ssss == scriptEndTag)
-                        {
-                        while(content[index] != '>')
-                           ++index;
-                        break;
-                        }
+                     while( content[ index ] != '>' )
+                        ++index;
+                     break;
                      }
-            ++index;
-            }
+                  }
+               ++index;
+               }
             return index;
          }
 

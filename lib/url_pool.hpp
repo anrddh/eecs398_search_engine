@@ -2,8 +2,8 @@
 #pragma once
 
 #include "stddef.hpp"
-#include "saved_urls.hpp"
-#include "saved_adjlist.hpp"
+#include "SavedStrings.hpp"
+#include "SavedLists.hpp"
 #include "unordered_set.hpp"
 //#include "string.hpp"
 //#include "vector.hpp"

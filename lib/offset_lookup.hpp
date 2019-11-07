@@ -24,7 +24,7 @@ enum class OffsetStatus {
 };
 
 template<typename K = URL, typename V = SizeT, typename Hasher = Hash<K>>
-class OffsetLookup {
+class OffsetLookupChunk {
     using Status = OffsetStatus;
 public:
     friend class Iterator;
@@ -40,7 +40,7 @@ public:
     //Iterator type
     class Iterator {
     public:
-        friend class OffsetLookup;
+        friend class OffsetLookupChunk;
         Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
         Iterator(Vector<Bucket> *owner, size_t index) : owner(owner), index(index) {
             if (index > owner->size()) index = owner->size();
@@ -85,14 +85,13 @@ public:
     };
 
     //Default constructor
-    OffsetLookup() {
+    OffsetLookupChunk() {
         buckets.resize(INITIAL_SIZE);
     }
 
-    //Constructor with owner, the one we should be using
-    OffsetLookup(UrlPoolChunk *owner_) {
+    //Default Constructor, the one we should be using
+    OffsetLookupChunk() {
         buckets.resize(INITIAL_SIZE);
-        owner = owner_;
     }
 
 
@@ -117,7 +116,7 @@ public:
     //It only looks at the hash, and finds that object. If it isnt found, it then
     //creates the object using the key. In either case, it returns an iterator to the
     //object.
-    V& find(const K& key, SizT hash){
+    V& find(const K& key, SizeT hash){
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
@@ -128,7 +127,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)){
+                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -142,7 +141,7 @@ public:
                     if(buckets[original_hash].status == Status::Ghost){
                         num_ghosts--;
                     }
-                    buckets[original_hash].val = owner->OffsetCreate(URL);
+                    buckets[original_hash].val = GlobalList.add_str(key);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return buckets[original_hash].val;
@@ -150,7 +149,7 @@ public:
             }
         }else{
             //bucket is empty, so add key
-            buckets[original_hash].val = owner->OffsetCreate(URL);
+            buckets[original_hash].val = GlobalList.add_str(key);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return buckets[original_hash].val;
@@ -171,7 +170,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)){
+                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -185,7 +184,7 @@ public:
                     if(buckets[original_hash].status == Status::Ghost){
                         num_ghosts--;
                     }
-                    buckets[original_hash].val = owner->OffsetCreate(URL);
+                    buckets[original_hash].val = GlobalList.add_str(key);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return buckets[original_hash].val;
@@ -193,7 +192,7 @@ public:
             }
         }else{
             //bucket is empty, so add key
-            buckets[original_hash].val = owner->OffsetCreate(URL);
+            buckets[original_hash].val = GlobalList.add_str(key);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return buckets[original_hash].val;
@@ -211,7 +210,7 @@ public:
             //search until an empty bucket
             while (buckets[desired_bucket].status != Status::Empty) {
                 //if a bucket has the key, return
-                if (buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)) {
+                if (buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))) {
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket + 1) % buckets.size();
@@ -234,7 +233,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val){
+                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
                     return false;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -271,7 +270,7 @@ public:
             return 0;
         }else{
             //if key at original bucket matches, remove and return
-            if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key, buckets[desired_bucket].val)){
+            if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
                 buckets[desired_bucket].status = Status::Ghost;
                 num_elements--;
                 num_ghosts++;
@@ -280,7 +279,7 @@ public:
                 //search until an empty bucket
                 while(buckets[desired_bucket].status != Status::Empty){
                     //if a bucket has the key, remove and return
-                    if(buckets[desired_bucket].status == Status::Filled && owner->OffsetCompare(key,buckets[desired_bucket].val)){
+                    if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
                         buckets[desired_bucket].status = Status::Ghost;
                         num_elements--;
                         num_ghosts++;
@@ -345,7 +344,7 @@ private:
     float max_load = 0.5;
     Vector<Bucket> buckets;
     Hasher hash = fb::Hash<K>();
-    UrlPoolChunk *owner;
+    SavedStrings &GlobalList;
 
     void rehash_and_grow(size_t n) {
         Vector<Bucket> temp = buckets;

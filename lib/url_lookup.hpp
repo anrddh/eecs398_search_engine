@@ -1,5 +1,5 @@
 //Created by Chandler Meyers 11/6/2019
-//#pragma once
+#pragma once
 
 //This is essentially an unordered_map, but it does not store the keys in the buckets
 //This is intended to look up a file offset, and comparisons will then be done using the lookup

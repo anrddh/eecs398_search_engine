@@ -4,10 +4,10 @@
 #include "stddef.hpp"
 #include "Exception.hpp"
 #include "SavedObject.hpp"
+#include "vector.hpp"
 #include <string> // TODO delete
 #include <unistd.h>
 #include <sys/stat.h>
-#include "vector.hpp"
 #include <atomic>
 #include <fcntl.h>
 #include <sys/mman.h>

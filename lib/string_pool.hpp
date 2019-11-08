@@ -22,7 +22,7 @@ public:
    SizeT get_offset( String str ) {
       SizeT hash = hasher(str);
       AutoLock<Mutex> l(offset_hashes[hash % N].second);
-      offset_hashes[hash % N].first.find( str, hash );
+      return offset_hashes[hash % N].first.find( str, hash );
    }
 
    char* access_offset( SizeT offset ) {

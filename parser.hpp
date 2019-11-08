@@ -10,159 +10,170 @@
 namespace fb
 {
 std::string extractURL( const std::string & line);
-// // struct View {
-// // 	 const char *p = nullptr;
-// // 	 fb::SizeT s = 0;
-// // };
+struct View {
+	 const char *p = nullptr;
+	 fb::SizeT s = 0;
+};
 
-// // std::ostream& operator<<(std::ostream &os, View &v) {
-// // 	 for (fb::SizeT i = 0; i < v.s; ++i) {
-// // 			os << v.p[i];
-// // 	 }
+std::ostream& operator<<(std::ostream &os, View &v) {
+	 for (fb::SizeT i = 0; i < v.s; ++i) {
+			os << v.p[i];
+	 }
 
-// // 	 return os;
-// // }
+	 return os;
+}
 
-// // class ParsedUrl
-// // 	{
-// // 	public:
-// // 		const std::string url;
+class ParsedUrl
+	{
+	public:
+		const std::string url;
 
-// // 		View Service, Host, Port, Path;
-// // 		 bool success = false;
+		View Service, Host, Port, Path;
+		 bool success = false;
 
-// // 		ParsedUrl( std::string url_ ) : url(std::move(url_))
-// // 			{
-// // 			Service.p = url.c_str();
-// // 			const char Colon = ':', Slash = '/';
+		ParsedUrl( std::string url_ ) : url(std::move(url_))
+			{
+			Service.p = url.c_str();
+			const char Colon = ':', Slash = '/';
 
-// // 			fb::SizeT p = url.find(':');
-// // 			if (p == std::string::npos || !p) {
-// // 				Path.p = url.c_str();
-// // 				Path.s = url.size();
-// // 				success = true;
-// // 				return;
-// // 			}
+			fb::SizeT p = url.find(':');
+			if (p == std::string::npos || !p) {
+				Path.p = url.c_str();
+				Path.s = url.size();
+				success = true;
+				return;
+			}
 
-// // 			Service.s = p++;
+			Service.s = p++;
 
-// // 			/*
-// // 				TODO: If Service does not belong to allowed_services, we exit.
-// // 			 */
+			
+				// TODO: If Service does not belong to allowed_services, we exit.
+			 
 
-// // 			if ( url[p] == Slash )
-// // 				 p++;
-// // 			if ( url[p] == Slash )
-// // 				 p++;
+			if ( url[p] == Slash )
+				 p++;
+			if ( url[p] == Slash )
+				 p++;
 
-// // 			Host.p = url.c_str() + p;
+			Host.p = url.c_str() + p;
 
-// // 			// check for stl algorithms
-// // 			for ( ; p < url.size() && url[p] != Slash && url[p] != Colon; ++p )
-// // 				 ;
+			// check for stl algorithms
+			for ( ; p < url.size() && url[p] != Slash && url[p] != Colon; ++p )
+				 ;
 
-// // 			Host.s = url.c_str() + p - Host.p;
+			Host.s = url.c_str() + p - Host.p;
 
-// // 			if (p < url.size() && url[p] == Colon) {
-// // 				// Port specified.  Skip over the colon and
-// // 				// the port number.
-// // 				 ++p;
-// // 				 Port.p = url.c_str() + p;
-// // 				 for (; p < url.size() && url[p] != Slash; ++p)
-// // 						;
-// // 				 Port.s = url.c_str() + p - Port.p;
-// // 			}
+			if (p < url.size() && url[p] == Colon) {
+				// Port specified.  Skip over the colon and
+				// the port number.
+				 ++p;
+				 Port.p = url.c_str() + p;
+				 for (; p < url.size() && url[p] != Slash; ++p)
+						;
+				 Port.s = url.c_str() + p - Port.p;
+			}
 
-// // 			Path.p = url.c_str() + p;
-// // 			Path.s = url.size() - p;
-// // 			success = true;
-// // 		}
+			Path.p = url.c_str() + p;
+			Path.s = url.size() - p;
+			success = true;
+		}
 
-// // 		~ParsedUrl( )
-// // 			{
-// // 			delete[ ] pathBuffer;
-// // 			}
+		~ParsedUrl( )
+			{
+			delete[ ] pathBuffer;
+			}
 
-// // 	private:
-// // 		char *pathBuffer;
-// // 		constexpr static std::array<const char *, 2> allowed_services = {"https", "http"};
-// // 	};
+	private:
+		char *pathBuffer;
+		// constexpr static std::array<const char *, 2> allowed_services = {"https", "http"};
+	};
 
-// 	std::ostream& operator << ( std::ostream& os, ParsedUrl &testguy )
-// 		{
-// 		os << "complete: " << testguy.url << std::endl
-// 			<< "service: " << testguy.Service << std::endl
-// 			<< "host: " << testguy.Host << std::endl
-// 			<< "port: " << testguy.Port << std::endl
-// 			<< "path: " << testguy.Path << std::endl;
-// 		return os;
-// 		}
+	std::ostream& operator << ( std::ostream& os, ParsedUrl &testguy )
+		{
+		os << "complete: " << testguy.url << std::endl
+			<< "service: " << testguy.Service << std::endl
+			<< "host: " << testguy.Host << std::endl
+			<< "port: " << testguy.Port << std::endl
+			<< "path: " << testguy.Path << std::endl;
+		return os;
+		}
 
 // Simple exception class for reporting String errors
-struct ParserException {
-	ParserException(const char* msg_) : msg(msg_)
-		{}
-	const char* msg;
+struct ParserException 
+{
+	ParserException(const std::string msg_) : msg(msg_)
+		{
+		}
+
+	const std::string msg;
 };
 
 bool isSpace( char c )
-{
+	{
 	return ( c == ' ' ) || ( c == '\t' ) || ( c == '\n' )
 			|| ( c == '\v' ) || ( c == '\f' ) || ( c == '\r' );
-}
+	}
 
 class Parser
 {
 public:
 	std::map<std::string, std::vector<std::string>> urlAnchorText;
 
-	Parser( const std::string & content_in, const std::string & domain_in )
+	Parser( const std::string &content_in, const std::string &domain_in )
 	: content( content_in ), domain( domain_in )
 	{
 		tagStack.push_back( "DEFAULT" );
 	}
 
-	std::string parse( )
+	const std::string &getParsedResult( ) const
 		{
-		std::string returnString;
+		return parsedResult;
+		}
+
+	std::string getParsedResult( )
+		{
+		return parsedResult;
+		}
+
+	void parse( )
+		{
 		fb::SizeT index = 0;
 		char lastChar = '0';
 		try
-		{
-		while ( index < content.length( ) )
 			{
-			if ( content[ index ] == '<' )
+			while ( index < content.length( ) )
 				{
-				index = handleTag( index );
-				if ( !isSpace( lastChar ) )
+				if ( content[ index ] == '<' )
 					{
-					returnString += " ";
-					lastChar = ' ';
+					index = handleTag( index );
+					if ( !isSpace( lastChar ) )
+						{
+						parsedResult += " ";
+						lastChar = ' ';
+						}
 					}
-				}
-			else
-				{
-				if ( content[ index ] == '{' )
-					index = seekSubstr(index, "}");
-				else if ( content[ index ] == '}')
-				{
+				else
+					{
+					if ( content[ index ] == '{' )
+						index = seekSubstr(index, "}");
+					else if ( content[ index ] == '}')
+					{
 
-				}
-				else if ( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
-					{
-					returnString += content[ index ];
-					lastChar = content[ index ];
 					}
+					else if ( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
+						{
+						parsedResult += content[ index ];
+						lastChar = content[ index ];
+						}
+					}
+				++index;
 				}
-			++index;
 			}
-		}
-		catch ( const ParserException & e)
-		{
-			std::cout << "Caught exception in " << domain << std::endl;
-			std::cout << e.msg << std::endl;
-		}
-		return returnString;
+		catch ( const ParserException & e )
+			{
+			std::cerr << "Caught exception in " << domain << std::endl;
+			std::cerr << e.msg << std::endl;
+			}
 		}
 
 	void printUrls( ) const
@@ -177,10 +188,22 @@ public:
 		}
 
 private:
-	bool contentEqual( const fb::SizeT start, const std::string & rhs ) const
+
+	std::string contentEqualErrorMsg( const fb::SizeT start, const std::string &rhs ) const
+		{
+		std::string errorMsg = "Comparison out of range.\n";
+		errorMsg += "Start Index: " + std::to_string( start ) + "\n";
+		errorMsg += "Content Length: " + std::to_string( content.length( ) ) + "\n";
+		errorMsg += "RHS: " + rhs + "\n";
+		errorMsg += "Content string: " + content.substr( start ) + "\n";
+		return errorMsg;
+		}
+	// check if content[start : start + rhs.length()] == rhs
+	// throw exception if try to access out of range
+	bool contentEqual( const fb::SizeT start, const std::string &rhs ) const
 		{
 		if ( start + rhs.length( ) > content.length( ) )
-			throw ParserException(std::string("Comparison out of range " + std::to_string(start) + " " + rhs).c_str());
+			throw ParserException( contentEqualErrorMsg( start, rhs ) );
 
 		for ( size_t i = 0;  i < rhs.length( );  ++i )
 			{
@@ -190,14 +213,16 @@ private:
 		return true;
 		}
 
+	// check if content[start : start + rhs.length()] == rhs with case ignored
+	// throw exception if try to access out of range
 	bool contentEqualIgnoreCase( const fb::SizeT start, const std::string & rhs ) const
 		{
 		if ( start + rhs.length( ) > content.length( ) )
-			throw ParserException(std::string("Comparison out of range " + std::to_string(start) + " " + rhs).c_str());
+			throw ParserException( contentEqualErrorMsg( start, rhs ) );
 
 		for ( size_t i = 0;  i < rhs.length( );  ++i )
 			{
-			if ( tolower(content[ start + i ]) != tolower(rhs[ i ]) )
+			if ( tolower( content[ start + i ] ) != tolower( rhs[ i ] ) )
 				return false;
 			}
 		return true;
@@ -224,23 +249,19 @@ private:
 	void setTag( std::string tagName )
 	{
 		if ( tagName[ 0 ] == '/' )
-		{
-			std::string tagType = tagName.substr( 1 );
-			if ( tagStack.back( ) != tagType )
 			{
+			std::string tagType = tagName.substr( 1 );
+			if ( tagStack.back ( ) == tagType )
+				{
+				if ( !tagStack.empty( ) )
+					tagStack.pop_back( );
+				// else
+				// 	std::cerr << "Possible tag error" << std::endl;
+				}
+			// else
 				// std::cerr << "Tag do not match, something is wrong. Current tag: " 
 				// 		<< tagStack.back() << " read: " << tagType <<  std::endl;
 			}
-			else
-			 {
-				if ( tagStack.empty() )
-				{
-					// std::cerr << "Possible tag error" << std::endl;
-				}
-				else
-					tagStack.pop_back( );
-			 }
-		}
 		else
 			tagStack.push_back( tagName );
 	}
@@ -251,7 +272,7 @@ private:
 	{
 		while ( !contentEqual( index, str ) )
 			++index;
-		return index + str.length() - 1;
+		return index + str.length( ) - 1;
 	}
 
 	// look for occurence of str in content
@@ -260,39 +281,36 @@ private:
 	{
 		while ( !contentEqualIgnoreCase( index, str ) )
 			++index;
-		return index + str.length() - 1;
+		return index + str.length( ) - 1;
 	}
 
+	fb::SizeT seekUnescaped( fb::SizeT index, const std::string& str ) const
+	{
+		while ( !contentEqual( index, str ) )
+		{
+			if ( content[ index ] == '\\' )
+				index += 2;
+			else
+				++index;
+		}
+		return index + str.length( ) - 1;
+	}
+
+	// given index that starts at a quotation mark
+	// return index of end of quotation
 	fb::SizeT handleQuote( fb::SizeT index ) const
 		{
-		bool inSingleQuote = false;
-		bool inDoubleQuote = false;
 		// handle escape character
 		if( content[ index - 1 ] =='\\' )
 			return index;
 
-		while( index < content.length( ) )
-			{
-			if ( content[ index - 1 ] != '\\' )
-				{
-				char c = content[ index ];
-				if( ( c == '\'' && inSingleQuote ) || ( c == '\"' && inDoubleQuote ) )
-					break;
+		if ( content[ index ] == '\'' )
+			return seekUnescaped( index, "\'" );
 
-				// not in quote
-				if( !inSingleQuote && !inDoubleQuote )
-					{
-					// enter single quote
-					if( c == '\'' )
-						inSingleQuote = true;
-					// enter double quote
-					else if( c == '\"' )
-						inDoubleQuote = true;
-					}
-				}
-				++index;
-			}
-			return index;
+		if ( content[ index ] == '\"' )
+			return seekUnescaped( index, "\"" );
+
+		throw ParserException("Index given is not an index of quotation mark");
 		}
 
 	// handle tag and return the end index, which is index of ">".
@@ -310,23 +328,17 @@ private:
 			for ( ;  content[ i ] != ' ' && content[ i ] != '>' && i < content.length( );  ++i )
 				tagName += tolower( content[ i ] );
 
-			// std::cerr << tagName << " " << content[i] << std::endl;
-			// std::cerr << i << " length " << content.length() << std::endl;
-
-			// i = seekSubstr( i, ">" );
-			while ( content[i] != '>' )
-			{
-				if ( content[i] == '\"' || content[i] == '\'')
+			while ( content[ i ] != '>' && i < content.length( ) )
+				{
+				if ( content[ i ] == '\"' || content[i] == '\'')
 					i = handleQuote(i);
 				++i;
-			}
-
-			// std::cerr << "after seek " << i << " " << content[i] << std::endl;
+				}
 
 			size_t last_index = skipSpacesBackward( i - 1 );
 			
 			// not self closing tag
-			if ( content[ last_index ] != '/')
+			if ( content[ last_index ] != '/' )
 				{
 				if ( tagName == "script" )
 					i = handleScript( i + 1 );
@@ -337,16 +349,15 @@ private:
 				else
 					setTag( tagName );
 				}
-			// std::cerr << "end handle tag" << std::endl;
 			return i;
 		}
 
 	fb::SizeT handleStyle( fb::SizeT index ) const
-	{
-		index = seekSubstrIgnoreCase(index, "</style");
-		index = seekSubstr(index, ">");
+		{
+		index = seekSubstrIgnoreCase( index, "</style" );
+		index = seekSubstr( index, ">" );
 		return index;
-	}
+		}
 
 
 	// Given the start and end indices open anchor tag
@@ -354,7 +365,7 @@ private:
 	// and get the anchor text, and add those to urlAnchorText
 	// return index of ">" of closing anchor tag
 	fb::SizeT handleAnchor( fb::SizeT tagStartIndex, fb::SizeT tagEndIndex )
-	{
+		{
 		fb::SizeT index = tagEndIndex;
 
 		std::string aTag = content.substr( tagStartIndex, tagEndIndex - tagStartIndex );
@@ -363,32 +374,39 @@ private:
 
 		std::string url = extractURL( aTag );
 		std::string anchorText = content.substr( tagEndIndex, index - tagEndIndex );
-
-		// while ( !contentEqual( index, "</a" ) && !contentEqual( index, "</A" ) )
-		// 	++index;
+		
+		// add anchor text to parsed result
+		if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
+			parsedResult += " ";
+		parsedResult += anchorText;
+		if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
+			parsedResult += " ";
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if( url[0] != '#' )
-		{
-			if( url[0] == '/' )
-				url = domain + url;
+		if ( url.length( ) )
+			{
+			if( url[ 0 ] != '#' )
+				{
+				if( url[ 0 ] == '/' )
+					url = domain + url;
 
-			urlAnchorText[ url ].push_back( anchorText );
-		}
+				urlAnchorText[ url ].push_back( anchorText );
+				}
+			}
 
 		index = seekSubstr( index, ">" );
 
 		return index;
-	}
+		}
 
 
 	// skip comment block in java script and return index at the end
 	fb::SizeT skipJSCommentBlock( fb::SizeT index ) const
 		{
-		while ( !contentEqual(index, "*/") )
+		while ( !contentEqual( index, "*/" ) )
 			{
-			if ( contentEqual(index, "<![CDATA"))
+			if ( contentEqual( index, "<![CDATA" ) )
 			{
 				index = seekSubstr( index, "]]>" );
 				break;
@@ -400,38 +418,38 @@ private:
 		}
 
 	// skip comment in java script and return index at the end
-	fb::SizeT skipJSCommentLine( fb::SizeT index, bool & endScript ) const
+	fb::SizeT skipJSCommentLine( fb::SizeT index, bool &endScript ) const
 		{
-		// anything between these interpreted literally.
-		// if ( contentEqual(index, "//<![CDATA["))
-		// 	return seekSubstr(index, "//]]>");
-
 		while( index < content.length() )
 			{
+			// this is literally the only hope in html & javascript
 			if ( contentEqual(index, "<![CDATA"))
 				index = seekSubstr( index, "]]>" );
 
 			if ( contentEqual( index, "\n" ) )
-			{
+				{
 				endScript = false;
 				return index;
-			}
+				}
+
+			// apparnetly end of script tag finishes comment
 			if ( contentEqualIgnoreCase( index, "</script" ) )
-			{
+				{
 				endScript = true;
-				index = seekSubstr( index, ">");
+				index = seekSubstr( index, ">" );
 				return index;
-			}
+				}
+
 			++index;
 			}
+
 		endScript = true;
-		return content.length();
+		return content.length( );
 		}
 
 	// return the index of ">" of end of the closing tag of a script
 	fb::SizeT handleScript( fb::SizeT index ) const
 		{
-		// std::cerr << "enter script " << index << " " << content.substr(index - 10, 30) << std::endl;
 		bool inSingleQuote = false;
 		bool inDoubleQuote = false;
 		while( index < content.length( ) )
@@ -440,13 +458,11 @@ private:
 
 			// skip quote
 			if ( c == '\'' || c == '\"')
-				{
 				index = handleQuote( index );
-				}
 			else
 				{
 				// skip line comment
-				if( c == '/' && content[ index + 1 ] == '/' )
+				if ( contentEqual( index, "//" ) )
 					{
 					bool endScript = false;
 					index = skipJSCommentLine( index, endScript );
@@ -454,7 +470,7 @@ private:
 						break;
 					}
 				// skip comment block
-				else if ( c == '/' && content[ index + 1 ] == '*' )
+				else if ( contentEqual( index, "/*" ) )
 					index = skipJSCommentBlock( index );
 				}
 
@@ -473,6 +489,9 @@ private:
 	const std::string domain;
 	// content of the html page to parse
 	const std::string & content;
+
+	std::string parsedResult;
+
 	// stack to contain the tags
 	std::vector<std::string> tagStack;
 };

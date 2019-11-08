@@ -5,99 +5,98 @@
 #include <string>
 #include <iostream>
 #include <map>
-#include "GetSSL.hpp"
 #include "lib/stddef.hpp"
 
 namespace fb
 {
 std::string extractURL( const std::string & line);
-struct View {
-	 const char *p = nullptr;
-	 fb::SizeT s = 0;
-};
+// // struct View {
+// // 	 const char *p = nullptr;
+// // 	 fb::SizeT s = 0;
+// // };
 
-std::ostream& operator<<(std::ostream &os, View &v) {
-	 for (fb::SizeT i = 0; i < v.s; ++i) {
-			os << v.p[i];
-	 }
+// // std::ostream& operator<<(std::ostream &os, View &v) {
+// // 	 for (fb::SizeT i = 0; i < v.s; ++i) {
+// // 			os << v.p[i];
+// // 	 }
 
-	 return os;
-}
+// // 	 return os;
+// // }
 
-class ParsedUrl
-	{
-	public:
-		const std::string url;
+// // class ParsedUrl
+// // 	{
+// // 	public:
+// // 		const std::string url;
 
-		View Service, Host, Port, Path;
-		 bool success = false;
+// // 		View Service, Host, Port, Path;
+// // 		 bool success = false;
 
-		ParsedUrl( std::string url_ ) : url(std::move(url_))
-			{
-			Service.p = url.c_str();
-			const char Colon = ':', Slash = '/';
+// // 		ParsedUrl( std::string url_ ) : url(std::move(url_))
+// // 			{
+// // 			Service.p = url.c_str();
+// // 			const char Colon = ':', Slash = '/';
 
-			fb::SizeT p = url.find(':');
-			if (p == std::string::npos || !p) {
-				Path.p = url.c_str();
-				Path.s = url.size();
-				success = true;
-				return;
-			}
+// // 			fb::SizeT p = url.find(':');
+// // 			if (p == std::string::npos || !p) {
+// // 				Path.p = url.c_str();
+// // 				Path.s = url.size();
+// // 				success = true;
+// // 				return;
+// // 			}
 
-			Service.s = p++;
+// // 			Service.s = p++;
 
-			/*
-				TODO: If Service does not belong to allowed_services, we exit.
-			 */
+// // 			/*
+// // 				TODO: If Service does not belong to allowed_services, we exit.
+// // 			 */
 
-			if ( url[p] == Slash )
-				 p++;
-			if ( url[p] == Slash )
-				 p++;
+// // 			if ( url[p] == Slash )
+// // 				 p++;
+// // 			if ( url[p] == Slash )
+// // 				 p++;
 
-			Host.p = url.c_str() + p;
+// // 			Host.p = url.c_str() + p;
 
-			// check for stl algorithms
-			for ( ; p < url.size() && url[p] != Slash && url[p] != Colon; ++p )
-				 ;
+// // 			// check for stl algorithms
+// // 			for ( ; p < url.size() && url[p] != Slash && url[p] != Colon; ++p )
+// // 				 ;
 
-			Host.s = url.c_str() + p - Host.p;
+// // 			Host.s = url.c_str() + p - Host.p;
 
-			if (p < url.size() && url[p] == Colon) {
-				// Port specified.  Skip over the colon and
-				// the port number.
-				 ++p;
-				 Port.p = url.c_str() + p;
-				 for (; p < url.size() && url[p] != Slash; ++p)
-						;
-				 Port.s = url.c_str() + p - Port.p;
-			}
+// // 			if (p < url.size() && url[p] == Colon) {
+// // 				// Port specified.  Skip over the colon and
+// // 				// the port number.
+// // 				 ++p;
+// // 				 Port.p = url.c_str() + p;
+// // 				 for (; p < url.size() && url[p] != Slash; ++p)
+// // 						;
+// // 				 Port.s = url.c_str() + p - Port.p;
+// // 			}
 
-			Path.p = url.c_str() + p;
-			Path.s = url.size() - p;
-			success = true;
-		}
+// // 			Path.p = url.c_str() + p;
+// // 			Path.s = url.size() - p;
+// // 			success = true;
+// // 		}
 
-		~ParsedUrl( )
-			{
-			delete[ ] pathBuffer;
-			}
+// // 		~ParsedUrl( )
+// // 			{
+// // 			delete[ ] pathBuffer;
+// // 			}
 
-	private:
-		char *pathBuffer;
-		constexpr static std::array<const char *, 2> allowed_services = {"https", "http"};
-	};
+// // 	private:
+// // 		char *pathBuffer;
+// // 		constexpr static std::array<const char *, 2> allowed_services = {"https", "http"};
+// // 	};
 
-	std::ostream& operator << ( std::ostream& os, ParsedUrl &testguy )
-		{
-		os << "complete: " << testguy.url << std::endl
-			<< "service: " << testguy.Service << std::endl
-			<< "host: " << testguy.Host << std::endl
-			<< "port: " << testguy.Port << std::endl
-			<< "path: " << testguy.Path << std::endl;
-		return os;
-		}
+// 	std::ostream& operator << ( std::ostream& os, ParsedUrl &testguy )
+// 		{
+// 		os << "complete: " << testguy.url << std::endl
+// 			<< "service: " << testguy.Service << std::endl
+// 			<< "host: " << testguy.Host << std::endl
+// 			<< "port: " << testguy.Port << std::endl
+// 			<< "path: " << testguy.Path << std::endl;
+// 		return os;
+// 		}
 
 // Simple exception class for reporting String errors
 struct ParserException {
@@ -143,7 +142,13 @@ public:
 				}
 			else
 				{
-				if( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
+				if ( content[ index ] == '{' )
+					index = seekSubstr(index, "}");
+				else if ( content[ index ] == '}')
+				{
+
+				}
+				else if ( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
 					{
 					returnString += content[ index ];
 					lastChar = content[ index ];
@@ -180,6 +185,19 @@ private:
 		for ( size_t i = 0;  i < rhs.length( );  ++i )
 			{
 			if ( content[ start + i ] != rhs[ i ] )
+				return false;
+			}
+		return true;
+		}
+
+	bool contentEqualIgnoreCase( const fb::SizeT start, const std::string & rhs ) const
+		{
+		if ( start + rhs.length( ) > content.length( ) )
+			throw ParserException(std::string("Comparison out of range " + std::to_string(start) + " " + rhs).c_str());
+
+		for ( size_t i = 0;  i < rhs.length( );  ++i )
+			{
+			if ( tolower(content[ start + i ]) != tolower(rhs[ i ]) )
 				return false;
 			}
 		return true;
@@ -236,6 +254,47 @@ private:
 		return index + str.length() - 1;
 	}
 
+	// look for occurence of str in content
+	// and return the index of end of the occurence
+	fb::SizeT seekSubstrIgnoreCase( fb::SizeT index, const std::string& str ) const
+	{
+		while ( !contentEqualIgnoreCase( index, str ) )
+			++index;
+		return index + str.length() - 1;
+	}
+
+	fb::SizeT handleQuote( fb::SizeT index ) const
+		{
+		bool inSingleQuote = false;
+		bool inDoubleQuote = false;
+		// handle escape character
+		if( content[ index - 1 ] =='\\' )
+			return index;
+
+		while( index < content.length( ) )
+			{
+			if ( content[ index - 1 ] != '\\' )
+				{
+				char c = content[ index ];
+				if( ( c == '\'' && inSingleQuote ) || ( c == '\"' && inDoubleQuote ) )
+					break;
+
+				// not in quote
+				if( !inSingleQuote && !inDoubleQuote )
+					{
+					// enter single quote
+					if( c == '\'' )
+						inSingleQuote = true;
+					// enter double quote
+					else if( c == '\"' )
+						inDoubleQuote = true;
+					}
+				}
+				++index;
+			}
+			return index;
+		}
+
 	// handle tag and return the end index, which is index of ">".
 	// start_index is the index of "<"
 	fb::SizeT handleTag( fb::SizeT start_index )
@@ -249,12 +308,18 @@ private:
 
 			std::string tagName;
 			for ( ;  content[ i ] != ' ' && content[ i ] != '>' && i < content.length( );  ++i )
-				tagName += content[ i ];
+				tagName += tolower( content[ i ] );
 
 			// std::cerr << tagName << " " << content[i] << std::endl;
 			// std::cerr << i << " length " << content.length() << std::endl;
 
-			i = seekSubstr( i, ">" );
+			// i = seekSubstr( i, ">" );
+			while ( content[i] != '>' )
+			{
+				if ( content[i] == '\"' || content[i] == '\'')
+					i = handleQuote(i);
+				++i;
+			}
 
 			// std::cerr << "after seek " << i << " " << content[i] << std::endl;
 
@@ -272,13 +337,13 @@ private:
 				else
 					setTag( tagName );
 				}
-
+			// std::cerr << "end handle tag" << std::endl;
 			return i;
 		}
 
 	fb::SizeT handleStyle( fb::SizeT index ) const
 	{
-		index = seekSubstr(index, "</style");
+		index = seekSubstrIgnoreCase(index, "</style");
 		index = seekSubstr(index, ">");
 		return index;
 	}
@@ -299,7 +364,10 @@ private:
 		std::string url = extractURL( aTag );
 		std::string anchorText = content.substr( tagEndIndex, index - tagEndIndex );
 
-		index = seekSubstr( index, "</a" );
+		// while ( !contentEqual( index, "</a" ) && !contentEqual( index, "</A" ) )
+		// 	++index;
+
+		index = seekSubstrIgnoreCase( index, "</a" );
 
 		if( url[0] != '#' )
 		{
@@ -314,24 +382,41 @@ private:
 		return index;
 	}
 
-	// skip comment block in java script and return index after the comments
+
+	// skip comment block in java script and return index at the end
 	fb::SizeT skipJSCommentBlock( fb::SizeT index ) const
 		{
+		while ( !contentEqual(index, "*/") )
+			{
+			if ( contentEqual(index, "<![CDATA"))
+			{
+				index = seekSubstr( index, "]]>" );
+				break;
+			}
+			++index;
+			}
 		index = seekSubstr( index, "*/" );
-		return index + 2;
+		return index + 1;
 		}
 
-		// skip comment in java script and return index after the comments
+	// skip comment in java script and return index at the end
 	fb::SizeT skipJSCommentLine( fb::SizeT index, bool & endScript ) const
 		{
+		// anything between these interpreted literally.
+		// if ( contentEqual(index, "//<![CDATA["))
+		// 	return seekSubstr(index, "//]]>");
+
 		while( index < content.length() )
 			{
+			if ( contentEqual(index, "<![CDATA"))
+				index = seekSubstr( index, "]]>" );
+
 			if ( contentEqual( index, "\n" ) )
 			{
 				endScript = false;
-				return index + 1;
+				return index;
 			}
-			if ( contentEqual( index, "</script" ) )
+			if ( contentEqualIgnoreCase( index, "</script" ) )
 			{
 				endScript = true;
 				index = seekSubstr( index, ">");
@@ -346,76 +431,41 @@ private:
 	// return the index of ">" of end of the closing tag of a script
 	fb::SizeT handleScript( fb::SizeT index ) const
 		{
-			auto starti = index;
 		// std::cerr << "enter script " << index << " " << content.substr(index - 10, 30) << std::endl;
 		bool inSingleQuote = false;
 		bool inDoubleQuote = false;
 		while( index < content.length( ) )
 			{
-			// handle escape character
-			if( content[ index - 1 ] != '\\' )
-				{
-				char c = content[ index ];
-				// exit single quote
-				if( c == '\'' && inSingleQuote )
-				{
-					// std::cerr << "exit single quote " << index << std::endl;
-						inSingleQuote = false;
-				}
-				// exit double quote
-				else if( c == '\"' && inDoubleQuote )
-				{
-					// std::cerr << "exit double quote " << index << std::endl;
-						inDoubleQuote = false;
-				}
-				else
-					{
-					// not in quote
-					if( !inSingleQuote && !inDoubleQuote )
-						{
-						// skip comment
-						if( c == '/' && content[ index + 1 ] == '/' )
-							{
-							bool endScript = false;
-							index = skipJSCommentLine( index, endScript );
-							if ( endScript )
-								break;
-							else
-								continue;
-							}
-						else if ( c == '/' && content[ index + 1 ] == '*' )
-						{
-							index = skipJSCommentBlock( index );
-							continue;
-						}
-						// enter single quote
-						if( c == '\'' )
-						{
-							inSingleQuote = true;
-							// std::cerr << "enter single quote " << index << std::endl;
-						}
-						// enter double quote
-						else if( c == '\"' )
-						{
-							inDoubleQuote = true;
-							// std::cerr << "enter double quote " << index << std::endl;
-						}
-						}
-					}
-				}
-	
-				// only look for end tag if not in quote and not in comment
-				if( !inSingleQuote && !inDoubleQuote && contentEqual( index, "</script" ))
-					{
-					index = seekSubstr( index, ">" );
-					break;
-					}
+			char c = content[ index ];
 
-				++index;
+			// skip quote
+			if ( c == '\'' || c == '\"')
+				{
+				index = handleQuote( index );
 				}
-			// std::cerr << "exit script " << index << std::endl;
-			// std::cerr << content.substr(starti, index - starti) << std::endl;
-			// std::cerr << "exit script " << index << std::endl;
+			else
+				{
+				// skip line comment
+				if( c == '/' && content[ index + 1 ] == '/' )
+					{
+					bool endScript = false;
+					index = skipJSCommentLine( index, endScript );
+					if ( endScript )
+						break;
+					}
+				// skip comment block
+				else if ( c == '/' && content[ index + 1 ] == '*' )
+					index = skipJSCommentBlock( index );
+				}
+
+			if( contentEqualIgnoreCase( index, "</script" ))
+				{
+				index = seekSubstr( index, ">" );
+				break;
+				}
+
+			++index;
+			}
 			return index;
 		}
 
@@ -430,6 +480,8 @@ private:
 std::string extractURL( const std::string & line )
 	{
 	fb::SizeT found = line.find( "href" );
+	if ( found == std::string::npos )
+		found = line.find( "HREF" );
 	// There might be space between href and =
 	found = line.find( "\"", found );
 	if ( found == std::string::npos )
@@ -441,7 +493,6 @@ std::string extractURL( const std::string & line )
 		return "";
 
 	std::string url = line.substr( found + 1, endURL - found - 1);
-
 	// just in case a closing quote is not really closing the url, one heuristic is
 	// that there would be a space somewhere.
 	// For example, we might have

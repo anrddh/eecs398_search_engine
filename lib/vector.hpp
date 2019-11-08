@@ -1,3 +1,5 @@
+#pragma once
+
 typedef unsigned long size_t;
 template<typename T>
 class Vector

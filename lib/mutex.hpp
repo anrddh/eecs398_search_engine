@@ -3,29 +3,32 @@
 
 namespace fb {
 
+//Exception type (since we dont have assert)
+class MutexExcept{};
+
 /* Wrapper around the pthread mutex
  * provides a more modern c++ interface
  */
-class Mutex 
+class Mutex
 {
 public:
-   Mutex() 
+   Mutex()
       {
-         if ( pthread_mutex_init(&lock, NULL) != 0)
-            assert(false);
+         if ( pthread_mutex_init(&Lock, NULL) != 0)
+            throw MutexExcept();
       }
 
    void lock() noexcept
       {
-      pthread_mutex_lock(&lock);
+      pthread_mutex_lock(&Lock);
       }
 
    void unlock() noexcept
       {
-      pthread_mutex_unlock(&lock);
+      pthread_mutex_unlock(&Lock);
       }
 private:
-   pthread_mutex_t lock;
+   pthread_mutex_t Lock;
 };
 
 /* AutoLock is a synchronization tool that takes advantage of RAII
@@ -36,12 +39,12 @@ template <typename L>
 class AutoLock
 {
 public:
-   AutoLock(L& mutex_) : mutex(mutex_) 
+   AutoLock(L& mutex_) : mutex(mutex_)
       {
       mutex.lock();
       }
 
-   ~AutoLock() 
+   ~AutoLock()
       {
       mutex.unlock();
       }

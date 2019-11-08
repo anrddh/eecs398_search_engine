@@ -4,17 +4,20 @@
 #include "stddef.hpp"
 #include "SavedStrings.hpp"
 #include "SavedLists.hpp"
+#include "string_pool.hpp"
 #include "unordered_set.hpp"
 //#include "string.hpp"
-//#include "vector.hpp"
+#include "vector.hpp"
 #include <string>
-#include <vector>
-#define Vector std::vector
 #define String std::string
+#define NumBins 256 //TODO: change if necessary
 
 namespace fb {
 
 using URL = String;
+
+template<SizeT N>
+class StringPool;
 
 //struct which contains info about a specific url
 struct UrlInfo {
@@ -25,7 +28,7 @@ struct UrlInfo {
     SizeT StaticRank;
     SizeT URLOffset;
     //This is the pointer to the downloaded page for this url
-    (void *) Page;
+    //(void *) Page; TODO: this
 };
 
 //class which handles URL lookup, defined in url_lookup.hpp
@@ -33,16 +36,14 @@ template<typename K, typename V, typename Hasher> class UrlLookup;
 
 class UrlPoolChunk {
 private:
-    //take this out later
-    typedef SavedAnchorText (void *);
 
     //UnorderedSet<URL> FrontierChunk;
-    SavedUrls UrlListChunk;
-    SavedAdjList AdListChunk;
-    SavedAnchorText AnchorTextChunk;
+    SavedStrings *UrlList; //The global url list
+    SavedStrings *AnchorTextList; //The global anchor text list
+    SavedLists<SizeT> *AdList; //TODO: Probably needs to be Pair<SizeT,SizeT>. The global adjlist
 
-    UrlLookup UrlLookupChunk;
-    SizeT ChunkId;
+    StringPool<NumBins> *UrlLookup; //The url lookup handler
+    StringPool<NumBins> *AnchorTextLookup; //The anchor text lookup handler
 
     Vector<UrlInfo> UrlInfos;
 
@@ -51,10 +52,10 @@ private:
 
 public:
 
-    //Default Constructor
-    UrlPoolChunk(){
-        UrlLookupChunk = UrlLookup(this);
-    }
+    //Constructor
+    UrlPoolChunk(SavedStrings *urls, SavedStrings *anchors, SavedLists<SizeT> *adjlist,
+        StringPool<NumBins> *urllookup, StringPool<NumBins> *anchorlookup) : UrlList(urls), AnchorTextList(anchors),
+        AdList(adjlist), UrlLookup(urllookup), AnchorTextLookup(anchorlookup) {}
 
     // Compares a URL to the URL at offset
     bool OffsetCompare(URL key, SizeT offset);
@@ -71,6 +72,6 @@ public:
 };
 
 //Wrapper global function for running URLPoolChunks
-void URLPoolChunkRun(&UrlPoolChunk PoolChunk);
+void URLPoolChunkRun(UrlPoolChunk *PoolChunk);
 
 }; //namespace fb

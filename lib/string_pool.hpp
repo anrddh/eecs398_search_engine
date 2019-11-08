@@ -2,13 +2,15 @@
 #pragma once
 
 #include "stddef.hpp"
-#include "saved_urls.hpp"
+#include "SavedStrings.hpp"
 #include "unordered_set.hpp"
-#include "url_pool.hpp"
+//#include "url_pool.hpp"
 #include "offset_lookup.hpp"
 #include "mutex.hpp"
 #include "utilities.hpp" // for pair
+//#include "string.hpp"
 #include <string>
+#define String std::string
 
 namespace fb {
 
@@ -16,16 +18,16 @@ namespace fb {
 template <SizeT N>
 class StringPool {
 public:
-   StringPool( std::string filename ) : str_array( filename ) {}
-   
+   StringPool( String filename ) : str_array( filename ) {}
+
    // Will find the offset (if this string was seen
-   SizeT get_offset( std::string str );
+   SizeT get_offset( String str );
 
    char* access_offset( SizeT offset );
 private:
    SavedStrings str_array;
-   Pair<offset_lookup, Mutex> offset_hashes[N];
-   Hash<std::string> hasher;
+   Pair<OffsetLookupChunk<String, SizeT, Hash<String>>, Mutex> offset_hashes[N];
+   Hash<String> hasher;
 };
 
 }; //namespace fb

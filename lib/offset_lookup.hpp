@@ -6,11 +6,9 @@
 #include "functional.hpp"
 #include "url_pool.hpp"
 //#include "string.hpp"
-//#include "vector.hpp"
-#include <vector>
+#include "vector.hpp"
 #include <string>
-#define Vector std::vector
-#define URL std::string
+#define String std::string
 
 #define INITIAL_SIZE 1024
 
@@ -23,7 +21,7 @@ enum class OffsetStatus {
     Ghost
 };
 
-template<typename K = URL, typename V = SizeT, typename Hasher = Hash<K>>
+template<typename K = String, typename V = SizeT, typename Hasher = Hash<K>>
 class OffsetLookupChunk {
     using Status = OffsetStatus;
 public:
@@ -89,12 +87,6 @@ public:
         buckets.resize(INITIAL_SIZE);
     }
 
-    //Default Constructor, the one we should be using
-    OffsetLookupChunk() {
-        buckets.resize(INITIAL_SIZE);
-    }
-
-
     //Returns the number of elements in the map
     size_t size() const {
         return num_elements;
@@ -127,7 +119,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
+                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList->get_str(buckets[desired_bucket].val))){
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -141,7 +133,7 @@ public:
                     if(buckets[original_hash].status == Status::Ghost){
                         num_ghosts--;
                     }
-                    buckets[original_hash].val = GlobalList.add_str(key);
+                    buckets[original_hash].val = GlobalList->add_str(key);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return buckets[original_hash].val;
@@ -149,7 +141,7 @@ public:
             }
         }else{
             //bucket is empty, so add key
-            buckets[original_hash].val = GlobalList.add_str(key);
+            buckets[original_hash].val = GlobalList->add_str(key);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return buckets[original_hash].val;
@@ -170,7 +162,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
+                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList->get_str(buckets[desired_bucket].val))){
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -184,7 +176,7 @@ public:
                     if(buckets[original_hash].status == Status::Ghost){
                         num_ghosts--;
                     }
-                    buckets[original_hash].val = GlobalList.add_str(key);
+                    buckets[original_hash].val = GlobalList->add_str(key);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return buckets[original_hash].val;
@@ -192,7 +184,7 @@ public:
             }
         }else{
             //bucket is empty, so add key
-            buckets[original_hash].val = GlobalList.add_str(key);
+            buckets[original_hash].val = GlobalList->add_str(key);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return buckets[original_hash].val;
@@ -210,7 +202,7 @@ public:
             //search until an empty bucket
             while (buckets[desired_bucket].status != Status::Empty) {
                 //if a bucket has the key, return
-                if (buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))) {
+                if (buckets[desired_bucket].status == Status::Filled && (key == GlobalList->get_str(buckets[desired_bucket].val))) {
                     return buckets[desired_bucket].val;
                 }
                 desired_bucket = (desired_bucket + 1) % buckets.size();
@@ -233,7 +225,7 @@ public:
             //search until an empty bucket
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
-                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
+                if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList->get_str(buckets[desired_bucket].val))){
                     return false;
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
@@ -270,7 +262,7 @@ public:
             return 0;
         }else{
             //if key at original bucket matches, remove and return
-            if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
+            if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList->get_str(buckets[desired_bucket].val))){
                 buckets[desired_bucket].status = Status::Ghost;
                 num_elements--;
                 num_ghosts++;
@@ -279,7 +271,7 @@ public:
                 //search until an empty bucket
                 while(buckets[desired_bucket].status != Status::Empty){
                     //if a bucket has the key, remove and return
-                    if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList.get_str(buckets[desired_bucket].val))){
+                    if(buckets[desired_bucket].status == Status::Filled && (key == GlobalList->get_str(buckets[desired_bucket].val))){
                         buckets[desired_bucket].status = Status::Ghost;
                         num_elements--;
                         num_ghosts++;
@@ -344,7 +336,7 @@ private:
     float max_load = 0.5;
     Vector<Bucket> buckets;
     Hasher hash = fb::Hash<K>();
-    SavedStrings &GlobalList;
+    SavedStrings *GlobalList;
 
     void rehash_and_grow(size_t n) {
         Vector<Bucket> temp = buckets;

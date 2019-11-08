@@ -346,7 +346,7 @@ private:
         buckets.resize(n);
         for(size_t i = 0; i < temp.size(); i++){
             if(temp[i].status == Status::Filled){
-                insert(temp[i].key, temp[i].val);
+                insert(GlobalList->get_str(temp[i].val), temp[i].val);
             }
         }
     }

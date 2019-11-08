@@ -2,7 +2,9 @@
 #pragma once
 
 #include "functional.hpp"
-#include "vector.hpp"
+//#include "vector.hpp"
+#include <vector>
+#define Vector std::vector
 
 #define INITIAL_SIZE 1024
 

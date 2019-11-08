@@ -6,9 +6,11 @@
 #include "functional.hpp"
 #include "url_pool.hpp"
 //#include "string.hpp"
-#include "vector.hpp"
+//#include "vector.hpp"
 #include <string>
+#include <vector>
 #define String std::string
+#define Vector std::vector
 
 #define INITIAL_SIZE 1024
 

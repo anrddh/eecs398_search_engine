@@ -4,7 +4,9 @@
 #include "stddef.hpp"
 #include "Exception.hpp"
 #include "SavedObject.hpp"
-#include "vector.hpp"
+//#include "vector.hpp"
+#include <vector>
+#define Vector std::vector
 #include <string> // TODO delete
 #include <unistd.h>
 #include <sys/stat.h>
@@ -27,7 +29,7 @@ public:
 
    SizeT add_list( const Vector<T>& adj_list ) {
       // obtain the old previous value and increment it
-      SizeT offset = disk_array.cursor->fetch_add( adj_list.size() ); 
+      SizeT offset = disk_array.cursor->fetch_add( adj_list.size() );
       SizeT* ptr = disk_array.file_ptr + offset;
       for (SizeT i = 0; i < adj_list.size(); ++i) {
          ptr[i] = adj_list[i];
@@ -35,9 +37,9 @@ public:
       return offset;
    }
 
-   inline T* get_list(SizeT offset) 
-      { 
-      return disk_array.file_ptr + offset; 
+   inline T* get_list(SizeT offset)
+      {
+      return disk_array.file_ptr + offset;
       }
 
 private:

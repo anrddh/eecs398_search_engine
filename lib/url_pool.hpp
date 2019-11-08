@@ -7,7 +7,9 @@
 #include "string_pool.hpp"
 #include "unordered_set.hpp"
 //#include "string.hpp"
-#include "vector.hpp"
+//#include "vector.hpp"
+#include <vector>
+#define Vector std::vector
 #include <string>
 #define String std::string
 #define NumBins 256 //TODO: change if necessary

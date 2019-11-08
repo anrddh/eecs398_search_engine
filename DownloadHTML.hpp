@@ -84,7 +84,7 @@ class BufferWriter
       int fd;
 
       BufferWriter( bool chunkedIn, const std::string &filename )
-      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" ) 
+      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" )
          {
          fd = creat( filename.c_str( ), 0666 );
          }
@@ -122,6 +122,11 @@ class BufferWriter
             }
          return false;
          }
+
+      void writeRaw( const char buffer[ ], int bytes )
+      {
+         write( fd, buffer, bytes );
+      }
 
       // main print function
       void print( char buffer[ ], int bytes )
@@ -335,6 +340,8 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
          else
             {
             // print the remaining message if no need to redirect
+            std::string url_comment = "<!-- " + connector->url.CompleteUrl + " -->\n";
+            writer.writeRaw( url_comment.c_str(), url_comment.length() );
             writer.print( buffer + i + 1, bytes - i - 1 );
             }
          

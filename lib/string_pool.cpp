@@ -13,7 +13,7 @@ namespace fb {
 template <SizeT N>
 SizeT StringPool<N>::get_offset( String str ) {
    SizeT hash = hasher(str);
-   AutoLock l(offset_hashes[hash % N].second);
+   AutoLock<Mutex> l(offset_hashes[hash % N].second);
    offset_hashes[hash % N].first.find( str, hash );
 }
 

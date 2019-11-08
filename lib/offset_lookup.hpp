@@ -308,7 +308,7 @@ public:
     }
     //Returns the current load factor
     float load_factor() {
-        return bucket_count / num_elements;
+        return bucket_count() / num_elements;
     }
     //Returns the max load factor
     float max_load_factor() {

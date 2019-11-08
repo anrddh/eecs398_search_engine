@@ -4,6 +4,7 @@
 #include "SavedStrings.hpp"
 #include "url_pool.hpp"
 #include "string_pool.hpp"
+#include "functional.hpp"
 //#include "string.hpp"
 #include <string>
 #define String std::string

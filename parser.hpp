@@ -117,7 +117,7 @@ bool isSpace( char c )
 class Parser
 {
 public:
-	std::map<std::string, std::vector<std::string>> urlAnchorText;
+	std::map<std::string, std::string> urlAnchorText;
 
 	Parser( const std::string &content_in, const std::string &domain_in )
 	: content( content_in ), domain( domain_in )
@@ -181,9 +181,7 @@ public:
 		for(auto i : urlAnchorText)
 			{
 			std::cout << "URL is: " << i.first << std::endl;
-			std::cout << "Anchor text:" << std::endl;
-			for(auto j : i.second)
-				std::cout << "\t" << j << std::endl;
+			std::cout << "Anchor text: " << i.second << std::endl;
 			}
 		}
 
@@ -391,7 +389,7 @@ private:
 				if( url[ 0 ] == '/' )
 					url = domain + url;
 
-				urlAnchorText[ url ].push_back( anchorText );
+				urlAnchorText[ url ] += " " + anchorText;
 				}
 			}
 

@@ -22,10 +22,6 @@ int main() {
    std::cout << pool.access_offset(offset) << std::endl;
    offset = pool.get_offset("bad url");
    SizeT offset2 = pool.get_offset("bad url");
-<<<<<<< HEAD
-   assert(offset = offset2);
-=======
    assert(offset == offset2);
->>>>>>> 016ce6dc0a54e313fd688871c1ef0b626bcc68bc
    std::cout << pool.access_offset(offset) << std::endl;
 }

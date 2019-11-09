@@ -3,6 +3,7 @@
 #include "stddef.hpp"
 #include "Exception.hpp"
 #include <string> // TODO delete
+#include <iostream> // TODO delete
 #include <unistd.h>
 #include <sys/stat.h>
 #include <atomic>
@@ -12,6 +13,7 @@
 namespace fb {
 
 constexpr SizeT MAXFILESIZE = 0x1000000000; // 128 Giga bytes
+//constexpr SizeT MAXFILESIZE = 1000; // 128 Giga bytes
 
 
 // This is the class that represents an array saved on disk

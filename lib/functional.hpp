@@ -49,8 +49,8 @@ struct Hash<SizeT> {
 };
 
 //Equality predicate for template type which supports ==
-template <class T = void> struct EqualTo {
-    constexpr bool operator() (const T &lhs, const T &rhs) const {
+template <typename T = void> struct EqualTo {
+    constexpr bool operator() (const T &lhs, const T &rhs) const noexcept {
         return lhs == rhs;
     }
     using FirstArgumentType = T;
@@ -59,8 +59,8 @@ template <class T = void> struct EqualTo {
 };
 
 //Inequality predicate for template type which supports !=
-template <class T> struct NotEqualTo {
-    constexpr bool operator() (const T &lhs, const T &rhs) const {
+template <typename T> struct NotEqualTo {
+    constexpr bool operator() (const T &lhs, const T &rhs) const noexcept {
         return lhs != rhs;
     }
     using FirstArgumentType = T;
@@ -69,8 +69,8 @@ template <class T> struct NotEqualTo {
 };
 
 //Less than predicate for template type which supports <
-template <class T> struct Less {
-    constexpr bool operator() (const T &lhs, const T &rhs) const {
+template <typename T> struct Less {
+    constexpr bool operator() (const T &lhs, const T &rhs) const noexcept {
         return lhs < rhs;
     }
     using FirstArgumentType = T;
@@ -79,8 +79,8 @@ template <class T> struct Less {
 };
 
 //Greater than predicate for template type which supports >
-template <class T> struct Greater {
-    constexpr bool operator() (const T &lhs, const T &rhs) const {
+template <typename T> struct Greater {
+    constexpr bool operator() (const T &lhs, const T &rhs) const noexcept {
         return lhs > rhs;
     }
     using FirstArgumentType = T;
@@ -89,8 +89,8 @@ template <class T> struct Greater {
 };
 
 //Less than or equal to predicate for template type which supports <=
-template <class T> struct LessEqual {
-    constexpr bool operator() (const T &lhs, const T &rhs) const {
+template <typename T> struct LessEqual {
+    constexpr bool operator() (const T &lhs, const T &rhs) const noexcept {
         return lhs <= rhs;
     }
     using FirstArgumentType = T;
@@ -99,8 +99,8 @@ template <class T> struct LessEqual {
 };
 
 //Greater than or equal to predicate for template type which supports <
-template <class T> struct GreaterEqual {
-    constexpr bool operator() (const T &lhs, const T &rhs) const {
+template <typename T> struct GreaterEqual {
+    constexpr bool operator() (const T &lhs, const T &rhs) const noexcept {
         return lhs >= rhs;
     }
     using FirstArgumentType = T;

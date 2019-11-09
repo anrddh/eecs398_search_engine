@@ -9,12 +9,15 @@
 namespace fb {
 
     template <typename T, typename Compare = Less<T>>
-    constexpr const T & min(const T &a, const T &b, Compare comp) {
+    constexpr const T & min(const T &a,
+                            const T &b,
+                            Compare comp = Less<T>()) {
         return comp(a,b) ? a : b;
     }
 
     template <typename T, typename Compare = Less<T>>
-    constexpr T min(std::initializer_list<T> ilist, Compare comp) {
+    constexpr T min(std::initializer_list<T> ilist,
+                    Compare comp = Less<T>()) {
         return *min_element(ilist.begin(), ilist.end(), comp);
     }
 

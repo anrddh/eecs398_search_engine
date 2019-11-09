@@ -4,6 +4,7 @@
 #include "vector.hpp"
 #include "string_view.hpp"
 #include "type_traits.hpp"
+#include "cstring.hpp"
 
 #include <iostream>
 #include <type_traits>
@@ -26,30 +27,28 @@ namespace fb {
         using ReverseIterator = typename Vector<CharT>::ReverseIterator;
         using ConstReverseIterator = typename Vector<CharT>::ConstReverseIterator;
 
+        static constexpr SizeType npos = SizeType(-1);
+
         BasicString() = default;
 
         BasicString(SizeT count, CharT c) : buf(count, c) {
-            buf.insert(buf.end(), 0);
+            buf.pushBack(0);
         }
 
-        BasicString(const char *cstr_ = "") : buf_size(std::strlen(cstr_)) {
-            if (!buf_size)
-                return;
-
-            alloc_mem(buf_size + 1);
-            std::strcpy(buf, cstr_);
+        BasicString(const char *cstr = "") : buf(cstr, cstr + fb::strlen(cstr)) {
+            buf.pushBack(0);
         }
 
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= buf.size())
-                throw std::out_of_range{};
+                throw std::out_of_range("");
             return buf[pos];
         }
 
         ConstReference at(SizeType pos) const {
             if (pos >= buf.size())
-                throw std::out_of_range{};
+                throw std::out_of_range("");
             return buf[pos];
         }
 
@@ -86,7 +85,7 @@ namespace fb {
         }
 
         operator BasicStringView<CharT>() const noexcept {
-            return BasicStringnView<CharT>(data(), size());
+            return BasicStringView<CharT>(data(), size());
         }
 
         /* Iterators */
@@ -239,37 +238,90 @@ namespace fb {
             return *this;
         }
 
+        BasicString & append(const BasicStringView<CharT> str, SizeType count) {
+            buf.insert(end(), str.begin(), str.begin() + count);
+            return *this;
+        }
+
         BasicString & append(const BasicStringView<CharT> str) {
             buf.insert(end(), str.begin(), str.end());
             return *this;
         }
 
-        BasicString & append(const BasicString &str,
+        BasicString & append(const BasicStringView<CharT> str,
                              SizeType pos,
                              SizeType count = npos) {
+            if (pos > str.size())
+                throw std::out_of_range("");
+
+            auto first = str.begin() + pos;
+
+            if (count == npos || pos + count >= str.size())
+                buf.insert(end(), first, str.end());
+            else
+                buf.insert(end(), first, pos + count);
+
+            return *this;
         }
 
-        /*
-basic_string& append( const CharT* s, size_type count );
-basic_string& append( const CharT* s );
-template< class InputIt >
-basic_string& append( InputIt first, InputIt last );
-basic_string& append( std::initializer_list<CharT> ilist );
-	(7) 	(since C++11)
-template < class T >
-basic_string& append( const T& t );
-	(8) 	(since C++17)
-template < class T >
+        template <typename It>
+        BasicString & append(EnableIfT<
+                             std::is_base_of_v<InputIteratorTag,
+                             typename IteratorTraits<It>::IteratorCategory>,
+                             It> first, It last) {
+            buf.insert(end(), first, last);
+            return *this;
+        }
 
-basic_string& append( const T& t, size_type pos,
-                      size_type count = npos );
-	(9) 	(since C++17)
-    */
+        BasicString & append(std::initializer_list<CharT> ilist) {
+            return append(ilist.begin(), ilist.end());
+        }
+
+        BasicString & operator+=(const BasicStringView<CharT> s) {
+            return append(s);
+        }
+
+        BasicString & operator+=(CharT ch) {
+            insert(end(), ch);
+            return *this;
+        }
+
+        BasicString & operator+=(std::initializer_list<CharT> ilist) {
+            return append(ilist.begin(), ilist.end());
+        }
+
+        constexpr int compare(const BasicStringView<CharT> str) const noexcept {
+            return BasicStringView<CharT>(*this).compare(str);
+        }
+
+        bool startsWith(const BasicStringView<CharT> str) const noexcept {
+            return BasicStringView<CharT>(*this).startsWith(str);
+        }
+
+        bool startsWith(CharT x) const noexcept {
+            return BasicStringView<CharT>(*this).startsWith(x);
+        }
+
+        bool endsWith(const BasicStringView<CharT> str) const noexcept {
+            return BasicStringView<CharT>(*this).endsWith(str);
+        }
+
+        bool endsWith(CharT x) const noexcept {
+            return BasicStringView<CharT>(*this).endsWith(x);
+        }
+
         BasicString substr(SizeType pos = 0, SizeType count = npos) const {
             if (pos > size())
                 throw std::out_of_range("");
             return BasicString(data() + pos, count);
         }
+
+        SizeType copy(CharT *dest,
+                      SizeType count,
+                      SizeType pos = 0) const {
+            return BasicStringnView<CharT>(*this).copy(dest, count, pos);
+        }
+
 
         void resize(SizeType count) {
             buf.resize(count + 1);
@@ -278,11 +330,13 @@ basic_string& append( const T& t, size_type pos,
         void resize(SizeType count, CharT ch) {
             if (count <= size()) {
                 buf.resize(count + 1);
-                buf.last() = 0;
                 return;
             }
 
-
+            buf.last() = ch;
+            buf.reserve(count + 1);
+            buf.resize(count, ch);
+            buf.push_back(0);
         }
 
         void swap(BasicString &other) noexcept {
@@ -295,85 +349,43 @@ basic_string& append( const T& t, size_type pos,
 
     using String = BasicString<char>;
 
-// non-member overloaded operators
-
-// compare lhs and rhs strings; constructor will convert a C-string literal to a String.
-// comparison is based on std::strcmp result compared to 0
-bool operator== (const String& lhs, const String& rhs) {
-    return std::strcmp(lhs.c_str(), rhs.c_str()) == 0;
-}
-
-bool operator!= (const String& lhs, const String& rhs) {
-    return std::strcmp(lhs.c_str(), rhs.c_str()) != 0;
-}
-
-bool operator< (const String& lhs, const String& rhs) {
-    return std::strcmp(lhs.c_str(), rhs.c_str()) < 0;
-}
-
-bool operator> (const String& lhs, const String& rhs) {
-    return std::strcmp(lhs.c_str(), rhs.c_str()) > 0;
-}
-
-/* Concatenate a String with another String.  If one of the arguments
- is a C-string, the String constructor will automatically create a
- temporary String for it to match this function (inefficient, but
- instructive).  This automatic behavior would be disabled if the
- String constructor was declared "explicit".  This function constructs
- a copy of the lhs in a local String variable, then concatenates the
- rhs to it with operator +=, and returns it. */
-String operator+ (const String &lhs, const String &rhs) {
-    String temp(lhs);
-    temp += rhs;
-    return temp;
-}
-
-// Input and output operators and functions The output operator writes
-// the contents of the String to the stream
-std::ostream & operator<< (std::ostream &os, const String &str) {
-    os << str.c_str();
-    return os;
-}
-
-/* The input operator clears the supplied String, then starts reading
-the stream.  It skips initial whitespace, then copies characters into
-the supplied str until whitespace is encountered again. The
-terminating whitespace remains in the input stream, analogous to how
-string input normally works.  str is expanded as needed, and retains
-the final allocation.  If the input stream fails, str contains
-whatever characters were read. */
-std::istream & operator>> (std::istream &is, String &str) {
-    str.clear();
-
-    // skip initial whitespace
-    char c;
-    while (is && (c = is.peek()) && isspace(c))
-        is.get();
-
-    while (is && (c = is.peek()) && !isspace(c))
-        str += is.get();
-
-    return is;
-}
-
-/* getline for String clears str to an empty String, then reads
-characters into str until it finds a '\n'.  Similar to std::getline,
-the newline character is consumed, but not stored in the String.
-str's allocation is expanded as needed, and it retains the final
-allocation.  If the input stream fails, str contains whatever
-characters were read. */
-std::istream & getline(std::istream &is, String &str) {
-    str.clear();
-
-    char c;
-    while (is && (c = is.peek()) && c != '\n') {
-        c = is.get();
-        str += c;
+    String operator+ (const String &lhs, const StringView rhs) {
+        String temp(lhs);
+        temp += rhs;
+        return temp;
     }
 
-    if (c == '\n')
+    std::ostream & operator<< (std::ostream &os, const String &str) {
+        os << str.data();
+        return os;
+    }
+
+    std::istream & operator>> (std::istream &is, String &str) {
+        str.clear();
+
+        // skip initial whitespace
+        char c;
+        while (is && (c = is.peek()) && isspace(c))
+            is.get();
+
+        while (is && (c = is.peek()) && !isspace(c))
+            str += is.get();
+
+        return is;
+    }
+
+    std::istream & getline(std::istream &is, String &str) {
+      str.clear();
+
+      char c;
+      while (is && (c = is.peek()) && c != '\n') {
+        c = is.get();
+        str += c;
+      }
+
+      if (c == '\n')
         is.get(); // read in last newline
 
-    return is;
-}
-}
+      return is;
+    }
+} // namespace fb

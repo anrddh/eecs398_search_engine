@@ -26,9 +26,9 @@ namespace fb {
         using SizeType = SizeT;
         using DifferenceType = PtrDiffT;
         using Reference = T &;
-        using ConstReference = AddConstT<Reference>;
+        using ConstReference = const T &;
         using Pointer = T *;
-        using ConstPointer = AddConstT<Pointer>;
+        using ConstPointer = const T *;
         using Iterator = Pointer;
         using ConstIterator = const T *;
         using ReverseIterator = fb::ReverseIterator<Iterator>;
@@ -47,13 +47,16 @@ namespace fb {
             uninitializedDefaultConstruct(begin(), end());
         }
 
-        Vector( const Vector<T>& v ) : Vector(), size_(v.size()) {
+        Vector( const Vector<T>& v ) : Vector() {
+            size_ = v.size();
             alloc_mem(v.size());
-            uninitalizedCopy(v.begin(), v.end(), begin());
+            uninitializedCopy(v.begin(), v.end(), begin());
         }
 
         Vector( Vector<T>&& v ) noexcept
-            : Vector(), size_(v.size()), cap_(v.cap()), buf(std::move(v.buf)) {
+            : size_(v.size()),
+              cap_(v.capacity()),
+              buf(std::move(v.buf)) {
            v.size_ = 0;
            v.cap_ = 0;
         }

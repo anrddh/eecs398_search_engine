@@ -4,10 +4,11 @@
 #include "iterator.hpp"
 #include "stddef.hpp"
 #include "algorithm.hpp"
-
-#include <string.h>
+#include "cstring.hpp"
+#include "memory.hpp"
 
 #include <stdexcept>
+#include <iostream>
 
 namespace fb {
 
@@ -19,10 +20,9 @@ namespace fb {
         using ConstPointer = const CharT *;
         using Reference = CharT &;
         using ConstReference = const CharT &;
-        using ConstIterator = typename View<CharT,dynamicExtent>::ConstIterator;
+        using ConstIterator = ConstPointer;
         using Iterator = ConstIterator;
-        using ConstReverseIterator =
-            typename View<CharT,dynamicExtent>::ConstReverseIterator;
+        using ConstReverseIterator = fb::ReverseIterator<ConstIterator>;
         using ReverseIterator = ConstReverseIterator;
         using SizeType = SizeT;
         using DifferenceType = PtrDiffT;
@@ -32,72 +32,73 @@ namespace fb {
         constexpr BasicStringView() noexcept {}
         constexpr BasicStringView(const BasicStringView &) noexcept = default;
         constexpr BasicStringView(const CharT *s, SizeType count)
-            : view(s,count) {}
+            : ptr(s), len(count) {}
         constexpr BasicStringView(const CharT *s)
-            : view(s, strlen(s)) {}
+            : BasicStringView(s, fb::strlen(s)) {}
         constexpr BasicStringView & operator=(const BasicStringView &view)
             noexcept = default;
 
         /* Iterators */
         [[nodiscard]] constexpr Iterator begin() const noexcept {
-            return view.begin();
+            return ptr;
         }
 
         [[nodiscard]] constexpr ConstIterator cbegin() const noexcept {
-            return view.cbegin();
+            return ptr;
         }
 
         [[nodiscard]] constexpr Iterator end() const noexcept {
-            return view.end();
+            return ptr + len;
         }
 
         [[nodiscard]] constexpr ConstIterator cend() const noexcept {
-            return view.cend();
+            return ptr + len;
         }
 
         [[nodiscard]] constexpr ReverseIterator rbegin() const noexcept {
-            return view.rbegin();
+            return ReverseIterator(end());
         }
 
         [[nodiscard]] constexpr ConstReverseIterator crbegin() const noexcept {
-            return view.crbegin();
+            return ConstReverseIterator(cend());
         }
 
         [[nodiscard]] constexpr ReverseIterator rend() const noexcept {
-            return view.rend();
+            return ReverseIterator(begin());
         }
 
         [[nodiscard]] constexpr ConstReverseIterator crend() const noexcept {
-            return view.crend();
+            return ConstReverseIterator(cbegin());
         }
 
         /* Element access */
-        [[nodiscard]] constexpr ConstReference operator[](SizeType pos) const {
-            return view[pos];
+        [[nodiscard]] constexpr ConstReference operator[](SizeType pos)
+            const noexcept {
+            return data()[pos];
         }
 
         [[nodiscard]] constexpr ConstReference at(SizeType pos) const {
             if (pos > size())
-                throw std::out_of_range{};
+                throw std::out_of_range("");
 
-            return view[pos];
+            return data()[pos];
         }
 
         [[nodiscard]] constexpr ConstReference front() const {
-            return view.back();
+            return data()[0];
         }
 
         [[nodiscard]] constexpr ConstReference back() const {
-            return view.back();
+            return data()[size() - 1];
         }
 
         [[nodiscard]] constexpr ConstPointer data() const noexcept {
-            return view.data();
+            return ptr;
         }
 
         /* Capacity  */
         [[nodiscard]] constexpr SizeType size() const noexcept {
-            return view.size();
+            return len;
         }
 
         [[nodiscard]] constexpr SizeType length() const noexcept {
@@ -114,22 +115,24 @@ namespace fb {
 
         /*  Modifiers */
         constexpr void remove_prefix(SizeType n) {
-            view = view.last(size() - n);
+            ptr += n;
+            len -= n;
         }
 
         constexpr void remove_suffix(SizeType n) {
-            view = view.first(size() - n);
+            len -= n;
         }
 
         constexpr void swap(BasicStringView &v) noexcept {
-            fb::swap(view, v.view);
+            fb::swap(ptr, v.ptr);
+            fb::swap(len, v.len);
         }
 
         /* Operations */
         constexpr SizeType copy(CharT *dest,
                                 SizeType count,
                                 SizeType pos = 0) const {
-            auto rcount = min(count, ize() - pos);
+            auto rcount = min(count, size() - pos);
             fb::copy(data() + pos, data() + pos + rcount, dest);
             return rcount;
         }
@@ -137,28 +140,173 @@ namespace fb {
         constexpr BasicStringView substr(SizeType pos = 0,
                                          SizeType count = npos) const {
             if (pos > size())
-                throw std::out_of_range{};
+                throw std::out_of_range("");
 
-            return { view.data() + pos, min(count, size() - pos) };
+            return { data() + pos, fb::min(count, size()) };
+        }
+
+        constexpr int compare(BasicStringView v) const noexcept {
+            return fb::strncmp(data(), v.data(), fb::min(size(), v.size()));
+        }
+
+        constexpr int compare(SizeType pos1, SizeType count1,
+                              BasicStringView v) const {
+            return substr(pos1, count1).compare(v);
+        }
+
+        constexpr int compare(SizeType pos1, SizeType count1,
+                              BasicStringView  v,
+                              SizeType pos2, SizeType count2) const {
+            return substr(pos1, count1).compare(v.substr(pos2, count2));
+        }
+
+        constexpr int compare(const CharT *s) const {
+            auto ptr = data();
+            auto len = size();
+
+            for ( ; len && *s; --len, ++ptr, ++s)
+                if (*s != *ptr)
+                    return *ptr - *s;
+
+            return 0;
+        }
+
+        constexpr int compare(SizeType pos1, SizeType count1,
+                              const CharT *s) const {
+            return substr(pos1, count1).compare(s);
+        }
+
+        constexpr int compare(SizeType pos1, SizeType count1,
+                              const CharT *s, SizeType count2) const {
+            return fb::strncmp(data() + pos1, s, fb::min(count1, count2));
+        }
+
+        constexpr bool startsWith(BasicStringView x) const noexcept {
+            return size() >= x.size() && !compare(0, x.size(), x);
+        }
+
+        constexpr bool startsWith(CharT x) const noexcept {
+            return !empty() && front() == x;
+        }
+
+        constexpr bool startsWith(const CharT *x) const {
+            for (auto c : *this) {
+                if (!*x)
+                    return true;
+                if (c != *x)
+                    return false;
+                ++x;
+            }
+
+            if (*x)
+                return false;
+            return true;
+        }
+
+        constexpr bool endsWith(BasicStringView x) const noexcept {
+            return size() >= x.size() &&
+                compare(size() - x.size(), npos, x) == 0;
+        }
+
+        constexpr bool endsWith(CharT x) const noexcept {
+            return !empty() && back() == x;
+        }
+
+        constexpr bool endsWith(const CharT *x) const {
+            return endsWith(BasicStringView(x));
+        }
+
+        constexpr SizeType find(BasicStringView v, SizeType pos = 0) const noexcept {
+            if (v.empty())
+                return 0;
+
+            auto len = size() - pos - 1;
+            auto ptr = data() + pos + 1;
+
+            for ( ; v.size() <= len; --len, ++ptr)
+                if (!memcmp(ptr, v.data(), v.size()))
+                    return ptr - data();
+
+            return npos;
+        }
+
+        constexpr SizeType find(CharT ch, SizeType pos = 0) const noexcept {
+            return find(fb::addressof(ch), pos, 1);
+        }
+
+        constexpr SizeType find(const CharT *s, SizeType pos, SizeType count) const {
+            return find(BasicStringView(s, count), pos);
+        }
+
+        constexpr SizeType find(const CharT *s, SizeType pos = 0) const {
+            return fb::strnstr(data() + pos + 1, s, size() - pos - 1);
         }
 
     private:
-        View<CharT, dynamicExtent> view;
+        ConstPointer ptr = nullptr;
+        SizeT len = 0;
+        // View<CharT, dynamicExtent> view;
     };
+
+    template <typename CharT, typename Traits>
+    std::basic_ostream<CharT, Traits>&
+    operator<<(std::basic_ostream<CharT, Traits>& os,
+               fb::BasicStringView<CharT> v) {
+        for (auto c : v)
+            os << c;
+        return os;
+    }
+
+    template <typename CharT>
+    constexpr bool operator==(BasicStringView<CharT> lhs,
+                              BasicStringView<CharT> rhs) noexcept {
+        return !lhs.compare(rhs);
+    }
+
+    template <typename CharT>
+    constexpr bool operator!=(BasicStringView<CharT> lhs,
+                              BasicStringView<CharT> rhs) noexcept {
+        return !(lhs == rhs);
+    }
+
+    template <typename CharT>
+    constexpr bool operator<(BasicStringView<CharT> lhs,
+                             BasicStringView<CharT> rhs) noexcept {
+        return lhs.compare(rhs) < 0;
+    }
+
+    template <typename CharT>
+    constexpr bool operator<=(BasicStringView<CharT> lhs,
+                              BasicStringView<CharT> rhs) noexcept {
+        return !(lhs > rhs);
+    }
+
+    template <typename CharT>
+    constexpr bool operator>(BasicStringView<CharT> lhs,
+                             BasicStringView<CharT> rhs) noexcept {
+        return lhs.compare(rhs) > 0;
+    }
+
+    template <typename CharT>
+    constexpr bool operator>=(BasicStringView<CharT> lhs,
+                              BasicStringView<CharT> rhs) noexcept {
+        return !(lhs < rhs);
+    }
 
     using StringView = BasicStringView<char>;
 
     template <typename CharT>
-    constexpr BasicStringView<CharT>::ConstIterator begin(BasicStringView<CharT> sv) noexcept {
+    constexpr typename BasicStringView<CharT>::ConstIterator begin(BasicStringView<CharT> sv) noexcept {
         return sv.begin();
     }
 
     template <typename CharT>
-    constexpr BasicStringView<CharT>::ConstIterator end(BasicStringView<CharT> sv) noexcept {
+    constexpr typename BasicStringView<CharT>::ConstIterator end(BasicStringView<CharT> sv) noexcept {
         return sv.end();
     }
 
     constexpr StringView operator "" sv(const char *str, SizeT len) noexcept {
         return { str, len };
     }
+
 }

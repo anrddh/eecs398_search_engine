@@ -4,10 +4,8 @@
 #include "stddef.hpp"
 #include "Exception.hpp"
 #include "SavedObject.hpp"
-//#include "vector.hpp"
-#include <vector>
-#define Vector std::vector
-#include <string> // TODO delete
+#include "vector.hpp"
+#include "string.hpp"
 #include <unistd.h>
 #include <sys/stat.h>
 #include <atomic>

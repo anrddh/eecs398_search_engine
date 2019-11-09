@@ -7,8 +7,7 @@
 #include "offset_lookup.hpp"
 #include "mutex.hpp"
 #include "utilities.hpp" // for pair
-#include <string> // TODO switch it out
-#define String std::string
+#include "string.hpp"
 
 namespace fb {
 

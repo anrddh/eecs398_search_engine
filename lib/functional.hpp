@@ -2,11 +2,8 @@
 //Edited by Chandler Meyers 11/5/2019
 #pragma once
 
-//#include "string.hpp"
+#include "string.hpp"
 #include "stddef.hpp"
-
-#include <string>
-#define String std::string
 
 #define INITIAL_SIZE 1024
 

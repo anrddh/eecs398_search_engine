@@ -5,12 +5,8 @@
 //This is intended to look up a file offset, and comparisons will then be done using the lookup
 #include "functional.hpp"
 #include "url_pool.hpp"
-//#include "string.hpp"
-//#include "vector.hpp"
-#include <string>
-#include <vector>
-#define String std::string
-#define Vector std::vector
+#include "string.hpp"
+#include "vector.hpp"
 
 #define INITIAL_SIZE 1024
 

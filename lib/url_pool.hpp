@@ -7,12 +7,9 @@
 #include "string_pool.hpp"
 #include "unordered_set.hpp"
 #include "unordered_map.hpp"
-//#include "string.hpp"
-//#include "vector.hpp"
-#include <vector>
-#define Vector std::vector
-#include <string>
-#define String std::string
+#include "string.hpp"
+#include "vector.hpp"
+
 #define NumBins 256 //TODO: change if necessary
 
 namespace fb {

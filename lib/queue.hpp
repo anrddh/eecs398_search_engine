@@ -1,10 +1,7 @@
 #pragma once
 
-//#include "vector.hpp"
-#include <vector>
-#define Vector std::vector
-
-#include <memory> //std::unique_ptr, etc.
+#include "vector.hpp"
+#include "memory.hpp"
 
 namespace fb
 {

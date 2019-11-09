@@ -5,12 +5,8 @@
 #include "saved_urls.hpp"
 #include "unordered_set.hpp"
 #include "url_pool.hpp"
-//#include "string,hpp"
-//#include "vector.hpp"
-#include <string>
-#include <vector>
-#define Vector std::vector
-#define String std::string
+#include "string,hpp"
+#include "vector.hpp"
 
 namespace fb {
 

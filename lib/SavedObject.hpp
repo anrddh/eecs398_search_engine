@@ -2,7 +2,7 @@
 #pragma once
 #include "stddef.hpp"
 #include "Exception.hpp"
-#include <string> // TODO delete
+#include "string.hpp"
 #include <iostream> // TODO delete
 #include <unistd.h>
 #include <sys/stat.h>

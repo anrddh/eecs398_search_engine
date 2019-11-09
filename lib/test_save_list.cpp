@@ -17,7 +17,7 @@ int main() {
    SizeT offset1 = file.add_list( test_list_1 );
    SizeT offset2 = file.add_list( test_list_2);
    SizeT offset3 = file.add_list( test_list_3);
-   
+
    SizeT* val = file.get_list(offset1);
    for (int i = 0; i < test_list_1.size(); ++i) {
       assert(test_list_1[i] == val[i]);

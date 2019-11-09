@@ -1,9 +1,7 @@
 // Created by Jaeyoon Kim 11/6/2019
 #pragma once
-//#include "string.hpp"
-#include <string> // TODO delete
+#include "string.hpp"
 #include <cstring> //TODO
-#define String std::string //TODO
 #define strcpy std::strcpy //TODO
 #include "Exception.hpp"
 #include "SavedObject.hpp"

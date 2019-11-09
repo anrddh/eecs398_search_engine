@@ -3,12 +3,17 @@
 //#include "vector.hpp"
 #include <vector>
 #include <iostream>
+#include <cassert>
 #define Vector std::vector
+
+using namespace std;
 
 using namespace fb;
 
 int main() {
+   cout << -1 << endl;
    StringPool<16> pool("test_offset_file");
+   std::cout << "first cout" << std::endl;
    SizeT offset = pool.get_offset("some url");
    std::cout << pool.access_offset(offset) << std::endl;
    pool.get_offset("good url");
@@ -17,6 +22,6 @@ int main() {
    std::cout << pool.access_offset(offset) << std::endl;
    offset = pool.get_offset("bad url");
    SizeT offset2 = pool.get_offset("bad url");
-   //assert(offset = offset2);
+   assert(offset = offset2);
    std::cout << pool.access_offset(offset) << std::endl;
 }

@@ -16,7 +16,11 @@ namespace fb {
 template <SizeT N>
 class StringPool {
 public:
-   StringPool( String filename ) : str_array( filename ) {}
+   StringPool( String filename ) : str_array( filename ) {
+       for (int i = 0; i < N; ++i){
+           offset_hashes[i].first.set_string_list(&str_array);
+       }
+   }
 
    // Will find the offset (if this string was seen
    SizeT get_offset( String str ) {

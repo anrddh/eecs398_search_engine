@@ -14,21 +14,26 @@
 
 namespace fb {
 
-// Compares a URL to the URL at offset
-bool OffsetCompare(URL key, SizeT offset){
-    //TODO
-    //this wont work until get_str returns a usable type for this
-    return key == UrlListChunk.get_str(offset);
-}
-
-//Adds a URL to the URL List, returns its offset
-SizeT OffsetCreate(URL key){
-    return UrlListChunk.add_url(key);
-}
-
 //If the URL is already in the URL List, it adds the anchor text
 void UrlPoolChunk::ProcessUrl(URL url, String anchor_text){
-    //TODO
+    //find the corresponding url info struct
+    UrlInfo info = UrlInfos[url];
+    //check if its the first time seeing the url
+    if (info.Page == nullptr){
+        SizeT url_offset = (*UrlLookup)[url];
+        info.URLOffset = url_offset;
+        //TODO: send the url to the parser, receive vector of found url, anchor text pairs, and a pointer to the stored page
+        //Set the page pointer of info to the stored page
+        //Send the url, anchor text pairs to the appropraite chunks
+        //Look up all the urls, and send the vector of offsets to the adjacency list to be added
+        //The adj list returns a pair of begin and end offsets, set those for info
+    }
+    //Send the current anchor text end, begin, and the new text to the anchor text list
+    Pair<SizeT, SizeT> newAnchorOffsets = SavedAnchors->add_str(anchor_text, {info.AnchorTextBegin, info.AnchorTextEnd});
+    //Set the new begin and end for info
+    info.AnchorTextBegin = newAnchorOffsets.begin;
+    info.AnchorTextEnd = newAnchorOffsets.end;
+    return;
 }
 
 void UrlPoolChunk::AddToFrontier(URL url, String anchor_text){

@@ -42,30 +42,28 @@ template<typename K, typename V, typename Hasher> class UrlLookup;
 class UrlPoolChunk {
 private:
 
-    //UnorderedSet<URL> FrontierChunk; //The frontier chunk, whatever form it takes
+    //UnorderedSet<SizeT urlOffset, SizeT urlRank> FrontierChunk; //The frontier chunk, whatever form it takes
     SavedStrings *UrlList; //The saved url list
     SavedAnchors *AnchorTextList; //The saved anchor text list
     SavedLists<SizeT> *AdList; //The saved adjlist
 
     StringPool<NumBins> *UrlLookup; //The url lookup handler
-    StringPool<NumBins> *AnchorTextLookup; //The anchor text lookup handler
-
-    UnorderedMap<URL, UrlInfo, Hash<URL>> UrlInfos;
+    InfoPool<NumBins> *InfoLookup; //The urlinfo lookup handler
 
     //If the URL is already in the URL List, it adds the anchor text
-    void ProcessUrl(URL url, String anchor_text);
+    void ProcessUrl(SizeT urlOffset);
 
 public:
 
     //Constructor
     UrlPoolChunk(SavedStrings *urls, SavedAnchors *anchors, SavedLists<SizeT> *adjlist,
-        StringPool<NumBins> *urllookup, StringPool<NumBins> *anchorlookup) : UrlList(urls), AnchorTextList(anchors),
-        AdList(adjlist), UrlLookup(urllookup), AnchorTextLookup(anchorlookup) {}
+        StringPool<NumBins> *urllookup, InfoPool<NumBins> *infolookup) : UrlList(urls), AnchorTextList(anchors),
+        AdList(adjlist), UrlLookup(urllookup), InfoLookup(infolookup) {}
 
-    //Adds URLs and anchor text to the frontier, to be called by other pools chunks
-    void AddToFronter(URL url, String anchor_text);
+    //Adds URL offset and rank pair to the frontier. To be called by other chunks
+    void AddToFronter(SizeT urlOffset, SizeT urlRank);
 
-    //Constantly pops off the frontier and process urls
+    //Constantly pops off the frontier and process urls. A while loop
     void Run();
 
 };

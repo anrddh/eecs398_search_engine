@@ -38,4 +38,21 @@ private:
    Hash<String> hasher;
 };
 
+template <SizeT N>
+class InfoPool {
+public:
+    InfoPool(){}
+
+    UrlInfo &get_info( String str ) {
+        SizeT hash = hasher(str);
+        AutoLock<Mutex> l(info_hashes[hash % N].second);
+        return info_hashes[hash % N].first[str];
+    }
+
+private:
+    //The unorderedmaps link the hashes of urls to the associated url infos
+    Pair<UnorderedMap<String, UrlInfo>, Mutex> info_hashes[N];
+    Hash<String> hasher;
+};
+
 }; //namespace fb

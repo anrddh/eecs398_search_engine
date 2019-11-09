@@ -15,7 +15,9 @@
 namespace fb {
 
 //If the URL is already in the URL List, it adds the anchor text
-void UrlPoolChunk::ProcessUrl(URL url, String anchor_text){
+void UrlPoolChunk::ProcessUrl(SizeT urlOffset) {
+    //lookup the url
+    String url = UrlList->get_str(urlOffset);
     //find the corresponding url info struct
     UrlInfo info = UrlInfos[url];
     //check if its the first time seeing the url
@@ -24,24 +26,25 @@ void UrlPoolChunk::ProcessUrl(URL url, String anchor_text){
         info.URLOffset = url_offset;
         //TODO: send the url to the parser, receive vector of found url, anchor text pairs, and a pointer to the stored page
         //Set the page pointer of info to the stored page
-        //Send the url, anchor text pairs to the appropraite chunks
+        //Look up the url infos, and handle their anchor texts
+        //Compute url heuristic rankings for new urls
         //Look up all the urls, and send the vector of offsets to the adjacency list to be added
         //The adj list returns a pair of begin and end offsets, set those for info
+        //Send url offset, heuristric ranking pairs to the appropriate frontier chunks
     }
-    //Send the current anchor text end, begin, and the new text to the anchor text list
-    Pair<SizeT, SizeT> newAnchorOffsets = SavedAnchors->add_str(anchor_text, {info.AnchorTextBegin, info.AnchorTextEnd});
-    //Set the new begin and end for info
-    info.AnchorTextBegin = newAnchorOffsets.begin;
-    info.AnchorTextEnd = newAnchorOffsets.end;
     return;
 }
 
-void UrlPoolChunk::AddToFrontier(URL url, String anchor_text){
+void UrlPoolChunk::AddToFrontier(SizeT urlOffset, SizeT urlRank){
     //TODO
+    //frontier.push({urlOffset, urlRank});
 }
 
 void UrlPoolChunk::Run(){
     //TODO
+    //while(!frontier.empty()){
+        //ProcessUrl(frontier.pop());
+    //}
 }
 
 //Wrapper global function for running URLPoolChunks

@@ -20,7 +20,14 @@
 
 class UrlStore {
 public:
-    constexpr UrlStore(fb::StringView filename) : urls(filename) {}
+    static void init(fb::StringView filename) {
+        delete ptr;
+        ptr = new UrlStore(filename);
+    }
+
+    UrlStore & getStore() {
+        return *ptr;
+    }
 
     constexpr fb::SizeT addUrl(fb::StringView url) {
         auto idx = urls.reserve(url.size() + 1);
@@ -34,5 +41,8 @@ public:
     }
 
 private:
+    constexpr UrlStore(fb::StringView filename) : urls(filename) {}
+
+    static UrlStore *ptr;
     DiskVec<char> urls;
 };

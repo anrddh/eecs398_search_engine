@@ -82,16 +82,31 @@ class BufferWriter
       size_t chunkSize;
       std::string chunkSizeString;
       int fd;
+      size_t fileSize;
+      bool fileClosed;
+      std::string filename;
 
-      BufferWriter( bool chunkedIn, const std::string &filename )
-      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" )
+      BufferWriter( bool chunkedIn, const std::string &filenameIn )
+      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" ), fileSize( 0 ), fileClosed( false )
          {
-         fd = creat( filename.c_str( ), 0666 );
+         filename = filenameIn;
+         fd = creat( filenameIn.c_str( ), 0666 );
          }
 
       ~BufferWriter( )
          {
-         close( fd );
+         if ( !fileClosed )
+            close( fd );
+         }
+
+      void deleteFile( )
+         {
+         if ( !fileClosed )
+            {
+            close( fd );
+            fileClosed = true;
+            remove( filename.c_str( ) );
+            }
          }
 
       // get rid of \r\n in front
@@ -126,7 +141,13 @@ class BufferWriter
       void writeRaw( const char buffer[ ], int bytes )
       {
          write( fd, buffer, bytes );
+         fileSize += bytes;
       }
+
+      bool fileTooBig( )
+         {
+         return fileSize > 1e+7;
+         }
 
       // main print function
       void print( char buffer[ ], int bytes )
@@ -151,12 +172,16 @@ class BufferWriter
                else
                   {
                   write( fd, buffer + i, 1 );
+                  ++fileSize;
                   --chunkSize;
                   }
                }
             }
          else
+         {
             write( fd, buffer, bytes );
+            fileSize += bytes;
+         }
       }
    };
 
@@ -367,7 +392,7 @@ ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
 // Esatblish connection with the url
 // If redirect, return the redirect url
 // Else, write the recieved content to a file
-std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &filename )
+std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &filename, bool & fileSaved )
    {
       // Parse the URL
    ParsedUrl url( url_in );
@@ -398,9 +423,22 @@ std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &
          while ( ( bytes =  connector->read(buffer)) > 0 )
             {
             writer.print( buffer, bytes );
+
+            if( writer.fileTooBig( ) )
+               break;
             }
          }
       }
+
+   if ( redirectUrl == linkNotHTML || redirectUrl != "" || writer.fileTooBig( ) )
+   {
+      writer.deleteFile( );
+      fileSaved = false;
+   }
+   else
+   {
+      fileSaved = true;
+   }
 
    // clean up
    delete connector;
@@ -411,17 +449,19 @@ std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &
 // Write the url information to a file
 // handling redirect appropriately
 // If redirect creates a loop, do nothing
-void PrintHtml( const std::string &url_in, const std::string &filename )
+bool PrintHtml( const std::string &url_in, const std::string &filename )
    {
    std::set<std::string> visitedURLs;
 
    visitedURLs.insert( url_in );
 
+   bool fileSaved = false;
+
    std::string url = url_in;
 
    while ( url.length( ) != 0 )
       {
-      url = PrintHtmlGetRedirect( url, filename );
+      url = PrintHtmlGetRedirect( url, filename, fileSaved );
       if ( url == linkNotHTML )
          break;
       // If there is a loop, probably a bad website.
@@ -430,4 +470,6 @@ void PrintHtml( const std::string &url_in, const std::string &filename )
 
       visitedURLs.insert( url );
       }
+
+   return fileSaved;
    }

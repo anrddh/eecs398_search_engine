@@ -29,7 +29,7 @@ public:
         return idx;
     }
 
-    constexpr fb:;StringView getUrl(fb::SizeT idx) const noexcept {
+    constexpr fb::StringView getUrl(fb::SizeT idx) const noexcept {
         return { urls.data() + idx };
     }
 

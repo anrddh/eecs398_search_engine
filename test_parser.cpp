@@ -43,14 +43,19 @@ int main ( int argc, char *argv[] ){
    std::string content( (std::istreambuf_iterator<char>(ifs) ),
               (std::istreambuf_iterator<char>()    ) );
    ifs.close();
+
+   std::string domain = "https://en.wikipedia.org/wiki/Commutative_algebra";
+
    auto parser = Parser(content, filename);
 
-   auto retstr = parser.parse();
+   parser.parse();
+   auto retstr = parser.getParsedResult();
 
-   // parser.printUrls();
+   parser.printUrls();
 
    std::ofstream outfile;
-   outfile.open("htmlstagless/" + filename.substr(6));
+   // outfile.open("htmlstagless/" + filename.substr(6));
+   outfile.open(filename + "_tagless");
 
    outfile << retstr;
    outfile.close();

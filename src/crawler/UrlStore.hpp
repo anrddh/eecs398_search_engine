@@ -15,13 +15,16 @@
 // Note that each file will be mapping 128 Gb of virtual address
 // However, the pages will not be allocated for the files until
 // they are written to.
+
+// TODO: make UrlStore a singleton
+
 class UrlStore {
 public:
     constexpr UrlStore(fb::StringView filename) : urls(filename) {}
 
     constexpr fb::SizeT addUrl(fb::StringView url) {
         auto idx = urls.reserve(url.size() + 1);
-        fb::copy(fb::begin(url), fb::end(url), urls.data() + idx);
+        url.copy(urls.data() + idx, url.size());
         urls.data()[idx + url.size()] = 0;
         return idx;
     }

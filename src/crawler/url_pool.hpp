@@ -44,11 +44,8 @@ public:
         AdList(adjlist), UrlLookup(urllookup), InfoLookup(infolookup) {}
 
     //Returns a vector of urls for the thread to process
-    //The caller is then expected to handle parsing the pages and updating the url info
-    Vector<URL> RequestUrls();
-
-    //returns by reference the url info for the given url
-    UrlInfo &UrlInfoLookup(Url url);
+    //The caller is then expected to handle parsing the pages and return the info
+    Vector<Pair<URL, SizeT>> RequestUrls();
 
     //Adds URL offset and rank pair to the frontier
     void AddToFrontier(SizeT urlOffset, SizeT urlRank);

@@ -10,20 +10,29 @@
  *(which you will be able to tell from looking up its URL info), you must now
  *add it back to the frontier.
  */
-#include "../lib/string.hpp"
-#include "../lib/vector.hpp"
-#include "../lib/url_pool.hpp"
+#include "UrlStore.hpp"
+#include "../../lib/string.hpp"
+#include "../../lib/vector.hpp"
+#include "url_pool.hpp"
 
 using namespace fb;
 using URL = String;
 
+struct ParsedPageInfo {
+    Vector<Pair<URL, String>> OutGoingLinks; //the outgoing links found on the page
+    (uint *) Page; //the reference to the saved page //TODO: type
+}; //TODO: this probably belongs in a different file, and maybe in a different form
 
 int ProcessURLs(UrlPool* Pool){
-    //Receive the URLS to process from the URL pool
-    Vector<URL> URLsToProcess = Pool->RequestUrls();
+    //Receive the URLS and offsets to process from the URL pool
+    Vector<Pair<URL, SizeT>> URLsToProcess = Pool->RequestUrls();
     for (auto currentURL : URLsToProcess){
-        //TODO: all the stuff described above
+        //Send and recieve the info from the parser
+        ParsedPageInfo parsedPage; // = parser->parse(currentURL);
+        //Lookup the URL info struct
+        Pool->
     }
 
+    //Probably want to use return value to describe success/failure
     return 0;
 }

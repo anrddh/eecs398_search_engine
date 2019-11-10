@@ -10,15 +10,10 @@
 
 using URL = String;
 
-//Returns a vector of urls for the thread to process
-//The caller is then expected to handle parsing the pages and updating the url info
-Vector<URL> UrlPool::RequestUrls(){
+//Returns a vector of urls and urls offsets for the thread to process
+//The caller is then expected to handle parsing the pages and return the info
+Vector<Pair<URL, SizeT>> UrlPool::RequestUrls(){
     //TODO
-}
-
-//returns by reference the url info for the given url
-UrlInfo & UrlPool::UrlInfoLookup(Url url){
-    return InfoLookup->get_info(url);
 }
 
 //Adds URL offset and rank pair to the frontier

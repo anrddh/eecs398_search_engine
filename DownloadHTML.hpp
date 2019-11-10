@@ -15,6 +15,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "lib/stddef.hpp"
+
 // URL wrapper class 
 class ParsedUrl
    {
@@ -26,8 +28,8 @@ class ParsedUrl
       ParsedUrl( const std::string &url )
         : CompleteUrl( url )
          {
-         size_t start = 0;
-         size_t end = CompleteUrl.find( "://" );
+         fb::SizeT start = 0;
+         fb::SizeT end = CompleteUrl.find( "://" );
          if ( end != std::string::npos )
             {
             Service = CompleteUrl.substr( start, end - start );
@@ -35,7 +37,7 @@ class ParsedUrl
             }
 
          end = CompleteUrl.find( "/", start );
-         size_t HostEnd = CompleteUrl.find( ":", start );
+         fb::SizeT HostEnd = CompleteUrl.find( ":", start );
          if ( HostEnd < end )
             {
             Host = CompleteUrl.substr( start, HostEnd - start );
@@ -79,15 +81,16 @@ class BufferWriter
 {
    public:
       bool chunked;
-      size_t chunkSize;
+      fb::SizeT chunkSize;
       std::string chunkSizeString;
       int fd;
-      size_t fileSize;
+      fb::SizeT fileSize;
       bool fileClosed;
       std::string filename;
 
       BufferWriter( bool chunkedIn, const std::string &filenameIn )
-      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" ), fileSize( 0 ), fileClosed( false )
+      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" ),
+         fileSize( 0 ), fileClosed( false )
          {
          filename = filenameIn;
          fd = creat( filenameIn.c_str( ), 0666 );
@@ -112,7 +115,7 @@ class BufferWriter
       // get rid of \r\n in front
       void truncateFront( )
          {
-         if ( chunkSizeString.length() >= 2 )
+         if ( chunkSizeString.length( ) >= 2 )
             {
             if ( chunkSizeString[ 0 ] == '\r' && chunkSizeString[ 1 ] == '\n' )
                {
@@ -138,11 +141,11 @@ class BufferWriter
          return false;
          }
 
-      void writeRaw( const char buffer[ ], int bytes )
-      {
+      void writeToFd( const char buffer[ ], int bytes )
+         {
          write( fd, buffer, bytes );
          fileSize += bytes;
-      }
+         }
 
       bool fileTooBig( )
          {
@@ -171,15 +174,14 @@ class BufferWriter
                // write until chunk exhausted
                else
                   {
-                  write( fd, buffer + i, 1 );
-                  ++fileSize;
+                  writeToFd( buffer + i, 1 );
                   --chunkSize;
                   }
                }
             }
          else
          {
-            write( fd, buffer, bytes );
+            writeToFd( buffer, bytes );
             fileSize += bytes;
          }
       }
@@ -336,47 +338,47 @@ std::string parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
    const std::string htmlIndicator = "text/html";
    std::string redirectUrl = "";
 
-   while ( ( bytes =  connector->read(buffer)) > 0 )
-   {
+   while ( ( bytes =  connector->read( buffer ) ) > 0 )
+      {
       // build up header
       for ( int i = 0;  i < bytes;  ++i )
-      {
-      header.push_back( buffer[ i ] );
-      // if end of header reached
-      if ( std::string( header.end( ) - 4, header.end( ) ) == endHeader )
          {
-         // check for chunked
-         if ( header.find( chunkedIndicator ) != std::string::npos )
-            writer.chunked = true;
+         header.push_back( buffer[ i ] );
+         // if end of header reached
+         if ( std::string( header.end( ) - 4, header.end( ) ) == endHeader )
+            {
+            // check for chunked
+            if ( header.find( chunkedIndicator ) != std::string::npos )
+               writer.chunked = true;
 
-         // check for redirect
-         size_t startRedirectUrl = header.find( redirectIndicator );
-         if ( startRedirectUrl != std::string::npos )
-            {
-            size_t endRedirectUrl = header.find( "\r\n", startRedirectUrl );
-            redirectUrl = header.substr(
-                  startRedirectUrl + redirectIndicator.length( ),
-                  endRedirectUrl - startRedirectUrl - redirectIndicator.length( ) );
+            // check for redirect
+            fb::SizeT startRedirectUrl = header.find( redirectIndicator );
+            if ( startRedirectUrl != std::string::npos )
+               {
+               fb::SizeT endRedirectUrl = header.find( "\r\n", startRedirectUrl );
+               redirectUrl = header.substr(
+                     startRedirectUrl + redirectIndicator.length( ),
+                     endRedirectUrl - startRedirectUrl - redirectIndicator.length( ) );
+               }
+            else if ( header.find( htmlIndicator ) == std::string::npos )
+               {
+               redirectUrl = linkNotHTML;
+               }
+            else
+               {
+               // print the remaining message if no need to redirect
+               std::string url_comment = "<!-- " + connector->url.CompleteUrl + " -->\n";
+               writer.writeToFd( url_comment.c_str(), url_comment.length() );
+               writer.print( buffer + i + 1, bytes - i - 1 );
+               }
+            
+            pastHeader = true;
+            break;
             }
-         else if ( header.find( htmlIndicator ) == std::string::npos )
-            {
-            redirectUrl = linkNotHTML;
-            }
-         else
-            {
-            // print the remaining message if no need to redirect
-            std::string url_comment = "<!-- " + connector->url.CompleteUrl + " -->\n";
-            writer.writeRaw( url_comment.c_str(), url_comment.length() );
-            writer.print( buffer + i + 1, bytes - i - 1 );
-            }
-         
-         pastHeader = true;
-         break;
          }
-      }
       if ( pastHeader )
          break;
-   }
+      }
    return redirectUrl;
    }
 
@@ -391,8 +393,11 @@ ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
 
 // Esatblish connection with the url
 // If redirect, return the redirect url
+// if not html, return ""
 // Else, write the recieved content to a file
-std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &filename, bool & fileSaved )
+// fileSaved = true if and only if not redirect, content is html, and file is not too big
+std::string PrintHtmlGetRedirect( const std::string &url_in, 
+      const std::string &filename, bool &fileSaved )
    {
       // Parse the URL
    ParsedUrl url( url_in );
@@ -410,35 +415,26 @@ std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &
    int bytes;
 
    // temporary filename
-   BufferWriter writer( false , filename );
+   BufferWriter writer( false, filename );
 
    // Check for redirect and other relevant header info
    std::string redirectUrl = parseHeader( connector, writer );
    
-   if ( redirectUrl != linkNotHTML )
+   // write the content if no redirect and link is html
+   if ( redirectUrl != linkNotHTML && redirectUrl == "" )
       {
-      // If no redirect, write the content
-      if ( redirectUrl == "" )
-         {
-         while ( ( bytes =  connector->read(buffer)) > 0 )
-            {
-            writer.print( buffer, bytes );
-
-            if( writer.fileTooBig( ) )
-               break;
-            }
-         }
+      while ( ( bytes =  connector->read( buffer ) ) > 0 
+            && !writer.fileTooBig( ) )
+         writer.print( buffer, bytes );
       }
 
    if ( redirectUrl == linkNotHTML || redirectUrl != "" || writer.fileTooBig( ) )
-   {
+      {
       writer.deleteFile( );
       fileSaved = false;
-   }
+      }
    else
-   {
       fileSaved = true;
-   }
 
    // clean up
    delete connector;
@@ -449,6 +445,9 @@ std::string PrintHtmlGetRedirect( const std::string &url_in, const std::string &
 // Write the url information to a file
 // handling redirect appropriately
 // If redirect creates a loop, do nothing
+// return whether a file is saved or not 
+// file is saved if and only if there is no looping redirect, 
+// links go to html, and the file not too big.
 bool PrintHtml( const std::string &url_in, const std::string &filename )
    {
    std::set<std::string> visitedURLs;

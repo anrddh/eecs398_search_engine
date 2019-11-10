@@ -1,4 +1,4 @@
-#include "set.hpp"
+#include "fb/set.hpp"
 #include "gtest/gtest.h"
 
 #include <set>
@@ -19,12 +19,12 @@ class SetTest : public ::testing::Test
          a.insert(35);
          }
 
-      FBL::Set<int> a;
+      fb::Set<int> a;
    };
 
 TEST_F(SetTest, BasicIteratorTest)
    {
-   FBL::Set<int>::Iterator iter = a.begin();
+   fb::Set<int>::Iterator iter = a.begin();
    ASSERT_EQ(*iter, 8);
    ++iter;
    ASSERT_EQ(*iter, 10);
@@ -44,7 +44,7 @@ TEST_F(SetTest, BasicIteratorTest)
    
 TEST_F(SetTest, FindTest)
    {
-   FBL::Set<int>::Iterator iter = a.find(20);
+   fb::Set<int>::Iterator iter = a.find(20);
    ASSERT_NE(iter, a.end());
    ASSERT_EQ(*iter, 20);
    ++iter;
@@ -57,7 +57,7 @@ TEST_F(SetTest, FindTest)
 TEST_F(SetTest, EraseTest)
    {
    a.erase(20);
-   FBL::Set<int>::Iterator iter = a.begin();
+   fb::Set<int>::Iterator iter = a.begin();
    ASSERT_EQ(*iter, 8);
    ++iter;
    ASSERT_EQ(*iter, 10);
@@ -120,7 +120,7 @@ TEST_F(SetTest, InsertAndErase)
    a.insert(-8);
    a.insert(34);
 
-   FBL::Set<int>::Iterator iter = a.begin();
+   fb::Set<int>::Iterator iter = a.begin();
    ASSERT_EQ(*iter, -8);
    ++iter;
    ASSERT_EQ(*iter, 10);

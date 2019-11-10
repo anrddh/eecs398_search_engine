@@ -4,7 +4,7 @@
 #include <queue>
 #include <iostream>
 
-namespace FBL
+namespace fb
    {
    namespace detail
       {

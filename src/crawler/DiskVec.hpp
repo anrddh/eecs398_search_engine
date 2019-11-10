@@ -7,6 +7,7 @@
 #include "../../lib/string.hpp"
 #include "../../lib/string_view.hpp"
 #include "../../lib/file_descriptor.hpp"
+#include "../../lib/algorithm/copy.hpp"
 
 #include <iostream> // TODO delete
 #include <atomic>
@@ -68,12 +69,8 @@ public:
 
     template <typename It>
     fb::SizeT insert(It begin, It end) {
-        auto count = fb::distance(begin,end);
-        auto firstIdx = reserve(count);
-
-        for (auto idx = firstIdx; begin != end; ++idx, ++begin)
-            data()[idx] = *begin;
-
+        auto firstIdx = reserve(fb::distance(begin,end));
+        fb::copy(begin, end, data() + firstIdx);
         return firstIdx;
     }
 

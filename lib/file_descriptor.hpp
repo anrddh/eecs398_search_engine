@@ -14,7 +14,7 @@ namespace fb {
 
             ConstructionError(const char *msg_) : msg(msg_) {}
 
-            virtual const char * what() const noexcept {
+            virtual const char * what() const noexcept override {
                 return msg;
             }
         };
@@ -54,7 +54,6 @@ namespace fb {
         constexpr operator int() noexcept {
             return fd;
         }
-
     };
 
 };

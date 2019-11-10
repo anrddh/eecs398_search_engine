@@ -52,8 +52,12 @@ public:
         close(fd);
     }
 
+    T * data() {
+        return filePtr;
+    }
+
     T & operator[](fb::SizeT idx) {
-        return filePtr[idx];
+        return data()[idx];
     }
 
     fb::SizeT reserve(fb::SizeT n) {

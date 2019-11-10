@@ -1,12 +1,12 @@
 #pragma once
 
-#include <functional> // less
+#include "functional.hpp"
 #include <queue>
 #include <iostream>
 
 namespace FBL
    {
-   namespace detail 
+   namespace detail
       {
       enum class Color : unsigned char
          {
@@ -14,7 +14,7 @@ namespace FBL
          RED = 1
          };
       template< typename T >
-      struct Node 
+      struct Node
          {
          public:
             template< class... Args >
@@ -22,7 +22,7 @@ namespace FBL
             Node( T t ) : val( t ), left( nullptr ), right( nullptr ), parent( nullptr ), color(Color::RED) { }
             Node( ) : left( nullptr ), right( nullptr ), parent( nullptr ), color(Color::RED) { }
 
-         
+
             T val;
             Node< T > * left, * right, * parent;
             Color color;
@@ -36,8 +36,8 @@ namespace FBL
             if ( n->right )
                {
                return findFirst( n->right );
-               } 
-            else 
+               }
+            else
                {
                return findRightAncestor( n );
                }
@@ -53,14 +53,14 @@ namespace FBL
          {
          if ( n )
             {
-            
+
             if ( n->left )
                {
                return findLast( n->left );
-               } 
-            else 
+               }
+            else
                {
-               return findLeftAncestor( n ); 
+               return findLeftAncestor( n );
                }
             }
          else
@@ -72,7 +72,7 @@ namespace FBL
       template< typename T >
       Node< T > * findFirst( Node< T > * n )
          {
-         if( !n->left ) 
+         if( !n->left )
             {
             return n;
             }
@@ -94,7 +94,7 @@ namespace FBL
             return findLast( n->right );
             }
          }
-      
+
       template< typename T >
       Node< T > * findRightAncestor( Node< T > * n )
          {
@@ -130,8 +130,8 @@ namespace FBL
          }
       }
 
-   template< typename T, typename Compare = std::less< T > > // Compare(a, b) returns true if a should come before b
-   class Set 
+   template< typename T, typename Compare = Less< T > > // Compare(a, b) returns true if a should come before b
+   class Set
       {
       public:
          class Iterator
@@ -141,7 +141,7 @@ namespace FBL
                Iterator( detail::Node< T > * root_, detail::Node< T > * current_ ) : root( root_ ), current( current_ ) { }
                Iterator( ) : root( nullptr ), current( nullptr ) { }
                Iterator( const Iterator &other) : root( other.root ), current( other.current ) { }
-               Iterator& operator=( const Iterator &rhs ) 
+               Iterator& operator=( const Iterator &rhs )
                   {
                   if ( rhs != *this )
                      {
@@ -151,20 +151,20 @@ namespace FBL
                   return *this;
                   }
 
-               Iterator& operator++( ) 
+               Iterator& operator++( )
                   {
                   current = detail::findNext( current );
                   return  *this;
                   }
 
-               Iterator& operator++( int ) 
+               Iterator& operator++( int )
                   {
                   Iterator& old = *this;
                   this->operator++();
                   return old;
                   }
 
-               Iterator& operator--( ) 
+               Iterator& operator--( )
                   {
                   current = detail::findPrevious( current );
                   return *this;
@@ -186,7 +186,7 @@ namespace FBL
                   return &current->val;
                   }
 
-               bool operator==( const Iterator& other ) const 
+               bool operator==( const Iterator& other ) const
                   {
                   return root == other.root && current == other.current;
                   }
@@ -195,7 +195,7 @@ namespace FBL
                   {
                   return !( *this == other );
                   }
-            
+
             private:
                detail::Node<T> * root;
                detail::Node<T> * current;
@@ -209,7 +209,7 @@ namespace FBL
                insert( val );
                }
             }
-         
+
          Set& operator=( Set &rhs )
             {
                clear( );
@@ -218,8 +218,8 @@ namespace FBL
                   insert( val );
                   }
             }
-         
-         bool empty( ) 
+
+         bool empty( )
             {
             return !sz;
             }
@@ -244,7 +244,7 @@ namespace FBL
             }
 
          template< class... Args >
-         std::pair< Iterator, bool > emplace( Args&&... args ) 
+         std::pair< Iterator, bool > emplace( Args&&... args )
             {
                detail::Node< T > * emplNode = new detail::Node< T >( std::forward< Args >( args )... );
                if ( !root )
@@ -256,7 +256,7 @@ namespace FBL
                else
                   {
                   std::pair< Iterator, bool > result = emplaceImpl( root, emplNode );
-                  if( !result.second ) 
+                  if( !result.second )
                      {
                      delete emplNode;
                      }
@@ -264,7 +264,7 @@ namespace FBL
                   }
             }
 
-         Iterator erase( T val ) 
+         Iterator erase( T val )
             {
             if( !root  )
                {
@@ -277,7 +277,7 @@ namespace FBL
                root->parent = nullptr;
                return Iterator( root, detail::findNext( root ) );
                }
-            
+
             if( comp( val, root->val ) )
                {
                return eraseImpl(root, val, true);
@@ -321,9 +321,9 @@ namespace FBL
             }
          }
 
-         Iterator find( T val ) 
+         Iterator find( T val )
             {
-            if( !root ) 
+            if( !root )
                {
                return Iterator( nullptr, nullptr );
                }
@@ -333,7 +333,7 @@ namespace FBL
                }
             }
 
-         Iterator begin( ) 
+         Iterator begin( )
             {
             return Iterator( root, detail::findFirst( root ) );
             }
@@ -343,8 +343,8 @@ namespace FBL
             return Iterator( root, nullptr );
             }
 
-         void swap( Set &other ) 
-            { 
+         void swap( Set &other )
+            {
             Set temp = other;
             other = *this;
             *this = other;
@@ -411,7 +411,7 @@ namespace FBL
             return newNode;
             }
 
-         std::pair<Iterator, bool> emplaceImpl( detail::Node< T > * node, detail::Node< T > * emplNode ) 
+         std::pair<Iterator, bool> emplaceImpl( detail::Node< T > * node, detail::Node< T > * emplNode )
             {
             if( !comp( emplNode->val, node->val ) && !comp( node->val, emplNode->val ) )
                {
@@ -514,7 +514,7 @@ namespace FBL
                   return eraseImpl( node->right, val, false );
                   }
                }
-            
+
             }
 
          detail::Node< T > * eraseNode( detail::Node< T > * node)
@@ -554,7 +554,7 @@ namespace FBL
                   node->right->parent = output;
                   }
                }
-            
+
             delete node;
             return output;
             }
@@ -609,5 +609,5 @@ namespace FBL
                }
             }
       };
-      
+
    }

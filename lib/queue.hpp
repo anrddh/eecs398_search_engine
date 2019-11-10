@@ -1,9 +1,12 @@
 #pragma once
 
+//#include "vector.hpp"
 #include <vector>
-#include <memory>
+#define Vector std::vector
 
-namespace fb 
+#include <memory> //std::unique_ptr, etc.
+
+namespace fb
 {
 
 template <class T, int ArraySize = 32>
@@ -22,7 +25,7 @@ public:
         }
 
     Queue(const Queue & other)
-        : numElements(other.numElements) 
+        : numElements(other.numElements)
         {
             start = std::unique_ptr<QueueNode> (new QueueNode(*(other.start)));
             end = start.get();
@@ -54,7 +57,7 @@ public:
         }
 
     template<class ... Args>
-    void emplace( Args&&... args) 
+    void emplace( Args&&... args)
         {
         if( empty() )
             makeFirstNode();
@@ -160,7 +163,7 @@ private:
             }
 
         template<class ... Args>
-        QueueNode* emplace( Args&&... args) 
+        QueueNode* emplace( Args&&... args)
             {
             if(data.size() == ArraySize)
                 {
@@ -215,7 +218,7 @@ private:
             }
 
     private:
-        std::vector<T> data;
+        Vector<T> data;
         std::unique_ptr<QueueNode> next;
         int current;
     };

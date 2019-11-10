@@ -123,20 +123,25 @@ public:
 	std::string specialCharacterString;
 	char lastChar;
 
+	std::vector<std::string> parsedWords;
+
 	Parser( const std::string &content_in, const std::string &domain_in )
 	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
 		specialCharacterString( "" ), lastChar( '0' )
 	{
 		tagStack.push_back( "DEFAULT" );
+		parsedWords.push_back( "" );
 	}
 
-	const std::string &getParsedResult( ) const
-		{
-		return parsedResult;
-		}
+	void convertParsedResult( )
+	{
+		for( auto i : parsedWords )
+			parsedResult += i + " ";
+	}
 
 	std::string getParsedResult( )
 		{
+			convertParsedResult();
 		return parsedResult;
 		}
 
@@ -149,6 +154,25 @@ public:
 			return iter->second;
 	}
 
+	void addWord( std::string str )
+	{
+		for ( auto i : str )
+			addWord( i );
+	}
+
+	void addWord( char c )
+	{
+		if ( isSpace( c ) || ispunct( c ) )
+		{
+			if ( parsedWords.back( ) != "" )
+				parsedWords.push_back("");
+		}
+		else
+		{
+			parsedWords.back() += c;
+		}
+	}
+
 	void addToResult( char c )
 	{
 		if( c == '&' )
@@ -158,7 +182,8 @@ public:
 			if ( c == ';' )
 			{
 				inSpecialCharacter = false;
-				parsedResult += getSpecialCharacter( );
+				// parsedResult += getSpecialCharacter( );
+				addWord( getSpecialCharacter( ) );
 				specialCharacterString = "";
 			}
 			else
@@ -172,7 +197,8 @@ public:
 			{
 				if ( isSpace( c ) )
 					c = ' ';
-				parsedResult += c;
+				// parsedResult += c;
+				addWord( c );
 				lastChar = c;
 			}
 		}

@@ -44,7 +44,7 @@ public:
         if (ptr == (void *) -1)
             throw fb::exception("SavedObj: Failed to mmap.");
 
-        cursor = static_cast<std::atomic<fb::SizeT> *>(ptr);
+        cursor = new (ptr) std::atomic<fb::SizeT>(0);
         filePtr = reinterpret_cast<T *>(cursor + 1);
     }
 
@@ -52,16 +52,35 @@ public:
         close(fd);
     }
 
-    T * data() {
+    [[nodiscard]] constexpr T * data() noexcept {
         return filePtr;
     }
 
-    T & operator[](fb::SizeT idx) {
+    [[nodiscard]] constexpr T & operator[](fb::SizeT idx) noexcept {
         return data()[idx];
     }
 
-    fb::SizeT reserve(fb::SizeT n) {
+    [[nodiscard]] constexpr fb::SizeT size() noexcept {
+        return cursor->load();
+    }
+
+    fb::SizeT reserve(fb::SizeT n) noexcept {
         return cursor->fetch_add(n):
+    }
+
+    template <typename It>
+    fb::SizeT insert(It begin, It end) {
+        auto count = fb::distance(begin,end);
+        auto firstIdx = reserve(count);
+
+        for (auto idx = firstIdx; begin != end; ++idx, ++begin)
+            data()[idx] = *begin;
+
+        return firstIdx;
+    }
+
+    fb::SizeT pushBack(T &elt) {
+        return insert(&elt, &elt + 1);
     }
 
 private:

@@ -7,7 +7,7 @@
 #define strcpy std::strcpy //TODO
 #include "Exception.hpp"
 #include "SavedObject.hpp"
-#include "utilities.hpp"
+#include "utility.hpp"
 
 #define ANCHOR_BLOCK_SIZE 64
 #define ANCHOR_TEXT_SIZE 56

@@ -6,7 +6,7 @@
 #include "unordered_set.hpp"
 #include "offset_lookup.hpp"
 #include "mutex.hpp"
-#include "utilities.hpp" // for pair
+#include "utility.hpp" // for pair
 #include <string> // TODO switch it out
 #define String std::string
 

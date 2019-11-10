@@ -2,11 +2,8 @@
 //Edited by Chandler Meyers 11/5/2019
 #pragma once
 
-//#include "string.hpp"
+#include "string.hpp"
 #include "stddef.hpp"
-
-#include <string>
-#define String std::string
 
 #define INITIAL_SIZE 1024
 
@@ -16,7 +13,11 @@
 namespace fb {
 
 //This hash function for char buffers from lecture slides
+<<<<<<< HEAD
+SizeT fnvHash( const char *data, SizeT length )
+=======
 constexpr SizeT fnvHash( const char *data, SizeT length ) noexcept
+>>>>>>> 493d51dfaba6c0df9dbb667cf830de38e3e31557
 {
     constexpr SizeT FnvOffsetBasis = 146959810393466560;
     constexpr SizeT FnvPrime = 1099511628211ul;
@@ -35,7 +36,11 @@ struct Hash;
 //Hash instance for String type
 template <>
 struct Hash<String> {
+<<<<<<< HEAD
+    SizeT operator() ( const String &data ) const {
+=======
     constexpr SizeT operator() ( const String &data ) const noexcept {
+>>>>>>> 493d51dfaba6c0df9dbb667cf830de38e3e31557
         return fnvHash( data.c_str(), data.size() );
     }
 };
@@ -43,7 +48,11 @@ struct Hash<String> {
 //Hash instance for SizeT type
 template <>
 struct Hash<SizeT> {
+<<<<<<< HEAD
+    SizeT operator() ( const SizeT &data ) const {
+=======
     constexpr SizeT operator() ( const SizeT &data ) const noexcept {
+>>>>>>> 493d51dfaba6c0df9dbb667cf830de38e3e31557
         return fnvHash( (char *) &data, sizeof(data) );
     }
 };

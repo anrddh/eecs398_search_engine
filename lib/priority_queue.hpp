@@ -3,9 +3,8 @@
 
 //#include "vector.hpp"
 #include "functional.hpp"
-#include <vector>
-#include <functional> //std::swap, std::move
-#define Vector std::vector
+#include "vector.hpp"
+#include <functional> //std::swap, std::move TODO
 
 namespace fb {
 template< typename T, typename Container = Vector< T >, typename Compare = Less< typename Container::value_type > >

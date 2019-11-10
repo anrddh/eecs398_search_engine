@@ -1,6 +1,6 @@
 // Created by Jaeyoon Kim 11/6/2019
 #include "SavedStrings.hpp"
-#include <vector>
+#include "vector.hpp"
 #include <iostream>
 
 using namespace std;
@@ -10,7 +10,7 @@ int main() {
    try {
    SavedAnchors file( "test_file" );
 
-   vector<Pair<String, Pair<SizeT, SizeT>>> offsets;
+   Vector<Pair<String, Pair<SizeT, SizeT>>> offsets;
 
    offsets.push_back( {"Hello world!", file.add_str( "Hello world!", {0,0} )});
    offsets.push_back( {"Testing this thing", file.add_str( "Testing this thing", {0,0})});

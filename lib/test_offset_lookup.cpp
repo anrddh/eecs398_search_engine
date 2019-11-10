@@ -1,10 +1,8 @@
 // Created by Jaeyoon Kim 11/7/2019
 #include "string_pool.hpp"
-//#include "vector.hpp"
-#include <vector>
+#include "vector.hpp"
 #include <iostream>
 #include <cassert>
-#define Vector std::vector
 
 using namespace std;
 

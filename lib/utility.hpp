@@ -11,12 +11,17 @@ namespace fb {
         V second;
     };
 
-   template <typename T>
-   constexpr void swap(T &a, T &b) noexcept {
-       T temp = std::move(a);
-       a = std::move(b);
-       b = std::move(temp);
-   }
+    template <typename T1, typename T2>
+    [[nodiscard]] constexpr Pair<T1,T2> make_pair (T1 &&x, T2 &&y) noexcept {
+        return { std::forward<T1>(x), std::forward<T2>(y) };
+    };
+
+    template <typename T>
+    constexpr void swap(T &a, T &b) noexcept {
+        T temp = std::move(a);
+        a = std::move(b);
+        b = std::move(temp);
+    }
 
 }; // Namespace fb
 

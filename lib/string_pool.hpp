@@ -6,8 +6,14 @@
 #include "unordered_set.hpp"
 #include "offset_lookup.hpp"
 #include "mutex.hpp"
+<<<<<<< HEAD
 #include "utilities.hpp" // for pair
 #include "string.hpp"
+=======
+#include "utility.hpp" // for pair
+#include <string> // TODO switch it out
+#define String std::string
+>>>>>>> 493d51dfaba6c0df9dbb667cf830de38e3e31557
 
 namespace fb {
 

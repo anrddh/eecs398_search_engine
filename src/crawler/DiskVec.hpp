@@ -6,6 +6,7 @@
 #include "../../lib/Exception.hpp"
 #include "../../lib/string.hpp"
 #include "../../lib/string_view.hpp"
+#include "../../lib/file_descriptor.hpp"
 
 #include <iostream> // TODO delete
 #include <atomic>
@@ -28,12 +29,9 @@ template <typename T>
 class DiskVec {
 public:
     DiskVec(fb::StringView fname)  {
-        fd = open(fname.data(),
+        fb::FileDesc fd = open(fname.data(),
                   O_RDWR | O_CREAT,
                   S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
-
-        if (fd == -1)
-            throw fb::exception("SavedObj: Failed to open file.");
 
         if (!ftruncate(fd, MAXFILESIZE))
             throw fb::exception("SavedObj: Failed to truncate file.");
@@ -48,8 +46,8 @@ public:
         filePtr = reinterpret_cast<T *>(cursor + 1);
     }
 
-    ~DiskVec() {
-        close(fd);
+    ~DiskVec() noexcept {
+        munmap(static_cast<void *>(cursor), MAXFILESIZE);
     }
 
     [[nodiscard]] constexpr T * data() noexcept {
@@ -85,6 +83,5 @@ public:
 
 private:
     T *filePtr;
-    int fd;
     std::atomic<SizeT> *cursor;
 };

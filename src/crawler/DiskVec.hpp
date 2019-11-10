@@ -51,7 +51,7 @@ public:
         munmap(static_cast<void *>(cursor), MAXFILESIZE);
     }
 
-    [[nodiscard]] constexpr T * data() noexcept {
+    [[nodiscard]] constexpr T * data() const noexcept {
         return filePtr;
     }
 
@@ -59,7 +59,7 @@ public:
         return data()[idx];
     }
 
-    [[nodiscard]] constexpr fb::SizeT size() noexcept {
+    [[nodiscard]] constexpr fb::SizeT size() const noexcept {
         return cursor->load();
     }
 

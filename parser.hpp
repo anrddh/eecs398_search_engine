@@ -137,6 +137,9 @@ public:
 
 	void parse( )
 		{
+		parsedResult.clear( );
+		parsedResult.reserve( content.length( ) );
+
 		fb::SizeT index = 0;
 		char lastChar = '0';
 		try

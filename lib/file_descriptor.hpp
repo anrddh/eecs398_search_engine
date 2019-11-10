@@ -37,10 +37,10 @@ namespace fb {
         }
 
         FileDesc(FileDesc &rhs) {
-            auto new_desc = dup(fd);
+            auto new_desc = dup(rhs.fd);
             if (new_desc == -1)
                 throw ConstructionError("Failed to dup.");
-            rhs.fd = new_desc;
+            fd = new_desc;
         }
 
         FileDesc & operator=(FileDesc rhs) {

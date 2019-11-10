@@ -117,10 +117,15 @@ bool isSpace( char c )
 class Parser
 {
 public:
+	const static std::map<std::string, std::string> characterConversionMap;
 	std::map<std::string, std::string> urlAnchorText;
+	bool inSpecialCharacter;
+	std::string specialCharacterString;
+	char lastChar;
 
 	Parser( const std::string &content_in, const std::string &domain_in )
-	: content( content_in ), domain( domain_in )
+	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
+		specialCharacterString( "" ), lastChar( '0' )
 	{
 		tagStack.push_back( "DEFAULT" );
 	}
@@ -135,13 +140,51 @@ public:
 		return parsedResult;
 		}
 
+	std::string getSpecialCharacter( )
+	{
+		auto iter = characterConversionMap.find( specialCharacterString );
+		if ( iter == characterConversionMap.end( ) )
+			return " ";
+		else
+			return iter->second;
+	}
+
+	void addToResult( char c )
+	{
+		if( c == '&' )
+			inSpecialCharacter = true;
+		else if ( inSpecialCharacter )
+		{
+			if ( c == ';' )
+			{
+				inSpecialCharacter = false;
+				parsedResult += getSpecialCharacter( );
+				specialCharacterString = "";
+			}
+			else
+			{
+				specialCharacterString += c;
+			}
+		}
+		else
+		{
+			if ( !( isSpace( c ) && isSpace( lastChar ) ) )
+			{
+				if ( isSpace( c ) )
+					c = ' ';
+				parsedResult += c;
+				lastChar = c;
+			}
+		}
+
+	}
+
 	void parse( )
 		{
 		parsedResult.clear( );
 		parsedResult.reserve( content.length( ) );
 
 		fb::SizeT index = 0;
-		char lastChar = '0';
 		try
 			{
 			while ( index < content.length( ) )
@@ -149,11 +192,7 @@ public:
 				if ( content[ index ] == '<' )
 					{
 					index = handleTag( index );
-					if ( !isSpace( lastChar ) )
-						{
-						parsedResult += " ";
-						lastChar = ' ';
-						}
+					addToResult( ' ' );
 					}
 				else
 					{
@@ -163,11 +202,12 @@ public:
 					{
 
 					}
-					else if ( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
-						{
-						parsedResult += content[ index ];
-						lastChar = content[ index ];
-						}
+					// else if ( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
+					// 	{
+					// 	parsedResult += content[ index ];
+					// 	lastChar = content[ index ];
+					// 	}
+					addToResult( content[ index ] );
 					}
 				++index;
 				}
@@ -377,11 +417,16 @@ private:
 		std::string anchorText = content.substr( tagEndIndex, index - tagEndIndex );
 		
 		// add anchor text to parsed result
-		if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
-			parsedResult += " ";
-		parsedResult += anchorText;
-		if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
-			parsedResult += " ";
+		addToResult( ' ' );
+		for ( auto i : anchorText )
+			addToResult( i );
+		addToResult( ' ' );
+
+		// if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
+		// 	parsedResult += " ";
+		// parsedResult += anchorText;
+		// if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
+		// 	parsedResult += " ";
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
@@ -495,6 +540,151 @@ private:
 
 	// stack to contain the tags
 	std::vector<std::string> tagStack;
+};
+
+const std::map<std::string, std::string> Parser::characterConversionMap = 
+{
+	{ "#192", "A" },
+	{ "#193", "A" },
+	{ "#194", "A" },
+	{ "#195", "A" },
+	{ "#196", "A" },
+	{ "#197", "A" },
+
+	{ "Agrave", "A" },
+	{ "Aacute", "A" },
+	{ "Acirc", "A" },
+	{ "Atilde", "A" },
+	{ "Auml", "A" },
+	{ "Aring", "A" },
+
+	{ "#198", "AE" },
+	{ "AElig", "AE" },
+
+	{ "#199", "C" },
+	{ "Ccedil", "C" },
+
+	{ "#200", "E" },
+	{ "#201", "E" },
+	{ "#202", "E" },
+	{ "#203", "E" },
+
+	{ "Egrave", "E" },
+	{ "Eacute", "E" },
+	{ "Ecirc", "E" },
+	{ "Euml", "E" },
+
+	{ "#204", "I" },
+	{ "#205", "I" },
+	{ "#206", "I" },
+	{ "#207", "I" },
+
+	{ "Igrave", "I" },
+	{ "Iacute", "I" },
+	{ "Icirc", "I" },
+	{ "Iuml", "I" },
+
+	{ "#209", "N" },
+	{ "Ntilde", "N" },
+
+	{ "#210", "O" },
+	{ "#211", "O" },
+	{ "#212", "O" },
+	{ "#213", "O" },
+	{ "#214", "O" },
+	{ "#216", "O" },
+
+	{ "Ograve", "O" },
+	{ "Oacute", "O" },
+	{ "Ocirc", "O" },
+	{ "Otilde", "O" },
+	{ "Ouml", "O" },
+	{ "Oslash", "O" },
+
+	{ "#217", "U" },
+	{ "#218", "U" },
+	{ "#219", "U" },
+	{ "#220", "U" },
+
+	{ "Ugrave", "U" },
+	{ "Uacute", "U" },
+	{ "Ucirc", "U" },
+	{ "Uuml", "U" },
+
+	{ "#221", "Y" },
+	{ "Yacute", "Y" },
+
+	{ "#224", "a" },
+	{ "#225", "a" },
+	{ "#226", "a" },
+	{ "#227", "a" },
+	{ "#228", "a" },
+	{ "#229", "a" },
+
+	{ "agrave", "a" },
+	{ "aacute", "a" },
+	{ "acirc", "a" },
+	{ "atilde", "a" },
+	{ "auml", "a" },
+	{ "aring", "a" },
+
+	{ "#230", "ae" },
+	{ "aelig", "ae" },
+
+	{ "#231", "c" },
+	{ "ccedil", "c" },
+
+	{ "#232", "e" },
+	{ "#233", "e" },
+	{ "#234", "e" },
+	{ "#235", "e" },
+
+	{ "egrave", "e" },
+	{ "eacute", "e" },
+	{ "ecirc", "e" },
+	{ "euml", "e" },
+
+	{ "#236", "i" },
+	{ "#237", "i" },
+	{ "#238", "i" },
+	{ "#239", "i" },
+
+	{ "igrave", "i" },
+	{ "iacute", "i" },
+	{ "icirc", "i" },
+	{ "iuml", "i" },
+
+	{ "#241", "n" },
+	{ "ntilde", "n" },
+
+	{ "#242", "o" },
+	{ "#243", "o" },
+	{ "#244", "o" },
+	{ "#245", "o" },
+	{ "#246", "o" },
+	{ "#248", "o" },
+
+	{ "ograve", "o" },
+	{ "oacute", "o" },
+	{ "ocirc", "o" },
+	{ "otilde", "o" },
+	{ "ouml", "o" },
+	{ "oslash", "o" },
+
+	{ "#249", "u" },
+	{ "#250", "u" },
+	{ "#251", "u" },
+	{ "#252", "u" },
+
+	{ "ugrave", "u" },
+	{ "uacute", "u" },
+	{ "ucirc", "u" },
+	{ "uuml", "u" },
+
+	{ "#253", "y" },
+	{ "yacute", "y" },
+	{ "#255", "y" },
+	{ "yuml", "y" },
 };
 
 std::string extractURL( const std::string & line )

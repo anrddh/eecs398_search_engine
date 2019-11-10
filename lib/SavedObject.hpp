@@ -2,6 +2,7 @@
 #pragma once
 #include "stddef.hpp"
 #include "Exception.hpp"
+
 #include <string> // TODO delete
 #include <iostream> // TODO delete
 #include <unistd.h>
@@ -9,12 +10,12 @@
 #include <atomic>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <errno.h>
 
 namespace fb {
 
 constexpr SizeT MAXFILESIZE = 0x1000000000; // 128 Giga bytes
 //constexpr SizeT MAXFILESIZE = 1000; // 128 Giga bytes
-
 
 // This is the class that represents an array saved on disk
 // ASSUMES that there won't be more than 128 Gb of data
@@ -30,10 +31,19 @@ public:
       {
          throw Exception( (std::string("SavedAdjList: Failed to open file ") + filename).c_str() );
       }
-      ftruncate(fd, MAXFILESIZE);
+      if (ftruncate(fd, MAXFILESIZE) < 0 ) perror("");
 
-      cursor = (std::atomic<SizeT>* )  mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
+
+
+      auto ptr = mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
+      if (ptr == (void *) -1)
+        throw int(0);
+        std::cout << "yoyoyo" << std::endl;
+    new (ptr) int(5);
+        std::cout << "heyyo" << std::endl;
+      cursor = (std::atomic<SizeT>* ) ptr;
       file_ptr = reinterpret_cast<T*> (cursor + 1);
+      new (cursor) std::atomic(0);
    }
 
    ~SavedObj() {

@@ -5,8 +5,11 @@
 #include "string.hpp"
 #include "stddef.hpp"
 
+<<<<<<< HEAD
 #define INITIAL_SIZE 1024
 
+=======
+>>>>>>> Fix compile errors
 //Implementation of features typically from std::functional
 //Add things to this as needed
 
@@ -33,6 +36,7 @@ constexpr SizeT fnvHash( const char *data, SizeT length ) noexcept
 template <typename T>
 struct Hash;
 
+<<<<<<< HEAD
 //Hash instance for String type
 template <>
 struct Hash<String> {
@@ -45,6 +49,8 @@ struct Hash<String> {
     }
 };
 
+=======
+>>>>>>> Fix compile errors
 //Hash instance for SizeT type
 template <>
 struct Hash<SizeT> {

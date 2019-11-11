@@ -34,6 +34,7 @@ namespace fb {
 
         FileDesc & operator=(FileDesc &&rhs) noexcept {
             fb::swap(fd, rhs.fd);
+            return *this;
         }
 
         FileDesc(FileDesc &rhs) {
@@ -45,6 +46,7 @@ namespace fb {
 
         FileDesc & operator=(FileDesc rhs) {
             fb::swap(fd, rhs.fd);
+            return *this;
         }
 
         ~FileDesc() {

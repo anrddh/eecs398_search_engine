@@ -114,12 +114,12 @@ namespace fb {
         }
 
         /*  Modifiers */
-        constexpr void remove_prefix(SizeType n) {
+        constexpr void removePrefix(SizeType n) {
             ptr += n;
             len -= n;
         }
 
-        constexpr void remove_suffix(SizeType n) {
+        constexpr void removeSuffix(SizeType n) {
             len -= n;
         }
 
@@ -305,7 +305,7 @@ namespace fb {
         return sv.end();
     }
 
-    constexpr StringView operator "" sv(const char *str, SizeT len) noexcept {
+    StringView operator "" sv(const char *str, unsigned long len) noexcept {
         return { str, len };
     }
 

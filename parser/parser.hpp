@@ -1,8 +1,6 @@
 #pragma once
 
-#include <vector>
 #include <deque>
-// #include <string>
 #include "../lib/string.hpp"
 #include <iostream>
 #include <map>
@@ -10,95 +8,6 @@
 
 namespace fb
 {
-String extractURL( const String & line);
-struct View {
-	 const char *p = nullptr;
-	 fb::SizeT s = 0;
-};
-
-std::ostream& operator<<(std::ostream &os, View &v) {
-	 for (fb::SizeT i = 0; i < v.s; ++i) {
-			os << v.p[i];
-	 }
-
-	 return os;
-}
-
-class ParsedUrl
-	{
-	public:
-		const String url;
-
-		View Service, Host, Port, Path;
-		 bool success = false;
-
-		ParsedUrl( String url_ ) : url(std::move(url_))
-			{
-			Service.p = url.c_str();
-			const char Colon = ':', Slash = '/';
-
-			fb::SizeT p = url.find(':');
-			if (p == String::npos || !p) {
-				Path.p = url.c_str();
-				Path.s = url.size();
-				success = true;
-				return;
-			}
-
-			Service.s = p++;
-
-			
-				// TODO: If Service does not belong to allowed_services, we exit.
-			 
-
-			if ( url[p] == Slash )
-				 p++;
-			if ( url[p] == Slash )
-				 p++;
-
-			Host.p = url.c_str() + p;
-
-			// check for stl algorithms
-			for ( ; p < url.size() && url[p] != Slash && url[p] != Colon; ++p )
-				 ;
-
-			Host.s = url.c_str() + p - Host.p;
-
-			if (p < url.size() && url[p] == Colon) {
-				// Port specified.  Skip over the colon and
-				// the port number.
-				 ++p;
-				 Port.p = url.c_str() + p;
-				 for (; p < url.size() && url[p] != Slash; ++p)
-						;
-				 Port.s = url.c_str() + p - Port.p;
-			}
-
-			Path.p = url.c_str() + p;
-			Path.s = url.size() - p;
-			success = true;
-		}
-
-		~ParsedUrl( )
-			{
-			delete[ ] pathBuffer;
-			}
-
-	private:
-		char *pathBuffer;
-		// constexpr static std::array<const char *, 2> allowed_services = {"https", "http"};
-	};
-
-	std::ostream& operator << ( std::ostream& os, ParsedUrl &testguy )
-		{
-		os << "complete: " << testguy.url << std::endl
-			<< "service: " << testguy.Service << std::endl
-			<< "host: " << testguy.Host << std::endl
-			<< "port: " << testguy.Port << std::endl
-			<< "path: " << testguy.Path << std::endl;
-		return os;
-		}
-
 // Simple exception class for reporting String errors
 struct ParserException 
 {
@@ -124,14 +33,14 @@ public:
 	String specialCharacterString;
 	char lastChar;
 
-	std::vector<String> parsedWords;
+	fb::Vector<String> parsedWords;
 
 	Parser( const String &content_in, const String &domain_in )
 	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
 		specialCharacterString( "" ), lastChar( '0' )
 	{
-		tagStack.push_back( "DEFAULT" );
-		parsedWords.push_back( "" );
+		tagStack.pushBack( "DEFAULT" );
+		parsedWords.pushBack( "" );
 	}
 
 	void convertParsedResult( )
@@ -165,12 +74,12 @@ public:
 	{
 		if ( isSpace( c ) || ispunct( c ) )
 		{
-			if ( parsedWords.back( ) != "" )
-				parsedWords.push_back("");
+			if ( !parsedWords.back( ).empty( ) )
+				parsedWords.pushBack("");
 		}
 		else
 		{
-			parsedWords.back() += c;
+			parsedWords.back( ) += c;
 		}
 	}
 
@@ -209,12 +118,12 @@ public:
 	void parse( )
 		{
 		parsedResult.clear( );
-		parsedResult.reserve( content.length( ) );
+		parsedResult.reserve( content.size( ) );
 
 		fb::SizeT index = 0;
 		try
 			{
-			while ( index < content.length( ) )
+			while ( index < content.size( ) )
 				{
 				if ( content[ index ] == '<' )
 					{
@@ -257,23 +166,61 @@ public:
 
 private:
 
+	// exclusive end
+	fb::SizeT find( const fb::SizeT start, const fb::SizeT end, const String &rhs )
+		{
+		for( fb::SizeT i = start;  i + rhs.size( ) <= end;  ++i )
+			if ( contentEqual( i, rhs ) )
+				return i;
+
+		return end;
+		}
+
+	String extractURL( const fb::SizeT start, const fb::SizeT end )
+		{
+		fb::SizeT found = find( start, end, "href" );
+		if ( found == end )
+			found = find( start, end, "HREF" );
+		// There might be space between href and =
+		found = find( found, end, "\"" );
+		if ( found == end )
+			return "";
+		// found + 1 to find the next closing quote
+		// if no closing quote is found, skip.
+		fb::SizeT endURL = find( found + 1, end, "\"" );
+		if( endURL == end )
+			return "";
+
+		String url = content.substr( found + 1, endURL - found - 1 );
+		// just in case a closing quote is not really closing the url, one heuristic is
+		// that there would be a space somewhere.
+		// For example, we might have
+		// href="https://www.nytimes.com/es/ href =    "https://www.nytimes.com/es/
+		// it mighbe be possible to just add the substring until the space, but we will see.
+		for ( int i = 0;  i < url.size( );  ++i )
+			if( url[ i ] == ' ' )
+				return "";
+
+		return url;
+		}
+
 	String contentEqualErrorMsg( const fb::SizeT start, const String &rhs ) const
 		{
 		String errorMsg = "Comparison out of range.\n";
-		errorMsg += "Start Index: " + std::to_string( start ) + "\n";
-		errorMsg += "Content Length: " + std::to_string( content.length( ) ) + "\n";
-		errorMsg += "RHS: " + rhs + "\n";
-		errorMsg += "Content string: " + content.substr( start ) + "\n";
+		// errorMsg.append( "Start Index: " + std::to_string( start ) + "\n" );
+		// errorMsg.append( "Content Length: " + std::to_string( content.size( ) ) + "\n" );
+		// errorMsg.append( "RHS: " + rhs + "\n" );
+		// errorMsg.append( "Content string: " + content.substr( start ) + "\n" );
 		return errorMsg;
 		}
-	// check if content[start : start + rhs.length()] == rhs
+	// check if content[start : start + rhs.size()] == rhs
 	// throw exception if try to access out of range
 	bool contentEqual( const fb::SizeT start, const String &rhs ) const
 		{
-		if ( start + rhs.length( ) > content.length( ) )
+		if ( start + rhs.size( ) > content.size( ) )
 			throw ParserException( contentEqualErrorMsg( start, rhs ) );
 
-		for ( size_t i = 0;  i < rhs.length( );  ++i )
+		for ( size_t i = 0;  i < rhs.size( );  ++i )
 			{
 			if ( content[ start + i ] != rhs[ i ] )
 				return false;
@@ -281,14 +228,14 @@ private:
 		return true;
 		}
 
-	// check if content[start : start + rhs.length()] == rhs with case ignored
+	// check if content[start : start + rhs.size()] == rhs with case ignored
 	// throw exception if try to access out of range
 	bool contentEqualIgnoreCase( const fb::SizeT start, const String & rhs ) const
 		{
-		if ( start + rhs.length( ) > content.length( ) )
+		if ( start + rhs.size( ) > content.size( ) )
 			throw ParserException( contentEqualErrorMsg( start, rhs ) );
 
-		for ( size_t i = 0;  i < rhs.length( );  ++i )
+		for ( size_t i = 0;  i < rhs.size( );  ++i )
 			{
 			if ( tolower( content[ start + i ] ) != tolower( rhs[ i ] ) )
 				return false;
@@ -319,10 +266,10 @@ private:
 		if ( tagName[ 0 ] == '/' )
 			{
 			String tagType = tagName.substr( 1 );
-			if ( tagStack.back ( ) == tagType )
+			if ( StringView( tagStack.back ( ) ) == StringView( tagType ) )
 				{
 				if ( !tagStack.empty( ) )
-					tagStack.pop_back( );
+					tagStack.popBack( );
 				// else
 				// 	std::cerr << "Possible tag error" << std::endl;
 				}
@@ -331,7 +278,7 @@ private:
 				// 		<< tagStack.back() << " read: " << tagType <<  std::endl;
 			}
 		else
-			tagStack.push_back( tagName );
+			tagStack.pushBack( tagName );
 	}
 
 	// look for occurence of str in content
@@ -340,7 +287,7 @@ private:
 	{
 		while ( !contentEqual( index, str ) )
 			++index;
-		return index + str.length( ) - 1;
+		return index + str.size( ) - 1;
 	}
 
 	// look for occurence of str in content
@@ -349,7 +296,7 @@ private:
 	{
 		while ( !contentEqualIgnoreCase( index, str ) )
 			++index;
-		return index + str.length( ) - 1;
+		return index + str.size( ) - 1;
 	}
 
 	fb::SizeT seekUnescaped( fb::SizeT index, const String& str ) const
@@ -361,7 +308,7 @@ private:
 			else
 				++index;
 		}
-		return index + str.length( ) - 1;
+		return index + str.size( ) - 1;
 	}
 
 	// given index that starts at a quotation mark
@@ -393,10 +340,10 @@ private:
 				return seekSubstr( i , "-->" );
 
 			String tagName;
-			for ( ;  content[ i ] != ' ' && content[ i ] != '>' && i < content.length( );  ++i )
+			for ( ;  content[ i ] != ' ' && content[ i ] != '>' && i < content.size( );  ++i )
 				tagName += tolower( content[ i ] );
 
-			while ( content[ i ] != '>' && i < content.length( ) )
+			while ( content[ i ] != '>' && i < content.size( ) )
 				{
 				if ( content[ i ] == '\"' || content[i] == '\'')
 					i = handleQuote(i);
@@ -408,11 +355,11 @@ private:
 			// not self closing tag
 			if ( content[ last_index ] != '/' )
 				{
-				if ( tagName == "script" )
+				if ( tagName.compare( "script" ) == 0 )
 					i = handleScript( i + 1 );
-				else if ( tagName == "a" )
+				else if ( tagName.compare( "a" ) == 0 )
 					i = handleAnchor( start_index, i + 1 );
-				else if ( tagName == "style" )
+				else if ( tagName.compare( "style" ) == 0 )
 					i = handleStyle( start_index );
 				else
 					setTag( tagName );
@@ -440,7 +387,7 @@ private:
 
 		index = seekSubstr( index, "<" );
 
-		String url = extractURL( aTag );
+		String url = extractURL( tagStartIndex, tagEndIndex );
 		String anchorText = content.substr( tagEndIndex, index - tagEndIndex );
 		
 		// add anchor text to parsed result
@@ -457,7 +404,7 @@ private:
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if ( url.length( ) )
+		if ( url.size( ) )
 			{
 			if( url[ 0 ] != '#' )
 				{
@@ -493,7 +440,7 @@ private:
 	// skip comment in java script and return index at the end
 	fb::SizeT skipJSCommentLine( fb::SizeT index, bool &endScript ) const
 		{
-		while( index < content.length() )
+		while( index < content.size() )
 			{
 			// this is literally the only hope in html & javascript
 			if ( contentEqual(index, "<![CDATA"))
@@ -517,7 +464,7 @@ private:
 			}
 
 		endScript = true;
-		return content.length( );
+		return content.size( );
 		}
 
 	// return the index of ">" of end of the closing tag of a script
@@ -525,7 +472,7 @@ private:
 		{
 		bool inSingleQuote = false;
 		bool inDoubleQuote = false;
-		while( index < content.length( ) )
+		while( index < content.size( ) )
 			{
 			char c = content[ index ];
 
@@ -566,7 +513,7 @@ private:
 	String parsedResult;
 
 	// stack to contain the tags
-	std::vector<String> tagStack;
+	fb::Vector<String> tagStack;
 };
 
 const std::map<String, String> Parser::characterConversionMap = 
@@ -712,70 +659,6 @@ const std::map<String, String> Parser::characterConversionMap =
 	{ "yacute", "y" },
 	{ "#255", "y" },
 	{ "yuml", "y" },
-};
+}; 
 
-String extractURL( const String & line )
-	{
-	fb::SizeT found = line.find( "href" );
-	if ( found == String::npos )
-		found = line.find( "HREF" );
-	// There might be space between href and =
-	found = line.find( "\"", found );
-	if ( found == String::npos )
-		return "";
-	// found + 1 to find the next closing quote
-	// if no closing quote is found, skip.
-	fb::SizeT endURL = line.find( "\"", found + 1 );
-	if( endURL == String::npos )
-		return "";
-
-	String url = line.substr( found + 1, endURL - found - 1);
-	// just in case a closing quote is not really closing the url, one heuristic is
-	// that there would be a space somewhere.
-	// For example, we might have
-	// href="https://www.nytimes.com/es/ href =    "https://www.nytimes.com/es/
-	// it mighbe be possible to just add the substring until the space, but we will see.
-	if( url.find( " " ) == String::npos )
-		return url;
-	else
-		return "";
-}
-
-// take in string and a container, vector for now, and append newly found urls
-// to the given container.
-void extractURL( const String & line, std::deque< String > & urls , String domain)
-	 {
-	 fb::SizeT found = line.find( "href" );
-	 while( found != String::npos )
-			{
-			// There might be space between href and =
-			found = line.find( "\"", found );
-			if ( found == String::npos )
-				return;
-			// found + 1 to find the next closing quote
-			// if no closing quote is found, skip.
-			fb::SizeT endURL = line.find( "\"", found + 1 );
-			if( endURL == String::npos )
-				return;
-
-			String url = line.substr( found + 1, endURL - found - 1);
-
-			// just in case a closing quote is not really closing the url, one heuristic is
-			// that there would be a space somewhere.
-			// For example, we might have
-			// href="https://www.nytimes.com/es/ href =    "https://www.nytimes.com/es/
-			// it mighbe be possible to just add the substring until the space, but we will see.
-			if( url.find( " " ) == String::npos )
-				{
-				// ParsedUrl parsedUrl( url.c_str( ) );
-				if( url.length() )
-					if(url[0] == '/')
-					{
-					 url = domain + url;
-					}
-				urls.push_back( url );
-				}
-			found = line.find( "href", endURL );
-			}
-	 }
 };

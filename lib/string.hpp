@@ -5,6 +5,7 @@
 #include "string_view.hpp"
 #include "type_traits.hpp"
 #include "cstring.hpp"
+#include "functional.hpp"
 
 #include <iostream>
 #include <type_traits>
@@ -319,7 +320,7 @@ namespace fb {
         SizeType copy(CharT *dest,
                       SizeType count,
                       SizeType pos = 0) const {
-            return BasicStringnView<CharT>(*this).copy(dest, count, pos);
+            return BasicStringView<CharT>(*this).copy(dest, count, pos);
         }
 
 
@@ -388,4 +389,13 @@ namespace fb {
 
       return is;
     }
+
+    //Hash instance for String type
+    template <>
+    struct Hash<BasicString<char>> {
+        constexpr SizeT operator() ( const BasicString<char> &data ) const noexcept {
+            return fnvHash( data.data(), data.size() );
+        }
+    };
+
 } // namespace fb

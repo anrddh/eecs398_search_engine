@@ -2,13 +2,7 @@
 //Edited by Chandler Meyers 11/5/2019
 #pragma once
 
-//#include "string.hpp"
 #include "stddef.hpp"
-
-#include <string>
-
-#define INITIAL_SIZE 1024
-
 //Implementation of features typically from std::functional
 //Add things to this as needed
 
@@ -29,15 +23,7 @@ constexpr SizeT fnvHash( const char *data, SizeT length ) noexcept
 }
 
 template <typename T>
-struct Hash;
-
-//Hash instance for std::string type
-template <>
-struct Hash<String> {
-    constexpr SizeT operator() ( const String &data ) const noexcept {
-        return fnvHash( data.c_str(), data.size() );
-    }
-};
+struct Hash {};
 
 //Hash instance for SizeT type
 template <>

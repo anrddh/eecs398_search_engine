@@ -42,7 +42,8 @@ namespace fb {
             uninitializedFill(begin(), end(), val);
          }
 
-        Vector(SizeT n) : Vector(), size_(n) {
+        Vector(SizeT n) : Vector() {
+            size_ = n;
             alloc_mem(n);
             uninitializedDefaultConstruct(begin(), end());
         }

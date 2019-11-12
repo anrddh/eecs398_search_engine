@@ -4,6 +4,7 @@
 #include "misc.hpp"
 
 #include <utility>
+#include <new>
 
 namespace fb {
 
@@ -23,8 +24,7 @@ namespace fb {
         auto current = dest;
         try {
             while (first != last)
-                ::new (addressof(*current++))
-                      typename IteratorTraits<DIt>::ValueType(*first++);
+                ::new (current++) typename IteratorTraits<DIt>::ValueType(*first++);
             return current;
         } catch (...) {
             destroy(dest, current);
@@ -38,8 +38,7 @@ namespace fb {
         auto current = first;
         try {
             while (current != last)
-                ::new (static_cast<void *>(addressof(*current++)))
-                      typename IteratorTraits<It>::ValueType(value);
+                ::new (current++) typename IteratorTraits<It>::ValueType(value);
         }  catch (...) {
             destroy(first, current);
             throw;
@@ -51,8 +50,7 @@ namespace fb {
         auto current = first;
         try {
             while (current != last)
-                ::new (static_cast<void *>(addressof(*current++)))
-                      typename IteratorTraits<It>::ValueType;
+                ::new (addressof(*current++)) typename IteratorTraits<It>::ValueType;
         }  catch (...) {
             destroy(first, current);
             throw;
@@ -61,12 +59,11 @@ namespace fb {
 
     template<class It, class DestIt>
     DestIt uninitializedMove(It first, It last, DestIt dest) {
-        auto current = dest;
+        DestIt current = dest;
         try {
             while (first != last)
-                ::new (static_cast<void *>(fb::addressof(*current++)))
-                      typename IteratorTraits<It>
-                      ::ValueType(std::move(*first++));
+                new (fb::addressof(*current++))
+                    typename IteratorTraits<DestIt>::ValueType(std::move(*first++));
             return current;
         } catch (...) {
             fb::destroy(dest, current);

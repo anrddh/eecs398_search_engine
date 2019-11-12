@@ -75,9 +75,7 @@ namespace fb {
             : Vector(init.begin(), init.end()) {}
 
         Vector & operator=( const Vector<T> v ) {
-            swap(buf, v.buf);
-            swap(size_, v.size_);
-            swap(cap_, v.cap_);
+            swap(v);
         }
 
         Vector operator=( Vector<T>&& v ) noexcept {

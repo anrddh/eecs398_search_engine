@@ -36,13 +36,11 @@ namespace fb {
             buf.pushBack(0);
         }
 
-        BasicString(const char *cstr) : buf(cstr, cstr + fb::strlen(cstr)) {
-            buf.pushBack(0);
-        }
-
         BasicString(const char *cstr, SizeType size) : buf(cstr, cstr + size) {
             buf.pushBack(0);
         }
+
+        BasicString(const char *cstr) : BasicString(cstr, fb::strlen(cstr)) {}
 
         /*  Element access  */
         Reference at(SizeType pos) {

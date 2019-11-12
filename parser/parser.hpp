@@ -1,9 +1,9 @@
 #pragma once
 
-#include <deque>
+// #include <deque>
 #include "../lib/string.hpp"
 #include <iostream>
-#include <map>
+#include "../lib/map.hpp"
 #include "../lib/stddef.hpp"
 
 namespace fb
@@ -27,8 +27,8 @@ bool isSpace( char c )
 class Parser
 {
 public:
-	const static std::map<String, String> characterConversionMap;
-	std::map<String, String> urlAnchorText;
+	const static fb::Map<String, String> characterConversionMap;
+	fb::Map<String, String> urlAnchorText;
 	bool inSpecialCharacter;
 	String specialCharacterString;
 	char lastChar;
@@ -516,7 +516,7 @@ private:
 	fb::Vector<String> tagStack;
 };
 
-const std::map<String, String> Parser::characterConversionMap = 
+const fb::Map<String, String> Parser::characterConversionMap = 
 {
 	{ "#192", "A" },
 	{ "#193", "A" },

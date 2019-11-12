@@ -40,6 +40,10 @@ namespace fb {
             buf.pushBack(0);
         }
 
+        BasicString(const char *cstr, SizeType size) : buf(cstr, cstr + size) {
+            buf.pushBack(0);
+        }
+
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= buf.size())

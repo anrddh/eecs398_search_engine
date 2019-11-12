@@ -36,7 +36,7 @@ namespace fb {
             buf.pushBack(0);
         }
 
-        BasicString(const char *cstr = "") : buf(cstr, cstr + fb::strlen(cstr)) {
+        BasicString(const char *cstr) : buf(cstr, cstr + fb::strlen(cstr)) {
             buf.pushBack(0);
         }
 

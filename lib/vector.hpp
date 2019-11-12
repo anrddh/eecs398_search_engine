@@ -359,9 +359,9 @@ namespace fb {
         }
 
         void swap(Vector &other) noexcept {
-            swap(buf, other.buf);
-            swap(size_, other.size_);
-            swap(cap_, other.cap_);
+            fb::swap(buf, other.buf);
+            fb::swap(size_, other.size_);
+            fb::swap(cap_, other.cap_);
         }
 
     private:

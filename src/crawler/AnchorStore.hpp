@@ -2,7 +2,7 @@
 
 #include "../../lib/string.hpp"
 #include "../../lib/string_view.hpp"
-#include "../../lib/exception.hpp"
+#include "../../lib/Exception.hpp"
 #include "../../lib/utility.hpp"
 
 #include "DiskVec.hpp"
@@ -27,7 +27,7 @@ public:
         ptr = new AnchorStore(filename);
     }
 
-    AnchorStore & getStore() {
+    static AnchorStore & getStore() {
         return *ptr;
     }
 

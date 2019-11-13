@@ -43,14 +43,14 @@ namespace fb {
          }
 
         Vector(SizeT n) : Vector() {
-            size_ = n;
             alloc_mem(n);
+            size_ = n;
             uninitializedDefaultConstruct(begin(), end());
         }
 
         Vector( const Vector<T>& v ) : Vector() {
-            size_ = v.size();
             alloc_mem(v.size());
+            size_ = v.size();
             uninitializedCopy(v.begin(), v.end(), begin());
         }
 

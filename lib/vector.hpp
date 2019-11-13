@@ -74,7 +74,7 @@ namespace fb {
         Vector(std::initializer_list<T> init)
             : Vector(init.begin(), init.end()) {}
 
-        Vector & operator=( const Vector<T> v ) {
+        Vector & operator=( Vector<T> v ) {
             swap(v);
         }
 

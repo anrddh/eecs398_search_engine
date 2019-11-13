@@ -56,7 +56,7 @@ public:
             else
                 endOffset = anchors[endOffset].ptr = idx;
 
-            anchorText.copy(anchors.data() + idx, Chunk::TextSize);
+            anchorText.copy(anchors[idx].arr, Chunk::TextSize);
             anchorText.removePrefix(Chunk::TextSize);
         }
 

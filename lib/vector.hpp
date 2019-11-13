@@ -42,7 +42,8 @@ namespace fb {
             uninitializedFill(begin(), end(), val);
          }
 
-        Vector(SizeT n) : Vector(), size_(n) {
+        Vector(SizeT n) : Vector() {
+            size_ = n;
             alloc_mem(n);
             uninitializedDefaultConstruct(begin(), end());
         }
@@ -74,9 +75,7 @@ namespace fb {
             : Vector(init.begin(), init.end()) {}
 
         Vector & operator=( const Vector<T> v ) {
-            swap(buf, v.buf);
-            swap(size_, v.size_);
-            swap(cap_, v.cap_);
+            swap(v);
         }
 
         Vector operator=( Vector<T>&& v ) noexcept {
@@ -358,9 +357,9 @@ namespace fb {
         }
 
         void swap(Vector &other) noexcept {
-            swap(buf, other.buf);
-            swap(size_, other.size_);
-            swap(cap_, other.cap_);
+            fb::swap(buf, other.buf);
+            fb::swap(size_, other.size_);
+            fb::swap(cap_, other.cap_);
         }
 
     private:

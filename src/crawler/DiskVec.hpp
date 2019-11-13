@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-constexpr SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
+constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
 
 // This is the class that represents an array saved on disk
 // ASSUMES that there won't be more than 128 Gb of data
@@ -35,13 +35,13 @@ public:
                   S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
 
         if (!ftruncate(fd, MAXFILESIZE))
-            throw fb::exception("SavedObj: Failed to truncate file.");
+            throw fb::Exception("SavedObj: Failed to truncate file.");
 
         auto ptr = mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
                         MAP_SHARED, fd, 0);
 
         if (ptr == (void *) -1)
-            throw fb::exception("SavedObj: Failed to mmap.");
+            throw fb::Exception("SavedObj: Failed to mmap.");
 
         cursor = new (ptr) std::atomic<fb::SizeT>(0);
         filePtr = reinterpret_cast<T *>(cursor + 1);
@@ -64,7 +64,7 @@ public:
     }
 
     fb::SizeT reserve(fb::SizeT n) noexcept {
-        return cursor->fetch_add(n):
+        return cursor->fetch_add(n);
     }
 
     template <typename It>
@@ -80,5 +80,5 @@ public:
 
 private:
     T *filePtr;
-    std::atomic<SizeT> *cursor;
+    std::atomic<fb::SizeT> *cursor;
 };

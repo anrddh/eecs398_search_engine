@@ -3,19 +3,22 @@
 #include "utility.hpp"
 #include <atomic>
 #include <stdlib.h>
+#include <iostream>
+
 
 using namespace fb;
 using namespace std;
 
 // TODO set to 0?
-atomic<int> insert_counter;
-atomic<int> get_counter;
-atomic<int> rand_seed_counter;
+atomic<int> insert_counter = 0;
+atomic<int> get_counter = 0;
+atomic<int> rand_seed_counter = 0;
 
 constexpr int NUM_BINS = 16; // This indicates how many seperate UrlFrontierBin there are
 
-constexpr int NUM_TRY = 400;
-constexpr int NUM_SAMPLE = 4;
+constexpr int NUM_TRY = 1000;
+constexpr int NUM_SAMPLE = 3;
+
 
 class UrlFrontierBin {
 public:
@@ -56,6 +59,7 @@ public:
            }
        }
 
+
        urls_to_return.pushBack( to_parse[max_idx].first );
        to_parse[ max_idx ] = to_parse.back();
        to_parse.popBack();
@@ -78,6 +82,13 @@ public:
        return urls_to_return;
    }
 
+   // TODO delete
+   void print_debug() {
+      for (auto p : to_parse) {
+         std::cout << p.first << std::endl;
+      }
+   }
+
 private:
    Mutex local_seed_m;
    unsigned int local_seed;
@@ -87,12 +98,12 @@ private:
 
 UrlFrontierBin frontiers[ NUM_BINS ];
 
-void add_url(SizeT url_offset, SizeT url_ranking) {
+void frontier_add_url(SizeT url_offset, SizeT url_ranking) {
    int local_counter = ++insert_counter;
    frontiers[ local_counter % NUM_BINS ].add_url( url_offset, url_ranking );
 }
 
-Vector<SizeT> get_url() {
+Vector<SizeT> frontier_get_url() {
    int local_counter = ++get_counter;
    return frontiers[ local_counter % NUM_BINS ].get_url();
 }

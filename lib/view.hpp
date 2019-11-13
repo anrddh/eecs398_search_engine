@@ -25,7 +25,7 @@ namespace fb {
         using ConstReference = const T &;
         using Iterator = Pointer;
         using ConstIterator = ConstPointer;
-        using ReverseIterator = ReverseIterator<Iterator>;
+        using ReverseIterator = fb::ReverseIterator<Iterator>;
         using ConstReverseIterator = fb::ReverseIterator<ConstIterator>;
 
         static constexpr SizeT extent = Extent;
@@ -170,7 +170,7 @@ namespace fb {
             return { data() + Offset, Count };
         }
 
-        constexpr void swap(const View &other) {
+        constexpr void swap(View &other) {
             fb::swap(ptr, other.ptr);
             fb::swap(count, other.count);
         }

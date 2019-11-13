@@ -15,12 +15,12 @@ class Thread {
 
       void join() noexcept 
       {
-         pthread_join(&t, nullptr);
+         pthread_join(t, nullptr);
       }
 
       void detach() noexcept
       {
-         pthread_detach(&t, nullptr);
+         pthread_detach(t);
       }
    private:
       pthread_t t;

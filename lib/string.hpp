@@ -293,6 +293,10 @@ namespace fb {
             return append(ilist.begin(), ilist.end());
         }
 
+        bool operator==(const BasicStringView<CharT> str) const noexcept {
+            return compare(str) == 0;
+        }
+
         constexpr int compare(const BasicStringView<CharT> str) const noexcept {
             return BasicStringView<CharT>(*this).compare(str);
         }

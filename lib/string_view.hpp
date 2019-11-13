@@ -305,7 +305,7 @@ namespace fb {
         return sv.end();
     }
 
-    StringView operator "" _sv(const char *str, unsigned long len) noexcept {
+    constexpr StringView operator "" _sv(const char *str, unsigned long len) noexcept {
         return { str, len };
     }
 

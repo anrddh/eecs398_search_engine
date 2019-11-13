@@ -352,18 +352,18 @@ namespace fb {
 
     using String = BasicString<char>;
 
-    String operator+ (const String &lhs, const StringView rhs) {
+    inline String operator+ (const String &lhs, const StringView rhs) {
         String temp(lhs);
         temp += rhs;
         return temp;
     }
 
-    std::ostream & operator<< (std::ostream &os, const String &str) {
+    inline std::ostream & operator<< (std::ostream &os, const String &str) {
         os << str.data();
         return os;
     }
 
-    std::istream & operator>> (std::istream &is, String &str) {
+    inline std::istream & operator>> (std::istream &is, String &str) {
         str.clear();
 
         // skip initial whitespace
@@ -377,7 +377,7 @@ namespace fb {
         return is;
     }
 
-    std::istream & getline(std::istream &is, String &str) {
+    inline std::istream & getline(std::istream &is, String &str) {
       str.clear();
 
       char c;

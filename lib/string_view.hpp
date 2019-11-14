@@ -115,6 +115,12 @@ namespace fb {
 
         /*  Modifiers */
         constexpr void removePrefix(SizeType n) {
+            if (n > len) {
+                ptr = nullptr;
+                len = 0;
+                return;
+            }
+
             ptr += n;
             len -= n;
         }

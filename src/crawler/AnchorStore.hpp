@@ -9,6 +9,9 @@
 
 #include <stdint.h>
 
+//TEST
+#include <iostream>
+
 template <fb::SizeT TextSize_, typename T>
 struct ChunkImpl {
     static constexpr fb::SizeT TextSize = TextSize_;
@@ -25,6 +28,7 @@ public:
     static void init(fb::StringView filename) {
         delete ptr;
         ptr = new AnchorStore(filename);
+        ptr->addStr("Dummy", {0,0});
     }
 
     static AnchorStore & getStore() {
@@ -55,7 +59,6 @@ public:
                 offsets = { idx, idx };
             else
                 endOffset = anchors[endOffset].ptr = idx;
-
             anchorText.copy(anchors[idx].arr, Chunk::TextSize);
             anchorText.removePrefix(Chunk::TextSize);
         }

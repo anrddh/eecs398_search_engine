@@ -113,6 +113,28 @@ public:
         return Iterator(&buckets);
     }
 
+    Iterator find(const K& key) {
+        if(num_elements+num_ghosts > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+        SizeT desired_bucket = hash(key) % buckets.size();
+        SizeT original_hash = desired_bucket;
+        //if the bucket is not empty
+        if(buckets[desired_bucket].status != Status::Empty){
+            //search until an empty bucket
+            while(buckets[desired_bucket].status != Status::Empty){
+                //if a bucket has the key, return
+                if(buckets[desired_bucket].status == Status::Filled && pred(buckets[desired_bucket].key, key)){
+                    return Iterator(&buckets, desired_bucket);
+                }
+                desired_bucket = (desired_bucket+1) % buckets.size();
+            }
+        }else{
+            //bucket is empty, so return end
+            return end();
+        }
+    }
+
     //Return an iterator to a given offset (really the next full bucket from the offset)
     Iterator Jaeyoon(SizeT offset){
         return Iterator(&buckets, offset);

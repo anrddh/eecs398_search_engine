@@ -1,20 +1,13 @@
-#include "transfer_url.hpp"
+#include "slave_url_tcp.hpp"
 #include "TCPUtility.hpp"
 #include "vector.hpp"
 #include "queue.hpp"
 #include "mutex.hpp"
 #include "utility.hpp"
+#include "file_descriptor.hpp"
+#include "SocketException.hpp"
 
 using namespace fb;
-
-// TCP messaging protocol
-// Child Machine: First letter R (char) - request NUM_URLS_PER_REQUEST urls to parse
-// Master Machine: First 4 bytes: int number of urls actually give
-//                   All urls are null terminated
-// Child Machine: First letter S (char), 
-//    [ url_size (int), url, file_size (int) file, num_links (int), 
-//    [ str_len (int), str, 
-//    anchor_len (int), anchor_text] x num_links many times ] x NUM_URLS_PER_SEND
 
 String master_ip;
 int master_port;
@@ -25,18 +18,43 @@ void set_master_ip( const String& master_ip_, int master_port_ ) {
 }
 
 Mutex to_parse_m;
-Queue<String> urls_to_parse;
+CV to_parse_cv;
+Queue<Pair<String, SizeT>> urls_to_parse;
 bool getting_more = false; // Check if some thread is getting more urls
 
 Mutex parsed_m;
 Vector< ParsedPage > urls_parsed; // first val url, second val parsed page
 
-String get_url_to_parse() {
+// get_url_to_parse will return an 
+// url to parse and its unique id (offset)
+// from master
+Pair<SizeT, String> get_url_to_parse() {
    to_parse_m.lock();
-   if ( urls_to_parse.size() << 
-   while ( urls_to_parse
+   while (true) {
+      if ( urls_to_parse.size() < MIN_BUFFER_SIZE && !getting_more ) {
+         try {
+            getting_more = true;
+            to_parse_m.unlock();
+            // Release the lock while processing TCP
+            Vector<Pair< SizeT, String >> new_urls = checkout_urls(); // TODO do exception handling
 
-   to_parse_m.unlock();
+            to_parse_m.lock();
+            for ( int i = 0; i < new_urls.size(); ++i ) {
+               urls_to_parse.push_back( std::move( new_urls[i] ) );
+            }
+         } catch (const SocketException
+         getting_more = false;
+         to_parse_cv.broadcast();
+      }
+
+      if ( !urls_to_parse.empty() ) {
+         String url = std::move(urls_to_parse.front());
+         to_parse_m.unlock();
+         return url;
+      } else {
+         to_parse_cv.wait(to_parse_m);
+      }
+   }
 }
 
 void add_parsed( ParsedPage pp ) {
@@ -56,13 +74,12 @@ void add_parsed( ParsedPage pp ) {
    send_parsed_pages( swapped_to_parse );
 }
 
-void checkout_urls() {
+int open_socket_to_master() {
    int sock = 0, valread;
    struct sockaddr_in serv_addr;
-   char *hello = "Hello from client";
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
    {
-      // TODO throw an exception
+      throw SocketException("TCP socket: Failed to construct socket");
    }
 
    serv_addr.sin_family = AF_INET;
@@ -71,78 +88,71 @@ void checkout_urls() {
    // Convert IPv4 and IPv6 addresses from text to binary form
    if(inet_pton(AF_INET, master_ip.c_str(), &serv_addr.sin_addr) <= 0)
    {
-      // TODO throw an exception
+      throw SocketException("TCP socket: Failed in inet_pton");
    }
 
    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
    {
-      // TODO throw an exception
+      throw SocketException("TCP socket: Failed in connect");
    }
 
-   char request_code = 'R';
-   if (send(sock , &request_code , sizeof(request_code) , 0 ) == -1) {
-      // TODO throw an exception
-   }
+   // Finished establishing socket
+   // Send verfication message
+   send_int(sock, &VERFICATION_CODE);
 
-   int32_t num_urls;
-   if (recv(sock, &num_urls, sizeof(int32_t), MSG_WAITALL) == -1) {
-      // TODO throw an exception
-   }
-
-   Vector<String> received_urls;
-   for (int i = 0; i < num_urls; ++i) {
-      received_urls.push_back( recv_url() );
-   }
-
-   to_parse_m.lock();
-   for ( int i = 0; i < urls_to_parse.size(); ++i ) {
-      urls_to_parse.push_back( std::move( urls_to_parse[i] ) );
-   }
-   to_parse_m.unlock();
+   return sock;
 }
 
-// Child Machine: First letter S (char), 
-//    [ url_size (int), url, file_size (int) file, num_links (int), 
-//    [ str_len (int), str, 
-//    anchor_len (int), anchor_text] x num_links many times ] x NUM_URLS_PER_SEND
+void send_message_type(char message_type) {
+   if (send(sock , &message_type, sizeof(message_type) , 0 ) == -1) {
+      throw SocketException("TCP socket: Failed in send request code");
+   }
+}
+
+Vector< Pair<SizeT, String> > checkout_urls() {
+   // RAII file descriptor does automatic close() 
+   // when it goes out of scope
+   FileDesc sock(open_socket_to_master());
+
+   send_message_type('R');
+
+   int32_t num_urls = recv_num(sock);
+
+   Vector< Pair<SizeT, String> > received_urls;
+   for (int i = 0; i < num_urls; ++i) {
+      String url = recv_uint64_t();
+      SizeT url_offset = recv_url();
+
+      received_urls.push_back( make_pair( url_offset, std::move(url) ) );
+   }
+
+   return received_urls;
+}
+
+// Child Machine: First letter S (char),  number of pages (int)
+//    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
+//    x num_links many times ] x NUM_URLS_PER_SEND
 void send_parsed_pages(Vector<ParsedPage> pages_to_send) {
-   int sock = 0, valread;
-   struct sockaddr_in serv_addr;
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-   {
-      // TODO throw an exception
-   }
+   // RAII file descriptor does automatic close() 
+   // when it goes out of scope
+   FileDesc sock(open_socket_to_master());
 
-   serv_addr.sin_family = AF_INET;
-   serv_addr.sin_port = htons(master_port);
+   send_message_type('S');
 
-   // Convert IPv4 and IPv6 addresses from text to binary form
-   if(inet_pton(AF_INET, master_ip.c_str(), &serv_addr.sin_addr) <= 0)
-   {
-      // TODO throw an exception
-   }
+   int size = pages_to_send.size(); 
+   send_int(sock, size);
 
-   if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-   {
-      // TODO throw an exception
-   }
-
-   char request_code = 'S';
-   send( sock , &request_code , sizeof(request), 0 );
-
-   if (send(sock , &request_code , size + 1 , 0 ) == -1) {
-      // TODO throw an exception
-   }
-
-   while ( !pages_to_send.empty() ) {
-      send_str( pages_to_send.back().url );
-      send_str( pages_to_send.back().page );
-      int num_links = pages_to_send.back().links.size();
-      send( sock , &num_links, sizeof( num_links ), 0 );
-
-      for ( int i = 0; i < num_links; ++i ) {
-         send_str( pages_to_send.back().links[i].first );
-         send_str( pages_to_send.back().links[i].second );
+   for (int i = 0; i < size; ++i) {
+      assert( !pages_to_send.emtpy() );
+      ParsedPage page = std::move( pages_to_send.front() );
+      pages_to_send.pop();
+      send_uint64_t( page.url_offset );
+      send_int( page.links.size() );
+      for ( int j = 0; j < page.links.size(); ++j) {
+         send_str( page.links[j].first );
+         send_str( page.links[j].second );
       }
    }
+
+   assert(pages_to_send.empty());
 }

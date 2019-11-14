@@ -7,6 +7,7 @@
 namespace fb {
 
     // Simple exception class for reporting String errors
+    // TODO remove std::exception!
     struct Exception : std::exception {
         Exception(const char *msg_) : msg(msg_) {}
 

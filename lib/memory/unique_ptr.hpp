@@ -47,7 +47,7 @@ public:
         noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
 
     // move assignment operator
-    [[nodiscard]] constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
+    constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
         owner = rhs.release();
         deleter = rhs.getDeleter();
         return *this;

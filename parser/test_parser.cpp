@@ -34,7 +34,6 @@ int main ( int argc, char *argv[] ){
    // ParsedUrl testguy4("http://file/sd");
    // std::cout << testguy4 << "\n\n\n\n\n";
 
-
    // for (auto i : urls){
    //    //std::cout << i << std::endl;
    // }
@@ -56,7 +55,7 @@ int main ( int argc, char *argv[] ){
 
    std::ofstream outfile;
    // outfile.open("htmlstagless/" + filename.substr(6));
-   outfile.open(  (filename + "_tagless"sv).data() );
+   outfile.open(  (filename + "_tagless"_sv).data() );
 
    outfile << retstr;
    outfile.close();

@@ -27,7 +27,7 @@ bool isSpace( char c )
 class Parser
 {
 public:
-	const static fb::UnorderedMap<String, String> characterConversionMap;
+	fb::UnorderedMap<String, String> characterConversionMap;
 	fb::UnorderedMap<String, String> urlAnchorText;
 	bool inSpecialCharacter;
 	String specialCharacterString;
@@ -39,6 +39,7 @@ public:
 	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
 		specialCharacterString( "" ), lastChar( '0' )
 	{
+		initializerConversionMap( );
 		tagStack.pushBack( "DEFAULT" );
 		parsedWords.pushBack( "" );
 	}
@@ -57,11 +58,20 @@ public:
 
 	String getSpecialCharacter( )
 	{
-		auto iter = characterConversionMap.find( specialCharacterString );
-		if ( iter == characterConversionMap.end( ) )
-			return " ";
-		else
-			return iter->second;
+		try 
+		{
+			return characterConversionMap.at( specialCharacterString );
+		}
+		catch ( ... )
+		{
+			return "";
+		}
+
+		// auto iter = characterConversionMap.find( specialCharacterString );
+		// if ( iter == characterConversionMap.end( ) )
+		// 	return " ";
+		// else
+		// 	return iter->second;
 	}
 
 	void addWord( String str )
@@ -155,12 +165,12 @@ public:
 			}
 		}
 
-	void printUrls( ) const
+	void printUrls( )
 		{
-		for(auto i : urlAnchorText)
+		for( auto i = urlAnchorText.begin(); i != urlAnchorText.end(); ++i )
 			{
-			std::cout << "URL is: " << i.first << std::endl;
-			std::cout << "Anchor text: " << i.second << std::endl;
+			std::cout << "URL is: " << i.key() << std::endl;
+			std::cout << "Anchor text: " << *i << std::endl;
 			}
 		}
 
@@ -505,6 +515,152 @@ private:
 			return index;
 		}
 
+
+void initializerConversionMap()
+{
+	characterConversionMap[ "#192"] = "A";
+	characterConversionMap[ "#193"] = "A";
+	characterConversionMap[ "#194"] = "A";
+	characterConversionMap[ "#195"] = "A";
+	characterConversionMap[ "#196"] = "A";
+	characterConversionMap[ "#197"] = "A";
+
+	characterConversionMap[ "Agrave"] = "A";
+	characterConversionMap[ "Aacute"] = "A";
+	characterConversionMap[ "Acirc"] = "A";
+	characterConversionMap[ "Atilde"] = "A";
+	characterConversionMap[ "Auml"] = "A";
+	characterConversionMap[ "Aring"] = "A";
+
+	characterConversionMap[ "#198"] = "AE";
+	characterConversionMap[ "AElig"] = "AE";
+
+	characterConversionMap[ "#199"] = "C";
+	characterConversionMap[ "Ccedil"] = "C";
+
+	characterConversionMap[ "#200"] = "E";
+	characterConversionMap[ "#201"] = "E";
+	characterConversionMap[ "#202"] = "E";
+	characterConversionMap[ "#203"] = "E";
+
+	characterConversionMap[ "Egrave"] = "E";
+	characterConversionMap[ "Eacute"] = "E";
+	characterConversionMap[ "Ecirc"] = "E";
+	characterConversionMap[ "Euml"] = "E";
+
+	characterConversionMap[ "#204"] = "I";
+	characterConversionMap[ "#205"] = "I";
+	characterConversionMap[ "#206"] = "I";
+	characterConversionMap[ "#207"] = "I";
+
+	characterConversionMap[ "Igrave"] = "I";
+	characterConversionMap[ "Iacute"] = "I";
+	characterConversionMap[ "Icirc"] = "I";
+	characterConversionMap[ "Iuml"] = "I";
+
+	characterConversionMap[ "#209"] = "N";
+	characterConversionMap[ "Ntilde"] = "N";
+
+	characterConversionMap[ "#210"] = "O";
+	characterConversionMap[ "#211"] = "O";
+	characterConversionMap[ "#212"] = "O";
+	characterConversionMap[ "#213"] = "O";
+	characterConversionMap[ "#214"] = "O";
+	characterConversionMap[ "#216"] = "O";
+
+	characterConversionMap[ "Ograve"] = "O";
+	characterConversionMap[ "Oacute"] = "O";
+	characterConversionMap[ "Ocirc"] = "O";
+	characterConversionMap[ "Otilde"] = "O";
+	characterConversionMap[ "Ouml"] = "O";
+	characterConversionMap[ "Oslash"] = "O";
+
+	characterConversionMap[ "#217"] = "U";
+	characterConversionMap[ "#218"] = "U";
+	characterConversionMap[ "#219"] = "U";
+	characterConversionMap[ "#220"] = "U";
+
+	characterConversionMap[ "Ugrave"] = "U";
+	characterConversionMap[ "Uacute"] = "U";
+	characterConversionMap[ "Ucirc"] = "U";
+	characterConversionMap[ "Uuml"] = "U";
+
+	characterConversionMap[ "#221"] = "Y";
+	characterConversionMap[ "Yacute"] = "Y";
+
+	characterConversionMap[ "#224"] = "a";
+	characterConversionMap[ "#225"] = "a";
+	characterConversionMap[ "#226"] = "a";
+	characterConversionMap[ "#227"] = "a";
+	characterConversionMap[ "#228"] = "a";
+	characterConversionMap[ "#229"] = "a";
+
+	characterConversionMap[ "agrave"] = "a";
+	characterConversionMap[ "aacute"] = "a";
+	characterConversionMap[ "acirc"] = "a";
+	characterConversionMap[ "atilde"] = "a";
+	characterConversionMap[ "auml"] = "a";
+	characterConversionMap[ "aring"] = "a";
+
+	characterConversionMap[ "#230"] = "ae";
+	characterConversionMap[ "aelig"] = "ae";
+
+	characterConversionMap[ "#231"] = "c";
+	characterConversionMap[ "ccedil"] = "c";
+
+	characterConversionMap[ "#232"] = "e";
+	characterConversionMap[ "#233"] = "e";
+	characterConversionMap[ "#234"] = "e";
+	characterConversionMap[ "#235"] = "e";
+
+	characterConversionMap[ "egrave"] = "e";
+	characterConversionMap[ "eacute"] = "e";
+	characterConversionMap[ "ecirc"] = "e";
+	characterConversionMap[ "euml"] = "e";
+
+	characterConversionMap[ "#236"] = "i";
+	characterConversionMap[ "#237"] = "i";
+	characterConversionMap[ "#238"] = "i";
+	characterConversionMap[ "#239"] = "i";
+
+	characterConversionMap[ "igrave"] = "i";
+	characterConversionMap[ "iacute"] = "i";
+	characterConversionMap[ "icirc"] = "i";
+	characterConversionMap[ "iuml"] = "i";
+
+	characterConversionMap[ "#241"] = "n";
+	characterConversionMap[ "ntilde"] = "n";
+
+	characterConversionMap[ "#242"] = "o";
+	characterConversionMap[ "#243"] = "o";
+	characterConversionMap[ "#244"] = "o";
+	characterConversionMap[ "#245"] = "o";
+	characterConversionMap[ "#246"] = "o";
+	characterConversionMap[ "#248"] = "o";
+
+	characterConversionMap[ "ograve"] = "o";
+	characterConversionMap[ "oacute"] = "o";
+	characterConversionMap[ "ocirc"] = "o";
+	characterConversionMap[ "otilde"] = "o";
+	characterConversionMap[ "ouml"] = "o";
+	characterConversionMap[ "oslash"] = "o";
+
+	characterConversionMap[ "#249"] = "u";
+	characterConversionMap[ "#250"] = "u";
+	characterConversionMap[ "#251"] = "u";
+	characterConversionMap[ "#252"] = "u";
+
+	characterConversionMap[ "ugrave"] = "u";
+	characterConversionMap[ "uacute"] = "u";
+	characterConversionMap[ "ucirc"] = "u";
+	characterConversionMap[ "uuml"] = "u";
+
+	characterConversionMap[ "#253"] = "y";
+	characterConversionMap[ "yacute"] = "y";
+	characterConversionMap[ "#255"] = "y";
+	characterConversionMap[ "yuml"] = "y";
+}
+
 	// domain name of html page being parsed
 	const String domain;
 	// content of the html page to parse
@@ -516,149 +672,149 @@ private:
 	fb::Vector<String> tagStack;
 };
 
-const fb::UnorderedMap<String, String> Parser::characterConversionMap = 
-{
-	{ "#192", "A" },
-	{ "#193", "A" },
-	{ "#194", "A" },
-	{ "#195", "A" },
-	{ "#196", "A" },
-	{ "#197", "A" },
+// const fb::UnorderedMap<String, String> Parser::characterConversionMap = 
+// {
+// 	{ "#192", "A" },
+// 	{ "#193", "A" },
+// 	{ "#194", "A" },
+// 	{ "#195", "A" },
+// 	{ "#196", "A" },
+// 	{ "#197", "A" },
 
-	{ "Agrave", "A" },
-	{ "Aacute", "A" },
-	{ "Acirc", "A" },
-	{ "Atilde", "A" },
-	{ "Auml", "A" },
-	{ "Aring", "A" },
+// 	{ "Agrave", "A" },
+// 	{ "Aacute", "A" },
+// 	{ "Acirc", "A" },
+// 	{ "Atilde", "A" },
+// 	{ "Auml", "A" },
+// 	{ "Aring", "A" },
 
-	{ "#198", "AE" },
-	{ "AElig", "AE" },
+// 	{ "#198", "AE" },
+// 	{ "AElig", "AE" },
 
-	{ "#199", "C" },
-	{ "Ccedil", "C" },
+// 	{ "#199", "C" },
+// 	{ "Ccedil", "C" },
 
-	{ "#200", "E" },
-	{ "#201", "E" },
-	{ "#202", "E" },
-	{ "#203", "E" },
+// 	{ "#200", "E" },
+// 	{ "#201", "E" },
+// 	{ "#202", "E" },
+// 	{ "#203", "E" },
 
-	{ "Egrave", "E" },
-	{ "Eacute", "E" },
-	{ "Ecirc", "E" },
-	{ "Euml", "E" },
+// 	{ "Egrave", "E" },
+// 	{ "Eacute", "E" },
+// 	{ "Ecirc", "E" },
+// 	{ "Euml", "E" },
 
-	{ "#204", "I" },
-	{ "#205", "I" },
-	{ "#206", "I" },
-	{ "#207", "I" },
+// 	{ "#204", "I" },
+// 	{ "#205", "I" },
+// 	{ "#206", "I" },
+// 	{ "#207", "I" },
 
-	{ "Igrave", "I" },
-	{ "Iacute", "I" },
-	{ "Icirc", "I" },
-	{ "Iuml", "I" },
+// 	{ "Igrave", "I" },
+// 	{ "Iacute", "I" },
+// 	{ "Icirc", "I" },
+// 	{ "Iuml", "I" },
 
-	{ "#209", "N" },
-	{ "Ntilde", "N" },
+// 	{ "#209", "N" },
+// 	{ "Ntilde", "N" },
 
-	{ "#210", "O" },
-	{ "#211", "O" },
-	{ "#212", "O" },
-	{ "#213", "O" },
-	{ "#214", "O" },
-	{ "#216", "O" },
+// 	{ "#210", "O" },
+// 	{ "#211", "O" },
+// 	{ "#212", "O" },
+// 	{ "#213", "O" },
+// 	{ "#214", "O" },
+// 	{ "#216", "O" },
 
-	{ "Ograve", "O" },
-	{ "Oacute", "O" },
-	{ "Ocirc", "O" },
-	{ "Otilde", "O" },
-	{ "Ouml", "O" },
-	{ "Oslash", "O" },
+// 	{ "Ograve", "O" },
+// 	{ "Oacute", "O" },
+// 	{ "Ocirc", "O" },
+// 	{ "Otilde", "O" },
+// 	{ "Ouml", "O" },
+// 	{ "Oslash", "O" },
 
-	{ "#217", "U" },
-	{ "#218", "U" },
-	{ "#219", "U" },
-	{ "#220", "U" },
+// 	{ "#217", "U" },
+// 	{ "#218", "U" },
+// 	{ "#219", "U" },
+// 	{ "#220", "U" },
 
-	{ "Ugrave", "U" },
-	{ "Uacute", "U" },
-	{ "Ucirc", "U" },
-	{ "Uuml", "U" },
+// 	{ "Ugrave", "U" },
+// 	{ "Uacute", "U" },
+// 	{ "Ucirc", "U" },
+// 	{ "Uuml", "U" },
 
-	{ "#221", "Y" },
-	{ "Yacute", "Y" },
+// 	{ "#221", "Y" },
+// 	{ "Yacute", "Y" },
 
-	{ "#224", "a" },
-	{ "#225", "a" },
-	{ "#226", "a" },
-	{ "#227", "a" },
-	{ "#228", "a" },
-	{ "#229", "a" },
+// 	{ "#224", "a" },
+// 	{ "#225", "a" },
+// 	{ "#226", "a" },
+// 	{ "#227", "a" },
+// 	{ "#228", "a" },
+// 	{ "#229", "a" },
 
-	{ "agrave", "a" },
-	{ "aacute", "a" },
-	{ "acirc", "a" },
-	{ "atilde", "a" },
-	{ "auml", "a" },
-	{ "aring", "a" },
+// 	{ "agrave", "a" },
+// 	{ "aacute", "a" },
+// 	{ "acirc", "a" },
+// 	{ "atilde", "a" },
+// 	{ "auml", "a" },
+// 	{ "aring", "a" },
 
-	{ "#230", "ae" },
-	{ "aelig", "ae" },
+// 	{ "#230", "ae" },
+// 	{ "aelig", "ae" },
 
-	{ "#231", "c" },
-	{ "ccedil", "c" },
+// 	{ "#231", "c" },
+// 	{ "ccedil", "c" },
 
-	{ "#232", "e" },
-	{ "#233", "e" },
-	{ "#234", "e" },
-	{ "#235", "e" },
+// 	{ "#232", "e" },
+// 	{ "#233", "e" },
+// 	{ "#234", "e" },
+// 	{ "#235", "e" },
 
-	{ "egrave", "e" },
-	{ "eacute", "e" },
-	{ "ecirc", "e" },
-	{ "euml", "e" },
+// 	{ "egrave", "e" },
+// 	{ "eacute", "e" },
+// 	{ "ecirc", "e" },
+// 	{ "euml", "e" },
 
-	{ "#236", "i" },
-	{ "#237", "i" },
-	{ "#238", "i" },
-	{ "#239", "i" },
+// 	{ "#236", "i" },
+// 	{ "#237", "i" },
+// 	{ "#238", "i" },
+// 	{ "#239", "i" },
 
-	{ "igrave", "i" },
-	{ "iacute", "i" },
-	{ "icirc", "i" },
-	{ "iuml", "i" },
+// 	{ "igrave", "i" },
+// 	{ "iacute", "i" },
+// 	{ "icirc", "i" },
+// 	{ "iuml", "i" },
 
-	{ "#241", "n" },
-	{ "ntilde", "n" },
+// 	{ "#241", "n" },
+// 	{ "ntilde", "n" },
 
-	{ "#242", "o" },
-	{ "#243", "o" },
-	{ "#244", "o" },
-	{ "#245", "o" },
-	{ "#246", "o" },
-	{ "#248", "o" },
+// 	{ "#242", "o" },
+// 	{ "#243", "o" },
+// 	{ "#244", "o" },
+// 	{ "#245", "o" },
+// 	{ "#246", "o" },
+// 	{ "#248", "o" },
 
-	{ "ograve", "o" },
-	{ "oacute", "o" },
-	{ "ocirc", "o" },
-	{ "otilde", "o" },
-	{ "ouml", "o" },
-	{ "oslash", "o" },
+// 	{ "ograve", "o" },
+// 	{ "oacute", "o" },
+// 	{ "ocirc", "o" },
+// 	{ "otilde", "o" },
+// 	{ "ouml", "o" },
+// 	{ "oslash", "o" },
 
-	{ "#249", "u" },
-	{ "#250", "u" },
-	{ "#251", "u" },
-	{ "#252", "u" },
+// 	{ "#249", "u" },
+// 	{ "#250", "u" },
+// 	{ "#251", "u" },
+// 	{ "#252", "u" },
 
-	{ "ugrave", "u" },
-	{ "uacute", "u" },
-	{ "ucirc", "u" },
-	{ "uuml", "u" },
+// 	{ "ugrave", "u" },
+// 	{ "uacute", "u" },
+// 	{ "ucirc", "u" },
+// 	{ "uuml", "u" },
 
-	{ "#253", "y" },
-	{ "yacute", "y" },
-	{ "#255", "y" },
-	{ "yuml", "y" },
-}; 
+// 	{ "#253", "y" },
+// 	{ "yacute", "y" },
+// 	{ "#255", "y" },
+// 	{ "yuml", "y" },
+// }; 
 
 };

@@ -47,12 +47,15 @@ public:
 	void convertParsedResult( )
 	{
 		for( auto i : parsedWords )
+		{
+			std::cout << i << std::endl;
 			parsedResult += i + " ";
+		}
 	}
 
 	String getParsedResult( )
 		{
-			convertParsedResult();
+		convertParsedResult();
 		return parsedResult;
 		}
 

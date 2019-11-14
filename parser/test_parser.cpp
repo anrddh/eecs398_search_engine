@@ -57,6 +57,8 @@ int main ( int argc, char *argv[] ){
    // outfile.open("htmlstagless/" + filename.substr(6));
    outfile.open(  (filename + "_tagless"_sv).data() );
 
+   std::cout << retstr << std::endl;
+
    outfile << retstr;
    outfile.close();
 

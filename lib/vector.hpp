@@ -76,12 +76,14 @@ namespace fb {
 
         Vector & operator=( Vector<T> v ) {
             swap(v);
+            return *this;
         }
 
-        Vector operator=( Vector<T>&& v ) noexcept {
-            swap(buf, v.buf);
-            swap(size_, v.size_);
-            swap(cap_, v.cap_);
+        Vector & operator=( Vector<T>&& v ) noexcept {
+            fb::swap(buf, v.buf);
+            fb::swap(size_, v.size_);
+            fb::swap(cap_, v.cap_);
+            return *this;
         }
 
         ~Vector() {

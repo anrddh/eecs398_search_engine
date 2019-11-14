@@ -323,6 +323,9 @@ namespace fb {
         BasicString substr(SizeType pos = 0, SizeType count = npos) const {
             if (pos > size())
                 throw std::out_of_range("");
+
+            if (count == npos || pos + count > size())
+                return BasicString(data() + pos, size() - pos);
             return BasicString(data() + pos, count);
         }
 

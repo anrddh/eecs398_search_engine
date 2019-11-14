@@ -60,6 +60,10 @@ public:
             return (*owner)[index].val;
         }
 
+         K& key() {
+            return (*owner)[index].key;
+        }
+
         V* operator->() {
             return &(*owner)[index].val;
         }
@@ -151,7 +155,7 @@ public:
 
     V& at(const K& key) {
         if (num_elements + num_ghosts > buckets.size() * max_load) {
-            rehash_and_grow();
+            rehash_and_grow(buckets.size() * 2);
         }
         SizeT desired_bucket = hash(key) % buckets.size();
         SizeT original_hash = desired_bucket;

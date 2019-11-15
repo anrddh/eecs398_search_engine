@@ -85,15 +85,11 @@ public:
 
 	void addWord( char c )
 	{
-		if ( isSpace( c ) || ispunct( c ) )
-		{
-			if ( !parsedWords.back( ).empty( ) )
-				parsedWords.pushBack("");
-		}
+		if ( ( isSpace( c ) || ispunct( c ) ) 
+				&& !parsedWords.back( ).empty( ) )
+			parsedWords.pushBack("");
 		else
-		{
 			parsedWords.back( ) += c;
-		}
 	}
 
 	void addToResult( char c )
@@ -158,6 +154,7 @@ public:
 					// 	}
 					addToResult( content[ index ] );
 					}
+				std::cout << index  << " " << content.size( ) << std::endl;
 				++index;
 				}
 			}
@@ -274,12 +271,13 @@ private:
 
 	// change tagStack appropriately 
 	// opening tag or closing tag
-	void setTag( String tagName )
+	void setTag( const String tagName )
 	{
+		std::cout << "in set Tag" << std::endl;
 		if ( tagName[ 0 ] == '/' )
 			{
 			String tagType = tagName.substr( 1 );
-			if ( StringView( tagStack.back ( ) ) == StringView( tagType ) )
+			if ( tagStack.back( ) == tagType )
 				{
 				if ( !tagStack.empty( ) )
 					tagStack.popBack( );
@@ -291,7 +289,10 @@ private:
 				// 		<< tagStack.back() << " read: " << tagType <<  std::endl;
 			}
 		else
-			tagStack.pushBack( tagName );
+		{
+			String tagType = tagName;
+			tagStack.pushBack( tagType );
+		}
 	}
 
 	// look for occurence of str in content
@@ -365,18 +366,20 @@ private:
 
 			size_t last_index = skipSpacesBackward( i - 1 );
 			
+			std::cout << "before " << tagName << " " << tagName.size() << std::endl;
 			// not self closing tag
 			if ( content[ last_index ] != '/' )
 				{
-				if ( tagName.compare( "script" ) == 0 )
+				if ( tagName == "script" )
 					i = handleScript( i + 1 );
-				else if ( tagName.compare( "a" ) == 0 )
+				else if ( tagName == "a" )
 					i = handleAnchor( start_index, i + 1 );
-				else if ( tagName.compare( "style" ) == 0 )
+				else if ( tagName == "style" )
 					i = handleStyle( start_index );
 				else
 					setTag( tagName );
 				}
+			std::cout << tagName << " " << tagName.size() << std::endl;
 			return i;
 		}
 

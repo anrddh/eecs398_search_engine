@@ -15,10 +15,14 @@
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
 
-struct docIdInfo {
-  //position of last word in document + 1
-  unsigned int pos;
-  unsigned int docId;
+//
+constexptr int TOKEN_THRESHOLD = 134217728; // 2^27
+
+
+
+struct WriteToDiskInput {
+    fb::String filename;
+    fb::UniquePtr<fb::unordered_map<fb::string, fb::vector<offsetInfo>>> map;
 }
 
 //flags
@@ -30,12 +34,18 @@ constexpr uint8_t INDEX_WORD_ANCHOR = 0b0001;
 struct IndexWord {
   fb::string word;
   uint8_t type_flags; // should be or'ed INDEX_WORD_ above.
+};
+
+struct DocIdInfo {
+  // position of last word in document + 1
+  unsigned int pos;
+  unsigned int docId;
 }
 
 struct AbsoluteWordInfo {
     unsigned long position;
     uint8_t type_flags;
-}
+};
 
 class IndexBuilder {
 public:
@@ -47,43 +57,55 @@ public:
         }
         close(f);
         
-      	for(int i = 0; i < NUM_WORD_MAPS; ++i) 
-        	{
-          	wordPositionsMaps.emplace_back(fb::makeUnique());
-        	}
+        wordPositions = fb::makeUnique();
+        tokenCount = 1;
     }
     //takes in vector of IndexWords, maps words to indices in vector/flags
     bool addDocument(unsigned int docId, fb::vector<IndexWord>> &words) {
-      	currentMapNumLock.lock();
- 		int mapToUse = currentMapNum
+        wordPositionsLock.lock();
         for(auto word : words)
         {
             OffsetInfo info = {tokenCount, word.type_flags}; 
-            wordPositions[word.word].pushBack(info);
+            (*wordPositions)[word.word].pushBack(info);
             ++tokenCount;
         }
-        //what is emplace_back?
+
+        // what is emplace_back? emplace back forwards the arguments you pass it to the constructor of type T. It constructs an object of type T in place which is why it is useufl
         documents.emplaceBack(tokenCount, docId);
         ++tokenCount;
-      
-        if(tokenCount > THRESHOLD) {
-            writeToDisk();
-            tokenCount = 0;
-            wordPositions.clear();
+
+        if(tokenCount > TOKEN_THRESHOLD) {
+            flushToDisk();
         }
+        wordPositionsLock.unlock();
     }
 
 private:
-    bool writeToDisk();
-    void buildPostingList(char* start, const fb::string &word);
+    void flushToDisk() 
+        {
+        WriteToDiskInput * input = new WriteToDiskInput;
+        input->filename = (path + "index_" + to_string(masterIndexData->numIndexes)).c_str();
+        input->map = std::move(wordPositions);
+
+        fb::Thread worker(writeToDisk, (void *) input);
+        worker.detach();
+        
+        tokenCount = 1;
+        wordPositions = fb::makeUnique();
+
+        ++masterIndexData->numIndexes;
+        }
     
-    //folder for each index chunk, store root directory
+    // folder for each index chunk, store root directory
     fb::string root;
+    
+    // some meta data about the index chunks in this index
     MasterIndexData * masterIndexData;
-    fb::vector<fb::UniquePtr<fb::unordered_map<fb::string, fb::vector<offsetInfo>>>> wordPositionsMaps;
-  	fb::vector<fb::UniquePtr<fb::Mutex *> > mapLocks;
-  	fb::Mutex currentMapNumLock;
-  	int currentMapNum;
+    fb::Mutex masterIndexDataLock;
+
+    // the actual map that stores the positions of the words, is a unique pointer so that we can pass this ownership to a thread.
+    fb::UniquePtr<fb::unordered_map<fb::string, fb::vector<AbsoluteWordInfo>>> wordPositions;
+  	fb::Mutex wordPositionsLock;
   	
     fb::vector<docIdInfo> documents;
     //each chunk keeps track of its own word count
@@ -99,7 +121,7 @@ struct MasterIndexData {
 // take in the word and vector of abs info
 // write data to file
 // return how much space actually used
-int IndexBuilder::buildPostingList(char* start, const fb::string &word, const fb::vector<AbsoluteWordInfo> &info){
+int buildPostingList(char* start, const fb::string &word, const fb::vector<AbsoluteWordInfo> &info){
     // start is a pointer to the "beginning of file"
     // write string into disk
     strcpy(start, word.c_str());
@@ -115,14 +137,26 @@ int IndexBuilder::buildPostingList(char* start, const fb::string &word, const fb
 }
 
 // create dictionary: maps words to offset in the file where posting list is
-bool IndexBuilder::writeToDisk() {
-    int f = open((path + "index_" + to_string(masterIndexData->numIndexes)).c_str(), O_RDWR | O_CREAT);
+void writeToDisk(void * arg) {
+    WriteToDiskInput input = *(WriteToDiskInput *)arg;
+
+    IndexChunkBuilder indexChunkBuilder(input.filename, *(input.map).bucket_count());
+    for(const fb::pair<fb::String, fb::vector<AbsoluteWordInfo>> &entry : *(input.map))
+        {
+        indexChunkBuilder.addWord(pair.first, pair.second);
+        }
+
+    /*
+    masterIndexDataLock.lock();
+    int f = open(input.filename, O_RDWR | O_CREAT);
     ++masterIndexData->numIndexes;
-    unsigned int dictionaryDataLength = wordPositions.capacity();
+  	masterIndexDataLock.unlock();
+  
+  	unsigned int dictionaryDataLength = wordPositions.bucket_count();
     unsigned int dictionarySize = (dictionaryDataLength + 1) * sizeof(unsigned int);
     unsigned int * dictionary = (unsigned int *) mmap(nullptr, dictionarySize, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
-    *dictionary = wordPositions.capacity();
-    dictionaryData = dictionary + 1;
+    *dictionary = dictionaryDataLength;
+    unsigned int * dictionaryData = dictionary + 1;
     
     unsigned int currentPos = dictionarySize;
   
@@ -134,7 +168,6 @@ bool IndexBuilder::writeToDisk() {
         }
         dictionaryData[bucket] = currentPos;
       
-      
         unsigned long postingListLength = (entry.first.size() + 1) + (4 * entry.second.size());
         char * postingList = (char *) mmap(nullptr, postingListLength, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, currentPos);
         int actualSize = buildPostingList(postingList, entry);
@@ -142,6 +175,10 @@ bool IndexBuilder::writeToDisk() {
         munmap(postingList, postingListLength);
     }
     
-  munmap(dictionary, dictionarySize); 
+    munmap(dictionary, dictionarySize); 
+
+    */
+
+    delete arg;
     
 }

@@ -84,6 +84,7 @@ int main(int argc, char const *argv[])
        } catch (SocketException& se) {
           cout << se.what() << endl;
        } 
+       close(sock);
     }
 
     return 0; 

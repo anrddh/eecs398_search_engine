@@ -5,9 +5,10 @@
 
 using namespace fb;
 
-void* dummy_parse(void*) {
+void* dummy_parse(void* val) {
+   int* num = (int*) val;
    while(true) {
-      std::cout << "in loop" << std::endl;
+      std::cout << "in loop" << *num << std::endl;
       try {
          get_url_to_parse();
          std::cout << "after to_parse" << std::endl;
@@ -24,22 +25,18 @@ void* dummy_parse(void*) {
    }
 }
 
-int main(){
+int main() {
    int master_port = 8992; // HARD coding for testing
    String master_ip = "127.0.0.1";
 
    set_master_ip(master_ip, master_port);
 
-   dummy_parse(nullptr);
-
-   //Thread t1(dummy_parse, nullptr);
-   /*
-   Thread t2(dummy_parse, nullptr);
-   Thread t3(dummy_parse, nullptr);
-   Thread t4(dummy_parse, nullptr);
-   Thread t5(dummy_parse, nullptr);
-   Thread t6(dummy_parse, nullptr);
-   */
+   Vector<Thread> threads;
+   int ids[] = {1, 2, 3, 4, 5, 6};
+   for (int i = 0; i < 6; ++i) {
+      Thread t(dummy_parse, ids + i);
+      threads.pushBack(std::move(t));
+   }
 
    while (true);
 

@@ -248,7 +248,7 @@ namespace fb {
         }
 
         Iterator insert(ConstIterator pos, SizeType count, const T &value) {
-            auto idx = distance(cbegin(), pos);
+            auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + count);
 
             uninitializedDefaultConstruct(end(), end() + count);
@@ -268,9 +268,9 @@ namespace fb {
                         std::is_base_of_v<InputIteratorTag,
                         typename IteratorTraits<It>::IteratorCategory>,
                         It> first, It last) {
-            auto count = distance(first, last);
+            auto count = fb::distance(first, last);
 
-            auto idx = distance(cbegin(), pos);
+            auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + count);
 
             uninitializedDefaultConstruct(end(), end() + count);
@@ -288,7 +288,7 @@ namespace fb {
 
         template <typename ... Args>
         Iterator emplace(ConstIterator pos, Args &&... args) {
-            auto idx = distance(cbegin(), pos);
+            auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + 1);
             uninitializedDefaultConstruct(end(), end() + 1);
             for (auto i = size(); i > idx; --i)
@@ -300,7 +300,7 @@ namespace fb {
         }
 
         Iterator erase(ConstIterator pos) {
-            auto idx = distance(cbegin(), pos);
+            auto idx = fb::distance(cbegin(), pos);
             --size_;
             for (auto i = idx; i < size(); ++i)
                 data()[i] = std::move(data()[i+1]);
@@ -310,10 +310,10 @@ namespace fb {
 
         Iterator erase(ConstIterator first, ConstIterator last) {
             if (first == last)
-                return begin() + distance(cbegin(), first);
+                return begin() + fb::distance(cbegin(), first);
 
-            auto idx = distance(cbegin(), first);
-            auto count = distance(first,last);
+            auto idx = fb::distance(cbegin(), first);
+            auto count = fb::distance(first,last);
             destroy(first,last);
 
             for (auto first_it = begin() + idx; last != end(); ++last, ++first_it)

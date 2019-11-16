@@ -5,8 +5,7 @@ public:
 
     PostingListBuilder(const fb::String &word, char * location) : beginning(location), lastLocation(0) {
         strcpy(beginning, word.c_str());
-        current = begining + word.size() + 1;
-        // chunk out area for skip table
+        current = begining + (word.size() + 1) + ((2 <<  NUM_SKIP_TABLE_BITS) * 3 * sizeof(unsigned int));
 
     }
 
@@ -27,9 +26,8 @@ private:
 };
 
 void PostingListBuilder::addPost(AbsoluteWordInfo word) {
-    // TODO: check that lastLocation < word.position
-    if((word.position >> (27 - 12)) > nextSkipTableEntry) {
-        // add numbers to skip table
+    if((word.position >> (MAX_BITS_PER_CHUNK - NUM_SKIP_TABLE_BITS)) > nextSkipTableEntry) {
+        // TODO: add numbers to skip table
 
     }
     current = add_num(current, word.position - lastLocation, word.type_flags);

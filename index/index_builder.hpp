@@ -16,7 +16,8 @@
  */
 
 //
-constexptr int TOKEN_THRESHOLD = 134217728; // 2^27
+constexptr int MAX_BITS_PER_CHUNK = 27;
+constexptr int TOKEN_THRESHOLD = 2 << MAX_BITS_PER_CHUNK; //134217728; // 2^27
 
 
 

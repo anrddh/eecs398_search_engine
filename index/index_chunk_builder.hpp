@@ -9,7 +9,6 @@ class IndexChunkBuilder {
 public:
     IndexChunkBuilder(std::string filename, uint32_t capacity) : tableSize(capacity), file(open(input.filename, O_RDWR | O_CREAT)) 
         { 
-        // TODO: make sure file != 0
         if(file == -1) 
             {
             // TODO: throw error or something

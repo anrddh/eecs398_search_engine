@@ -48,7 +48,7 @@ public:
 	{
 		for( auto i : parsedWords )
 		{
-			std::cout << i << std::endl;
+			// std::cout << i << std::endl;
 			parsedResult += i + " ";
 		}
 	}
@@ -85,9 +85,11 @@ public:
 
 	void addWord( char c )
 	{
-		if ( ( isSpace( c ) || ispunct( c ) ) 
-				&& !parsedWords.back( ).empty( ) )
-			parsedWords.pushBack("");
+		if ( ( isSpace( c ) || ispunct( c ) ) )
+		{
+			if( !parsedWords.back( ).empty( ) )
+				parsedWords.pushBack("");
+		}
 		else
 			parsedWords.back( ) += c;
 	}
@@ -154,7 +156,6 @@ public:
 					// 	}
 					addToResult( content[ index ] );
 					}
-				std::cout << index  << " " << content.size( ) << std::endl;
 				++index;
 				}
 			}
@@ -273,7 +274,7 @@ private:
 	// opening tag or closing tag
 	void setTag( const String tagName )
 	{
-		std::cout << "in set Tag" << std::endl;
+		// std::cout << "in set Tag" << std::endl;
 		if ( tagName[ 0 ] == '/' )
 			{
 			String tagType = tagName.substr( 1 );
@@ -366,7 +367,7 @@ private:
 
 			size_t last_index = skipSpacesBackward( i - 1 );
 			
-			std::cout << "before " << tagName << " " << tagName.size() << std::endl;
+			// std::cout << "before " << tagName << " " << tagName.size() << std::endl;
 			// not self closing tag
 			if ( content[ last_index ] != '/' )
 				{
@@ -379,7 +380,7 @@ private:
 				else
 					setTag( tagName );
 				}
-			std::cout << tagName << " " << tagName.size() << std::endl;
+			// std::cout << tagName << " " << tagName.size() << std::endl;
 			return i;
 		}
 

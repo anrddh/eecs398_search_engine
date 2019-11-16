@@ -148,11 +148,6 @@ public:
 					{
 
 					}
-					// else if ( !( isSpace( content[ index ] ) && isSpace( lastChar ) ) )
-					// 	{
-					// 	parsedResult += content[ index ];
-					// 	lastChar = content[ index ];
-					// 	}
 					addToResult( content[ index ] );
 					}
 				++index;

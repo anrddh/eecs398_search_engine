@@ -323,7 +323,7 @@ const fb::String GetGetMessage( const ParsedUrl &url )
    {
    fb::String getMessage = 
          "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n" +
-         "User-Agent: LinuxGetSsl/2.0 jinihm@umich.edu (Linux)\r\n" +
+         "User-Agent: LinuxGetSsl/2.0 (Linux)\r\n" +
          "Accept: */*\r\n" +
          "Accept-Encoding: identity\r\n" +
          "Connection: close\r\n\r\n"; 

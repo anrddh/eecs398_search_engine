@@ -16,7 +16,7 @@ namespace fb {
     template <typename It>
     void destroy(It first, It last) {
         for (; first != last; ++first)
-            destroyAt(fb::addressof(*first));
+            fb::destroyAt(fb::addressof(*first));
     }
 
     template <typename It, typename DIt>
@@ -27,7 +27,7 @@ namespace fb {
                 ::new (current++) typename IteratorTraits<DIt>::ValueType(*first++);
             return current;
         } catch (...) {
-            destroy(dest, current);
+            fb::destroy(dest, current);
             throw;
         }
     }
@@ -40,7 +40,7 @@ namespace fb {
             while (current != last)
                 ::new (current++) typename IteratorTraits<It>::ValueType(value);
         }  catch (...) {
-            destroy(first, current);
+            fb::destroy(first, current);
             throw;
         }
     }
@@ -50,9 +50,9 @@ namespace fb {
         auto current = first;
         try {
             while (current != last)
-                ::new (addressof(*current++)) typename IteratorTraits<It>::ValueType;
+                ::new (fb::addressof(*current++)) typename IteratorTraits<It>::ValueType;
         }  catch (...) {
-            destroy(first, current);
+            fb::destroy(first, current);
             throw;
         }
     }

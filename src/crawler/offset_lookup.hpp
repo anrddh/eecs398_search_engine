@@ -3,14 +3,12 @@
 
 //This is essentially an unordered_map, but it does not store the keys in the buckets
 //This is intended to look up a file offset, and comparisons will then be done using the lookup
-#include "functional.hpp"
+#include "../../lib/functional.hpp"
 #include "url_pool.hpp"
-#include "string.hpp"
-#include "vector.hpp"
+#include "../../lib/string.hpp"
+#include "../../lib/vector.hpp"
 
 #define INITIAL_SIZE 1024
-
-namespace fb {
 
 // A bucket's status tells you whether it's filled, empty, or contains a ghost.
 enum class OffsetStatus {
@@ -19,7 +17,7 @@ enum class OffsetStatus {
     Ghost
 };
 
-template<typename K = String, typename V = SizeT, typename Hasher = Hash<K>>
+template<typename K = fb::String, typename V = fb::SizeT, typename Hasher = fb::Hash<K>>
 class OffsetLookupChunk {
     using Status = OffsetStatus;
 public:
@@ -38,7 +36,7 @@ public:
     public:
         friend class OffsetLookupChunk;
         Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
-        Iterator(Vector<Bucket> *owner, size_t index) : owner(owner), index(index) {
+        Iterator(Vector<Bucket> *owner, fb::SizeT index) : owner(owner), index(index) {
             if (index > owner->size()) index = owner->size();
         }
         Iterator& operator=(const Iterator &rhs) {
@@ -76,8 +74,8 @@ public:
         }
 
     private:
-        Vector<Bucket> *owner;
-        size_t index;
+        fb::Vector<Bucket> *owner;
+        fb::SizeT index;
     };
 
     //Default constructor
@@ -86,7 +84,7 @@ public:
     }
 
     //Returns the number of elements in the map
-    size_t size() const {
+    fb::SizeT size() const {
         return num_elements;
     }
 
@@ -106,12 +104,12 @@ public:
     //It only looks at the hash, and finds that object. If it isnt found, it then
     //creates the object using the key. In either case, it returns an iterator to the
     //object.
-    V& find(const K& key, SizeT hash){
+    V& find(const K& key, fb::SizeT hash){
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
-        size_t desired_bucket = hash % buckets.size();
-        size_t original_hash = desired_bucket;
+        fb::SizeT desired_bucket = hash % buckets.size();
+        fb::SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -153,8 +151,8 @@ public:
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
-        size_t desired_bucket = hash(key) % buckets.size();
-        size_t original_hash = desired_bucket;
+        fb::SizeT desired_bucket = hash(key) % buckets.size();
+        fb::SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -193,8 +191,8 @@ public:
         if (num_elements + num_ghosts > buckets.size() * max_load) {
             rehash_and_grow();
         }
-        size_t desired_bucket = hash(key) % buckets.size();
-        size_t original_hash = desired_bucket;
+        fb::SizeT desired_bucket = hash(key) % buckets.size();
+        fb::SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if (buckets[desired_bucket].status != Status::Empty) {
             //search until an empty bucket
@@ -216,8 +214,8 @@ public:
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
-        size_t desired_bucket = hash(key) % buckets.size();
-        size_t original_hash = desired_bucket;
+        fb::SizeT desired_bucket = hash(key) % buckets.size();
+        fb::SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -253,8 +251,8 @@ public:
 
     }
     // erase returns the number of items remove (0 or 1)
-    size_t erase(const K& key) {
-        size_t desired_bucket = hash(key) % buckets.size();
+    fb::SizeT erase(const K& key) {
+        fb::SizeT desired_bucket = hash(key) % buckets.size();
         //if the original bucket is empty, return
         if(buckets[desired_bucket].status == Status::Empty){
             return 0;
@@ -292,16 +290,16 @@ public:
         num_ghosts = 0;
     }
     //Returns the number of buckets
-    size_t bucket_count() {
+    fb::SizeT bucket_count() {
         return buckets.size();
     }
     //Returns the number of elements in bucket n
-    size_t bucket_size(size_t n) {
+    fb::SizeT bucket_size(fb::SizeT n) {
         if (buckets[n].status == Status::Filled) return 1;
         return 0;
     }
     //Returns the index of the bucket for the given key
-    size_t bucket(const K k) {
+    fb::SizeT bucket(const K k) {
         return hash(k) % buckets.size();
     }
     //Returns the current load factor
@@ -317,11 +315,11 @@ public:
         max_load = z;
     }
     //Sets the number of buckets in the container to n
-    void rehash(size_t n) {
+    void rehash(fb::SizeT n) {
         rehash_and_grow(n);
     }
     //Set the number of buckets to contain n elements
-    void reserve(size_t n) {
+    void reserve(fb::SizeT n) {
         rehash_and_grow(n);
     }
     //Returns the hash function
@@ -329,29 +327,27 @@ public:
         return hash;
     }
     //set the string list
-    void set_string_list(SavedStrings *list){
+    void set_string_list(UrlStore *list){
         StringList = list;
     }
 private:
-    size_t num_elements = 0;
-    size_t num_ghosts = 0;
+    fb::SizeT num_elements = 0;
+    fb::SizeT num_ghosts = 0;
     float max_load = 0.5;
-    Vector<Bucket> buckets;
+    fb::Vector<Bucket> buckets;
     Hasher hash = fb::Hash<K>();
-    SavedStrings *StringList = nullptr;
+    UrlStore *StringList = nullptr;
 
-    void rehash_and_grow(size_t n) {
+    void rehash_and_grow(fb::SizeT n) {
         Vector<Bucket> temp = buckets;
         buckets.clear();
         num_elements = 0;
         num_ghosts = 0;
         buckets.resize(n);
-        for(size_t i = 0; i < temp.size(); i++){
+        for(fb::SizeT i = 0; i < temp.size(); i++){
             if(temp[i].status == Status::Filled){
                 insert(StringList->get_str(temp[i].val), temp[i].val);
             }
         }
     }
 };
-
-} //fb

@@ -84,13 +84,15 @@ public:
 
 	void addWord( char c )
 	{
-		if ( ( isSpace( c ) || ispunct( c ) ) )
+		if ( isSpace( c ) || ispunct( c ) || !isalnum( c ) )
 		{
 			if( !parsedWords.back( ).empty( ) )
 				parsedWords.pushBack("");
 		}
-		else
+		else if ( isalnum(c) )
+		{
 			parsedWords.back( ) += c;
+		}
 	}
 
 	void addToResult( char c )
@@ -117,7 +119,6 @@ public:
 			{
 				if ( isSpace( c ) )
 					c = ' ';
-				// parsedResult += c;
 				addWord( c );
 				lastChar = c;
 			}

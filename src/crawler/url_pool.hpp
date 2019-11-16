@@ -1,18 +1,19 @@
 //Created on 11/6/19
 #pragma once
 
-#include "../../lib/frontier_pool.hpp"
-#include "../../lib/stddef.hpp"
+#include "frontier_pool.hpp"
 #include "UrlStore.hpp"
 #include "AnchorStore.hpp"
-//#include "string_pool.hpp"
+#include "string_pool.hpp"
+
 #include "../../lib/unordered_set.hpp"
 #include "../../lib/unordered_map.hpp"
 #include "../../lib/string.hpp"
 #include "../../lib/vector.hpp"
-#include "string_pool.hpp"
+#include "../../lib/stddef.hpp"
 
-#define NumBins 256 //TODO: change if necessary
+constexpr fb::SizeT NumBins = 256;  //TODO: change if necessary
+
 using URL = fb::String;
 
 //struct which contains info about a specific url
@@ -39,7 +40,8 @@ private:
 public:
     //Constructor
     UrlPool(UrlStore *urls, AnchorStore *anchors, DiskVec<fb::SizeT> *adjlist,
-        StringPool<NumBins> *urllookup, InfoPool<NumBins> *infolookup) : UrlList(urls), AnchorTextList(anchors),
-        AdList(adjlist), UrlLookup(urllookup), InfoLookup(infolookup) {}
-        
+            StringPool<NumBins> *urllookup, InfoPool<NumBins> *infolookup)
+        : UrlList(urls), AnchorTextList(anchors),
+          AdList(adjlist), UrlLookup(urllookup), InfoLookup(infolookup) {}
+
 };

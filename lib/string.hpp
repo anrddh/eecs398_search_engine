@@ -342,8 +342,24 @@ namespace fb {
             buf.push_back(0);
         }
 
-        void swap(BasicString &other) noexcept {
+        constexpr void swap(BasicString &other) noexcept {
             swap(buf, other.buf);
+        }
+
+        constexpr SizeType find(const BasicString &str, SizeType pos = 0 ) const noexcept {
+            return StringView(*this).find(str, pos);
+        }
+
+        constexpr SizeType find(const CharT *s, SizeType pos, SizeType count) const {
+            return StringView(*this).find(s,pos,count);
+        }
+
+        constexpr SizeType find(const CharT *s, SizeType pos = 0) const {
+            return StringView(*this).find(s,pos);
+        }
+
+        constexpr SizeType find(CharT ch, SizeType pos = 0) const noexcept {
+            return StringView(*this).find(ch, pos);
         }
 
     private:

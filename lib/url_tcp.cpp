@@ -1,4 +1,27 @@
 #include "url_tcp.hpp"
+// The header for endian (for changing endianess for uint64_t)
+// might be different for other os
+#include <machine/endian.h>
+/*
+#if defined(OS_MACOSX)
+  #include <machine/endian.h>
+#elif defined(OS_SOLARIS)
+  #include <sys/isa_defs.h>
+  #ifdef _LITTLE_ENDIAN
+    #define LITTLE_ENDIAN
+  #else
+    #define BIG_ENDIAN
+  #endif
+#elif defined(OS_FREEBSD) || defined(OS_OPENBSD) || defined(OS_NETBSD) ||\
+      defined(OS_DRAGONFLYBSD)
+  #include <sys/types.h>
+  #include <sys/endian.h>
+#else
+  #include <endian.h>
+#endif
+*/
+
+using namespace fb;
 
 void send_int(int sock, uint32_t num) {
    num = htonl(num);
@@ -35,27 +58,28 @@ uint64_t recv_uint64_t(int sock) {
 }
 
 void send_str(int sock, const fb::StringView str) {
-   send_int(sock, str.size());
+   int size = str.size();
+   send_int(sock, size);
 
    // Should send null character as well
-   if (send(sock , &str.data() , size + 1 , 0 ) == -1) {
+   if (send(sock , str.data() , size + 1 , 0 ) == -1) {
       throw SocketException("TCP Utility: send_str failed");
    }
 }
 
-fb::String recv_str(int sock) {
-   int32_t size recv_int(sock);
+String recv_str(int sock) {
+   int32_t size = recv_int(sock);
 
    String url;
    url.resize( size ); // resize to length of string (not counting null character)
    
    // Need to write null character as well
-   if (recv(sock, url.data, size + 1, MSG_WAITALL) == -1) {
+   if (recv(sock, url.data(), size + 1, MSG_WAITALL) == -1) {
       throw SocketException("TCP Utility: recv_str failed");
    }
 
    // Make sure the string is null terminiated
-   assert( url.data[size + 1] == '\0' );
+   assert( url.data()[size + 1] == '\0' );
 
    return url;
 }

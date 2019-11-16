@@ -1,13 +1,14 @@
 // Created by Jaeyoon Kim 11/9/2019
 #pragma once
 #include "string.hpp"
+#include "url_tcp.hpp"
 
 // This is a TCP inteface for slave computers
 
 
 // This function must be run ONLY ONCE and must be called
 // before any other functions are called
-void set_master_ip( const String& master_ip_, int master_port_ );
+void set_master_ip( const fb::String& master_ip_, int master_port_ );
 
 
 fb::Pair<fb::SizeT, fb::String> get_url_to_parse();

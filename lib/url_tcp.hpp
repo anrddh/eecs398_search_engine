@@ -1,8 +1,9 @@
 // Created by Jaeyoon Kim 11/9/2019
 #pragma once
 #include "string.hpp"
-#include "Vector.hpp"
+#include "vector.hpp"
 #include "Exception.hpp"
+#include "stddef.hpp"
 #include <arpa/inet.h> // htonl and ntohl
 
 // TCP messaging protocol
@@ -15,9 +16,10 @@
 //    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
 //    x num_links many times ] x NUM_URLS_PER_SEND
 
-class SocketException : SocketException {
-   SocketSocketException(const char *msg) : SocketException(msg) {}
-}
+class SocketException : fb::Exception {
+public:
+   SocketException(const char *msg) : Exception(msg) {}
+};
 
 // number of parsed pages info we send at a time
 constexpr int NUM_PAGES_PER_RETURN = 100;
@@ -34,9 +36,9 @@ constexpr int NUM_RETRY = 3;
 const uint32_t VERFICATION_CODE = 1513424; 
 
 struct ParsedPage {
-   SizeT url_offset;
-   fb::Vector< Pair<fb::String, fb::String> > links; // link, anchor text (concatenated)
-}
+   fb::SizeT url_offset;
+   fb::Vector< fb::Pair<fb::String, fb::String> > links; // link, anchor text (concatenated)
+};
 
 void send_int(int sock, uint32_t num);
 uint32_t recv_int(int sock);

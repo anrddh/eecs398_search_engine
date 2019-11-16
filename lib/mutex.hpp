@@ -14,22 +14,24 @@ class Mutex
 public:
    Mutex()
       {
-         if ( pthread_mutex_init(&Lock, NULL) != 0)
+         if ( pthread_mutex_init(&lock, NULL) != 0)
             throw MutexExcept();
       }
 
    void lock() noexcept
       {
-      pthread_mutex_lock(&Lock);
+      pthread_mutex_lock(&lock);
       }
 
    void unlock() noexcept
       {
-      pthread_mutex_unlock(&Lock);
+      pthread_mutex_unlock(&lock);
       }
 private:
-   pthread_mutex_t Lock;
+   friend class CV;
+   pthread_mutex_t lock;
 };
+
 
 /* AutoLock is a synchronization tool that takes advantage of RAII
  * The given mutex is lock during ctor and mutex is unlocked

@@ -5,7 +5,7 @@
 
 #include "../../lib/string.hpp"
 #include "../../lib/string_view.hpp"
-#include "../../lib/exception.hpp"
+#include "../../lib/Exception.hpp"
 #include "../../lib/utility.hpp"
 
 #include "DiskVec.hpp"
@@ -23,13 +23,14 @@ public:
     static void init(fb::StringView filename) {
         delete ptr;
         ptr = new UrlStore(filename);
+        ptr->addUrl("Dummy");
     }
 
-    UrlStore & getStore() {
+    static UrlStore & getStore() {
         return *ptr;
     }
 
-    constexpr fb::SizeT addUrl(fb::StringView url) {
+    fb::SizeT addUrl(fb::StringView url) {
         auto idx = urls.reserve(url.size() + 1);
         url.copy(urls.data() + idx, url.size());
         urls.data()[idx + url.size()] = 0;
@@ -41,7 +42,7 @@ public:
     }
 
 private:
-    constexpr UrlStore(fb::StringView filename) : urls(filename) {}
+    UrlStore(fb::StringView filename) : urls(filename) {}
 
     static UrlStore *ptr;
     DiskVec<char> urls;

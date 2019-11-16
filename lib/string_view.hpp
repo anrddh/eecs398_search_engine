@@ -314,8 +314,8 @@ namespace fb {
         return sv.end();
     }
 
-    constexpr StringView operator "" _sv(const char *str, unsigned long len) noexcept {
-        return { str, len };
-    }
+}
 
+constexpr fb::StringView operator""_sv(const char *str, unsigned long len) noexcept {
+    return fb::StringView(str, static_cast<fb::SizeT>(len));
 }

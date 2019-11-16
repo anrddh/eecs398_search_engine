@@ -1,110 +1,105 @@
+// * Created by Jaeyoon Kim
+// * Edited by Aniruddh Agarwal to improve conformance with style and
+//   memory map frontier
+
 #include "frontier_pool.hpp"
+#include "DiskVec.hpp"
+
 #include "../../lib/mutex.hpp"
 #include "../../lib/utility.hpp"
-#include <atomic>
 
+#include <atomic>
 #include <iostream>
 
 #include <stdlib.h>
 
 using fb::SizeT;
 using fb::Pair;
+using fb::Vector;
+using fb::AutoLock;
 
 using std::atomic;
 
 // TODO set to 0?
-atomic<int> insert_counter = 0;
-atomic<int> get_counter = 0;
-atomic<int> rand_seed_counter = 0;
+atomic<int> insertCounter = 0;
+atomic<int> getCounter = 0;
+atomic<int> randSeedCounter = 0;
 
-constexpr int NUM_BINS = 16; // This indicates how many seperate UrlFrontierBin there are
-constexpr int NUM_TRY = 1000;
-constexpr int NUM_SAMPLE = 3;
+constexpr SizeT NUM_BINS = 16; // This indicates how many seperate UrlFrontierBin there are
+constexpr SizeT NUM_TRY = 1000;
+constexpr SizeT NUM_SAMPLE = 3;
 
 class UrlFrontierBin {
 public:
-   UrlFrontierBin() {
-      local_seed = ++rand_seed_counter;
+   /* TODO: FIGURE OUT HOW TO STATICALLY GENERATE FILE NAMES */
+   UrlFrontierBin( )
+       : localSeed( ++randSeedCounter ),
+         idx( localSeed ),
+         toParse( "frontier" ) {}
+
+   void addUrl(const FrontierUrl &url) {
+      AutoLock lock( toParseM );
+      toParse.pushBack( url );
    }
 
-   void add_url( SizeT url_offset, SizeT url_ranking ) {
-      to_parse_m.lock();
-      to_parse.pushBack( Pair<SizeT, SizeT>{url_offset, url_ranking} );
-      to_parse_m.unlock();
-   }
+   Vector<SizeT> getUrl( ) {
+      int rand_num[ NUM_TRY ];
+      localSeedM.lock( );
+      for ( int i = 0;  i < NUM_TRY;  ++i )
+         rand_num[ i ] = rand_r( &localSeed );
+      localSeedM.unlock( );
 
-   Vector<SizeT> get_url() {
-       int rand_num[NUM_TRY];
-       local_seed_m.lock();
-       for (int i = 0; i < NUM_TRY; ++i) {
-           rand_num[i] = rand_r(&local_seed);
-       }
-       local_seed_m.unlock();
+      Vector<SizeT> urls_to_return;
+      AutoLock lock( toParseM );
+      if (toParse.size( ) < NUM_SAMPLE)
+         return {}; // empty url
 
-       int max_ranking = 0; // Requires that any ranking of urls to be greater than 0
-       int max_idx;
+      int max_ranking = 0; // Requires that any ranking of urls to be greater than 0
+      int max_idx;
 
-       Vector< SizeT > urls_to_return;
-       to_parse_m.lock();
-       if (to_parse.size() < NUM_SAMPLE) {
-           to_parse_m.unlock();
-           return {}; // empty url
-       }
-
-       // Find what to sample
-       // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
-       for (int i = 0; i < NUM_SAMPLE; ++i) {
-           if ( max_ranking < to_parse[ rand_num[i] % to_parse.size() ].second ) {
-               max_ranking = to_parse[ rand_num[i] % to_parse.size() ].second;
-               max_idx = rand_num[i] % to_parse.size();
-           }
-       }
-
-
-       urls_to_return.pushBack( to_parse[max_idx].first );
-       to_parse[ max_idx ] = to_parse.back();
-       to_parse.popBack();
-
-       // We randomly check urls
-       // If their ranking is greater than or equal to max_ranking,
-       // then we will take them to be parsed
-       // Note that it is possible that same url might be checked multiple times
-       // However, this is not likely since there should be many urls in here each time
-       for ( int i = NUM_SAMPLE; i < NUM_TRY && !to_parse.empty(); ++i ) {
-           if ( to_parse[ rand_num[i] % to_parse.size() ].second >= max_ranking )
-           {
-               urls_to_return.pushBack( to_parse[ rand_num[i] % to_parse.size() ].first ) ;
-               to_parse[ rand_num[i] % to_parse.size() ] = to_parse.back();
-               to_parse.popBack();
-           }
-       }
-
-       to_parse_m.unlock();
-       return urls_to_return;
-   }
-
-   // TODO delete
-   void print_debug() {
-      for (auto p : to_parse) {
-         std::cout << p.first << std::endl;
+      // Find what to sample
+      // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
+      for (int i = 0; i < NUM_SAMPLE; ++i) {
+         if ( max_ranking < toParse[ rand_num[i] % toParse.size() ].ranking ) {
+            max_ranking = toParse[ rand_num[i] % toParse.size() ].ranking;
+            max_idx = rand_num[i] % toParse.size();
+         }
       }
+
+      urls_to_return.pushBack( toParse[ max_idx ].offset );
+      toParse[ max_idx ] = toParse.back( );
+      toParse.popBack( );
+
+      // We randomly check urls
+      // If their ranking is greater than or equal to max_ranking,
+      // then we will take them to be parsed
+      // Note that it is possible that same url might be checked multiple times
+      // However, this is not likely since there should be many urls in here each time
+      for ( int i = NUM_SAMPLE; i < NUM_TRY && !toParse.empty(); ++i ) {
+         if ( toParse[ rand_num[i] % toParse.size() ].ranking >= max_ranking ) {
+            urls_to_return.pushBack( toParse[ rand_num[i] % toParse.size() ].offset ) ;
+            toParse[ rand_num[i] % toParse.size() ] = toParse.back();
+            toParse.popBack( );
+         }
+      }
+
+      return urls_to_return;
    }
 
 private:
-   Mutex local_seed_m;
-   unsigned int local_seed;
-   Mutex to_parse_m;
-   Vector< Pair<SizeT, SizeT> > to_parse;
+   fb::Mutex localSeedM;
+   fb::Mutex toParseM;
+   unsigned int localSeed;
+   unsigned int idx;
+   DiskVec<FrontierUrl> toParse;
 };
 
 UrlFrontierBin frontiers[ NUM_BINS ];
 
-void frontier_add_url(SizeT url_offset, SizeT url_ranking) {
-   int local_counter = ++insert_counter;
-   frontiers[ local_counter % NUM_BINS ].add_url( url_offset, url_ranking );
+void frontierAddUrl(const FrontierUrl &url) {
+   frontiers[ (++insertCounter) % NUM_BINS ].addUrl(url);
 }
 
-Vector<SizeT> frontier_get_url() {
-   int local_counter = ++get_counter;
-   return frontiers[ local_counter % NUM_BINS ].get_url();
+Vector<SizeT> frontierGetUrl() {
+   return frontiers[ (++getCounter) % NUM_BINS ].getUrl();
 }

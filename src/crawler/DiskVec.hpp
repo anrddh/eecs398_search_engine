@@ -31,8 +31,8 @@ class DiskVec {
 public:
     DiskVec(fb::StringView fname)  {
         fb::FileDesc fd = open(fname.data(),
-                  O_RDWR | O_CREAT,
-                  S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+                               O_RDWR | O_CREAT,
+                               S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
 
         if (ftruncate(fd, MAXFILESIZE))
             throw fb::Exception("SavedObj: Failed to truncate file.");
@@ -63,6 +63,10 @@ public:
         return cursor->load();
     }
 
+    [[nodiscard]] constexpr fb::SizeT empty() const noexcept {
+        return !size();
+    }
+
     fb::SizeT reserve(fb::SizeT n) noexcept {
         return cursor->fetch_add(n);
     }
@@ -74,8 +78,28 @@ public:
         return firstIdx;
     }
 
-    fb::SizeT pushBack(T &elt) {
+    fb::SizeT pushBack(const T &elt) {
         return insert(&elt, &elt + 1);
+    }
+
+    void popBack() {
+        cursor->fetch_sub(1);
+    }
+
+    T * begin() {
+        return filePtr;
+    }
+
+    T * end() {
+        return filePtr + *cursor;
+    }
+
+    T & front() {
+        return *begin();
+    }
+
+    T & back() {
+        return *(end() - 1);
     }
 
 private:

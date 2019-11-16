@@ -18,12 +18,12 @@ namespace fb {
     //    }
 
     template <typename T, SizeT N>
-    constexpr SizeT size(const T (&array)[N]) noexcept {
+    constexpr SizeT size(const T (&)[N]) noexcept {
         return N;
     }
 
     template <typename T, PtrDiffT N>
-    constexpr PtrDiffT ssize(const T (&array)[N]) noexcept {
+    constexpr PtrDiffT ssize(const T (&)[N]) noexcept {
         return N;
     }
 };

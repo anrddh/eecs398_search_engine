@@ -1,6 +1,8 @@
-#include "slave_url_tcp.hpp"
-#include "string.hpp"
-#include "thread.hpp"
+// Added by Jaeyoon Kim 11/15/2019
+
+#include "worker_url_tcp.hpp"
+#include "../../lib/string.hpp"
+#include "../../lib/thread.hpp"
 #include <iostream>
 
 using namespace fb;

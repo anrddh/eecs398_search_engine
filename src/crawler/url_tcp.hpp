@@ -1,9 +1,9 @@
 // Created by Jaeyoon Kim 11/9/2019
 #pragma once
-#include "string.hpp"
-#include "vector.hpp"
-#include "Exception.hpp"
-#include "stddef.hpp"
+#include "../../lib/string.hpp"
+#include "../../lib/vector.hpp"
+#include "../../lib/Exception.hpp"
+#include "../../lib/stddef.hpp"
 #include <arpa/inet.h> // htonl and ntohl
 
 // TCP messaging protocol
@@ -24,7 +24,7 @@ public:
 // number of parsed pages info we send at a time
 constexpr int NUM_PAGES_PER_RETURN = 100;
 
-// The minimum number of pages in buffer before slave will ask
+// The minimum number of pages in buffer before worker will ask
 // the master for more pages to parse
 constexpr int MIN_BUFFER_SIZE = 500;
 

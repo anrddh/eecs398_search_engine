@@ -1,6 +1,7 @@
+// Created by Jaeyoon Kim 11/15/2019
 #include "master_url_tcp.hpp"
 #include "url_tcp.hpp"
-#include "vector.hpp"
+#include "../../lib/vector.hpp"
 #include <iostream>
 
 using namespace fb;
@@ -15,9 +16,6 @@ char check_socket( int sock ) {
       throw SocketException("failed to get message type");
    }
 
-   if (message_type != 'R' && message_type != 'S') {
-      throw SocketException("Invalid message type");
-   }
 
    return message_type;
 }

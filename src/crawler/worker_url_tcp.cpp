@@ -1,12 +1,13 @@
-#include "slave_url_tcp.hpp"
+// Added by Jaeyoon Kim 11/15/2019
+#include "worker_url_tcp.hpp"
 #include "url_tcp.hpp"
-#include "vector.hpp"
-#include "queue.hpp"
-#include "mutex.hpp"
-#include "cv.hpp"
-#include "utility.hpp"
-#include "file_descriptor.hpp"
-#include "Exception.hpp"
+#include "../../lib/vector.hpp"
+#include "../../lib/queue.hpp"
+#include "../../lib/mutex.hpp"
+#include "../../lib/cv.hpp"
+#include "../../lib/utility.hpp"
+#include "../../lib/file_descriptor.hpp"
+#include "../../lib/Exception.hpp"
 #include <cassert>
 #include <string.h>
 #include <errno.h>

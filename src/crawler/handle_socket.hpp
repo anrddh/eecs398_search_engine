@@ -1,6 +1,5 @@
-#pragma once
 // Added by Jaeyoon Kim 11/16/2019
-
+#pragma once
 
 // Handles all incoming tcp messages/requests
 // Takes a dynamically allocated integer pointer for the port number

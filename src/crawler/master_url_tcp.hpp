@@ -1,13 +1,13 @@
 // Created by Jaeyoon Kim 11/13/2019
 #pragma once
-#include "string.hpp"
-#include "vector.hpp"
+#include "../../lib/string.hpp"
+#include "../../lib/vector.hpp"
 #include "url_tcp.hpp"
 
 // Checks if socket is valid, and 
 // returns the message type
-// 'S': the slave is sending parsed page info
-// 'R': the slave is requesting more urls to parse
+// 'S': the worker is sending parsed page info
+// 'R': the worker is requesting more urls to parse
 // Might throw SocketException
 char check_socket(int sock);
 

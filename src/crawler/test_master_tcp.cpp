@@ -1,7 +1,8 @@
-#include "master_url_tcp.hpp"
+// Added by Jaeyoon Kim 11/15/2019
 
-#include "string.hpp"
-#include "vector.hpp"
+#include "master_url_tcp.hpp"
+#include "../../lib/string.hpp"
+#include "../../lib/vector.hpp"
 #include <unistd.h> 
 #include <stdio.h> 
 #include <sys/socket.h> 

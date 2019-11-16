@@ -1,9 +1,9 @@
 // Created by Jaeyoon Kim 11/9/2019
 #pragma once
-#include "string.hpp"
+#include "../../lib/string.hpp"
 #include "url_tcp.hpp"
 
-// This is a TCP inteface for slave computers
+// This is a TCP inteface for worker computers
 
 
 // This function must be run ONLY ONCE and must be called

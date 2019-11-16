@@ -51,6 +51,6 @@ public:
       mutex.unlock();
       }
 private:
-   L mutex;
+   L& mutex;
 };
 }; // Namespace fb

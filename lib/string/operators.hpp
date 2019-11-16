@@ -7,6 +7,14 @@
 #include <iostream>
 
 namespace fb {
+    inline bool operator== (const String &lhs, const StringView rhs) {
+        return lhs.compare( rhs ) == 0;
+    }
+
+    inline bool operator!= (const String &lhs, const StringView rhs) {
+        return !( lhs == rhs );
+    }
+
     inline String operator+ (const String &lhs, const StringView rhs) {
         String temp(lhs);
         temp += rhs;

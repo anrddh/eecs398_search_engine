@@ -1,6 +1,8 @@
 #include "../../lib/stddef.hpp"
 #include "../../lib/file_descriptor.hpp"
 #include "../../lib/string_view.hpp"
+#include "../../lib/thread.hpp"
+#include "handle_socket.hpp"
 
 #include <exception>
 #include <iostream>
@@ -15,6 +17,7 @@
 using fb::SizeT;
 using fb::FileDesc;
 using fb::StringView;
+using fb::Thread;
 
 using std::cerr;
 
@@ -26,6 +29,10 @@ constexpr auto UsageHint = "Usage: ./MasterDriver <port>\n"_sv;
 
 int main(int argc, char **argv) try {
     auto sockptr = parseArguments( argc, argv );
+    Thread socket_handler(handle_socket, sockptr);
+    socket_handler.detach();
+
+    while(true);
 
 } catch (const ArgError &) {
     cerr << UsageHint;

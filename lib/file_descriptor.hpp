@@ -53,7 +53,7 @@ namespace fb {
             close(fd);
         }
 
-        constexpr operator int() noexcept {
+        operator int() noexcept {
             return fd;
         }
     };

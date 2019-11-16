@@ -1,8 +1,6 @@
 #include "url_tcp.hpp"
 // The header for endian (for changing endianess for uint64_t)
 // might be different for other os
-#include <machine/endian.h>
-/*
 #if defined(OS_MACOSX)
   #include <machine/endian.h>
 #elif defined(OS_SOLARIS)
@@ -19,7 +17,7 @@
 #else
   #include <endian.h>
 #endif
-*/
+#include <cassert>
 
 using namespace fb;
 

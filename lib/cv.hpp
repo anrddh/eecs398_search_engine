@@ -16,7 +16,7 @@ public:
 
    inline void wait(Mutex& mtx) noexcept
    {
-      pthread_cond_wait(&cv, &mtx.lock);
+      pthread_cond_wait(&cv, &mtx.mtx);
    }
 
    inline void signal() noexcept

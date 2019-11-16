@@ -14,22 +14,22 @@ class Mutex
 public:
    Mutex()
       {
-         if ( pthread_mutex_init(&lock, NULL) != 0)
+         if ( pthread_mutex_init(&mtx, NULL) != 0)
             throw MutexExcept();
       }
 
    void lock() noexcept
       {
-      pthread_mutex_lock(&lock);
+      pthread_mutex_lock(&mtx);
       }
 
    void unlock() noexcept
       {
-      pthread_mutex_unlock(&lock);
+      pthread_mutex_unlock(&mtx);
       }
 private:
    friend class CV;
-   pthread_mutex_t lock;
+   pthread_mutex_t mtx;
 };
 
 

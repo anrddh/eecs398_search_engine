@@ -30,7 +30,9 @@ namespace fb {
 
         static constexpr SizeType npos = SizeType(-1);
 
-        BasicString() = default;
+        BasicString() {
+            buf.pushBack(0);
+        }
 
         BasicString(SizeT count, CharT c) : buf(count, c) {
             buf.pushBack(0);
@@ -44,22 +46,22 @@ namespace fb {
 
         /*  Element access  */
         Reference at(SizeType pos) {
-            if (pos >= buf.size())
+            if (pos >= size())
                 throw std::out_of_range("");
             return buf[pos];
         }
 
         ConstReference at(SizeType pos) const {
-            if (pos >= buf.size())
+            if (pos >= size())
                 throw std::out_of_range("");
             return buf[pos];
         }
 
-        [[nodiscard]] Reference operator[](SizeType pos) {
+        [[nodiscard]] constexpr Reference operator[](SizeType pos) {
             return buf[pos];
         }
 
-        [[nodiscard]] ConstReference operator[](SizeType pos) const {
+        [[nodiscard]] constexpr ConstReference operator[](SizeType pos) const {
             return buf[pos];
         }
 
@@ -71,19 +73,19 @@ namespace fb {
             return buf.front();
         }
 
-        [[nodiscard]] Reference back() {
+        [[nodiscard]] constexpr Reference back() {
             return buf.back();
         }
 
-        [[nodiscard]] ConstReference back() const {
+        [[nodiscard]] constexpr ConstReference back() const {
             return buf.back();
         }
 
-        [[nodiscard]] Pointer data() noexcept {
+        [[nodiscard]] constexpr Pointer data() noexcept {
             return buf.data();
         }
 
-        [[nodiscard]] ConstPointer data() const noexcept {
+        [[nodiscard]] constexpr ConstPointer data() const noexcept {
             return buf.data();
         }
 
@@ -92,74 +94,75 @@ namespace fb {
         }
 
         /* Iterators */
-        Iterator begin() noexcept {
+        constexpr Iterator begin() noexcept {
             return buf.begin();
         }
 
-        ConstIterator begin() const noexcept {
+        constexpr ConstIterator begin() const noexcept {
             return buf.begin();
         }
 
-        ConstIterator cbegin() const noexcept {
+        [[nodiscard]] constexpr ConstIterator cbegin() const noexcept {
             return buf.cbegin();
         }
 
-        Iterator end() noexcept {
+        [[nodiscard]] constexpr Iterator end() noexcept {
             return buf.end() - 1;
         }
 
-        ConstIterator end() const noexcept {
+        [[nodiscard]] constexpr ConstIterator end() const noexcept {
             return buf.end() - 1;
         }
 
-        ConstIterator cend() const noexcept {
+        [[nodiscard]] constexpr ConstIterator cend() const noexcept {
             return buf.cend() - 1;
         }
 
-        ReverseIterator rbegin() noexcept {
+        [[nodiscard]] constexpr ReverseIterator rbegin() noexcept {
             return buf.rbegin() + 1;
         }
 
-        ConstReverseIterator rbegin() const noexcept {
+        [[nodiscard]] constexpr ConstReverseIterator rbegin() const noexcept {
             return buf.rbegin() + 1;
         }
 
-        ConstReverseIterator crbegin() const noexcept {
+        [[nodiscard]] constexpr ConstReverseIterator crbegin() const noexcept {
             return buf.crbegin() + 1;
         }
 
-        ReverseIterator rend() noexcept {
+        [[nodiscard]] constexpr ReverseIterator rend() noexcept {
             return buf.rend();
         }
 
-        ConstReverseIterator rend() const noexcept {
+        [[nodiscard]] constexpr ConstReverseIterator rend() const noexcept {
             return buf.rend();
         }
 
-        ConstReverseIterator crend() const noexcept {
+        [[nodiscard]] constexpr ConstReverseIterator crend() const noexcept {
             return buf.crend();
         }
 
         /* Capacity */
-        [[nodiscard]] bool empty() const noexcept {
+        [[nodiscard]] constexpr bool empty() const noexcept {
             return !size();
         }
 
-        [[nodiscard]] SizeType size() const noexcept {
-            return buf.size() ? buf.size() - 1 : 0;
+        [[nodiscard]] constexpr SizeType size() const noexcept {
+            return buf.size() - 1;
         }
 
         void reserve(SizeType new_cap) {
             buf.reserve(new_cap + 1);
         }
 
-        SizeType capacity() const noexcept {
-            return buf.capacity() ? buf.capacity() - 1 : 0;
+        [[nodiscard]] constexpr SizeType capacity() const noexcept {
+            return buf.capacity() - 1;
         }
 
         /* Operations */
         void clear() noexcept {
             buf.clear();
+            buf.pushBack(0);
         }
 
         BasicString & insert(SizeType index, SizeType count, CharT ch) {
@@ -229,7 +232,7 @@ namespace fb {
         }
 
         void pushBack(CharT ch) {
-            insert(end() - 1, ch);
+            insert(end(), ch);
         }
 
         void popBack() {
@@ -293,6 +296,10 @@ namespace fb {
             return append(ilist.begin(), ilist.end());
         }
 
+        bool operator==(const BasicStringView<CharT> str) const noexcept {
+            return compare(str) == 0;
+        }
+
         constexpr int compare(const BasicStringView<CharT> str) const noexcept {
             return BasicStringView<CharT>(*this).compare(str);
         }
@@ -316,6 +323,9 @@ namespace fb {
         BasicString substr(SizeType pos = 0, SizeType count = npos) const {
             if (pos > size())
                 throw std::out_of_range("");
+
+            if (count == npos || pos + count > size())
+                return BasicString(data() + pos, size() - pos);
             return BasicString(data() + pos, count);
         }
 
@@ -352,18 +362,18 @@ namespace fb {
 
     using String = BasicString<char>;
 
-    String operator+ (const String &lhs, const StringView rhs) {
+    inline String operator+ (const String &lhs, const StringView rhs) {
         String temp(lhs);
         temp += rhs;
         return temp;
     }
 
-    std::ostream & operator<< (std::ostream &os, const String &str) {
+    inline std::ostream & operator<< (std::ostream &os, const String &str) {
         os << str.data();
         return os;
     }
 
-    std::istream & operator>> (std::istream &is, String &str) {
+    inline std::istream & operator>> (std::istream &is, String &str) {
         str.clear();
 
         // skip initial whitespace
@@ -377,7 +387,7 @@ namespace fb {
         return is;
     }
 
-    std::istream & getline(std::istream &is, String &str) {
+    inline std::istream & getline(std::istream &is, String &str) {
       str.clear();
 
       char c;

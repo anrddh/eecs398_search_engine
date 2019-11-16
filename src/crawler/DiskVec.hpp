@@ -34,7 +34,7 @@ public:
                   O_RDWR | O_CREAT,
                   S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
 
-        if (!ftruncate(fd, MAXFILESIZE))
+        if (ftruncate(fd, MAXFILESIZE))
             throw fb::Exception("SavedObj: Failed to truncate file.");
 
         auto ptr = mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,

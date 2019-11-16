@@ -43,14 +43,14 @@ namespace fb {
          }
 
         Vector(SizeT n) : Vector() {
-            size_ = n;
             alloc_mem(n);
+            size_ = n;
             uninitializedDefaultConstruct(begin(), end());
         }
 
         Vector( const Vector<T>& v ) : Vector() {
-            size_ = v.size();
             alloc_mem(v.size());
+            size_ = v.size();
             uninitializedCopy(v.begin(), v.end(), begin());
         }
 
@@ -74,14 +74,14 @@ namespace fb {
         Vector(std::initializer_list<T> init)
             : Vector(init.begin(), init.end()) {}
 
-        Vector & operator=( const Vector<T> v ) {
+        Vector & operator=( Vector<T> v ) {
             swap(v);
+            return *this;
         }
 
-        Vector operator=( Vector<T>&& v ) noexcept {
-            swap(buf, v.buf);
-            swap(size_, v.size_);
-            swap(cap_, v.cap_);
+        Vector & operator=( Vector<T>&& v ) noexcept {
+            swap(v);
+            return *this;
         }
 
         ~Vector() {
@@ -224,6 +224,8 @@ namespace fb {
             auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + 1);
 
+            // TODO: make more efficient by avoiding default construction
+            uninitializedDefaultConstruct(end(), end() + 1);
             for (auto i = size(); i > idx; --i)
                 data()[i] = std::move(data()[i-1]);
 
@@ -235,8 +237,11 @@ namespace fb {
         Iterator insert(ConstIterator pos, T &&value) {
             auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + 1);
+
+            uninitializedDefaultConstruct(end(), end() + 1);
             for (auto i = size(); i > idx; --i)
                 data()[i] = std::move(data()[i-1]);
+
             data()[idx] = std::move(value);
             ++size_;
             return begin() + idx;
@@ -246,6 +251,7 @@ namespace fb {
             auto idx = distance(cbegin(), pos);
             alloc_mem(size() + count);
 
+            uninitializedDefaultConstruct(end(), end() + count);
             for (auto i = size() + count - 1; i > (idx + count - 1); --i)
                 data()[i] = std::move(data()[i-count]);
 
@@ -267,6 +273,7 @@ namespace fb {
             auto idx = distance(cbegin(), pos);
             alloc_mem(size() + count);
 
+            uninitializedDefaultConstruct(end(), end() + count);
             for (auto i = size() + count - 1; i > (idx + count - 1); --i)
                 data()[i] = std::move(data()[i-count]);
 
@@ -283,6 +290,7 @@ namespace fb {
         Iterator emplace(ConstIterator pos, Args &&... args) {
             auto idx = distance(cbegin(), pos);
             alloc_mem(size() + 1);
+            uninitializedDefaultConstruct(end(), end() + 1);
             for (auto i = size(); i > idx; --i)
                 data()[i] = std::move(data()[i-1]);
             destroyAt(data() + idx);
@@ -292,11 +300,11 @@ namespace fb {
         }
 
         Iterator erase(ConstIterator pos) {
-            destroyAt(const_cast<Pointer>(pos));
             auto idx = distance(cbegin(), pos);
             --size_;
             for (auto i = idx; i < size(); ++i)
                 data()[i] = std::move(data()[i+1]);
+            destroyAt(const_cast<Pointer>(begin() + size()));
             return begin() + idx;
         }
 

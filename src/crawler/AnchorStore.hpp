@@ -2,12 +2,15 @@
 
 #include "../../lib/string.hpp"
 #include "../../lib/string_view.hpp"
-#include "../../lib/exception.hpp"
+#include "../../lib/Exception.hpp"
 #include "../../lib/utility.hpp"
 
 #include "DiskVec.hpp"
 
 #include <stdint.h>
+
+//TEST
+#include <iostream>
 
 template <fb::SizeT TextSize_, typename T>
 struct ChunkImpl {
@@ -25,9 +28,10 @@ public:
     static void init(fb::StringView filename) {
         delete ptr;
         ptr = new AnchorStore(filename);
+        ptr->addStr("Dummy", {0,0});
     }
 
-    AnchorStore & getStore() {
+    static AnchorStore & getStore() {
         return *ptr;
     }
 
@@ -55,7 +59,6 @@ public:
                 offsets = { idx, idx };
             else
                 endOffset = anchors[endOffset].ptr = idx;
-
             anchorText.copy(anchors[idx].arr, Chunk::TextSize);
             anchorText.removePrefix(Chunk::TextSize);
         }

@@ -37,12 +37,15 @@ Vector< Pair<SizeT, String> > checkout_urls();
 // url to parse and its unique id (offset)
 // from master
 Pair<SizeT, String> get_url_to_parse() {
+   std::cout << "debug 1" << std::endl;
    to_parse_m.lock();
    while (true) {
+      std::cout << "debug 2" << std::endl;
       if ( urls_to_parse.size() < MIN_BUFFER_SIZE && !getting_more ) {
          Vector<Pair< SizeT, String >> new_urls;
          getting_more = true;
          to_parse_m.unlock();
+         std::cout << "debug 3" << std::endl;
          try {
             // Release the lock while processing TCP
             new_urls = std::move(checkout_urls());// apparently doesn't automatically
@@ -50,6 +53,7 @@ Pair<SizeT, String> get_url_to_parse() {
             new_urls.clear();
             // TODO print error message
          }
+         std::cout << "debug 4" << std::endl;
 
          to_parse_m.lock();
          for ( int i = 0; i < new_urls.size(); ++i ) {
@@ -110,7 +114,6 @@ int open_socket_to_master() {
 
    // Finished establishing socket
    // Send verfication message
-   std::cout << "sending verfication code!" << std::endl;
    send_int(sock, VERFICATION_CODE);
 
    return sock;
@@ -123,21 +126,31 @@ void send_message_type(int sock, char message_type) {
 }
 
 Vector< Pair<SizeT, String> > checkout_urls() {
+   std::cout << "checkout 1" << std::endl;
    // RAII file descriptor does automatic close() 
    // when it goes out of scope
    FileDesc sock(open_socket_to_master());
 
+   std::cout << "checkout 2" << std::endl;
    send_message_type(sock, 'R');
 
+   std::cout << "checkout 3" << std::endl;
    int32_t num_urls = recv_int(sock);
 
+   std::cout << "checkout 4" << std::endl;
    Vector< Pair<SizeT, String> > received_urls;
+
+   std::cout << "checkout 5" << std::endl;
    for (int i = 0; i < num_urls; ++i) {
-      String url = recv_str( sock );
+      std::cout << "checkout 5.1" << std::endl;
       SizeT url_offset = recv_uint64_t( sock );
+      std::cout << "checkout 5.2" << std::endl;
+      String url = recv_str( sock );
+      std::cout << "checkout 5.3" << std::endl;
 
       received_urls.pushBack(make_pair(url_offset, std::move(url)));
    }
+   std::cout << "checkout 6" << std::endl;
 
    return received_urls;
 }
@@ -159,7 +172,7 @@ void send_parsed_pages(Vector<ParsedPage> pages_to_send) {
       assert( !pages_to_send.empty() );
       ParsedPage page = std::move( pages_to_send.back() );
       pages_to_send.popBack();
-      send_uint64_t( sock, page.url_offset );
+      send_uint64_t( sock, page.url_offset ); // convert back to 
       send_int( sock, page.links.size() );
       for ( int j = 0; j < page.links.size(); ++j) {
          send_str( sock, page.links[j].first );

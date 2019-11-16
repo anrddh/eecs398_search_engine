@@ -32,7 +32,7 @@ void send_int(int sock, uint32_t num) {
 uint32_t recv_int(int sock) {
    uint32_t num;
 
-   if (recv(sock, &num, sizeof(uint32_t), MSG_WAITALL) == -1) {
+   if (recv(sock, &num, sizeof(uint32_t), MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_int failed");
    }
    return ntohl(num);
@@ -40,7 +40,7 @@ uint32_t recv_int(int sock) {
 
 void send_uint64_t(int sock, uint64_t num) {
    num = htobe64(num);
-   if (send(sock , &num , sizeof(uint32_t) , 0 ) == -1) {
+   if (send(sock , &num , sizeof(uint64_t) , 0 ) == -1) {
       throw SocketException("TCP Utility: send_uint64_t failed");
    }
 }
@@ -48,14 +48,14 @@ void send_uint64_t(int sock, uint64_t num) {
 uint64_t recv_uint64_t(int sock) {
    uint64_t num;
 
-   if (recv(sock, &num, sizeof(uint32_t), MSG_WAITALL) == -1) {
+   if (recv(sock, &num, sizeof(uint64_t), MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_uint64_t failed");
    }
    return be64toh(num);
 }
 
 void send_str(int sock, const fb::StringView str) {
-   int size = str.size();
+   uint32_t size = str.size();
    send_int(sock, size);
 
    // Should send null character as well
@@ -65,18 +65,18 @@ void send_str(int sock, const fb::StringView str) {
 }
 
 String recv_str(int sock) {
-   int32_t size = recv_int(sock);
+   uint32_t size = recv_int(sock);
 
    String url;
    url.resize( size ); // resize to length of string (not counting null character)
    
    // Need to write null character as well
-   if (recv(sock, url.data(), size + 1, MSG_WAITALL) == -1) {
+   if (recv(sock, url.data(), size + 1, MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_str failed");
    }
 
    // Make sure the string is null terminiated
-   assert( url.data()[size + 1] == '\0' );
+   assert( url.data()[size] == '\0' );
 
    return url;
 }

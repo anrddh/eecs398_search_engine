@@ -64,7 +64,7 @@ int main(int argc, char const *argv[])
        cout << "after accept" << endl;
        try {
           char message_type = check_socket( sock );
-          if ( message_type = 'S' ) {
+          if ( message_type == 'S' ) {
              Vector<ParsedPage> pages = recv_parsed_pages(sock);
              for (auto p : pages) {
                 cout << "offset: " << p.url_offset << "\n";
@@ -72,6 +72,14 @@ int main(int argc, char const *argv[])
                    cout << "url: " << link.first << " anchor text: " << link.second << "\n";
                 }
              }
+          } 
+          if ( message_type == 'R' ) { 
+             cout << "in request" << endl;
+             Vector<SizeT> dummy_offset;
+             for (int i = 0; i < 100; ++i) {
+                dummy_offset.pushBack(i);
+             }
+             send_urls(sock, dummy_offset);
           }
        } catch (SocketException& se) {
           cout << se.what() << endl;

@@ -31,7 +31,7 @@ constexpr int MIN_BUFFER_SIZE = 500;
 // Number of retries in case of socket failure
 constexpr int NUM_RETRY = 3;
 
-// every TCP message must start with sending this value
+// every TCP message to master must start with sending this value
 // and will be checked for the correct code
 const uint32_t VERFICATION_CODE = 1513424; 
 

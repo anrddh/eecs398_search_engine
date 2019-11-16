@@ -4,7 +4,6 @@
 #include "../vector.hpp"
 #include "../string_view.hpp"
 #include "../type_traits.hpp"
-#include "../cstring.hpp"
 #include "../functional.hpp"
 
 #include <type_traits>
@@ -39,7 +38,7 @@ namespace fb {
             buf.pushBack(0);
         }
 
-        BasicString(const char *cstr) : BasicString(cstr, fb::strlen(cstr)) {}
+        BasicString(const char *cstr) : BasicString(cstr, strlen(cstr)) {}
 
         /*  Element access  */
         Reference at(SizeType pos) {
@@ -315,7 +314,8 @@ namespace fb {
         BasicString substr(SizeType pos = 0, SizeType count = npos) const {
             if (pos > size())
                 throw std::out_of_range("");
-            return BasicString(data() + pos, count == npos ? size() : count);
+            return BasicString(data() + pos,
+                               count == npos ? size() - pos : count);
         }
 
         SizeType copy(CharT *dest,

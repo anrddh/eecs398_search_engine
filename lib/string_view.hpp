@@ -4,7 +4,6 @@
 #include "iterator.hpp"
 #include "stddef.hpp"
 #include "algorithm.hpp"
-#include "cstring.hpp"
 #include "memory.hpp"
 
 #include <stdexcept>
@@ -34,7 +33,7 @@ namespace fb {
         constexpr BasicStringView(const CharT *s, SizeType count)
             : ptr(s), len(count) {}
         constexpr BasicStringView(const CharT *s)
-            : BasicStringView(s, fb::strlen(s)) {}
+            : BasicStringView(s, strlen(s)) {}
         constexpr BasicStringView & operator=(const BasicStringView &view)
             noexcept = default;
 
@@ -152,7 +151,8 @@ namespace fb {
         }
 
         constexpr int compare(BasicStringView v) const noexcept {
-            return fb::strncmp(data(), v.data(), fb::min(size(), v.size()));
+            auto cmp = strncmp(data(), v.data(), fb::min(size(), v.size()));
+            return cmp ? cmp : size() - v.size();
         }
 
         constexpr int compare(SizeType pos1, SizeType count1,
@@ -169,12 +169,13 @@ namespace fb {
         constexpr int compare(const CharT *s) const {
             auto ptr = data();
             auto len = size();
+            auto begin = s;
 
             for ( ; len && *s; --len, ++ptr, ++s)
                 if (*s != *ptr)
                     return *ptr - *s;
 
-            return 0;
+            return size() - (s - begin);
         }
 
         constexpr int compare(SizeType pos1, SizeType count1,
@@ -184,7 +185,7 @@ namespace fb {
 
         constexpr int compare(SizeType pos1, SizeType count1,
                               const CharT *s, SizeType count2) const {
-            return fb::strncmp(data() + pos1, s, fb::min(count1, count2));
+            return strncmp(data() + pos1, s, fb::min(count1, count2));
         }
 
         constexpr bool startsWith(BasicStringView x) const noexcept {
@@ -245,7 +246,7 @@ namespace fb {
         }
 
         constexpr SizeType find(const CharT *s, SizeType pos = 0) const {
-            return fb::strnstr(data() + pos + 1, s, size() - pos - 1);
+            return strnstr(data() + pos + 1, s, size() - pos - 1);
         }
 
     private:

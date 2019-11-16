@@ -315,7 +315,7 @@ namespace fb {
         BasicString substr(SizeType pos = 0, SizeType count = npos) const {
             if (pos > size())
                 throw std::out_of_range("");
-            return BasicString(data() + pos, count);
+            return BasicString(data() + pos, count == npos ? size() : count);
         }
 
         SizeType copy(CharT *dest,

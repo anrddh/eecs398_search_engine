@@ -343,10 +343,19 @@ bool headerEnd( const fb::String &header )
    return true;
    }
 
+bool checkFileType( const fb::StringView &headerView, const fb::Vector<fb::String> &acceptableTypes )
+{
+   for ( const auto i : acceptableTypes )
+      if ( headerView.find( i ) != fb::String::npos )
+         return true;
+
+   return false;
+}
+
 // Get relevant information from the header
 // print received message after the header if no redirect 
 // return the URL to redirect to if necessary
-fb::String parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
+fb::String parseHeader( ConnectionWrapper *connector, BufferWriter &writer, const fb::Vector<fb::String> &acceptableTypes )
    {
    char buffer [ 10240 ];
    int bytes;
@@ -356,7 +365,6 @@ fb::String parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
    // some websites do not use capital case.
    const fb::String redirectIndicator = "ocation: ";
    const fb::String chunkedIndicator = "chunked";
-   const fb::String htmlIndicator = "text/html";
    const fb::String endLineIndicator = "\r\n";
    fb::String redirectUrl = "";
 
@@ -383,7 +391,7 @@ fb::String parseHeader( ConnectionWrapper *connector, BufferWriter &writer )
                      startRedirectUrl + redirectIndicator.size( ),
                      endRedirectUrl - startRedirectUrl - redirectIndicator.size( ) );
                }
-            else if ( headerView.find( htmlIndicator ) == fb::String::npos )
+            else if ( !checkFileType( headerView, acceptableTypes ) )
                {
                redirectUrl = linkNotHTML;
                }
@@ -419,8 +427,8 @@ ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
 // if not html, return ""
 // Else, write the recieved content to a file
 // fileSaved = true if and only if not redirect, content is html, and file is not too big
-fb::String PrintHtmlGetRedirect( const fb::String &url_in, 
-      const fb::String &filename, bool &fileSaved )
+fb::String PrintGetRedirect( const fb::String &url_in, 
+      const fb::String &filename, bool &fileSaved, const fb::Vector<fb::String> &acceptableTypes )
    {
       // Parse the URL
    ParsedUrl url( url_in );
@@ -441,7 +449,7 @@ fb::String PrintHtmlGetRedirect( const fb::String &url_in,
    BufferWriter writer( false, filename );
 
    // Check for redirect and other relevant header info
-   fb::String redirectUrl = parseHeader( connector, writer );
+   fb::String redirectUrl = parseHeader( connector, writer, acceptableTypes );
    
    // write the content if no redirect and link is html
    // if ( redirectUrl != linkNotHTML && redirectUrl.empty( ) )
@@ -472,7 +480,7 @@ fb::String PrintHtmlGetRedirect( const fb::String &url_in,
 // return whether a file is saved or not 
 // file is saved if and only if there is no looping redirect, 
 // links go to html, and the file not too big.
-bool PrintHtml( const fb::String &url_in, const fb::String &filename )
+bool PrintFile( const fb::String &url_in, const fb::String &filename, const fb::Vector<fb::String> &acceptableTypes )
    {
    fb::UnorderedSet<fb::String> visitedURLs;
 
@@ -484,7 +492,7 @@ bool PrintHtml( const fb::String &url_in, const fb::String &filename )
 
    while ( url.size( ) != 0 )
       {
-      url = PrintHtmlGetRedirect( url, filename, fileSaved );
+      url = PrintGetRedirect( url, filename, fileSaved, acceptableTypes );
       if ( url == linkNotHTML )
          break;
       // If there is a loop, probably a bad website.
@@ -496,3 +504,16 @@ bool PrintHtml( const fb::String &url_in, const fb::String &filename )
 
    return fileSaved;
    }
+
+bool PrintHtml( const fb::String &url_in, const fb::String &filename )
+{
+   fb::Vector<fb::String> acceptableTypes = { "text/html" };
+   return PrintFile( url_in, filename, acceptableTypes );
+}
+
+bool PrintPlainTxt( const fb::String &url_in, const fb::String &filename )
+{
+   fb::Vector<fb::String> acceptableTypes = { "text/html", "text/plain" };
+   return PrintFile( url_in, filename, acceptableTypes );
+}
+

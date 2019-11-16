@@ -1,13 +1,16 @@
 #include "frontier_pool.hpp"
-#include "mutex.hpp"
-#include "utility.hpp"
+#include "../../lib/mutex.hpp"
+#include "../../lib/utility.hpp"
 #include <atomic>
-#include <stdlib.h>
+
 #include <iostream>
 
+#include <stdlib.h>
 
-using namespace fb;
-using namespace std;
+using fb::SizeT;
+using fb::Pair;
+
+using std::atomic;
 
 // TODO set to 0?
 atomic<int> insert_counter = 0;
@@ -15,10 +18,8 @@ atomic<int> get_counter = 0;
 atomic<int> rand_seed_counter = 0;
 
 constexpr int NUM_BINS = 16; // This indicates how many seperate UrlFrontierBin there are
-
 constexpr int NUM_TRY = 1000;
 constexpr int NUM_SAMPLE = 3;
-
 
 class UrlFrontierBin {
 public:
@@ -39,7 +40,7 @@ public:
            rand_num[i] = rand_r(&local_seed);
        }
        local_seed_m.unlock();
-       
+
        int max_ranking = 0; // Requires that any ranking of urls to be greater than 0
        int max_idx;
 
@@ -49,7 +50,7 @@ public:
            to_parse_m.unlock();
            return {}; // empty url
        }
-       
+
        // Find what to sample
        // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
        for (int i = 0; i < NUM_SAMPLE; ++i) {
@@ -63,14 +64,14 @@ public:
        urls_to_return.pushBack( to_parse[max_idx].first );
        to_parse[ max_idx ] = to_parse.back();
        to_parse.popBack();
-       
+
        // We randomly check urls
        // If their ranking is greater than or equal to max_ranking,
        // then we will take them to be parsed
        // Note that it is possible that same url might be checked multiple times
        // However, this is not likely since there should be many urls in here each time
        for ( int i = NUM_SAMPLE; i < NUM_TRY && !to_parse.empty(); ++i ) {
-           if ( to_parse[ rand_num[i] % to_parse.size() ].second >= max_ranking ) 
+           if ( to_parse[ rand_num[i] % to_parse.size() ].second >= max_ranking )
            {
                urls_to_return.pushBack( to_parse[ rand_num[i] % to_parse.size() ].first ) ;
                to_parse[ rand_num[i] % to_parse.size() ] = to_parse.back();

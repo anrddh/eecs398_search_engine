@@ -17,13 +17,13 @@
 #else
   #include <endian.h>
 #endif
+
 #include <cassert>
 
 using namespace fb;
 
 void send_int(int sock, uint32_t num) {
    num = htonl(num);
-   send(sock, &num, sizeof(uint32_t), 0);
    if (send(sock , &num , sizeof(uint32_t) , 0 ) == -1) {
       throw SocketException("TCP Utility: send_int failed");
    }
@@ -40,7 +40,6 @@ uint32_t recv_int(int sock) {
 
 void send_uint64_t(int sock, uint64_t num) {
    num = htobe64(num);
-   send(sock, &num, sizeof(uint32_t), 0);
    if (send(sock , &num , sizeof(uint32_t) , 0 ) == -1) {
       throw SocketException("TCP Utility: send_uint64_t failed");
    }

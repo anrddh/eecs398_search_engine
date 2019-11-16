@@ -16,7 +16,7 @@
 //    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
 //    x num_links many times ] x NUM_URLS_PER_SEND
 
-class SocketException : fb::Exception {
+class SocketException : public fb::Exception {
 public:
    SocketException(const char *msg) : Exception(msg) {}
 };

@@ -1,5 +1,7 @@
 #include "parser.hpp"
 
+
+
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -17,7 +19,7 @@ int main ( int argc, char *argv[] ){
 
    // //ParsedUrl in_url(argv[1]);
 
-   // std::vector<fb::String> urls;
+   // std::vector<String> urls;
 
    // //extractURL(GetHTTPS(argv[1]), urls);
 
@@ -37,14 +39,14 @@ int main ( int argc, char *argv[] ){
    // for (auto i : urls){
    //    //std::cout << i << std::endl;
    // }
-   fb::String filename = fb::String(argv[1]);
+   String filename = String(argv[1]);
    std::ifstream ifs(filename.data( ));
    std::string contentstd( (std::istreambuf_iterator<char>(ifs) ),
               (std::istreambuf_iterator<char>()    ) );
-   fb::String content( contentstd.c_str( ) );
+   String content( contentstd.c_str( ) );
    ifs.close();
 
-   fb::String domain = "https://en.wikipedia.org/wiki/Commutative_algebra";
+   String domain = "https://en.wikipedia.org/wiki/Commutative_algebra";
 
    auto parser = Parser(content, filename);
 
@@ -55,9 +57,9 @@ int main ( int argc, char *argv[] ){
 
    std::ofstream outfile;
    // outfile.open("htmlstagless/" + filename.substr(6));
-   outfile.open(  (filename + "_tagless"_sv).data() );
+   outfile.open(  (filename + "_tagless").data() );
 
-   std::cout << retstr << std::endl;
+   // std::cout << retstr << std::endl;
 
    outfile << retstr;
    outfile.close();

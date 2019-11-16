@@ -1,71 +1,95 @@
-#include <string>
+// #include <string>
+
 #include <fstream>
 #include <vector>
 #include <set>
-#include <deque>
 
-#include "parser.hpp"
+#include "parser/parser.hpp"
 #include "DownloadHTML.hpp"
+#include "lib/string.hpp"
+#include "lib/queue.hpp"
+#include "lib/unordered_set.hpp"
 
-void writeVisitedUrls(std::string url)
+void writeVisitedUrls(fb::String url)
 {
-  std::ofstream outfile;
+	std::ofstream outfile;
 
-  outfile.open("visted_urls.txt", std::ios_base::app);
-  outfile << url << "\n"; 
+	outfile.open("visted_urls.txt", std::ios_base::app);
+	outfile << url << "\n"; 
+}
+
+fb::String readString( fb::String filename )
+{
+   std::ifstream ifs(filename.data());
+   std::string content( (std::istreambuf_iterator<char>(ifs)),
+         (std::istreambuf_iterator<char>()    ) );
+   ifs.close();
+   return fb::String(content.c_str());
+}
+
+void saveString( const fb::String &content, fb::String filename )
+{
+	std::ofstream outfile;
+   outfile.open( filename.data() );
+   outfile << content;
+   outfile.close();
 }
 
 int main( int argc, char *argv[ ] ) {
-    std::deque<std::string> urls;
-    std::set<std::string> visited_urls;
-    urls.push_back(argv[1]);
+		fb::Queue<fb::String> urls;
+		fb::UnorderedSet<fb::String> visited_urls;
+		urls.push(fb::String(argv[1]));
 
-    while(!urls.empty())
-    {
-        std::string url = urls.front();
-        urls.pop_front();
-        if(visited_urls.find(url) != visited_urls.end())
-            continue;
+		while(!urls.empty())
+		{
+				fb::String url = urls.front();
+				urls.pop();
+				if(visited_urls.find(url) != visited_urls.end())
+						continue;
 
-        std::cout << "Parsed URL is: " << url << std::endl;
-        if(url.length() < 7)
-            continue;
-        // std::string https = "https://";
-        // if(url.substr(0, https.length()) != https)
-        //     continue;
+				std::cout << "Parsed URL is: " << url << std::endl;
+				if(url.size() < 7)
+						continue;
 
-        std::cout << "\t Downloading " << url << std::endl;
-        std::string filename = "htmls/";
-        for(int i = 0; i < url.length(); ++i)
-        {
-            if(isalnum(url[i]))
-                filename += url[i];
-        }
-        filename += ".html";
-        try
-            {
-            PrintHtml( url, filename );
-            }
-        catch (...)
-            {
-            std::cerr << "\t Failed at link" << std::endl;
-            continue;
-            }
+				std::cout << "\t Downloading " << url << std::endl;
+				fb::String filename = "htmls_new/";
+				for(int i = 0; i < url.size(); ++i)
+				{
+						if(isalnum(url[i]))
+								filename += url[i];
+				}
+				filename += ".html";
+				try
+						{
+						PrintHtml( url, filename );
+						}
+				catch (...)
+						{
+						std::cerr << "\t Failed at link" << std::endl;
+						continue;
+						}
 
-        visited_urls.insert(url);
+				visited_urls.insert(url);
 
-        writeVisitedUrls(url);
+				writeVisitedUrls(url);
 
-        std::ifstream ifs(filename);
-        std::string content( (std::istreambuf_iterator<char>(ifs) ),
-                       (std::istreambuf_iterator<char>()    ) );
+				auto pa = ParsedUrl(url);
+				fb::String domain = pa.Service + "://" + pa.Host;
 
-        auto pa = ParsedUrl(url);
-        std::string domain = pa.Service + "://" + pa.Host;
-        fb::extractURL(content, urls, domain);
-   }
+            fb::String content = readString( filename );
+
+				fb::Parser parser( content,  domain );
+				parser.parse();
+
+				for ( auto i = parser.urlAnchorText.begin(); i != parser.urlAnchorText.end(); ++i )
+				{
+					urls.push(i.key());
+				}
+
+            saveString( parser.getParsedResult(), filename + "_tagless");
+	 }
 
 
-    // std::string url = argv[ 1 ];
-    // PrintHtml( url, "downloaded_html.html" );
+		// fb::String url = argv[ 1 ];
+		// bool a = PrintHtml( url, "downloaded_html.html" );
 }

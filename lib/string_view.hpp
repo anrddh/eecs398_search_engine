@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <string.h>
+
 namespace fb {
 
     template <typename CharT>

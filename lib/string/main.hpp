@@ -28,7 +28,9 @@ namespace fb {
 
         static constexpr SizeType npos = SizeType(-1);
 
-        BasicString() = default;
+        BasicString() {
+            buf.pushBack(0);
+        }
 
         BasicString(SizeT count, CharT c) : buf(count, c) {
             buf.pushBack(0);
@@ -42,13 +44,13 @@ namespace fb {
 
         /*  Element access  */
         Reference at(SizeType pos) {
-            if (pos >= buf.size())
+            if (pos >= size())
                 throw std::out_of_range("");
             return buf[pos];
         }
 
         ConstReference at(SizeType pos) const {
-            if (pos >= buf.size())
+            if (pos >= size())
                 throw std::out_of_range("");
             return buf[pos];
         }
@@ -144,7 +146,7 @@ namespace fb {
         }
 
         [[nodiscard]] constexpr SizeType size() const noexcept {
-            return buf.size() ? buf.size() - 1 : 0;
+            return buf.size() - 1;
         }
 
         void reserve(SizeType new_cap) {
@@ -152,12 +154,13 @@ namespace fb {
         }
 
         [[nodiscard]] constexpr SizeType capacity() const noexcept {
-            return buf.capacity() ? buf.capacity() - 1 : 0;
+            return buf.capacity() - 1;
         }
 
         /* Operations */
         void clear() noexcept {
             buf.clear();
+            buf.pushBack(0);
         }
 
         BasicString & insert(SizeType index, SizeType count, CharT ch) {
@@ -227,7 +230,7 @@ namespace fb {
         }
 
         void pushBack(CharT ch) {
-            insert(end() - 1, ch);
+            insert(end(), ch);
         }
 
         void popBack() {

@@ -10,6 +10,5 @@
 // before any other functions are called
 void set_master_ip( const fb::String& master_ip_, int master_port_ );
 
-
 fb::Pair<fb::SizeT, fb::String> get_url_to_parse();
 void add_parsed( ParsedPage pp ); // Use move ctor if possible

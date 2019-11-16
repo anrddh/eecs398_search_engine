@@ -16,7 +16,7 @@
 //    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
 //    x num_links many times ] x NUM_URLS_PER_SEND
 
-class SocketException : fb::Exception {
+class SocketException : public fb::Exception {
 public:
    SocketException(const char *msg) : Exception(msg) {}
 };
@@ -31,7 +31,7 @@ constexpr int MIN_BUFFER_SIZE = 500;
 // Number of retries in case of socket failure
 constexpr int NUM_RETRY = 3;
 
-// every TCP message must start with sending this value
+// every TCP message to master must start with sending this value
 // and will be checked for the correct code
 const uint32_t VERFICATION_CODE = 1513424; 
 

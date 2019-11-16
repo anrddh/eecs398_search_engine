@@ -8,6 +8,8 @@
 #include "file_descriptor.hpp"
 #include "Exception.hpp"
 #include <cassert>
+#include <string.h>
+#include <errno.h>
 
 using namespace fb;
 
@@ -21,26 +23,29 @@ void set_master_ip( const String& master_ip_, int master_port_ ) {
 
 Mutex to_parse_m;
 CV to_parse_cv;
-Queue<Pair<String, SizeT>> urls_to_parse;
+Queue<Pair<SizeT, String>> urls_to_parse;
 bool getting_more = false; // Check if some thread is getting more urls
 
 Mutex parsed_m;
 Vector< ParsedPage > urls_parsed; // first val url, second val parsed page
 
 // helper function
-void send_parsed_pages(Queue<ParsedPage> pages_to_send);
+void send_parsed_pages(Vector<ParsedPage> pages_to_send);
 Vector< Pair<SizeT, String> > checkout_urls();
 
 // get_url_to_parse will return an 
 // url to parse and its unique id (offset)
 // from master
 Pair<SizeT, String> get_url_to_parse() {
+   std::cout << "debug 1" << std::endl;
    to_parse_m.lock();
    while (true) {
+      std::cout << "debug 2" << std::endl;
       if ( urls_to_parse.size() < MIN_BUFFER_SIZE && !getting_more ) {
          Vector<Pair< SizeT, String >> new_urls;
          getting_more = true;
          to_parse_m.unlock();
+         std::cout << "debug 3" << std::endl;
          try {
             // Release the lock while processing TCP
             new_urls = std::move(checkout_urls());// apparently doesn't automatically
@@ -48,6 +53,7 @@ Pair<SizeT, String> get_url_to_parse() {
             new_urls.clear();
             // TODO print error message
          }
+         std::cout << "debug 4" << std::endl;
 
          to_parse_m.lock();
          for ( int i = 0; i < new_urls.size(); ++i ) {
@@ -77,8 +83,8 @@ void add_parsed( ParsedPage pp ) {
    }
 
    // Swap out the urls_parse so that we can unlock quicker
-   Queue<String> swapped_to_parse;
-   swap(swapped_to_parse, urls_to_parse);
+   Vector<ParsedPage> swapped_to_parse;
+   swap(swapped_to_parse, urls_parsed);
    parsed_m.unlock();
 
    send_parsed_pages( std::move( swapped_to_parse ) );
@@ -120,21 +126,31 @@ void send_message_type(int sock, char message_type) {
 }
 
 Vector< Pair<SizeT, String> > checkout_urls() {
+   std::cout << "checkout 1" << std::endl;
    // RAII file descriptor does automatic close() 
    // when it goes out of scope
    FileDesc sock(open_socket_to_master());
 
+   std::cout << "checkout 2" << std::endl;
    send_message_type(sock, 'R');
 
+   std::cout << "checkout 3" << std::endl;
    int32_t num_urls = recv_int(sock);
 
+   std::cout << "checkout 4" << std::endl;
    Vector< Pair<SizeT, String> > received_urls;
-   for (int i = 0; i < num_urls; ++i) {
-      String url = recv_str( sock );
-      SizeT url_offset = recv_uint64_t( sock );
 
-      received_urls.pushBack( make_pair( url_offset, std::move(url) ) );
+   std::cout << "checkout 5" << std::endl;
+   for (int i = 0; i < num_urls; ++i) {
+      std::cout << "checkout 5.1" << std::endl;
+      SizeT url_offset = recv_uint64_t( sock );
+      std::cout << "checkout 5.2" << std::endl;
+      String url = recv_str( sock );
+      std::cout << "checkout 5.3" << std::endl;
+
+      received_urls.pushBack(make_pair(url_offset, std::move(url)));
    }
+   std::cout << "checkout 6" << std::endl;
 
    return received_urls;
 }
@@ -142,7 +158,7 @@ Vector< Pair<SizeT, String> > checkout_urls() {
 // Child Machine: First letter S (char),  number of pages (int)
 //    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
 //    x num_links many times ] x NUM_URLS_PER_SEND
-void send_parsed_pages(Queue<ParsedPage> pages_to_send) {
+void send_parsed_pages(Vector<ParsedPage> pages_to_send) {
    // RAII file descriptor does automatic close() 
    // when it goes out of scope
    FileDesc sock(open_socket_to_master());
@@ -154,9 +170,9 @@ void send_parsed_pages(Queue<ParsedPage> pages_to_send) {
 
    for (int i = 0; i < size; ++i) {
       assert( !pages_to_send.empty() );
-      ParsedPage page = std::move( pages_to_send.front() );
-      pages_to_send.pop();
-      send_uint64_t( sock, page.url_offset );
+      ParsedPage page = std::move( pages_to_send.back() );
+      pages_to_send.popBack();
+      send_uint64_t( sock, page.url_offset ); // convert back to 
       send_int( sock, page.links.size() );
       for ( int j = 0; j < page.links.size(); ++j) {
          send_str( sock, page.links[j].first );

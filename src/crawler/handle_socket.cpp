@@ -2,6 +2,7 @@
 #include "handle_socket.hpp"
 #include "master_url_tcp.hpp"
 #include "frontier_pool.hpp"
+#include "UrlStore.hpp"
 #include "../../lib/Exception.hpp"
 #include "../../lib/thread.hpp"
 #include "../../lib/file_descriptor.hpp"

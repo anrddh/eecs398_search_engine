@@ -1,6 +1,7 @@
 // Created by Jaeyoon Kim 11/15/2019
 #include "master_url_tcp.hpp"
 #include "url_tcp.hpp"
+#include "UrlTable.hpp"
 #include "../../lib/vector.hpp"
 #include <iostream>
 
@@ -25,7 +26,7 @@ void send_urls(int sock, const Vector<SizeT>& urls_to_parse) {
 
    for (int i = 0; i < urls_to_parse.size(); ++i) {
       send_uint64_t(sock, urls_to_parse[i]);
-      send_str(sock, "dummy string"); // TODO figure out how to get strings
+      send_str(sock, UrlOffsetTable::getOffset().accessOffset( urls_to_parse[ i ]);
    }
 }
 

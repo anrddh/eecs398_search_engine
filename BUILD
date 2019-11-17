@@ -22,7 +22,7 @@ cc_library(
 
 cc_binary(
     name = "download_html",
-    srcs = ["DownloadHTML.cpp", "DownloadHTML.hpp", "parser.hpp", "GetSSL.hpp"],
+    srcs = ["DownloadHTML.cpp", "DownloadHTML.hpp", "parser/parser.hpp", "lib/stddef.hpp"],
     deps = [
         ":openssl",
     ],

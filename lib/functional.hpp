@@ -3,7 +3,6 @@
 #pragma once
 
 #include "stddef.hpp"
-
 //Implementation of features typically from std::functional
 //Add things to this as needed
 

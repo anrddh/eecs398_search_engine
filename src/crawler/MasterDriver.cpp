@@ -71,9 +71,9 @@ int main(int argc, char **argv) try {
 
             String url;
             while (fb::getline(file, url)) {
-                auto idx = urlStore.addUrl(line);
+                auto idx = urlStore.addUrl(url);
                 frontier.addUrl({ idx, 0 });
-                cout << url << "\tidx: " << idx << '\n';
+                cout << url << "\t\t\t\tidx: " << idx << '\n';
             }
         } else if (firstWord == "status"_sv) {
 

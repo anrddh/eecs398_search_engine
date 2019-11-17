@@ -4,9 +4,9 @@
 //This is essentially an unordered_map, but it does not store the keys in the buckets
 //This is intended to look up a file offset, and comparisons will then be done using the lookup
 #include "../../lib/functional.hpp"
-#include "url_pool.hpp"
 #include "../../lib/string.hpp"
 #include "../../lib/vector.hpp"
+#include "UrlStore.hpp"
 
 #define INITIAL_SIZE 1024
 
@@ -35,8 +35,8 @@ public:
     class Iterator {
     public:
         friend class OffsetLookupChunk;
-        Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
-        Iterator(Vector<Bucket> *owner, fb::SizeT index) : owner(owner), index(index) {
+        Iterator(fb::Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
+        Iterator(fb::Vector<Bucket> *owner, fb::SizeT index) : owner(owner), index(index) {
             if (index > owner->size()) index = owner->size();
         }
         Iterator& operator=(const Iterator &rhs) {

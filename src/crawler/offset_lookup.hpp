@@ -4,9 +4,9 @@
 //This is essentially an unordered_map, but it does not store the keys in the buckets
 //This is intended to look up a file offset, and comparisons will then be done using the lookup
 #include "../../lib/functional.hpp"
-#include "url_pool.hpp"
 #include "../../lib/string.hpp"
 #include "../../lib/vector.hpp"
+#include "UrlStore.hpp"
 
 #define INITIAL_SIZE 1024
 
@@ -17,7 +17,9 @@ enum class OffsetStatus {
     Ghost
 };
 
-template<typename K = fb::String, typename V = fb::SizeT, typename Hasher = fb::Hash<K>>
+template<typename K = fb::String,
+         typename V = fb::SizeT,
+         typename Hasher = fb::Hash<K>>
 class OffsetLookupChunk {
     using Status = OffsetStatus;
 public:
@@ -35,8 +37,8 @@ public:
     class Iterator {
     public:
         friend class OffsetLookupChunk;
-        Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
-        Iterator(Vector<Bucket> *owner, fb::SizeT index) : owner(owner), index(index) {
+        Iterator(fb::Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
+        Iterator(fb::Vector<Bucket> *owner, fb::SizeT index) : owner(owner), index(index) {
             if (index > owner->size()) index = owner->size();
         }
         Iterator& operator=(const Iterator &rhs) {
@@ -81,6 +83,7 @@ public:
     //Default constructor
     OffsetLookupChunk() {
         buckets.resize(INITIAL_SIZE);
+        set_string_list();
     }
 
     //Returns the number of elements in the map
@@ -331,8 +334,8 @@ public:
         return hash;
     }
     //set the string list
-    void set_string_list(UrlStore *list){
-        StringList = list;
+    void set_string_list(){
+        StringList = &UrlStore::getStore();
     }
 private:
     fb::SizeT num_elements = 0;

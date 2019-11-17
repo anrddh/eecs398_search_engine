@@ -7,6 +7,14 @@
 #include <iostream>
 
 namespace fb {
+    inline bool operator== (const String &lhs, const StringView rhs) {
+        return lhs.compare( rhs ) == 0;
+    }
+
+    inline bool operator!= (const String &lhs, const StringView rhs) {
+        return !( lhs == rhs );
+    }
+
     inline String operator+ (const String &lhs, const StringView rhs) {
         String temp(lhs);
         temp += rhs;
@@ -50,7 +58,7 @@ namespace fb {
     //Hash instance for String type
     template <>
     struct Hash<BasicString<char>> {
-        SizeT operator() (const BasicString<char> &data) const noexcept {
+        constexpr SizeT operator() (const BasicString<char> &data) const noexcept {
             return fnvHash( data.data(), data.size() );
         }
     };

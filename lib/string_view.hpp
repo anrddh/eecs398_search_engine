@@ -314,8 +314,15 @@ namespace fb {
         return sv.end();
     }
 
+    //Hash instance for String type
+    template <>
+    struct Hash<StringView> {
+        constexpr SizeT operator()(StringView data) const noexcept {
+            return fnvHash( data.data(), data.size() );
+        }
+    };
 }
 
-constexpr fb::StringView operator""_sv(const char *str, unsigned long len) noexcept {
-    return fb::StringView(str, static_cast<fb::SizeT>(len));
+constexpr fb::StringView operator "" _sv(const char *str, unsigned long len) noexcept {
+    return { str, len };
 }

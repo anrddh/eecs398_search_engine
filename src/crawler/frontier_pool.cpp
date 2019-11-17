@@ -100,6 +100,6 @@ void frontierAddUrl(const FrontierUrl &url) {
    frontiers[ (++insertCounter) % NUM_BINS ].addUrl(url);
 }
 
-Vector<SizeT> frontierGetUrl() {
+Vector<SizeT> frontierGetUrls() {
    return frontiers[ (++getCounter) % NUM_BINS ].getUrl();
 }

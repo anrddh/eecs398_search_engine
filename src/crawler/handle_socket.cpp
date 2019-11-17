@@ -81,7 +81,8 @@ void* handle_send(void* sock_ptr) {
 void* handle_request(void* sock_ptr) {
    FileDesc sock(* (int *) sock_ptr);
    delete (int *) sock_ptr;
-   Vector<SizeT> urls_to_parse = frontierGetUrls();
+   //Vector<SizeT> urls_to_parse = frontierGetUrls(); // TODO add it back it
+   Vector<SizeT> urls_to_parse = {1, 2, 3};
    try {
       send_urls(sock, urls_to_parse);
    } catch (SocketException& se) {

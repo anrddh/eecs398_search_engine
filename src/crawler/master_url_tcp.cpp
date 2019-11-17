@@ -21,15 +21,12 @@ char check_socket( int sock ) {
 }
 
 void send_urls(int sock, const Vector<SizeT>& urls_to_parse) {
-   std::cout << "in send urls 0" << std::endl;
    send_int(sock, urls_to_parse.size());
-   std::cout << "in send urls 1" << std::endl;
 
    for (int i = 0; i < urls_to_parse.size(); ++i) {
       send_uint64_t(sock, urls_to_parse[i]);
       send_str(sock, "dummy string"); // TODO figure out how to get strings
    }
-   std::cout << "in send urls 2" << std::endl;
 }
 
 Vector<ParsedPage> recv_parsed_pages(int sock) {

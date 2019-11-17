@@ -313,9 +313,8 @@ namespace fb {
     constexpr typename BasicStringView<CharT>::ConstIterator end(BasicStringView<CharT> sv) noexcept {
         return sv.end();
     }
+}
 
-    constexpr StringView operator "" _sv(const char *str, unsigned long len) noexcept {
-        return { str, len };
-    }
-
+constexpr fb::StringView operator "" _sv(const char *str, unsigned long len) noexcept {
+    return { str, len };
 }

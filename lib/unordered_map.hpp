@@ -1,5 +1,5 @@
 //Edited by Chandler Meyers 11/5/2019
-//#pragma once
+#pragma once
 
 #include "functional.hpp"
 #include "vector.hpp"
@@ -159,7 +159,7 @@ public:
                         num_ghosts--;
                     }
                     buckets[original_hash].key = key;
-                    buckets[original_hash].val = V();
+                    buckets[original_hash].val = V{};
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return buckets[original_hash].val;
@@ -168,7 +168,7 @@ public:
         }else{
             //bucket is empty, so add key
             buckets[original_hash].key = key;
-            buckets[original_hash].val = V();
+            buckets[original_hash].val = V{};
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return buckets[original_hash].val;

@@ -112,4 +112,20 @@ inline char* read_number( char* curr, uint64_t &num, uint8_t &header )
       }
    }
 
+// Adds document post. Returns the pointer to next address we should add to
+inline char* add_document_post( char* curr, uint32_t delta, uint64_t url_uid) {
+   (* (uint32_t *) curr) = delta;
+   curr += sizeof(delta);
+   (* (uint64_t *) curr) = url_uid;
+   return curr + sizeof(url_uid);
+}
+
+// Reads document post. Returns the pointer to next address we should read from
+inline char* read_document_post( char* curr, uint32_t& delta, uint64_t& url_uid) {
+   delta = (* (uint32_t *) curr);
+   curr += sizeof(delta);
+   url_uid = (* (uint64_t *) curr);
+   return curr + sizeof(url_uid);
+}
+
 }; // Namespace fb

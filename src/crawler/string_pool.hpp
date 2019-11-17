@@ -3,16 +3,19 @@
 
 #include "UrlStore.hpp"
 #include "offset_lookup.hpp"
+#include "UrlInfo.hpp"
 
 #include "../../lib/mutex.hpp"
 #include "../../lib/utility.hpp" // for pair
 #include "../../lib/string.hpp"
 #include "../../lib/string_view.hpp"
 #include "../../lib/stddef.hpp"
+#include "../../lib/unordered_map.hpp"
 #include "../../lib/unordered_set.hpp"
 
-// N represents the number of bins that the Hashes are separated into
-template <fb::SizeT N>
+// Number of bins is currently just hardcoded to 256,
+// because template singletons are apparently very
+// difficult to compile
 class StringPool {
 public:
    static void init() {
@@ -27,8 +30,8 @@ public:
    // Will find the offset (if this string was seen
    fb::SizeT getOffset( fb::String str ) {
       fb::SizeT hash = hasher(str);
-      fb::AutoLock<fb::Mutex> l(offset_hashes[hash % N].second);
-      return offset_hashes[hash % N].first.find( str, hash );
+      fb::AutoLock<fb::Mutex> l(offset_hashes[hash % NumBins].second);
+      return offset_hashes[hash % NumBins].first.find( str, hash );
    }
 
    fb::StringView accessOffset(fb::SizeT offset) {
@@ -37,33 +40,35 @@ public:
 
 private:
    StringPool() {
-      for (int i = 0; i < N; ++i){
-         offset_hashes[i].first.set_string_list(&UrlStore::getStore());
+      for (int i = 0; i < NumBins; ++i){
+         offset_hashes[i].first.set_string_list();
       }
    }
 
+   constexpr static fb::SizeT NumBins = 256;
    static StringPool *ptr;
 
-   fb::Pair<OffsetLookupChunk<fb::String,
+   fb::Pair<OffsetLookupChunk<fb::StringView,
                               fb::SizeT,
-                              fb::Hash<fb::String>>,
-            fb::Mutex> offset_hashes[N];
-   fb::Hash<fb::String> hasher;
+                              fb::Hash<fb::StringView>>,
+            fb::Mutex> offset_hashes[NumBins];
+   fb::Hash<fb::StringView> hasher;
 };
 
-template <fb::SizeT N>
+// Same as above
 class InfoPool {
 public:
    InfoPool(){}
 
    UrlInfo &get_info( fb::String str ) {
       fb::SizeT hash = hasher(str);
-      fb::AutoLock<fb::Mutex> l(info_hashes[hash % N].second);
-      return info_hashes[hash % N].first[str];
+      fb::AutoLock<fb::Mutex> l(info_hashes[hash % NumBins].second);
+      return info_hashes[hash % NumBins].first[str];
    }
 
 private:
+   constexpr static fb::SizeT NumBins = 256;
    //The unorderedmaps link the hashes of urls to the associated url infos
-   fb::Pair<fb::UnorderedMap<fb::String, UrlInfo>, fb::Mutex> info_hashes[N];
-   fb::Hash<fb::String> hasher;
+   fb::Pair<fb::UnorderedMap<fb::StringView, UrlInfo>, fb::Mutex> info_hashes[256];
+   fb::Hash<fb::StringView> hasher;
 };

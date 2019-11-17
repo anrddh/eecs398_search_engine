@@ -83,6 +83,7 @@ public:
     //Default constructor
     OffsetLookupChunk() {
         buckets.resize(INITIAL_SIZE);
+        set_string_list();
     }
 
     //Returns the number of elements in the map
@@ -333,8 +334,8 @@ public:
         return hash;
     }
     //set the string list
-    void set_string_list(UrlStore *list){
-        StringList = list;
+    void set_string_list(){
+        StringList = &UrlStore::getStore();
     }
 private:
     fb::SizeT num_elements = 0;

@@ -17,7 +17,9 @@ enum class OffsetStatus {
     Ghost
 };
 
-template<typename K = fb::String, typename V = fb::SizeT, typename Hasher = fb::Hash<K>>
+template<typename K = fb::String,
+         typename V = fb::SizeT,
+         typename Hasher = fb::Hash<K>>
 class OffsetLookupChunk {
     using Status = OffsetStatus;
 public:

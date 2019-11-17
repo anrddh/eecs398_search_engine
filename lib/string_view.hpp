@@ -313,6 +313,14 @@ namespace fb {
     constexpr typename BasicStringView<CharT>::ConstIterator end(BasicStringView<CharT> sv) noexcept {
         return sv.end();
     }
+
+    //Hash instance for String type
+    template <>
+    struct Hash<StringView> {
+        constexpr SizeT operator()(StringView data) const noexcept {
+            return fnvHash( data.data(), data.size() );
+        }
+    };
 }
 
 constexpr fb::StringView operator "" _sv(const char *str, unsigned long len) noexcept {

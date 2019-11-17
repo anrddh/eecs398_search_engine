@@ -370,5 +370,4 @@ namespace fb {
 
     using String = BasicString<char>;
 
-
 }

@@ -58,7 +58,7 @@ namespace fb {
     //Hash instance for String type
     template <>
     struct Hash<BasicString<char>> {
-        SizeT operator() (const BasicString<char> &data) const noexcept {
+        constexpr SizeT operator() (const BasicString<char> &data) const noexcept {
             return fnvHash( data.data(), data.size() );
         }
     };

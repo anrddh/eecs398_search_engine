@@ -15,10 +15,13 @@
 template <fb::SizeT N>
 class StringPool {
 public:
-   StringPool() {
-       for (int i = 0; i < N; ++i){
-           offset_hashes[i].first.set_string_list(&UrlStore::getStore());
-       }
+   static void init() {
+       delete ptr;
+       ptr = new StringPool();
+   }
+
+   static StringPool & getPool() {
+       return *ptr;
    }
 
    // Will find the offset (if this string was seen
@@ -28,27 +31,39 @@ public:
       return offset_hashes[hash % N].first.find( str, hash );
    }
 
-    fb::StringView accessOffset(fb::SizeT offset) {
-       return UrlStore::getStore().getUrl(offset);
+   fb::StringView accessOffset(fb::SizeT offset) {
+      return UrlStore::getStore().getUrl(offset);
    }
+
 private:
-   fb::Pair<OffsetLookupChunk<fb::String, fb::SizeT, fb::Hash<fb::String>>, fb::Mutex> offset_hashes[N];
+   StringPool() {
+      for (int i = 0; i < N; ++i){
+         offset_hashes[i].first.set_string_list(&UrlStore::getStore());
+      }
+   }
+
+   static StringPool *ptr;
+
+   fb::Pair<OffsetLookupChunk<fb::String,
+                              fb::SizeT,
+                              fb::Hash<fb::String>>,
+            fb::Mutex> offset_hashes[N];
    fb::Hash<fb::String> hasher;
 };
 
 template <fb::SizeT N>
 class InfoPool {
 public:
-    InfoPool(){}
+   InfoPool(){}
 
-    UrlInfo &get_info( fb::String str ) {
-        fb::SizeT hash = hasher(str);
-        fb::AutoLock<fb::Mutex> l(info_hashes[hash % N].second);
-        return info_hashes[hash % N].first[str];
-    }
+   UrlInfo &get_info( fb::String str ) {
+      fb::SizeT hash = hasher(str);
+      fb::AutoLock<fb::Mutex> l(info_hashes[hash % N].second);
+      return info_hashes[hash % N].first[str];
+   }
 
 private:
-    //The unorderedmaps link the hashes of urls to the associated url infos
-    fb::Pair<fb::UnorderedMap<fb::String, UrlInfo>, fb::Mutex> info_hashes[N];
-    fb::Hash<fb::String> hasher;
+   //The unorderedmaps link the hashes of urls to the associated url infos
+   fb::Pair<fb::UnorderedMap<fb::String, UrlInfo>, fb::Mutex> info_hashes[N];
+   fb::Hash<fb::String> hasher;
 };

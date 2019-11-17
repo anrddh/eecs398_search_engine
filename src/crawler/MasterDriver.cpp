@@ -1,11 +1,16 @@
+#include "UrlStore.hpp"
+#include "Frontier.hpp"
+
 #include "../../lib/stddef.hpp"
 #include "../../lib/file_descriptor.hpp"
 #include "../../lib/string_view.hpp"
-#include "../../lib/thread.hpp"
-#include "handle_socket.hpp"
+//#include "../../lib/thread.hpp"
+#include "../../lib/memory.hpp"
+#include "../../lib/string.hpp"
 
 #include <exception>
 #include <iostream>
+#include <fstream>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -13,27 +18,74 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <stdlib.h>
 
 using fb::SizeT;
 using fb::FileDesc;
 using fb::StringView;
-using fb::Thread;
+using fb::String;
+//using fb::Thread;
 
 using std::cerr;
+using std::cout;
+using std::ifstream;
 
 struct ArgError : std::exception {};
+
+template <typename T>
+struct FreeDeleter { void operator()(char *p) { free(p); } };
+template <typename T> using MUniquePtr = fb::UniquePtr<T,FreeDeleter<T>>;
 
 FileDesc * parseArguments(int argc, char **argv);
 
 constexpr auto UsageHint = "Usage: ./MasterDriver <port>\n"_sv;
+constexpr auto UrlStoreFileName = "/tmp/urlstore.file"_sv;
 
 int main(int argc, char **argv) try {
-    auto sockptr = parseArguments( argc, argv );
-    Thread socket_handler(handle_socket, sockptr);
-    socket_handler.detach();
+    UrlStore::init(UrlStoreFileName);
+    cout << "fuck\n";
+    Frontier::init("/tmp/frontier-bin.");
+    auto &urlStore = UrlStore::getStore();
+    auto &frontier = Frontier::getFrontier();
 
-    while(true);
+    // auto sockptr = parseArguments( argc, argv );
+    // Thread socket_handler(handle_socket, sockptr);
 
+    while (true) {
+        MUniquePtr<char> buf(readline(">> "), FreeDeleter<char>());
+        if (!buf)
+            break;
+
+        StringView line = buf.get();
+        if (!line.empty())
+            add_history(line.data());
+        auto firstSpace = line.find(' ');
+        auto firstWord = line.substr(0, firstSpace);
+
+        if (firstWord == "add-seed"_sv) {
+            line.removePrefix(firstSpace + 1);
+
+            ifstream file;
+            file.open(line.data());
+
+            String url;
+            while (fb::getline(file, url)) {
+                auto idx = urlStore.addUrl(line);
+                frontier.addUrl({ idx, 0 });
+                cout << url << "\tidx: " << idx << '\n';
+            }
+        } else if (firstWord == "status"_sv) {
+
+        } else if (firstWord == "shutdown"_sv) {
+
+        } else if (firstWord == "info"_sv) {
+
+        }
+    }
+
+    // socket_handler.join();
 } catch (const ArgError &) {
     cerr << UsageHint;
     return 1;

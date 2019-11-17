@@ -30,6 +30,7 @@ template <typename T>
 class DiskVec {
 public:
     DiskVec(fb::StringView fname)  {
+        std::cout << "DiskVec constructor\n";
         fb::FileDesc fd = open(fname.data(),
                                O_RDWR | O_CREAT,
                                S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
@@ -37,8 +38,12 @@ public:
         if (ftruncate(fd, MAXFILESIZE))
             throw fb::Exception("SavedObj: Failed to truncate file.");
 
+        std::cout << "ftruncated\n";
+
         auto ptr = mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
                         MAP_SHARED, fd, 0);
+
+        std::cout << "mmaped\n";
 
         if (ptr == (void *) -1)
             throw fb::Exception("SavedObj: Failed to mmap.");

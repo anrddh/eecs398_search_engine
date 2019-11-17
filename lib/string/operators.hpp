@@ -6,6 +6,9 @@
 
 #include <iostream>
 
+#include <stdio.h>
+#include <assert.h>
+
 namespace fb {
     inline bool operator== (const String &lhs, const StringView rhs) {
         return lhs.compare( rhs ) == 0;
@@ -62,4 +65,16 @@ namespace fb {
             return fnvHash( data.data(), data.size() );
         }
     };
+
+    template <typename T>
+    String toString(T);
+
+    template <>
+    inline String toString<int>( int value ) {
+        String str;
+        str.resize(snprintf(nullptr, 0, "%d", value));
+        auto numWritten = snprintf(str.data(), str.size() + 1, "%d", value);
+        assert(numWritten == str.size());
+        return str;
+    }
 }

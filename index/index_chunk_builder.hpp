@@ -4,7 +4,7 @@
 
 constexptr SKIP_TABLE_SIZE = 
 
-template<typename Hash>
+template<typename Hash, int NUM_SKIP_TABLE_BITS>
 class IndexChunkBuilder {
 public:
     IndexChunkBuilder(std::string filename, uint32_t capacity) : tableSize(capacity), file(open(input.filename, O_RDWR | O_CREAT)) 
@@ -58,7 +58,7 @@ void IndexChunkBuilder::addWord(const fb::String &word, const fb::vector<Absolut
 
 void IndexChunkBuilder::writePostingList(const fb::String &word, const fb::vector<AbsoluteWordInfo> &offsets) 
     {
-    unsigned long maxListLength = (word.size() + 1) + ((2 << NUM_SKIP_TABLE_BITS) * 3 * sizeof(unsigned int) + (4 * offsets.size());
+    unsigned long maxListLength = (word.size() + 1) + ((2 << NUM_SKIP_TABLE_BITS) * 2 * sizeof(unsigned int)) + (4 * offsets.size());
     char * postingListLocation = (char *) mmap(nullptr, maxListLength, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, nextAvailabeLocation);
 
     PostingListBuilder builder(word, nextAvailableLocation);

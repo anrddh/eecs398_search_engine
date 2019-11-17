@@ -9,15 +9,16 @@
 
 #include "fb/string"
 #include "fb/memory.hpp"
-#include "fb/indexEntry.hpp"
+
+#include "index_chunk_builder.hpp"
 
 /*
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
 
 //
-constexptr int MAX_BITS_PER_CHUNK = 27;
-constexptr int TOKEN_THRESHOLD = 2 << MAX_BITS_PER_CHUNK; //134217728; // 2^27
+// constexptr int MAX_BITS_PER_CHUNK = 27;
+// constexptr int TOKEN_THRESHOLD = 2 << MAX_BITS_PER_CHUNK; //134217728; // 2^27
 
 
 
@@ -48,6 +49,7 @@ struct AbsoluteWordInfo {
     uint8_t type_flags;
 };
 
+template<int MAX_BITS_PER_CHUNK, int NUM_SKIP_TABLE_BITS>
 class IndexBuilder {
 public:
     IndexBuilder(fb::string path) : root(path) { 
@@ -75,11 +77,27 @@ public:
         documents.emplaceBack(tokenCount, docId);
         ++tokenCount;
 
-        if(tokenCount > TOKEN_THRESHOLD) {
+        constexpr MAX_TOKEN_COUNT = 2 << MAX_BITS_PER_CHUNK;
+        if(tokenCount > MAX_TOKEN_COUNT) {
             flushToDisk();
         }
         wordPositionsLock.unlock();
     }
+
+    // create dictionary: maps words to offset in the file where posting list is
+    static void writeToDisk(void * arg) {
+    WriteToDiskInput input = *(WriteToDiskInput *)arg;
+
+    IndexChunkBuilder<fb::Hash, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, *(input.map).bucket_count());
+    for(const fb::pair<fb::String, fb::vector<AbsoluteWordInfo>> &entry : *(input.map))
+        {
+        indexChunkBuilder.addWord(pair.first, pair.second);
+        }
+    
+
+
+    delete arg;
+}
 
 private:
     void flushToDisk() 
@@ -137,49 +155,17 @@ int buildPostingList(char* start, const fb::string &word, const fb::vector<Absol
     }
 }
 
+/*
 // create dictionary: maps words to offset in the file where posting list is
 void writeToDisk(void * arg) {
     WriteToDiskInput input = *(WriteToDiskInput *)arg;
 
-    IndexChunkBuilder indexChunkBuilder(input.filename, *(input.map).bucket_count());
+    IndexChunkBuilder<fb::Hash, MAX_BITS_PER_CHUNK, TOKEN_THRESHOLD, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, *(input.map).bucket_count());
     for(const fb::pair<fb::String, fb::vector<AbsoluteWordInfo>> &entry : *(input.map))
         {
         indexChunkBuilder.addWord(pair.first, pair.second);
         }
 
-    /*
-    masterIndexDataLock.lock();
-    int f = open(input.filename, O_RDWR | O_CREAT);
-    ++masterIndexData->numIndexes;
-  	masterIndexDataLock.unlock();
-  
-  	unsigned int dictionaryDataLength = wordPositions.bucket_count();
-    unsigned int dictionarySize = (dictionaryDataLength + 1) * sizeof(unsigned int);
-    unsigned int * dictionary = (unsigned int *) mmap(nullptr, dictionarySize, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
-    *dictionary = dictionaryDataLength;
-    unsigned int * dictionaryData = dictionary + 1;
-    
-    unsigned int currentPos = dictionarySize;
-  
-    for(const fb::pair<fb::string, fb::vector<offsetInfo>> & entry : wordPositions) {
-        // write currentPos to bucket this word hashes to
-        int bucket = hashfunc(entry.first) % dictionaryDataLength;
-        while(dictionaryData[bucket] != 0) {
-          bucket = (bucket + 1) % dictionaryDataLength;
-        }
-        dictionaryData[bucket] = currentPos;
-      
-        unsigned long postingListLength = (entry.first.size() + 1) + (4 * entry.second.size());
-        char * postingList = (char *) mmap(nullptr, postingListLength, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, currentPos);
-        int actualSize = buildPostingList(postingList, entry);
-        currentPos += actualSize;
-        munmap(postingList, postingListLength);
-    }
-    
-    munmap(dictionary, dictionarySize); 
-
-    */
-
     delete arg;
-    
 }
+*/

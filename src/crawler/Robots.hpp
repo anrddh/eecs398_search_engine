@@ -22,7 +22,11 @@ public:
     bool canVisit(fb::StringView hostname, fb::StringView loc) {
         auto it = map.find(hostname);
         if (it == map.end()) {
+            // get html
         }
+
+        if (!it->second)
+            return true;
     }
 
 private:

@@ -45,7 +45,6 @@ constexpr auto UrlStoreFileName = "/tmp/urlstore.file"_sv;
 
 int main(int argc, char **argv) try {
     UrlStore::init(UrlStoreFileName);
-    cout << "fuck\n";
     Frontier::init("/tmp/frontier-bin.");
     auto &urlStore = UrlStore::getStore();
     auto &frontier = Frontier::getFrontier();

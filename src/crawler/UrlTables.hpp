@@ -16,14 +16,14 @@
 // Number of bins is currently just hardcoded to 256,
 // because template singletons are apparently very
 // difficult to compile
-class StringPool {
+class UrlOffsetTable {
 public:
    static void init() {
        delete ptr;
-       ptr = new StringPool();
+       ptr = new UrlOffsetTable();
    }
 
-   static StringPool & getPool() {
+   static UrlOffsetTable & getTable() {
        return *ptr;
    }
 
@@ -39,14 +39,14 @@ public:
    }
 
 private:
-   StringPool() {
+   UrlOffsetTable() {
       for (int i = 0; i < NumBins; ++i){
          offset_hashes[i].first.set_string_list();
       }
    }
 
    constexpr static fb::SizeT NumBins = 256;
-   static StringPool *ptr;
+   static UrlOffsetTable *ptr;
 
    fb::Pair<OffsetLookupChunk<fb::StringView,
                               fb::SizeT,
@@ -56,14 +56,14 @@ private:
 };
 
 // Same as above
-class InfoPool {
+class UrlInfoTable {
 public:
     static void init() {
         delete ptr;
-        ptr = new InfoPool();
+        ptr = new UrlInfoTable();
     }
 
-    static InfoPool & getPool() {
+    static UrlInfoTable & getTable() {
         return *ptr;
     }
 
@@ -74,10 +74,10 @@ public:
    }
 
 private:
-   InfoPool(){}
+   UrlInfoTable(){}
 
    constexpr static fb::SizeT NumBins = 256;
-   static InfoPool *ptr;
+   static UrlInfoTable *ptr;
    //The unorderedmaps link the hashes of urls to the associated url infos
    fb::Pair<fb::UnorderedMap<fb::StringView, UrlInfo>, fb::Mutex> info_hashes[256];
    fb::Hash<fb::StringView> hasher;

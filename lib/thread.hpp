@@ -1,5 +1,6 @@
 #pragma once
 
+#include "memory.hpp"
 #include <pthread.h>
 
 namespace fb {
@@ -8,21 +9,30 @@ namespace fb {
  */
 class Thread {
    public:
-      Thread( void* ( *func ) ( void* ), void* args ) 
+      Thread() = default; // Invalid default thread
+      Thread( void* ( *func ) ( void* ), void* args ) : t(makeUniqueDefaultInit<pthread_t>())
       {
-         pthread_create(&t, nullptr, func, args);
+         pthread_create(t.get(), nullptr, func, args);
+      }
+
+      Thread( Thread&& other) {
+         t.swap(other.t);
+      }
+
+      Thread& operator=( Thread&& other ) noexcept {
+         t.swap(other.t);
       }
 
       void join() noexcept 
       {
-         pthread_join(&t, nullptr);
+         pthread_join(*t.get(), nullptr);
       }
 
       void detach() noexcept
       {
-         pthread_detach(&t, nullptr);
+         pthread_detach(*t.get());
       }
    private:
-      pthread_t t;
+      UniquePtr<pthread_t> t;
 };
 };

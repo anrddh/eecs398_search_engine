@@ -1,10 +1,8 @@
-//Edited by Chandler Meyers on 11/5/2019
-//#pragma once
+//Edited by Chandler Meyers on 11/6/2019
+#pragma once
 
 #include "functional.hpp"
-//#include "vector.hpp"
-#include <vector>
-#define Vector std::vector
+#include "vector.hpp"
 
 #define INITIAL_SIZE 1024
 
@@ -36,8 +34,18 @@ public:
     public:
         friend class UnorderedSet;
         Iterator(Vector<Bucket> *owner) : owner(owner), index(owner->size()) {}
-        Iterator(Vector<Bucket> *owner, SizeT index) : owner(owner), index(index) {
-            if (index > owner->size()) index = owner->size();
+        Iterator(Vector<Bucket> *owner, SizeT index_) : owner(owner), index(index_) {
+            //if (index > owner->size()) index = owner->size();
+            if (owner->empty()) return;
+            index_ = index_ % owner->size();
+            index = index_;
+            //counter protects us from infinitely looping through an empty set
+            int counter = 0;
+            while((*owner)[index].status != Status::Filled && counter < owner->size()) {
+                counter++;
+                index++;
+                index = index % owner->size();
+            }
         }
         Iterator& operator=(const Iterator &rhs) {
             if (rhs != *this) {
@@ -105,6 +113,32 @@ public:
         return Iterator(&buckets);
     }
 
+    Iterator find(const K& key) {
+        if(num_elements+num_ghosts > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+        SizeT desired_bucket = hash(key) % buckets.size();
+        SizeT original_hash = desired_bucket;
+        //if the bucket is not empty
+        if(buckets[desired_bucket].status != Status::Empty){
+            //search until an empty bucket
+            while(buckets[desired_bucket].status != Status::Empty){
+                //if a bucket has the key, return
+                if(buckets[desired_bucket].status == Status::Filled && pred(buckets[desired_bucket].key, key)){
+                    return Iterator(&buckets, desired_bucket);
+                }
+                desired_bucket = (desired_bucket+1) % buckets.size();
+            }
+        }else{
+            //bucket is empty, so return end
+            return end();
+        }
+    }
+
+    //Return an iterator to a given offset (really the next full bucket from the offset)
+    Iterator Jaeyoon(SizeT offset){
+        return Iterator(&buckets, offset);
+    }
 
     // returns a reference to the value in the bucket with the key, if it
     // already exists. Otherwise, insert it with a default value, and return
@@ -115,6 +149,7 @@ public:
         }
         SizeT desired_bucket = hash(key) % buckets.size();
         SizeT original_hash = desired_bucket;
+
         //if the bucket is not empty
         if (buckets[desired_bucket].status != SetStatus::Empty) {
             //search until an empty bucket
@@ -153,8 +188,9 @@ public:
 
     K& at(const K& key) {
         if (num_elements + num_ghosts > buckets.size() * max_load) {
-            rehash_and_grow();
+            rehash_and_grow(buckets.size() * 2);
         }
+
         SizeT desired_bucket = hash(key) % buckets.size();
         SizeT original_hash = desired_bucket;
         //if the bucket is not empty
@@ -178,6 +214,7 @@ public:
         if (num_elements + num_ghosts > buckets.size() * max_load) {
             rehash_and_grow(buckets.size() * 2);
         }
+
         SizeT desired_bucket = hash(key) % buckets.size();
         SizeT original_hash = desired_bucket;
         //if the bucket is not empty
@@ -272,7 +309,7 @@ public:
     }
     //Returns the current load factor
     float load_factor() {
-        return bucket_count / num_elements;
+        return bucket_count() / num_elements;
     }
     //Returns the max load factor
     float max_load_factor() {
@@ -312,6 +349,7 @@ private:
         num_elements = 0;
         num_ghosts = 0;
         buckets.resize(n);
+
         for (SizeT i = 0; i < temp.size(); i++) {
             if (temp[i].status == SetStatus::Filled) {
                 insert(temp[i].key);

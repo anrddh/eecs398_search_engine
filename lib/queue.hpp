@@ -1,10 +1,7 @@
 #pragma once
 
-//#include "vector.hpp"
-#include <vector>
-#define Vector std::vector
-
-#include <memory> //std::unique_ptr, etc.
+#include "vector.hpp"
+#include "memory.hpp"
 
 namespace fb
 {
@@ -27,7 +24,7 @@ public:
     Queue(const Queue & other)
         : numElements(other.numElements)
         {
-            start = std::unique_ptr<QueueNode> (new QueueNode(*(other.start)));
+            start = UniquePtr<QueueNode> (new QueueNode(*(other.start)));
             end = start.get();
             while(end->nextptr() != nullptr)
                 end = end->nextptr();
@@ -109,7 +106,7 @@ private:
 
     void makeFirstNode()
         {
-            start = std::unique_ptr<QueueNode>(new QueueNode());
+            start = UniquePtr<QueueNode>(new QueueNode());
             end = start.get();
         }
 
@@ -127,7 +124,7 @@ private:
             {
             data = other.data;
             if( next != nullptr)
-                next = std::unique_ptr<QueueNode> (new QueueNode(*(other.next)));
+                next = UniquePtr<QueueNode> (new QueueNode(*(other.next)));
             else
                 next = nullptr;
             }
@@ -136,13 +133,13 @@ private:
             {
             if(data.size() == ArraySize)
                 {
-                next = std::unique_ptr<QueueNode>(new QueueNode());
+                next = UniquePtr<QueueNode>(new QueueNode());
                 next->push(value);
                 return next.get();
                 }
             else
                 {
-                data.push_back(value);
+                data.pushBack(value);
                 return this;
                 }
             }
@@ -151,13 +148,13 @@ private:
             {
             if(data.size() == ArraySize)
                 {
-                next = std::unique_ptr<QueueNode>(new QueueNode());
+                next = UniquePtr<QueueNode>(new QueueNode());
                 next->push(std::move(value));
                 return next.get();
                 }
             else
                 {
-                data.push_back(std::move(value));
+                data.pushBack(std::move(value));
                 return this;
                 }
             }
@@ -167,7 +164,7 @@ private:
             {
             if(data.size() == ArraySize)
                 {
-                next = std::unique_ptr<QueueNode>(new QueueNode());
+                next = UniquePtr<QueueNode>(new QueueNode());
                 next->emplace(std::forward< Args >( args )...);
                 return next.get();
                 }
@@ -178,7 +175,7 @@ private:
                 }
             }
 
-        void popAndMoveNext(std::unique_ptr<QueueNode>& start)
+        void popAndMoveNext(UniquePtr<QueueNode>& start)
             {
             ++current;
             if(current == ArraySize)
@@ -219,11 +216,11 @@ private:
 
     private:
         Vector<T> data;
-        std::unique_ptr<QueueNode> next;
+        UniquePtr<QueueNode> next;
         int current;
     };
 
-    std::unique_ptr<QueueNode> start;
+    UniquePtr<QueueNode> start;
     QueueNode* end;
     int numElements;
 

@@ -9,6 +9,7 @@
 
 #include "fb/string"
 #include "fb/memory.hpp"
+#include "fb/funcitonal.hpp"
 
 #include "index_chunk_builder.hpp"
 
@@ -25,7 +26,7 @@
 struct WriteToDiskInput {
     fb::String filename;
     fb::UniquePtr<fb::unordered_map<fb::string, fb::vector<offsetInfo>>> map;
-}
+};
 
 //flags
 constexpr uint8_t INDEX_WORD_ITALIC = 0b0100;
@@ -42,7 +43,7 @@ struct DocIdInfo {
   // position of last word in document + 1
   unsigned int pos;
   unsigned int docId;
-}
+};
 
 struct AbsoluteWordInfo {
     unsigned long position;
@@ -85,19 +86,20 @@ public:
     }
 
     // create dictionary: maps words to offset in the file where posting list is
-    static void writeToDisk(void * arg) {
-    WriteToDiskInput input = *(WriteToDiskInput *)arg;
-
-    IndexChunkBuilder<fb::Hash, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, *(input.map).bucket_count());
-    for(const fb::pair<fb::String, fb::vector<AbsoluteWordInfo>> &entry : *(input.map))
+    static void writeToDisk(void * arg) 
         {
-        indexChunkBuilder.addWord(pair.first, pair.second);
+        WriteToDiskInput input = *(WriteToDiskInput *)arg;
+
+        IndexChunkBuilder<fb::Hash, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, *(input.map).bucket_count());
+        for(const fb::pair<fb::String, fb::vector<AbsoluteWordInfo>> &entry : *(input.map))
+            {
+            indexChunkBuilder.addWord(pair.first, pair.second);
+            }
+        
+
+
+        delete arg;
         }
-    
-
-
-    delete arg;
-}
 
 private:
     void flushToDisk() 
@@ -134,7 +136,7 @@ private:
 
 struct MasterIndexData {
     int numIndexes;
-}
+};
 
 // take in pointer to space that is allocated
 // take in the word and vector of abs info
@@ -154,18 +156,3 @@ int buildPostingList(char* start, const fb::string &word, const fb::vector<Absol
         current = add_num(current, info[i].position - info[i-1].position, info[i].type_flags);
     }
 }
-
-/*
-// create dictionary: maps words to offset in the file where posting list is
-void writeToDisk(void * arg) {
-    WriteToDiskInput input = *(WriteToDiskInput *)arg;
-
-    IndexChunkBuilder<fb::Hash, MAX_BITS_PER_CHUNK, TOKEN_THRESHOLD, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, *(input.map).bucket_count());
-    for(const fb::pair<fb::String, fb::vector<AbsoluteWordInfo>> &entry : *(input.map))
-        {
-        indexChunkBuilder.addWord(pair.first, pair.second);
-        }
-
-    delete arg;
-}
-*/

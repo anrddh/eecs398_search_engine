@@ -9,7 +9,7 @@ public:
     PostingListBuilder(const fb::String &word, char * location) : beginning(location), lastLocation(0) {
         strcpy(beginning, word.c_str());
         current = begining + (word.size() + 1) + ((2 <<  NUM_SKIP_TABLE_BITS) * 2 * sizeof(unsigned int));
-        skipTableStart = (unsigned int *) (begining + word.size() + 1);
+        skipTableStart = (unsigned int *) (begining + word.size() + 1 + 2 * sizeof(unsigned int)); // past word and past the num of documents and num of occurences of word
         memset(skipTableStart, 0, ((2 <<  NUM_SKIP_TABLE_BITS) * 2 * sizeof(unsigned int))); // 0 out skip table
     }
 

@@ -58,16 +58,26 @@ private:
 // Same as above
 class InfoPool {
 public:
-   InfoPool(){}
+    static void init() {
+        delete ptr;
+        ptr = new InfoPool();
+    }
 
-   UrlInfo &get_info( fb::String str ) {
+    static InfoPool & getPool() {
+        return *ptr;
+    }
+
+   UrlInfo &get_info( fb::StringView str ) {
       fb::SizeT hash = hasher(str);
       fb::AutoLock<fb::Mutex> l(info_hashes[hash % NumBins].second);
       return info_hashes[hash % NumBins].first[str];
    }
 
 private:
+   InfoPool(){}
+
    constexpr static fb::SizeT NumBins = 256;
+   static InfoPool *ptr;
    //The unorderedmaps link the hashes of urls to the associated url infos
    fb::Pair<fb::UnorderedMap<fb::StringView, UrlInfo>, fb::Mutex> info_hashes[256];
    fb::Hash<fb::StringView> hasher;

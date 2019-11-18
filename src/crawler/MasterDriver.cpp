@@ -40,10 +40,9 @@ template <typename T>
 struct FreeDeleter { void operator()(char *p) { free(p); } };
 template <typename T> using MUniquePtr = fb::UniquePtr<T,FreeDeleter<T>>;
 
-#if __has_include(<readline/readline.h>) && __has_include(<readline/history.h>)
+#if __has_include(<readline/readline.h>)
 
 #include <readline/readline.h>
-#include <readline/history.h>
 
 MUniquePtr<char> getReadline() {
     return MUniquePtr<char>(readline(DriverPrompt), FreeDeleter<char>());
@@ -63,9 +62,18 @@ MUniquePtr<char> getReadline() {
     return ptr;
 }
 
+#endif
+
+#if __has_include(<readline/history.h>)
+
+#include <readline/history.h>
+
+#else
+
 void add_history(const char *) {}
 
 #endif
+
 
 struct ArgError : std::exception {};
 
@@ -121,6 +129,14 @@ int main(int argc, char **argv) try {
         } else if (firstWord == "info"_sv) {
 
         } else if (firstWord == "init"_sv) {
+            std::cout << "Are you sure? Type \"jaeyoon\" to confirm: ";
+            String str;
+            std::cin >> str;
+            if (str != "jaeyoon"_sv)
+                continue;
+
+            std::cout << "Alright...it's your funeral if something goes wrong...\n";
+
             UrlStore::init(UrlStoreFileName, true);
             Frontier::init("/tmp/frontier-bin.", true);
         }

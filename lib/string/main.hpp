@@ -5,6 +5,7 @@
 #include "../string_view.hpp"
 #include "../type_traits.hpp"
 #include "../functional.hpp"
+#include "../Exception.hpp"
 
 #include <type_traits>
 #include <initializer_list>
@@ -369,5 +370,7 @@ namespace fb {
     };
 
     using String = BasicString<char>;
+
+    using Exception = ExceptionImpl<String>;
 
 }

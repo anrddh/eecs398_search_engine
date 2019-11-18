@@ -3,7 +3,6 @@
 #include "main.hpp"
 #include "../stddef.hpp"
 #include "../functional.hpp"
-#include "../Exception.hpp"
 
 #include <iostream>
 

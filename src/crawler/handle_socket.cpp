@@ -9,6 +9,7 @@
 #include "../../lib/file_descriptor.hpp"
 #include <sys/socket.h> 
 #include <iostream> 
+#include <errno.h> 
 
 using namespace fb;
 
@@ -33,16 +34,21 @@ void handle_request(int sock);
 void handle_send(int sock);
 
 void* handle_socket(void* sock_ptr) {
-   int server_fd = * (FileDesc * ) sock_ptr;
+   int server_fd = * (FileDesc *) sock_ptr;
    int sock;
-   delete (FileDesc *) sock_ptr;
+
+   std::cout << "(inside) got socket of " << server_fd << std::endl;
 
    while (true) {
+      std::cout << "before listen" << std::endl;
       if (listen(server_fd, 3) < 0) 
       { 
+         std::cout << "listen error" << std::endl;
+         std::cout << errno << std::endl;
           perror("listen"); 
           exit(EXIT_FAILURE); 
       } 
+      std::cout << "after listen" << std::endl;
       
       term_mtx.lock();
       if (do_terminate) {

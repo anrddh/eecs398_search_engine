@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../lib/string.hpp"
 #include <iostream>
-#include "../lib/unordered_map.hpp"
-#include "../lib/stddef.hpp"
+
+#include "../../lib/string.hpp"
+#include "../../lib/unordered_map.hpp"
+#include "../../lib/stddef.hpp"
 
 namespace fb
 {
@@ -30,31 +31,17 @@ public:
 	fb::UnorderedMap<String, String> urlAnchorText;
 	bool inSpecialCharacter;
 	String specialCharacterString;
-	char lastChar;
-
-	fb::Vector<String> parsedWords;
 
 	Parser( const String &content_in, const String &domain_in )
 	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
-		specialCharacterString( "" ), lastChar( '0' )
+		specialCharacterString( "" )
 	{
 		initializeConversionMap( );
 		tagStack.pushBack( "DEFAULT" );
-		parsedWords.pushBack( "" );
-	}
-
-	void convertParsedResult( )
-	{
-		for( auto i : parsedWords )
-		{
-			// std::cout << i << std::endl;
-			parsedResult += i + " ";
-		}
 	}
 
 	String getParsedResult( )
 		{
-		convertParsedResult();
 		return parsedResult;
 		}
 
@@ -70,24 +57,24 @@ public:
 			}
 		}
 
-	void addWord( String str )
+	void addWord( const String &str )
 		{
-		for ( auto i : str )
+		for ( const auto i : str )
 			addWord( i );
 		}
 
-	void addWord( char c )
+	void addWord( const char c )
 		{
 		if ( isSpace( c ) || ispunct( c ) || !isalnum( c ) )
 			{
-			if( !parsedWords.back( ).empty( ) )
-				parsedWords.pushBack("");
+			if ( parsedResult.back( ) != ' ' )
+				parsedResult += ' ';
 			}
 		else if ( isalnum(c) )
-			parsedWords.back( ) += c;
+			parsedResult += c;
 		}
 
-	void addToResult( char c )
+	void addToResult( const char c )
 		{
 		if( c == '&' )
 			inSpecialCharacter = true;
@@ -96,31 +83,21 @@ public:
 			if ( c == ';' )
 				{
 				inSpecialCharacter = false;
-				// parsedResult += getSpecialCharacter( );
 				addWord( getSpecialCharacter( ) );
 				specialCharacterString = "";
 				}
 			else
-				{
 				specialCharacterString += c;
-				}
 			}
 		else
-			{
-			if ( !( isSpace( c ) && isSpace( lastChar ) ) )
-				{
-				if ( isSpace( c ) )
-					c = ' ';
-				addWord( c );
-				lastChar = c;
-				}
-			}
+			addWord( c );
 		}
 
 	void parse( )
 		{
 		parsedResult.clear( );
 		parsedResult.reserve( content.size( ) );
+		parsedResult += ' ';
 
 		fb::SizeT index = 0;
 		try
@@ -344,7 +321,6 @@ private:
 
 		size_t last_index = skipSpacesBackward( i - 1 );
 		
-		// std::cout << "before " << tagName << " " << tagName.size() << std::endl;
 		// not self closing tag
 		if ( content[ last_index ] != '/' )
 			{
@@ -357,7 +333,7 @@ private:
 			else
 				setTag( tagName );
 			}
-		// std::cout << tagName << " " << tagName.size() << std::endl;
+
 		return i;
 		}
 
@@ -386,14 +362,13 @@ private:
 
 		// add anchor text to parsed result
 		addToResult( ' ' );
-		SizeT parsedIndex = parsedWords.size( ) - 1;
-		for ( auto i : anchorText )
+
+		SizeT parsedIndex = parsedResult.size( );
+		for ( const auto i : anchorText )
 			addToResult( i );
 		addToResult( ' ' );
 
-		String normalizedTest;
-		for ( ; parsedIndex < parsedWords.size( ); ++parsedIndex )
-			normalizedTest += parsedWords[ parsedIndex ] + " ";
+		String normalizedTest = parsedResult.substr( parsedIndex );
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 

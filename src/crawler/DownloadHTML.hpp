@@ -13,10 +13,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "lib/stddef.hpp"
-#include "lib/unordered_set.hpp"
-#include "lib/string.hpp"
-#include "lib/utility.hpp"
+#include "../../lib/stddef.hpp"
+#include "../../lib/unordered_set.hpp"
+#include "../../lib/string.hpp"
+#include "../../lib/utility.hpp"
 
 // URL wrapper class 
 class ParsedUrl

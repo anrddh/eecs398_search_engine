@@ -386,9 +386,14 @@ private:
 		
 		// add anchor text to parsed result
 		addToResult( ' ' );
+		SizeT parsedIndex = parsedWords.size( ) - 1;
 		for ( auto i : anchorText )
 			addToResult( i );
 		addToResult( ' ' );
+
+		String normalizedTest;
+		for ( ; parsedIndex < parsedWords.size( ); ++parsedIndex )
+			normalizedTest += parsedWords[ parsedIndex ] + " ";
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
@@ -399,7 +404,7 @@ private:
 				if( url[ 0 ] == '/' )
 					url = domain + url;
 
-				urlAnchorText[ url ] += " " + anchorText;
+				urlAnchorText[ url ] += " " + normalizedTest;
 				}
 			}
 

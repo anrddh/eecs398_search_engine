@@ -52,6 +52,7 @@ void *commandLineArgs( void * )
    do
       {
       std::cout << "Shut down? (type 'SHUT DOWN!')" << std::endl;
+      std::cin >>  userInput;
       if ( userInput == "SHUT DOWN!" )
          {
          std::cout << "Are you sure? (type 'YES')" << std::endl;
@@ -74,7 +75,6 @@ void *commandLineArgs( void * )
 
 int main( int argc, char **argv )
    {
-
    fb::Thread argsThreads( commandLineArgs, nullptr );
 
    fb::Vector<fb::Thread> threads;

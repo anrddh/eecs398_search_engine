@@ -60,11 +60,15 @@ int main(int argc, char **argv) try {
         StringView line = buf.get();
         if (!line.empty())
             add_history(line.data());
+
         auto firstSpace = line.find(' ');
         auto firstWord = line.substr(0, firstSpace);
 
         if (firstWord == "add-seed"_sv) {
             line.removePrefix(firstSpace + 1);
+
+            if (line.back() == ' ')
+                line.removeSuffix(1);
 
             ifstream file;
             file.open(line.data());

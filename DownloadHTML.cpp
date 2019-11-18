@@ -101,6 +101,9 @@ int main( int argc, char *argv[ ] )
       std::cout << a.downloadedContent << std::endl;
       std::cout << "response " << a.response << std::endl;
 
+      if ( a.response[0] == '4' )
+        std::cout << ht.header << std::endl;
+
       // auto htt = HTTPDownloader();
       // auto b = htt.PrintPlainTxt( url );
       // std::cout << "print plain txt" << std::endl;

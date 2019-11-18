@@ -10,15 +10,16 @@
 
 using namespace fb;
 
-// Given dynamically allocated socket (int) that is requesting more urls
-// delete will be called on the socket 
-// and the socket will be closed
-void* handle_request(void* sock_ptr);
+atomic<bool> do_terminate = false;
 
-// Given dynamically allocated socket (int) that is sending parsing pages
-// delete will be called on the socket 
-// and the socket will be closed
-void* handle_send(void* sock_ptr);
+void terminate_workers() {
+   do_terminate = true;
+}
+
+void* handle_socket_helper(void* sock_ptr);
+
+void handle_request(int sock);
+void handle_send(int sock);
 
 void* handle_socket(void* sock_ptr) {
    int server_fd = * (FileDesc * ) sock_ptr;
@@ -31,6 +32,13 @@ void* handle_socket(void* sock_ptr) {
           perror("listen"); 
           exit(EXIT_FAILURE); 
       } 
+      
+      if (do_terminate) {
+         return nullptr;
+      }
+      // TODO do non-blocking
+      int flags = fcntl(listen_socket_fd, F_GETFL)
+        guard(fcntl(listen_socket_fd, F_SETFL, flags | O_NONBLOCK), 
 
       if ((sock = accept(server_fd, nullptr, nullptr)<0))
       { 
@@ -38,57 +46,45 @@ void* handle_socket(void* sock_ptr) {
           exit(EXIT_FAILURE); 
       } 
 
-      try {
-         char message_type = check_socket( sock );
-         // worker process is sending parsed pages
-         if ( message_type == 'S' ) {
-            Thread t(handle_send, new int( sock ));
-            t.detach();
+      Thread t(handle_request_helper, new int( sock ));
+      t.detach();
+   }
+}
 
-         // worker process is requesting more pages to parse
-         } else if ( message_type = 'R')  {
-            Thread t(handle_request, new int( sock ));
-            t.detach();
+void* handle_socket_helper(void* sock_ptr) {
+   FileDesc sock(* (int *) sock_ptr);
+   delete (int *) sock_ptr;
+
+   try {
+      while (true)  {
+         char message_type = recv_char(sock);
+         if (message_type == 'R') {
+            handle_request(sock);
+         } else if (message_type == 'S') {
+            handle_send(sock);
+         } else if (message_type == 'T')  {
+
          } else {
-            throw SocketException("Invalid message type");
+            throw SocketException("Wrong message type");
          }
-      } catch (SocketException& se) {
-         // TODO log this 
-         return nullptr;
       }
+   } catch (SocketException& se) {
+      // TODO log error
+      return nullptr;
    }
 }
 
 // Given dynamically allocated socket (int) that is sending parsing pages
 // delete will be called on the socket 
 // and the socket will be closed
-void* handle_send(void* sock_ptr) {
-   FileDesc sock(* (int *) sock_ptr);
-   delete (int *) sock_ptr;
-
-   try {
-      Vector<ParsedPage> pages = recv_parsed_pages(sock);
-      // TODO insert them into containers
-   } catch (SocketException& se) {
-      // TODO log error
-      return nullptr;
-   }
-   return nullptr;
+void handle_send(int sock) {
+   Vector<ParsedPage> pages = recv_parsed_pages(sock);
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls
 // delete will be called on the socket 
 // and the socket will be closed
-void* handle_request(void* sock_ptr) {
-   FileDesc sock(* (int *) sock_ptr);
-   delete (int *) sock_ptr;
-   //Vector<SizeT> urls_to_parse = frontierGetUrls(); // TODO add it back it
-   Vector<SizeT> urls_to_parse = {1, 2, 3};
-   try {
-      send_urls(sock, urls_to_parse);
-   } catch (SocketException& se) {
-      // TODO log this and add back urls to the frontier
-   }
-
-   return nullptr;
+void* handle_request(int sock) {
+   Vector<SizeT> urls_to_parse = frontierGetUrls();
+   send_urls(sock, urls_to_parse);
 }

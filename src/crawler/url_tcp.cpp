@@ -24,6 +24,21 @@
 
 using namespace fb;
 
+void send_char(int sock, char c) {
+   if (send(sock , &c , sizeof(c) , 0 ) == -1) {
+      throw SocketException("TCP Utility: send_char failed");
+   }
+}
+
+char recv_char(int sock) {
+   char c;
+
+   if (recv(sock, &c, sizeof(c), MSG_WAITALL) <= 0) {
+      throw SocketException("TCP Utility: recv_char failed");
+   }
+   return c;
+}
+
 void send_int(int sock, uint32_t num) {
    num = htonl(num);
    if (send(sock , &num , sizeof(uint32_t) , 0 ) == -1) {

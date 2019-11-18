@@ -7,17 +7,11 @@
 
 using namespace fb;
 
-char check_socket( int sock ) {
-   if (recv_int(sock) != VERFICATION_CODE ) {
-      throw SocketException("Incorrect verfication code!");
-   }
-
+char get_message(type) {
    char message_type;
-   if ( recv(sock , &message_type, sizeof(message_type) , MSG_WAITALL ) == -1) {
+   if ( recv(sock , &message_type, sizeof(message_type) , MSG_WAITALL ) <= 0) {
       throw SocketException("failed to get message type");
    }
-
-
    return message_type;
 }
 

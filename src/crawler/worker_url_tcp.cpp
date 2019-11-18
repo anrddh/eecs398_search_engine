@@ -8,6 +8,7 @@
 #include "../../lib/utility.hpp"
 #include "../../lib/file_descriptor.hpp"
 #include "../../lib/Exception.hpp"
+#include "../../lib/thread.hpp"
 #include <cassert>
 #include <string.h>
 #include <errno.h>
@@ -17,9 +18,13 @@ using namespace fb;
 String master_ip;
 int master_port;
 
-void set_master_ip( const String& master_ip_, int master_port_ ) {
+// Constantly talks to master
+void* talk_to_master(void*);
+
+void initialize_tcp( const String& master_ip_, int master_port_ ) {
    master_ip = master_ip_;
    master_port = master_port_;
+   // TODO spawn thread 
 }
 
 Mutex to_parse_m;
@@ -38,53 +43,21 @@ Vector< Pair<SizeT, String> > checkout_urls();
 // url to parse and its unique id (offset)
 // from master
 Pair<SizeT, String> get_url_to_parse() {
-   to_parse_m.lock();
-   while (true) {
-      if ( urls_to_parse.size() < MIN_BUFFER_SIZE && !getting_more ) {
-         Vector<Pair< SizeT, String >> new_urls;
-         getting_more = true;
-         to_parse_m.unlock();
-         try {
-            // Release the lock while processing TCP
-            new_urls = std::move(checkout_urls());// apparently doesn't automatically
-         } catch (const SocketException& se) {
-            new_urls.clear();
-            // TODO print error message
-         }
-
-         to_parse_m.lock();
-         for ( int i = 0; i < new_urls.size(); ++i ) {
-            urls_to_parse.push( std::move( new_urls[i] ) );
-         }
-         getting_more = false;
-         to_parse_cv.broadcast();
-      }
-
-      if ( !urls_to_parse.empty() ) {
-         Pair<SizeT, String> url_pair = std::move(urls_to_parse.front());
-         to_parse_m.unlock();
-         return url_pair;
-      } else {
-         to_parse_cv.wait(to_parse_m);
-      }
+   AutoLock<Mutex> al(to_parse_m);
+   while ( !urls_to_parse.empty() ) {
+      to_parse_cv.wait(to_parse_m);
    }
+
+   Pair<SizeT, String> url_pair = std::move(urls_to_parse.front());
+   urls_to_parse.pop();
+   return url_pair();
 }
 
 void add_parsed( ParsedPage pp ) {
    parsed_m.lock();
    urls_parsed.pushBack(std::move(pp));
-
-   if ( urls_parsed.size() != NUM_PAGES_PER_RETURN ) {
-      parsed_m.unlock();
-      return;
-   }
-
-   // Swap out the urls_parse so that we can unlock quicker
-   Vector<ParsedPage> swapped_to_parse;
-   swap(swapped_to_parse, urls_parsed);
    parsed_m.unlock();
-
-   send_parsed_pages( std::move( swapped_to_parse ) );
+   return;
 }
 
 int open_socket_to_master() {
@@ -119,6 +92,55 @@ int open_socket_to_master() {
 void send_message_type(int sock, char message_type) {
    if ( send(sock , &message_type, sizeof(message_type) , 0 ) == -1) {
       throw SocketException("TCP socket: Failed in send request code");
+   }
+}
+
+void* talk_to_master(void*) {
+   while (true) {
+      FileDesc sock(open_socket_to_master());
+      try {
+         send_char(sock, 'T');
+         char terminate_state = recv_char(sock);
+
+         if ( terminate_state == 'T' ) {
+            // TODO set terminate
+            return nullptr;
+         } else if ( terminate_state != 'N' ) {
+            throw SocketException("Invalid terminate state");
+         }
+
+         parsed_m.lock();
+         if (urls_parsed.empty()) {
+            parsed_m.lock();
+         } else {
+            Vector< ParsedPage > local; // first val url, second val parsed page
+            local.swap(urls_parsed);
+            parsed_m.unlock();
+            send_parsed_pages( pages_to_send );
+            char ack = recv_char(sock);
+         }
+
+         to_parse_m.lock();
+         if (to_parse.size() < MIN_BUFFER_SIZE) 
+         {
+            to_parse_m.unlock();
+            Vector< Pair<SizeT, String> > urls = checkout_urls();
+            to_parse_m.lock();
+            for ( int i = 0; i < urls.size(); ++i ) 
+            {
+               urls_to_parse.push( std::move( urls[i] ) );
+            }
+
+            to_parse_cv.broad_cast();
+            to_parse_m.unlock();
+         } 
+         else 
+         {
+            to_parse.unlock();
+         }
+      } catch (SocketException& se) {
+         // TODO log error
+      }
    }
 }
 

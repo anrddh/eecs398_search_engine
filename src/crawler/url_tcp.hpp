@@ -7,7 +7,7 @@
 #include <arpa/inet.h> // htonl and ntohl
 
 // TCP messaging protocol
-// Every message starts with verfication_code
+// First message starts with verfication_code
 // Child Machine: First letter R (char) - request urls to parse
 // Master Machine: First 4 bytes: int number of urls actually give
 //                   sends url_offset (uint64_t), url (string)
@@ -15,14 +15,15 @@
 // Child Machine: First letter S (char),  number of pages (int)
 //    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
 //    x num_links many times ] x NUM_URLS_PER_SEND
+// 
+// Child Machine T First letter C (char) - ask if master wants to terminate
+// Master responds T (char) - do terminate
+//                 N (char) - not terminating
 
 class SocketException : public fb::Exception {
 public:
    SocketException(const char *msg) : Exception(msg) {}
 };
-
-// number of parsed pages info we send at a time
-constexpr int NUM_PAGES_PER_RETURN = 100;
 
 // The minimum number of pages in buffer before worker will ask
 // the master for more pages to parse
@@ -40,6 +41,8 @@ struct ParsedPage {
    fb::Vector< fb::Pair<fb::String, fb::String> > links; // link, anchor text (concatenated)
 };
 
+void send_char(int sock, char c);
+char recv_char(int sock);
 void send_int(int sock, uint32_t num);
 uint32_t recv_int(int sock);
 void send_uint64_t(int sock, uint64_t num);

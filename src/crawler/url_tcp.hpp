@@ -4,6 +4,7 @@
 #include "../../lib/vector.hpp"
 #include "../../lib/Exception.hpp"
 #include "../../lib/stddef.hpp"
+#include "../../lib/string.hpp"
 #include <arpa/inet.h> // htonl and ntohl
 
 // TCP messaging protocol
@@ -23,7 +24,7 @@
 
 class SocketException : public fb::Exception {
 public:
-   SocketException(const char *msg) : Exception(msg) {}
+   SocketException(fb::String msg) : fb::Exception(msg) {}
 };
 
 // The minimum number of pages in buffer before worker will ask

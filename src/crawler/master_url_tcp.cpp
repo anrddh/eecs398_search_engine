@@ -7,20 +7,12 @@
 
 using namespace fb;
 
-char get_message(type) {
-   char message_type;
-   if ( recv(sock , &message_type, sizeof(message_type) , MSG_WAITALL ) <= 0) {
-      throw SocketException("failed to get message type");
-   }
-   return message_type;
-}
-
 void send_urls(int sock, const Vector<SizeT>& urls_to_parse) {
    send_int(sock, urls_to_parse.size());
 
    for (int i = 0; i < urls_to_parse.size(); ++i) {
       send_uint64_t(sock, urls_to_parse[i]);
-      send_str(sock, UrlOffsetTable::getOffset().accessOffset( urls_to_parse[ i ]);
+      send_str(sock, UrlOffsetTable::getTable().accessOffset( urls_to_parse[ i ]));
    }
 }
 
@@ -35,7 +27,7 @@ Vector<ParsedPage> recv_parsed_pages(int sock) {
       for (int j = 0; j < num_links; ++j ) {
          String link = recv_str( sock );
          String anchor_text = recv_str( sock );
-         pp.links.pushBack(make_pair( std::move(link), std::move(anchor_text) ) );
+         pp.links.pushBack( fb::make_pair(std::move(link), std::move(anchor_text)) );
       }
       recv_pages.pushBack( std::move(pp) );
    }

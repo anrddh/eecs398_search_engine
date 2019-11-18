@@ -1,12 +1,14 @@
 // Added by Jaeyoon Kim 11/16/2019
 #include "handle_socket.hpp"
 #include "master_url_tcp.hpp"
-#include "frontier_pool.hpp"
+#include "Frontier.hpp"
 #include "UrlStore.hpp"
 #include "../../lib/Exception.hpp"
 #include "../../lib/thread.hpp"
+#include "../../lib/cv.hpp"
 #include "../../lib/file_descriptor.hpp"
 #include <sys/socket.h> 
+#include <iostream> 
 
 using namespace fb;
 
@@ -63,7 +65,7 @@ void* handle_socket(void* sock_ptr) {
       }
       term_mtx.unlock();
 
-      Thread t(handle_request_helper, new int( sock ));
+      Thread t(handle_socket_helper, new int( sock ));
       t.detach();
    }
 }
@@ -73,7 +75,7 @@ void* handle_socket_helper(void* sock_ptr) {
    delete (int *) sock_ptr;
 
    try {
-   if ( recv_int() != VERFICATION_CODE ) {
+   if ( recv_int(sock) != VERFICATION_CODE ) {
       throw SocketException("Incorrect verfication code");
    }
 
@@ -96,7 +98,7 @@ void* handle_socket_helper(void* sock_ptr) {
          } else if (message_type == 'F') {
             term_mtx.lock();
             if (--num_threads == 0) {
-               term_cv.signal;
+               term_cv.signal();
             }
             term_mtx.unlock();
          } 
@@ -120,7 +122,7 @@ void handle_send(int sock) {
 // Given dynamically allocated socket (int) that is requesting more urls
 // delete will be called on the socket 
 // and the socket will be closed
-void* handle_request(int sock) {
-   Vector<SizeT> urls_to_parse = frontierGetUrls();
+void handle_request(int sock) {
+   Vector<SizeT> urls_to_parse = Frontier::getFrontier().getUrl();
    send_urls(sock, urls_to_parse);
 }

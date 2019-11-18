@@ -12,6 +12,7 @@
 #include <cassert>
 #include <string.h>
 #include <errno.h>
+#include <atomic>
 
 using namespace fb;
 
@@ -21,36 +22,53 @@ int master_port;
 // Constantly talks to master
 void* talk_to_master(void*);
 
-void initialize_tcp( const String& master_ip_, int master_port_ ) {
+void set_master_ip( const String& master_ip_, int master_port_ ) {
    master_ip = master_ip_;
    master_port = master_port_;
-   // TODO spawn thread 
+   Thread t(talk_to_master, nullptr);
+   t.detach();
 }
 
 Mutex to_parse_m;
 CV to_parse_cv;
 Queue<Pair<SizeT, String>> urls_to_parse;
-bool getting_more = false; // Check if some thread is getting more urls
 
 Mutex parsed_m;
 Vector< ParsedPage > urls_parsed; // first val url, second val parsed page
 
 // helper function
-void send_parsed_pages(Vector<ParsedPage> pages_to_send);
-Vector< Pair<SizeT, String> > checkout_urls();
+void send_parsed_pages(int sock, Vector<ParsedPage> pages_to_send);
+Vector< Pair<SizeT, String> > checkout_urls(int sock);
+
+std::atomic<bool> shutting_down = false;
+
+bool should_shutdown() {
+   AutoLock<Mutex> l(to_parse_m);
+   return shutting_down && urls_to_parse.empty();
+}
+
+void initiate_shut_down() {
+   shutting_down = true;
+}
 
 // get_url_to_parse will return an 
 // url to parse and its unique id (offset)
 // from master
 Pair<SizeT, String> get_url_to_parse() {
-   AutoLock<Mutex> al(to_parse_m);
-   while ( !urls_to_parse.empty() ) {
+   to_parse_m.lock();
+   while ( urls_to_parse.empty() ) {
+      if (shutting_down) {
+         to_parse_m.unlock();
+         return {0, ""};
+      }
+
       to_parse_cv.wait(to_parse_m);
    }
 
    Pair<SizeT, String> url_pair = std::move(urls_to_parse.front());
    urls_to_parse.pop();
-   return url_pair();
+   to_parse_m.unlock();
+   return url_pair;
 }
 
 void add_parsed( ParsedPage pp ) {
@@ -89,26 +107,11 @@ int open_socket_to_master() {
    return sock;
 }
 
-void send_message_type(int sock, char message_type) {
-   if ( send(sock , &message_type, sizeof(message_type) , 0 ) == -1) {
-      throw SocketException("TCP socket: Failed in send request code");
-   }
-}
-
 void* talk_to_master(void*) {
    while (true) {
       FileDesc sock(open_socket_to_master());
       try {
-         send_char(sock, 'T');
-         char terminate_state = recv_char(sock);
-
-         if ( terminate_state == 'T' ) {
-            // TODO set terminate
-            return nullptr;
-         } else if ( terminate_state != 'N' ) {
-            throw SocketException("Invalid terminate state");
-         }
-
+         // Send the parsed info
          parsed_m.lock();
          if (urls_parsed.empty()) {
             parsed_m.lock();
@@ -116,27 +119,44 @@ void* talk_to_master(void*) {
             Vector< ParsedPage > local; // first val url, second val parsed page
             local.swap(urls_parsed);
             parsed_m.unlock();
-            send_parsed_pages( pages_to_send );
-            char ack = recv_char(sock);
+            send_parsed_pages( sock, local );
          }
 
+         // Check if we should terminate
+         // and terminate accordingly
+         if (shutting_down) {
+            return nullptr;
+         }
+
+         send_char(sock, 'T');
+         char terminate_state = recv_char(sock);
+
+         if ( terminate_state == 'T' ) {
+            shutting_down = true;
+            return nullptr;
+         } else if ( terminate_state != 'N' ) {
+            throw SocketException("Invalid terminate state");
+         }
+
+         // If we are short on urls to parse,
+         // request for more
          to_parse_m.lock();
-         if (to_parse.size() < MIN_BUFFER_SIZE) 
+         if (urls_to_parse.size() < MIN_BUFFER_SIZE) 
          {
             to_parse_m.unlock();
-            Vector< Pair<SizeT, String> > urls = checkout_urls();
+            Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
             to_parse_m.lock();
             for ( int i = 0; i < urls.size(); ++i ) 
             {
                urls_to_parse.push( std::move( urls[i] ) );
             }
 
-            to_parse_cv.broad_cast();
+            to_parse_cv.broadcast();
             to_parse_m.unlock();
          } 
          else 
          {
-            to_parse.unlock();
+            to_parse_m.unlock();
          }
       } catch (SocketException& se) {
          // TODO log error
@@ -144,12 +164,8 @@ void* talk_to_master(void*) {
    }
 }
 
-Vector< Pair<SizeT, String> > checkout_urls() {
-   // RAII file descriptor does automatic close() 
-   // when it goes out of scope
-   FileDesc sock(open_socket_to_master());
-
-   send_message_type(sock, 'R');
+Vector< Pair<SizeT, String> > checkout_urls(int sock) {
+   send_char(sock, 'R');
 
    int32_t num_urls = recv_int(sock);
 
@@ -168,12 +184,8 @@ Vector< Pair<SizeT, String> > checkout_urls() {
 // Child Machine: First letter S (char),  number of pages (int)
 //    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
 //    x num_links many times ] x NUM_URLS_PER_SEND
-void send_parsed_pages(Vector<ParsedPage> pages_to_send) {
-   // RAII file descriptor does automatic close() 
-   // when it goes out of scope
-   FileDesc sock(open_socket_to_master());
-
-   send_message_type(sock, 'S');
+void send_parsed_pages(int sock, Vector<ParsedPage> pages_to_send) {
+   send_char(sock, 'S');
 
    int size = pages_to_send.size(); 
    send_int(sock, size);

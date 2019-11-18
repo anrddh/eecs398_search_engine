@@ -38,7 +38,7 @@ public:
 	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
 		specialCharacterString( "" ), lastChar( '0' )
 	{
-		initializerConversionMap( );
+		initializeConversionMap( );
 		tagStack.pushBack( "DEFAULT" );
 		parsedWords.pushBack( "" );
 	}
@@ -59,72 +59,63 @@ public:
 		}
 
 	String getSpecialCharacter( )
-	{
-		try
 		{
+		try 
+			{
 			return characterConversionMap.at( specialCharacterString );
-		}
+			}
 		catch ( ... )
-		{
+			{
 			return "";
+			}
 		}
-
-		// auto iter = characterConversionMap.find( specialCharacterString );
-		// if ( iter == characterConversionMap.end( ) )
-		// 	return " ";
-		// else
-		// 	return iter->second;
-	}
 
 	void addWord( String str )
-	{
+		{
 		for ( auto i : str )
 			addWord( i );
-	}
+		}
 
 	void addWord( char c )
-	{
-		if ( isSpace( c ) || ispunct( c ) || !isalnum( c ) )
 		{
+		if ( isSpace( c ) || ispunct( c ) || !isalnum( c ) )
+			{
 			if( !parsedWords.back( ).empty( ) )
 				parsedWords.pushBack("");
-		}
+			}
 		else if ( isalnum(c) )
-		{
 			parsedWords.back( ) += c;
 		}
-	}
 
 	void addToResult( char c )
-	{
+		{
 		if( c == '&' )
 			inSpecialCharacter = true;
 		else if ( inSpecialCharacter )
-		{
-			if ( c == ';' )
 			{
+			if ( c == ';' )
+				{
 				inSpecialCharacter = false;
 				// parsedResult += getSpecialCharacter( );
 				addWord( getSpecialCharacter( ) );
 				specialCharacterString = "";
-			}
+				}
 			else
-			{
+				{
 				specialCharacterString += c;
+				}
 			}
-		}
 		else
-		{
-			if ( !( isSpace( c ) && isSpace( lastChar ) ) )
 			{
+			if ( !( isSpace( c ) && isSpace( lastChar ) ) )
+				{
 				if ( isSpace( c ) )
 					c = ' ';
 				addWord( c );
 				lastChar = c;
+				}
 			}
 		}
-
-	}
 
 	void parse( )
 		{
@@ -147,8 +138,8 @@ public:
 						index = seekSubstr(index, "}");
 					else if ( content[ index ] == '}')
 					{
-
 					}
+
 					addToResult( content[ index ] );
 					}
 				++index;
@@ -163,7 +154,7 @@ public:
 
 	void printUrls( )
 		{
-		for( auto i = urlAnchorText.begin(); i != urlAnchorText.end(); ++i )
+		for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
 			{
 			std::cout << "URL is: " << i.key() << std::endl;
 			std::cout << "Anchor text: " << *i << std::endl;
@@ -194,7 +185,7 @@ private:
 		// found + 1 to find the next closing quote
 		// if no closing quote is found, skip.
 		fb::SizeT endURL = find( found + 1, end, "\"" );
-		if( endURL == end )
+		if ( endURL == end )
 			return "";
 
 		String url = content.substr( found + 1, endURL - found - 1 );
@@ -204,7 +195,7 @@ private:
 		// href="https://www.nytimes.com/es/ href =    "https://www.nytimes.com/es/
 		// it mighbe be possible to just add the substring until the space, but we will see.
 		for ( int i = 0;  i < url.size( );  ++i )
-			if( url[ i ] == ' ' )
+			if ( url[ i ] == ' ' )
 				return "";
 
 		return url;
@@ -227,10 +218,9 @@ private:
 			throw ParserException( contentEqualErrorMsg( start, rhs ) );
 
 		for ( size_t i = 0;  i < rhs.size( );  ++i )
-			{
 			if ( content[ start + i ] != rhs[ i ] )
 				return false;
-			}
+
 		return true;
 		}
 
@@ -242,10 +232,9 @@ private:
 			throw ParserException( contentEqualErrorMsg( start, rhs ) );
 
 		for ( size_t i = 0;  i < rhs.size( );  ++i )
-			{
 			if ( tolower( content[ start + i ] ) != tolower( rhs[ i ] ) )
 				return false;
-			}
+
 		return true;
 		}
 
@@ -268,58 +257,50 @@ private:
 	// change tagStack appropriately
 	// opening tag or closing tag
 	void setTag( const String tagName )
-	{
+		{
 		// std::cout << "in set Tag" << std::endl;
 		if ( tagName[ 0 ] == '/' )
 			{
 			String tagType = tagName.substr( 1 );
-			if ( tagStack.back( ) == tagType )
-				{
-				if ( !tagStack.empty( ) )
-					tagStack.popBack( );
-				// else
-				// 	std::cerr << "Possible tag error" << std::endl;
-				}
-			// else
-				// std::cerr << "Tag do not match, something is wrong. Current tag: "
-				// 		<< tagStack.back() << " read: " << tagType <<  std::endl;
+			if ( !tagStack.empty() && tagStack.back( ) == tagType )
+				tagStack.popBack( );
 			}
 		else
-		{
+			{
 			String tagType = tagName;
 			tagStack.pushBack( tagType );
+			}
 		}
-	}
 
 	// look for occurence of str in content
 	// and return the index of end of the occurence
 	fb::SizeT seekSubstr( fb::SizeT index, const String& str ) const
-	{
+		{
 		while ( !contentEqual( index, str ) )
 			++index;
 		return index + str.size( ) - 1;
-	}
+		}
 
 	// look for occurence of str in content
 	// and return the index of end of the occurence
 	fb::SizeT seekSubstrIgnoreCase( fb::SizeT index, const String& str ) const
-	{
+		{
 		while ( !contentEqualIgnoreCase( index, str ) )
 			++index;
 		return index + str.size( ) - 1;
-	}
+		}
 
 	fb::SizeT seekUnescaped( fb::SizeT index, const String& str ) const
-	{
-		while ( !contentEqual( index, str ) )
 		{
+		while ( !contentEqual( index, str ) )
+			{
 			if ( content[ index ] == '\\' )
 				index += 2;
 			else
 				++index;
-		}
+			}
 		return index + str.size( ) - 1;
-	}
+		}
 
 	// given index that starts at a quotation mark
 	// return index of end of quotation
@@ -342,41 +323,42 @@ private:
 	// start_index is the index of "<"
 	fb::SizeT handleTag( fb::SizeT start_index )
 		{
-			fb::SizeT i = start_index + 1;
+		fb::SizeT i = start_index + 1;
 
-			i = skipSpacesForward( i );
+		i = skipSpacesForward( i );
 
-			if ( contentEqual( i, "!-" ) )
-				return seekSubstr( i , "-->" );
+		if ( contentEqual( i, "!-" ) )
+			return seekSubstr( i , "-->" );
 
-			String tagName;
-			for ( ;  content[ i ] != ' ' && content[ i ] != '>' && i < content.size( );  ++i )
-				tagName += tolower( content[ i ] );
+		String tagName;
+		for ( ;  content[ i ] != ' ' 
+				&& content[ i ] != '>' && i < content.size( );  ++i )
+			tagName += tolower( content[ i ] );
 
-			while ( content[ i ] != '>' && i < content.size( ) )
-				{
-				if ( content[ i ] == '\"' || content[i] == '\'')
-					i = handleQuote(i);
-				++i;
-				}
+		while ( content[ i ] != '>' && i < content.size( ) )
+			{
+			if ( content[ i ] == '\"' || content[i] == '\'')
+				i = handleQuote(i);
+			++i;
+			}
 
-			size_t last_index = skipSpacesBackward( i - 1 );
-
-			// std::cout << "before " << tagName << " " << tagName.size() << std::endl;
-			// not self closing tag
-			if ( content[ last_index ] != '/' )
-				{
-				if ( tagName == "script" )
-					i = handleScript( i + 1 );
-				else if ( tagName == "a" )
-					i = handleAnchor( start_index, i + 1 );
-				else if ( tagName == "style" )
-					i = handleStyle( start_index );
-				else
-					setTag( tagName );
-				}
-			// std::cout << tagName << " " << tagName.size() << std::endl;
-			return i;
+		size_t last_index = skipSpacesBackward( i - 1 );
+		
+		// std::cout << "before " << tagName << " " << tagName.size() << std::endl;
+		// not self closing tag
+		if ( content[ last_index ] != '/' )
+			{
+			if ( tagName == "script" )
+				i = handleScript( i + 1 );
+			else if ( tagName == "a" )
+				i = handleAnchor( start_index, i + 1 );
+			else if ( tagName == "style" )
+				i = handleStyle( start_index );
+			else
+				setTag( tagName );
+			}
+		// std::cout << tagName << " " << tagName.size() << std::endl;
+		return i;
 		}
 
 	fb::SizeT handleStyle( fb::SizeT index ) const
@@ -404,15 +386,14 @@ private:
 
 		// add anchor text to parsed result
 		addToResult( ' ' );
+		SizeT parsedIndex = parsedWords.size( ) - 1;
 		for ( auto i : anchorText )
 			addToResult( i );
 		addToResult( ' ' );
 
-		// if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
-		// 	parsedResult += " ";
-		// parsedResult += anchorText;
-		// if( !parsedResult.empty( ) && !isSpace( parsedResult.back( ) ) )
-		// 	parsedResult += " ";
+		String normalizedTest;
+		for ( ; parsedIndex < parsedWords.size( ); ++parsedIndex )
+			normalizedTest += parsedWords[ parsedIndex ] + " ";
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
@@ -423,7 +404,7 @@ private:
 				if( url[ 0 ] == '/' )
 					url = domain + url;
 
-				urlAnchorText[ url ] += " " + anchorText;
+				urlAnchorText[ url ] += " " + normalizedTest;
 				}
 			}
 
@@ -455,7 +436,7 @@ private:
 		while( index < content.size() )
 			{
 			// this is literally the only hope in html & javascript
-			if ( contentEqual(index, "<![CDATA"))
+			if ( contentEqual( index, "<![CDATA") )
 				index = seekSubstr( index, "]]>" );
 
 			if ( contentEqual( index, "\n" ) )
@@ -506,7 +487,7 @@ private:
 					index = skipJSCommentBlock( index );
 				}
 
-			if( contentEqualIgnoreCase( index, "</script" ))
+			if( contentEqualIgnoreCase( index, "</script" ) )
 				{
 				index = seekSubstr( index, ">" );
 				break;
@@ -517,9 +498,8 @@ private:
 			return index;
 		}
 
-
-void initializerConversionMap()
-{
+void initializeConversionMap()
+	{
 	characterConversionMap[ "#192"] = "A";
 	characterConversionMap[ "#193"] = "A";
 	characterConversionMap[ "#194"] = "A";
@@ -661,7 +641,7 @@ void initializerConversionMap()
 	characterConversionMap[ "yacute"] = "y";
 	characterConversionMap[ "#255"] = "y";
 	characterConversionMap[ "yuml"] = "y";
-}
+	}
 
 	// domain name of html page being parsed
 	const String domain;
@@ -673,150 +653,4 @@ void initializerConversionMap()
 	// stack to contain the tags
 	fb::Vector<String> tagStack;
 };
-
-// const fb::UnorderedMap<String, String> Parser::characterConversionMap =
-// {
-// 	{ "#192", "A" },
-// 	{ "#193", "A" },
-// 	{ "#194", "A" },
-// 	{ "#195", "A" },
-// 	{ "#196", "A" },
-// 	{ "#197", "A" },
-
-// 	{ "Agrave", "A" },
-// 	{ "Aacute", "A" },
-// 	{ "Acirc", "A" },
-// 	{ "Atilde", "A" },
-// 	{ "Auml", "A" },
-// 	{ "Aring", "A" },
-
-// 	{ "#198", "AE" },
-// 	{ "AElig", "AE" },
-
-// 	{ "#199", "C" },
-// 	{ "Ccedil", "C" },
-
-// 	{ "#200", "E" },
-// 	{ "#201", "E" },
-// 	{ "#202", "E" },
-// 	{ "#203", "E" },
-
-// 	{ "Egrave", "E" },
-// 	{ "Eacute", "E" },
-// 	{ "Ecirc", "E" },
-// 	{ "Euml", "E" },
-
-// 	{ "#204", "I" },
-// 	{ "#205", "I" },
-// 	{ "#206", "I" },
-// 	{ "#207", "I" },
-
-// 	{ "Igrave", "I" },
-// 	{ "Iacute", "I" },
-// 	{ "Icirc", "I" },
-// 	{ "Iuml", "I" },
-
-// 	{ "#209", "N" },
-// 	{ "Ntilde", "N" },
-
-// 	{ "#210", "O" },
-// 	{ "#211", "O" },
-// 	{ "#212", "O" },
-// 	{ "#213", "O" },
-// 	{ "#214", "O" },
-// 	{ "#216", "O" },
-
-// 	{ "Ograve", "O" },
-// 	{ "Oacute", "O" },
-// 	{ "Ocirc", "O" },
-// 	{ "Otilde", "O" },
-// 	{ "Ouml", "O" },
-// 	{ "Oslash", "O" },
-
-// 	{ "#217", "U" },
-// 	{ "#218", "U" },
-// 	{ "#219", "U" },
-// 	{ "#220", "U" },
-
-// 	{ "Ugrave", "U" },
-// 	{ "Uacute", "U" },
-// 	{ "Ucirc", "U" },
-// 	{ "Uuml", "U" },
-
-// 	{ "#221", "Y" },
-// 	{ "Yacute", "Y" },
-
-// 	{ "#224", "a" },
-// 	{ "#225", "a" },
-// 	{ "#226", "a" },
-// 	{ "#227", "a" },
-// 	{ "#228", "a" },
-// 	{ "#229", "a" },
-
-// 	{ "agrave", "a" },
-// 	{ "aacute", "a" },
-// 	{ "acirc", "a" },
-// 	{ "atilde", "a" },
-// 	{ "auml", "a" },
-// 	{ "aring", "a" },
-
-// 	{ "#230", "ae" },
-// 	{ "aelig", "ae" },
-
-// 	{ "#231", "c" },
-// 	{ "ccedil", "c" },
-
-// 	{ "#232", "e" },
-// 	{ "#233", "e" },
-// 	{ "#234", "e" },
-// 	{ "#235", "e" },
-
-// 	{ "egrave", "e" },
-// 	{ "eacute", "e" },
-// 	{ "ecirc", "e" },
-// 	{ "euml", "e" },
-
-// 	{ "#236", "i" },
-// 	{ "#237", "i" },
-// 	{ "#238", "i" },
-// 	{ "#239", "i" },
-
-// 	{ "igrave", "i" },
-// 	{ "iacute", "i" },
-// 	{ "icirc", "i" },
-// 	{ "iuml", "i" },
-
-// 	{ "#241", "n" },
-// 	{ "ntilde", "n" },
-
-// 	{ "#242", "o" },
-// 	{ "#243", "o" },
-// 	{ "#244", "o" },
-// 	{ "#245", "o" },
-// 	{ "#246", "o" },
-// 	{ "#248", "o" },
-
-// 	{ "ograve", "o" },
-// 	{ "oacute", "o" },
-// 	{ "ocirc", "o" },
-// 	{ "otilde", "o" },
-// 	{ "ouml", "o" },
-// 	{ "oslash", "o" },
-
-// 	{ "#249", "u" },
-// 	{ "#250", "u" },
-// 	{ "#251", "u" },
-// 	{ "#252", "u" },
-
-// 	{ "ugrave", "u" },
-// 	{ "uacute", "u" },
-// 	{ "ucirc", "u" },
-// 	{ "uuml", "u" },
-
-// 	{ "#253", "y" },
-// 	{ "yacute", "y" },
-// 	{ "#255", "y" },
-// 	{ "yuml", "y" },
-// };
-
 };

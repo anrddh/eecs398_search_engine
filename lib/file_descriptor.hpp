@@ -50,7 +50,9 @@ namespace fb {
         }
 
         ~FileDesc() {
+           if ( fd != -1) {
             close(fd);
+           }
         }
 
         operator int() noexcept {

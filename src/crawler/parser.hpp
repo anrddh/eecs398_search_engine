@@ -8,7 +8,7 @@
 namespace fb
 {
 // Simple exception class for reporting String errors
-struct ParserException 
+struct ParserException
 {
 	ParserException(const String msg_) : msg(msg_)
 		{
@@ -60,7 +60,7 @@ public:
 
 	String getSpecialCharacter( )
 	{
-		try 
+		try
 		{
 			return characterConversionMap.at( specialCharacterString );
 		}
@@ -265,7 +265,7 @@ private:
 		return index;
 		}
 
-	// change tagStack appropriately 
+	// change tagStack appropriately
 	// opening tag or closing tag
 	void setTag( const String tagName )
 	{
@@ -281,7 +281,7 @@ private:
 				// 	std::cerr << "Possible tag error" << std::endl;
 				}
 			// else
-				// std::cerr << "Tag do not match, something is wrong. Current tag: " 
+				// std::cerr << "Tag do not match, something is wrong. Current tag: "
 				// 		<< tagStack.back() << " read: " << tagType <<  std::endl;
 			}
 		else
@@ -361,7 +361,7 @@ private:
 				}
 
 			size_t last_index = skipSpacesBackward( i - 1 );
-			
+
 			// std::cout << "before " << tagName << " " << tagName.size() << std::endl;
 			// not self closing tag
 			if ( content[ last_index ] != '/' )
@@ -401,7 +401,7 @@ private:
 
 		String url = extractURL( tagStartIndex, tagEndIndex );
 		String anchorText = content.substr( tagEndIndex, index - tagEndIndex );
-		
+
 		// add anchor text to parsed result
 		addToResult( ' ' );
 		for ( auto i : anchorText )
@@ -674,7 +674,7 @@ void initializerConversionMap()
 	fb::Vector<String> tagStack;
 };
 
-// const fb::UnorderedMap<String, String> Parser::characterConversionMap = 
+// const fb::UnorderedMap<String, String> Parser::characterConversionMap =
 // {
 // 	{ "#192", "A" },
 // 	{ "#193", "A" },
@@ -817,6 +817,6 @@ void initializerConversionMap()
 // 	{ "yacute", "y" },
 // 	{ "#255", "y" },
 // 	{ "yuml", "y" },
-// }; 
+// };
 
 };

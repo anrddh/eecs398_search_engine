@@ -18,11 +18,11 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 #include <stdlib.h>
+#include <ctype.h>
 
-using fb::SizeT;
+
+
 using fb::FileDesc;
 using fb::StringView;
 using fb::String;
@@ -32,16 +32,54 @@ using std::cerr;
 using std::cout;
 using std::ifstream;
 
-struct ArgError : std::exception {};
+constexpr auto DriverPrompt = ">> ";
+constexpr auto UsageHint =
+    "Usage: ./MasterDriver <port> [PARSE:] []\n"_sv;
+constexpr auto UrlStoreFileName = "/tmp/urlstore.file"_sv;
 
 template <typename T>
 struct FreeDeleter { void operator()(char *p) { free(p); } };
 template <typename T> using MUniquePtr = fb::UniquePtr<T,FreeDeleter<T>>;
 
-FileDesc * parseArguments(int argc, char **argv);
+#if __has_include(<readline/readline.h>) && __has_include(<readline/history.h>)
+#define HAVE_READLINE_SUPPORT
+#endif
 
-constexpr auto UsageHint = "Usage: ./MasterDriver <port>\n"_sv;
-constexpr auto UrlStoreFileName = "/tmp/urlstore.file"_sv;
+#ifdef HAVE_READLINE_SUPPORT
+#include <readline/readline.h>
+#include <readline/history.h>
+
+MUniquePtr<char> getReadline() {
+    return MUniquePtr<char>(readline(DriverPrompt), FreeDeleter<char>());
+}
+
+#else
+
+MUniquePtr<char> getReadline() {
+    std::cout << DriverPrompt;
+
+    fb::String line;
+    fb::getline(std::cin, line);
+
+    auto ptr = MUniquePtr<char>(static_cast<char *>(malloc(line.size())),
+                                FreeDeleter<char>());
+    strcpy(ptr.get(), line.data());
+    return ptr;
+}
+
+void add_history(const char *) {}
+
+#endif
+
+struct ArgError : std::exception {};
+
+struct Args {
+    FileDesc desc;
+    StringView UrlStore;
+    StringView FrontierPrefix;
+};
+
+FileDesc * parseArguments(int argc, char **argv);
 
 int main(int argc, char **argv) try {
     UrlStore::init(UrlStoreFileName);
@@ -53,7 +91,7 @@ int main(int argc, char **argv) try {
     // Thread socket_handler(handle_socket, sockptr);
 
     while (true) {
-        MUniquePtr<char> buf(readline(">> "), FreeDeleter<char>());
+        auto buf = getReadline();
         if (!buf)
             break;
 

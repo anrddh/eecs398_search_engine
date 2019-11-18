@@ -224,7 +224,7 @@ public:
                         num_ghosts--;
                     }
                     buckets[original_hash].key = key;
-                    buckets[original_hash].val = val;
+                    buckets[original_hash].val = std::move(val);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return true;
@@ -233,7 +233,7 @@ public:
         }else{
             //bucket is empty, so add key
             buckets[original_hash].key = key;
-            buckets[original_hash].val = val;
+            buckets[original_hash].val = std::move(val);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return true;

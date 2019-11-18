@@ -3,6 +3,7 @@
 
 #include "functional.hpp"
 #include "vector.hpp"
+#include <utility>
 
 #define INITIAL_SIZE 1024
 
@@ -198,7 +199,7 @@ public:
 
     // insert returns whether inserted successfully
     // (if the key already exists in the table, do nothing and return false).
-    bool insert(const K& key, const V& val) {
+    bool insert(K& key, V& val) {
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }

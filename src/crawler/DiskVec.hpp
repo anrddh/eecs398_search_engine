@@ -29,7 +29,7 @@ constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
 template <typename T>
 class DiskVec {
 public:
-    DiskVec(fb::StringView fname)  {
+    DiskVec(fb::StringView fname, bool init = false)  {
         fb::FileDesc fd = open(fname.data(),
                                O_RDWR | O_CREAT,
                                S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
@@ -43,7 +43,10 @@ public:
         if (ptr == (void *) -1)
             throw fb::Exception("SavedObj: Failed to mmap.");
 
-        cursor = new (ptr) std::atomic<fb::SizeT>(0);
+        if (init)
+            cursor = new (ptr) std::atomic<fb::SizeT>(0);
+        else
+            cursor = static_cast<std::atomic<fb::SizeT> *>(ptr);
         filePtr = reinterpret_cast<T *>(cursor + 1);
     }
 

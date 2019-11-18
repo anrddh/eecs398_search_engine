@@ -20,8 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-
-
+#include <getopt.h>
 
 using fb::FileDesc;
 using fb::StringView;
@@ -41,13 +40,9 @@ template <typename T>
 struct FreeDeleter { void operator()(char *p) { free(p); } };
 template <typename T> using MUniquePtr = fb::UniquePtr<T,FreeDeleter<T>>;
 
-#if __has_include(<readline/readline.h>) && __has_include(<readline/history.h>)
-#define HAVE_READLINE_SUPPORT
-#endif
+#if __has_include(<readline/readline.h>)
 
-#ifdef HAVE_READLINE_SUPPORT
 #include <readline/readline.h>
-#include <readline/history.h>
 
 MUniquePtr<char> getReadline() {
     return MUniquePtr<char>(readline(DriverPrompt), FreeDeleter<char>());
@@ -67,9 +62,18 @@ MUniquePtr<char> getReadline() {
     return ptr;
 }
 
+#endif
+
+#if __has_include(<readline/history.h>)
+
+#include <readline/history.h>
+
+#else
+
 void add_history(const char *) {}
 
 #endif
+
 
 struct ArgError : std::exception {};
 
@@ -79,18 +83,19 @@ struct Args {
     StringView FrontierPrefix;
 };
 
-FileDesc * parseArguments(int argc, char **argv);
+FileDesc initializeDataStructures(int argc, char **argv);
 
 int main(int argc, char **argv) try {
-    UrlStore::init(UrlStoreFileName);
-    Frontier::init("/tmp/frontier-bin.");
-    auto &urlStore = UrlStore::getStore();
-    auto &frontier = Frontier::getFrontier();
+    UrlStore::init(UrlStoreFileName, false);
+    Frontier::init("/tmp/frontier-bin.", false);
 
     // auto sockptr = parseArguments( argc, argv );
     // Thread socket_handler(handle_socket, sockptr);
 
     while (true) {
+        auto &urlStore = UrlStore::getStore();
+        auto &frontier = Frontier::getFrontier();
+
         auto buf = getReadline();
         if (!buf)
             break;
@@ -105,7 +110,7 @@ int main(int argc, char **argv) try {
         if (firstWord == "add-seed"_sv) {
             line.removePrefix(firstSpace + 1);
 
-            if (line.back() == ' ')
+            if (isspace(line.back()))
                 line.removeSuffix(1);
 
             ifstream file;
@@ -123,6 +128,17 @@ int main(int argc, char **argv) try {
 
         } else if (firstWord == "info"_sv) {
 
+        } else if (firstWord == "init"_sv) {
+            std::cout << "Are you sure? Type \"jaeyoon\" to confirm: ";
+            String str;
+            std::cin >> str;
+            if (str != "jaeyoon"_sv)
+                continue;
+
+            std::cout << "Alright...it's your funeral if something goes wrong...\n";
+
+            UrlStore::init(UrlStoreFileName, true);
+            Frontier::init("/tmp/frontier-bin.", true);
         }
     }
 

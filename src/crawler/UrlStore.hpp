@@ -10,6 +10,8 @@
 
 #include "DiskVec.hpp"
 
+#include <regex.h>
+
 // This is the class where one can save list of urls
 // ASSUMES that there won't be more than 128 Gb of urls
 // Note that each file will be mapping 128 Gb of virtual address
@@ -20,9 +22,9 @@
 
 class UrlStore {
 public:
-    static void init(fb::StringView filename) {
+    static void init(fb::StringView filename, bool init) {
         delete ptr;
-        ptr = new UrlStore(filename);
+        ptr = new UrlStore(filename, init);
         ptr->addUrl("Dummy");
     }
 
@@ -42,7 +44,7 @@ public:
     }
 
 private:
-    UrlStore(fb::StringView filename) : urls(filename) {}
+    UrlStore(fb::StringView filename, bool init) : urls(filename, init) {}
 
     static UrlStore *ptr;
     DiskVec<char> urls;

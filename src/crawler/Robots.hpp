@@ -1,12 +1,12 @@
 #pragma once
 
 #include "DiskVec.hpp"
+#include "parser.hpp"
+#include "Regex.hpp"
 
 #include "../../lib/unordered_map.hpp"
 #include "../../lib/string.hpp"
 #include "../../lib/string_view.hpp"
-
-#include "parser.hpp"
 
 class RobotsTxt {
 public:
@@ -19,14 +19,17 @@ public:
         return *ptr;
     }
 
-    bool canVisit(fb::StringView hostname, fb::StringView loc) {
+    bool canVisit(fb::StringView hostname, const char *loc) {
         auto it = map.find(hostname);
         if (it == map.end()) {
             // get html
         }
 
-        if (!it->second)
-            return true;
+        for (auto &regex : it->second)
+            if (regex.match(loc))
+                return true;
+
+        return it->second.empty();
     }
 
 private:
@@ -36,5 +39,5 @@ private:
     }
 
     static RobotsTxt *ptr;
-    UnorderedMap<fb::StringView, unsigned int> map;
+    UnorderedMap<fb::StringView, fb::Vector<Regex>> map;
 };

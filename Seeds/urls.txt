@@ -3352,6 +3352,7 @@ www.uitp.org
 forums.otterhub.org
 www.ikuska.com
 account.bbc.com
+www.pornhub.com
 www.prcdc.org
 ftpmirror.your.org
 www.statemaster.com
@@ -3376,7 +3377,6 @@ www.ntm.gov.tw
 paperjam.lu
 voodooskies.com
 www8.cpr.ca
-mailto:marketing@agerpres.ro
 mymoney.nana10.co.il
 workaround.org
 bestglobalbrands.com
@@ -3424,7 +3424,6 @@ iainarraniry.com
 learn.xdiscovery.com
 loebner.net
 netszkozkeszlet.ektf.hu
-http:
 www.azhagi.com
 ironmarines.gamepedia.com
 www.gbsad.ru
@@ -8607,7 +8606,6 @@ spanish.about.com
 ics.sagepub.com
 www.buenosaires.gov.ar
 www.foreignaffairs.com
-Meta'r%20Grwp%20Defnyddwyr%20https:
 www.wirtualny.gdansk.pl
 g1.dcdn.lt
 www.changiairport.com
@@ -9001,7 +8999,6 @@ www.brivioevigano.it
 www.fdiintelligence.com
 www.nestseekers.com
 careers.microsoft.com
-‎https:
 www.hrc.org
 www.oxfordenergy.org
 estadisticas.tierradelfuego.gov.ar
@@ -9455,7 +9452,6 @@ www.minivandaily.com
 wybory2014.pkw.gov.pl
 www.aomatos.com
 www.telecomnews.co.il
-httpd.apache.org
 politiken.dk
 www.tagblatt.ch
 www.soumaya.com.mx

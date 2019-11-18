@@ -28,7 +28,7 @@ public:
    }
 
    // Will find the offset (if this string was seen
-   fb::SizeT getOffset( fb::String str ) {
+   fb::SizeT getOffset( fb::StringView str ) {
       fb::SizeT hash = hasher(str);
       fb::AutoLock<fb::Mutex> l(offset_hashes[hash % NumBins].second);
       return offset_hashes[hash % NumBins].first.find( str, hash );

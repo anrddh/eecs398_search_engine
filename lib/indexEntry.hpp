@@ -29,7 +29,7 @@ uint8_t ANCHOR_FLAG = 0b0001;
  * mem = add_num(mem, 1623, ITALICS_FLAG);
  * mem = add_num(mem, 610516583293);
  */
-inline char* add_num( char* curr, size_t num, uint8_t header = 0 ) 
+inline char* add_word_post( char* curr, size_t num, uint8_t header = 0 ) 
    {
    if (header) 
       {
@@ -78,7 +78,7 @@ inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  * mem = read_number(mem, value, header);
  * cout << int(header) << " " << value << endl;
  */
-inline char* read_number( char* curr, uint64_t &num, uint8_t &header ) 
+inline char* read_word_post( char* curr, uint64_t &num, uint8_t &header ) 
    {
    if ( ( ( fbImpl::headerByte* ) curr )->hasHeader ) 
       {
@@ -113,7 +113,7 @@ inline char* read_number( char* curr, uint64_t &num, uint8_t &header )
    }
 
 // Adds document post. Returns the pointer to next address we should add to
-inline char* add_document_post( char* curr, uint32_t delta, uint64_t url_uid) {
+inline char* add_document_post( char* curr, size_t delta, uint64_t url_uid) {
    (* (uint32_t *) curr) = delta;
    curr += sizeof(delta);
    (* (uint64_t *) curr) = url_uid;
@@ -121,7 +121,7 @@ inline char* add_document_post( char* curr, uint32_t delta, uint64_t url_uid) {
 }
 
 // Reads document post. Returns the pointer to next address we should read from
-inline char* read_document_post( char* curr, uint32_t& delta, uint64_t& url_uid) {
+inline char* read_document_post( char* curr, size_t& delta, uint64_t& url_uid) {
    delta = (* (uint32_t *) curr);
    curr += sizeof(delta);
    url_uid = (* (uint64_t *) curr);

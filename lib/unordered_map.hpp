@@ -2,9 +2,7 @@
 //#pragma once
 
 #include "functional.hpp"
-//#include "vector.hpp"
-#include <vector>
-#define Vector std::vector
+#include "vector.hpp"
 
 #define INITIAL_SIZE 1024
 
@@ -62,6 +60,10 @@ public:
             return (*owner)[index].val;
         }
 
+         K& key() {
+            return (*owner)[index].key;
+        }
+
         V* operator->() {
             return &(*owner)[index].val;
         }
@@ -104,6 +106,27 @@ public:
     //Return an iterator "off the end" of the map
     Iterator end() {
         return Iterator(&buckets);
+    }
+
+    Iterator find(const K& key) {
+        if(num_elements+num_ghosts > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+        SizeT desired_bucket = hash(key) % buckets.size();
+        //if the bucket is not empty
+        if(buckets[desired_bucket].status != Status::Empty){
+            //search until an empty bucket
+            while(buckets[desired_bucket].status != Status::Empty){
+                //if a bucket has the key, return
+                if(buckets[desired_bucket].status == Status::Filled && pred(buckets[desired_bucket].key, key)){
+                    return Iterator(&buckets, desired_bucket);
+                }
+                desired_bucket = (desired_bucket+1) % buckets.size();
+            }
+        }else{
+            //bucket is empty, so return end
+            return end();
+        }
     }
 
     // returns a reference to the value in the bucket with the key, if it
@@ -153,10 +176,9 @@ public:
 
     V& at(const K& key) {
         if (num_elements + num_ghosts > buckets.size() * max_load) {
-            rehash_and_grow();
+            rehash_and_grow(buckets.size() * 2);
         }
         SizeT desired_bucket = hash(key) % buckets.size();
-        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if (buckets[desired_bucket].status != Status::Empty) {
             //search until an empty bucket
@@ -270,7 +292,8 @@ public:
     }
     //Returns the current load factor
     float load_factor() {
-        return bucket_count / num_elements;
+        //LEAVE THIS VERSION WITH THE PARENTHESIS, WHY DOES IT KEEP REVERTING????
+        return bucket_count() / num_elements;
     }
     //Returns the max load factor
     float max_load_factor() {

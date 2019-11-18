@@ -1,46 +1,101 @@
 #pragma once
 
-class PostingListBuilder {
+#include <type_traits>
+
+#include "fb/indexEntry.hpp"
+
+#include "index_helpers.hpp"
+#include "index_data_structures.hpp"
+
+struct EODPost {
+   size_t position;
+   uint64_t url_uid;
+};
+
+template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK, typename PostType>
+class PostingListBuilder 
+   {
 public:
 
-    PostingListBuilder(const fb::String &word, char * location) : beginning(location), lastLocation(0) {
-        strcpy(beginning, word.c_str());
-        current = begining + (word.size() + 1) + ((2 <<  NUM_SKIP_TABLE_BITS) * 3 * sizeof(unsigned int));
+   PostingListBuilder(const fb::String &word, char * location, int numDocs, int numOccurences) : beginning(location), lastLocation(0) 
+      {
+      strcpy(beginning, word.data());
+      
+      unsigned int * rankingData = (unsigned int *) (beginning + (word.size() + 1));
 
-    }
+      rankingData[0] = numDocs;
+      rankingData[1] = numOccurences;
 
-    void addPost(OffsetInfo offset);
+      skipTableStart = (unsigned int *) (beginning + (word.size() + 1) + getSizeOfRankingData()); // past word and past the num of documents and num of occurences of word
+      memset(skipTableStart, 0, getSizeOfSkipTable); // 0 out skip table
 
-    void endList();
+      currentPostPosition = beginning + (word.size() + 1) + getSizeOfRankingData() + getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
 
-    char * getPointerPastEnd();
+      }
+
+   void addPost(PostType post)
+      {
+      if((post.position >> (MAX_BITS_PER_CHUNK - NUM_SKIP_TABLE_BITS)) > nextSkipTableEntry) 
+         {
+         skipTableStart[2 * nextSkipTableEntry] = currentPostPosition - beginning;
+         skipTableStart[2 * nextSkipTableEntry + 1] = post.position;
+         ++nextSkipTableEntry;
+         }
+
+      currentPostPosition = writePost(post);
+      lastLocation = post.position;
+      }
+
+   unsigned int getLength() 
+      {
+      return currentPostPosition - beginning;
+      }
+
+   void endList() 
+      {
+      AbsoluteWordInfo post;
+      post.position = 0;
+      post.type_flags = 0;
+      writePost(post);
+      }
+
+   void writePost(AbsoluteWordInfo post) 
+      {
+      currentPostPosition = add_word_post(currentPostPosition, post.position - lastLocation, post.type_flags);
+      }
+
+   void endEODList() 
+      {
+      DocIdInfo post;
+      post.position = 0;
+      post.docId = 0;
+      writePost(post);
+      }
+
+   void writeEODPost(DocIdInfo post) 
+      {
+      currentPostPosition = add_document_post(currentPostPosition, post.position - lastLocation, post.docId);
+      }
 
 private:
 
-    void buildSkipTable();
+   char * beginning;
+   char * currentPostPosition;
+   unsigned int * skipTableStart;
+   unsigned int lastLocation;
+   unsigned int nextSkipTableEntry = 0;
+   };
 
-    char * begining;
-    char * current;
-    unsigned int lastLocation;
+template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
+class PostingListBuilder<NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK, AbsoluteWordInfo>
+   {
+public:
+   
+   };
 
-};
-
-void PostingListBuilder::addPost(AbsoluteWordInfo word) {
-    if((word.position >> (MAX_BITS_PER_CHUNK - NUM_SKIP_TABLE_BITS)) > nextSkipTableEntry) {
-        // TODO: add numbers to skip table
-
-    }
-    current = add_num(current, word.position - lastLocation, word.type_flags);
-    lastLocation = word.position;
-}
-
-void PostingListBuilder::endList() {
-    // TODO: check that lastLocation < offset
-    current = add_num(current, 0, 0);
-
-    fillInSkipTable();
-}
-
-char * PostingListsBuilder::getLength() {
-    return current - beginning;
-}
+template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
+class PostingListBuilder<NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK, DocIdInfo>
+   {
+public:
+   
+   };

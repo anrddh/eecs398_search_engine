@@ -74,7 +74,6 @@ void add_history(const char *) {}
 
 #endif
 
-
 struct ArgError : std::exception {};
 
 struct Args {
@@ -83,13 +82,13 @@ struct Args {
     StringView FrontierPrefix;
 };
 
-FileDesc initializeDataStructures(int argc, char **argv);
+FileDesc parseArguments( int argc, char **argv );
 
 int main(int argc, char **argv) try {
     UrlStore::init(UrlStoreFileName, false);
     Frontier::init("/tmp/frontier-bin.", false);
 
-    // auto sockptr = parseArguments( argc, argv );
+    auto sock = parseArguments( argc, argv );
     // Thread socket_handler(handle_socket, sockptr);
 
     while (true) {
@@ -167,18 +166,15 @@ struct AddrInfo {
         }
     }
 
-    FileDesc * getBoundSocket() const {
-        FileDesc *sock =
-            new FileDesc(socket(res->ai_family,
-                                res->ai_socktype,
-                                res->ai_protocol));
+    FileDesc getBoundSocket() const {
+        FileDesc sock (socket(res->ai_family,
+                              res->ai_socktype,
+                              res->ai_protocol));
 
-        if (bind(*sock, res->ai_addr, res->ai_addrlen)) {
-            delete sock;
+        if (bind(sock, res->ai_addr, res->ai_addrlen)) {
             cerr << "Could not bind:\n";
             perror("");
             throw AddrError();
-            return nullptr;
         }
 
         return sock;
@@ -190,7 +186,7 @@ struct AddrInfo {
     }
 };
 
-FileDesc * parseArguments( int argc, char **argv ) try {
+FileDesc parseArguments( int argc, char **argv ) try {
     if (argc != 2)
         throw ArgError();
 

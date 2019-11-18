@@ -5,6 +5,7 @@
 #include "../../lib/string.hpp"
 #include "../../lib/vector.hpp"
 #include "../../lib/thread.hpp"
+#include "../../lib/file_descriptor.hpp"
 #include <unistd.h> 
 #include <stdio.h> 
 #include <sys/socket.h> 
@@ -49,8 +50,22 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE); 
     } 
 
-    Thread t(handle_socket, new int(server_fd));
+    cout << "got server socket of " << server_fd << endl;
+
+      std::cout << "before listen" << std::endl;
+      if (listen(server_fd, 3) < 0) 
+      { 
+         std::cout << "listen error" << std::endl;
+         std::cout << errno << std::endl;
+          perror("listen"); 
+          exit(EXIT_FAILURE); 
+      } 
+      std::cout << "after listen" << std::endl;
+
+    /*
+    Thread t(handle_socket, new FileDesc(server_fd));
     t.detach();
+    */
 
     while (true);
 

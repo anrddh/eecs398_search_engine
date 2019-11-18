@@ -73,11 +73,11 @@ namespace fb {
         }
 
         [[nodiscard]] constexpr Reference back() {
-            return buf.back();
+            return *(end() - 1);
         }
 
         [[nodiscard]] constexpr ConstReference back() const {
-            return buf.back();
+            return *(end() - 1);
         }
 
         [[nodiscard]] constexpr Pointer data() noexcept {

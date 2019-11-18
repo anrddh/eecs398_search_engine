@@ -3,6 +3,7 @@
 
 #include "functional.hpp"
 #include "vector.hpp"
+#include <utility>
 
 #define INITIAL_SIZE 1024
 
@@ -124,10 +125,9 @@ public:
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
             }
-        }else{
-            //bucket is empty, so return end
-            return end();
         }
+        //bucket is empty, or key not found so return end
+        return end();
     }
 
     // returns a reference to the value in the bucket with the key, if it
@@ -198,7 +198,7 @@ public:
 
     // insert returns whether inserted successfully
     // (if the key already exists in the table, do nothing and return false).
-    bool insert(const K& key, const V& val) {
+    bool insert(K& key, V& val) {
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
@@ -224,7 +224,7 @@ public:
                         num_ghosts--;
                     }
                     buckets[original_hash].key = key;
-                    buckets[original_hash].val = val;
+                    buckets[original_hash].val = std::move(val);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
                     return true;
@@ -233,7 +233,7 @@ public:
         }else{
             //bucket is empty, so add key
             buckets[original_hash].key = key;
-            buckets[original_hash].val = val;
+            buckets[original_hash].val = std::move(val);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
             return true;

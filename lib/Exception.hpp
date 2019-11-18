@@ -5,16 +5,17 @@
 
 #include <exception>
 #include <utility>
+#include <stdexcept>
 
 namespace fb {
 
     // Simple exception class for reporting String errors
     // TODO remove std::exception!
-    struct Exception : std::runtime_exception {
-        constexpr Exception(const char *msg_) noexcept : msg(msg_) {}
+    struct Exception {
+        Exception(const char *msg_) noexcept : msg(msg_) {}
         Exception(const String &msg_) : msg(msg_) {}
 
-        [[nodiscard]] virtual const char * what() const noexcept override {
+        [[nodiscard]] virtual const char * what() const noexcept {
             return msg.data();
         }
 

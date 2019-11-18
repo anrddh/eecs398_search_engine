@@ -78,8 +78,6 @@ struct Args {
 FileDesc initializeDataStructures(int argc, char **argv);
 
 int main(int argc, char **argv) try {
-    auto [sock, UrlStore, FrontierPrefix] = parseArguments(argc, argv);
-
     UrlStore::init(UrlStoreFileName, false);
     Frontier::init("/tmp/frontier-bin.", false);
 

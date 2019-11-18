@@ -69,10 +69,6 @@ namespace fb {
 
     struct ToStringConvErr : public Exception {
         ToStringConvErr(const char *msg_) : Exception(msg_) {}
-
-        [[nodiscard]] virtual const char * what() const noexcept override {
-            return msg;
-        }
     };
 
     template <typename T>

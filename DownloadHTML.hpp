@@ -25,7 +25,7 @@ class ParsedUrl
    public:
       static const fb::String defaultPort; 
       const fb::String CompleteUrl;
-      fb::String Service, Host, Port, Path;
+      fb::StringView Service, Host, Port, Path;
 
       ParsedUrl( const fb::String &url )
         : CompleteUrl( url )
@@ -35,7 +35,7 @@ class ParsedUrl
          fb::SizeT end = CompleteUrlView.find( "://", 0, 3 );
          if ( end != fb::String::npos )
             {
-            Service = CompleteUrl.substr( start, end - start );
+            Service = CompleteUrlView.substr( start, end - start );
             start = end + 3;
             }
 
@@ -43,30 +43,26 @@ class ParsedUrl
          fb::SizeT HostEnd = CompleteUrlView.find( ":", start, 1 );
          if ( HostEnd < end )
             {
-            Host = CompleteUrl.substr( start, HostEnd - start );
-            Port = CompleteUrl.substr( HostEnd + 1, end - HostEnd - 1 );
+            Host = CompleteUrlView.substr( start, HostEnd - start );
+            Port = CompleteUrlView.substr( HostEnd + 1, end - HostEnd - 1 );
             }
          else
             {
             if ( end == fb::String::npos )
-            {
-               Host = CompleteUrl.substr( start );
-            }
+               Host = CompleteUrlView.substr( start );
             else
-            {
-               Host = CompleteUrl.substr( start, end - start );
-            }
+               Host = CompleteUrlView.substr( start, end - start );
 
-            if ( Service == "http" )
+            if ( Service == "http"_sv )
                Port = "80";
-            else if ( Service == "https" )
+            else if ( Service == "https"_sv )
                Port = "443";
             else
                Port = defaultPort;
             }
 
          if ( end != fb::String::npos )
-            Path = CompleteUrl.substr( end + 1 );
+            Path = CompleteUrlView.substr( end + 1 );
          else
             Path = "";
          }
@@ -76,7 +72,7 @@ class ParsedUrl
          };
 
       // print function for debugging
-      void print( )
+      void print( ) const
          {
          std::cout << "Complete Url = " << CompleteUrl << std::endl;
          std::cout << "Service = " << Service
@@ -196,11 +192,11 @@ struct ConnectionAcception
 class ConnectionWrapper
    {
    public:
-      ParsedUrl &url;
+      const ParsedUrl &url;
       int socketFD;
 
       // http connection
-      ConnectionWrapper( ParsedUrl &url_in )
+      ConnectionWrapper( const ParsedUrl &url_in )
       : url(url_in) 
          {
          // Get the host address
@@ -209,8 +205,11 @@ class ConnectionWrapper
          hints.ai_family = AF_INET;
          hints.ai_socktype = SOCK_STREAM;
          hints.ai_protocol = IPPROTO_TCP;
-         int getaddrResult = getaddrinfo( url.Host.data( ),
-               url.Port.data( ), &hints, &address );
+
+         fb::String hostStr( url.Host.data( ), url.Host.size( ) );
+         fb::String portStr( url.Port.data( ), url.Port.size( ) );
+         int getaddrResult = getaddrinfo( hostStr.data( ),
+               portStr.data( ), &hints, &address );
 
          if ( getaddrResult != 0 )
             recordFailedLink( "getaddrResult" );
@@ -262,7 +261,7 @@ class ConnectionWrapper
 class SSLWrapper : public ConnectionWrapper
    {
    public:
-      SSLWrapper( ParsedUrl &url_in )
+      SSLWrapper( const ParsedUrl &url_in )
       : ConnectionWrapper( url_in ) 
          {
          // Add SSL layer around http
@@ -428,9 +427,9 @@ HeaderResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
    }
 
 // Helper function to get the correct ConnectionWrapper
-ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
+ConnectionWrapper * ConnectionWrapperFactory( const ParsedUrl &url )
    {
-   if ( url.Service == "http" )
+   if ( url.Service == "http"_sv )
       return new ConnectionWrapper( url );
    else
       return new SSLWrapper( url );
@@ -452,6 +451,8 @@ DownloadResult PrintGetRedirect( const fb::String &url,
    {
       // Parse the URL
    ParsedUrl parsedUrl( url );
+   std::cout << "PrintGetRedirect" << std::endl;
+   parsedUrl.print();
 
    ConnectionWrapper *connector = ConnectionWrapperFactory( parsedUrl );
 
@@ -482,7 +483,8 @@ DownloadResult PrintGetRedirect( const fb::String &url,
 
    if ( headerResult.response == "301"
          && ( !redirectUrl.empty() && redirectUrl[ 0 ] == '/' ) )
-      redirectUrl = parsedUrl.Service + "://" + parsedUrl.Host + redirectUrl;
+      redirectUrl = fb::String( parsedUrl.Service.data( ), parsedUrl.Service.size( ) ) 
+         + "://" + fb::String( parsedUrl.Host.data( ), parsedUrl.Host.size( ) ) + redirectUrl;
    else if ( headerResult.response != "301" )
       {
       // write the content if no redirect and link is html
@@ -490,17 +492,11 @@ DownloadResult PrintGetRedirect( const fb::String &url,
          {
          while ( ( bytes =  connector->read( buffer ) ) > 0 
                && !writer.contentTooBig( ) )
-         {
-            // std::cout << "downloading" << std::endl;
-            // std::cout << bytes << std::endl;
             writer.print( buffer, bytes );
-         }
-
          }
 
       if ( !writer.contentTooBig() )
          {
-         // std::cout << "not too big" << std::endl;
          dlResult.downloadedContent = writer.downloadedContent;
          dlResult.fileSmallEnough = true;
          }

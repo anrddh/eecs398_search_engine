@@ -25,7 +25,7 @@
 // constexptr int MAX_BITS_PER_CHUNK = 28;
 // constexptr int TOKEN_THRESHOLD = 2 << MAX_BITS_PER_CHUNK; //134,217,728; // 2^27
 
-template<int MAX_BITS_PER_CHUNK, int NUM_SKIP_TABLE_BITS>
+template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
 class IndexBuilder {
 public:
    // root must contain a trailing '/'
@@ -82,7 +82,7 @@ private:
       {
       WriteToDiskInput input = *(WriteToDiskInput *)arg;
 
-      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, input.map.bucket_count());
+      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK> indexChunkBuilder(input.filename, input.map.bucket_count());
 
       for(auto iter = input.map.begin(); iter != input.map.end(); ++iter)
          {

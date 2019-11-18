@@ -20,8 +20,8 @@ struct AbsoluteWordInfo {
 
 struct DocIdInfo {
   // position of last word in document + 1
-  unsigned int pos;
-  unsigned int docId;
+  unsigned int position;
+  uint64_t docId;
 };
 
 struct WriteToDiskInput {

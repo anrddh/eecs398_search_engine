@@ -19,6 +19,7 @@
 // Child Machine T First letter C (char) - ask if master wants to terminate
 // Master responds T (char) - do terminate
 //                 N (char) - not terminating
+// Child responds F (char) - to indicate the worker is shutting down
 
 class SocketException : public fb::Exception {
 public:

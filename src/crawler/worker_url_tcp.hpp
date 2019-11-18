@@ -10,5 +10,16 @@
 // before any other functions are called
 void set_master_ip( const fb::String& master_ip_, int master_port_ );
 
+// Tell system to initiate shut down
+// We will no longer recieve any new pages to parse from master
+// However, all urls we already have will be parsed first.
+void initiate_shut_down();
+
+// Checks if we should shut down
+// (i.e. no more urls to parse)
+bool should_shutdown();
+
+
+// If 
 fb::Pair<fb::SizeT, fb::String> get_url_to_parse();
 void add_parsed( ParsedPage pp ); // Use move ctor if possible

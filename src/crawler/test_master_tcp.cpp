@@ -1,8 +1,10 @@
 // Added by Jaeyoon Kim 11/15/2019
 
 #include "master_url_tcp.hpp"
+#include "handle_socket.hpp"
 #include "../../lib/string.hpp"
 #include "../../lib/vector.hpp"
+#include "../../lib/thread.hpp"
 #include <unistd.h> 
 #include <stdio.h> 
 #include <sys/socket.h> 
@@ -47,46 +49,10 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE); 
     } 
 
-    while (true) {
-       cout << "before listen" << endl;
-       if (listen(server_fd, 3) < 0) 
-       { 
-           perror("listen"); 
-           exit(EXIT_FAILURE); 
-       } 
-       cout << "after listen" << endl;
+    Thread t(handle_socket, new int(server_fd));
+    t.detach();
 
-       if ((sock = accept(server_fd, (struct sockaddr *)&address,  
-                          (socklen_t*)&addrlen))<0) 
-       { 
-           perror("accept"); 
-           exit(EXIT_FAILURE); 
-       } 
-       cout << "after accept" << endl;
-       try {
-          char message_type = check_socket( sock );
-          if ( message_type == 'S' ) {
-             Vector<ParsedPage> pages = recv_parsed_pages(sock);
-             for (auto p : pages) {
-                cout << "offset: " << p.url_offset << "\n";
-                for ( auto link : p.links ) {
-                   cout << "url: " << link.first << " anchor text: " << link.second << "\n";
-                }
-             }
-          } 
-          if ( message_type == 'R' ) { 
-             cout << "in request" << endl;
-             Vector<SizeT> dummy_offset;
-             for (int i = 0; i < 100; ++i) {
-                dummy_offset.pushBack(i);
-             }
-             send_urls(sock, dummy_offset);
-          }
-       } catch (SocketException& se) {
-          cout << se.what() << endl;
-       } 
-       close(sock);
-    }
+    while (true);
 
     return 0; 
 } 

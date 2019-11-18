@@ -125,10 +125,9 @@ public:
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
             }
-        }else{
-            //bucket is empty, so return end
-            return end();
         }
+        //bucket is empty, or key not found so return end
+        return end();
     }
 
     // returns a reference to the value in the bucket with the key, if it

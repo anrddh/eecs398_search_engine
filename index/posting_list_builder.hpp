@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-#include "fb/indexEntry.hpp"
+#include "indexEntry.hpp"
 
 #include "index_helpers.hpp"
 #include "index_data_structures.hpp"

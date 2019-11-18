@@ -1,8 +1,8 @@
 #pragma once
 
-#include "fb/string.hpp"
-#include "fb/vector.hpp"
-#include "fb/unordered_map.hpp"
+#include "string.hpp"
+#include "vector.hpp"
+#include "unordered_map.hpp"
 
 struct MasterIndexData {
     int numIndexes;

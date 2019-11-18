@@ -7,11 +7,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "fb/string.hpp"
-#include "fb/memory.hpp"
-#include "fb/functional.hpp"
-#include "fb/mutex.hpp"
-#include "fb/thread.hpp"
+#include "string.hpp"
+#include "memory.hpp"
+#include "functional.hpp"
+#include "mutex.hpp"
+#include "thread.hpp"
 
 #include "index_chunk_builder.hpp"
 #include "index_helpers.hpp"

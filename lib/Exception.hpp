@@ -1,6 +1,8 @@
 // Created by Jaeyoon Kim 11/6/2019
 #pragma once
 
+#include "string.hpp"
+
 #include <exception>
 #include <utility>
 
@@ -8,14 +10,15 @@ namespace fb {
 
     // Simple exception class for reporting String errors
     // TODO remove std::exception!
-    struct Exception : std::exception {
-        Exception(const char *msg_) : msg(msg_) {}
+    struct Exception : std::runtime_exception {
+        constexpr Exception(const char *msg_) noexcept : msg(msg_) {}
+        Exception(const String &msg_) : msg(msg_) {}
 
         [[nodiscard]] virtual const char * what() const noexcept override {
-            return msg;
+            return msg.data();
         }
 
-        const char * msg = "";
+        String msg = "";
     };
 
 }

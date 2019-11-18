@@ -229,8 +229,8 @@ namespace fb {
             if (v.empty())
                 return 0;
 
-            auto len = size() - pos - 1;
-            auto ptr = data() + pos + 1;
+            auto len = size() - pos;
+            auto ptr = data() + pos;
 
             for ( ; v.size() <= len; --len, ++ptr)
                 if (!memcmp(ptr, v.data(), v.size()))
@@ -254,7 +254,6 @@ namespace fb {
     private:
         ConstPointer ptr = nullptr;
         SizeT len = 0;
-        // View<CharT, dynamicExtent> view;
     };
 
     template <typename CharT, typename Traits>

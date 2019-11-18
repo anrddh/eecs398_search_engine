@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <regex.h>
+#include <string.h>
 
 class Regex {
 public:
@@ -13,42 +14,45 @@ public:
         Error(const fb::String &msg) : fb::Exception(msg) {}
     };
 
+    Regex() {
+        memset(&t, 0, sizeof(t));
+    }
+
     Regex(const char *regex) {
         auto rval = regcomp(&t, regex, REG_ICASE);
         if (rval) {
-            String str;
-            str.resize(regerror(rval, &regex, nullptr, 0) - 1);
-            auto numWritten = regerror(rval, &regex, str.data(), str.size() + 1);
+            fb::String str;
+            str.resize(regerror(rval, &t, nullptr, 0) - 1);
+            auto numWritten = regerror(rval, &t, str.data(), str.size() + 1);
             assert(numWritten == str.size() - 1);
             throw Error(str);
         }
     }
 
     bool match(const char *needle) {
-        auto rval = regexec(t, needle, 0, nullptr, 0);
+        auto rval = regexec(&t, needle, 0, nullptr, 0);
         return !rval;
     }
 
-    constexpr Regex(Regex &&other) noexcept {
+    Regex(Regex &&other) noexcept {
         swap(other);
     }
 
-    constexpr Regex & operator=(Regex &&other) noexcept {
+    Regex & operator=(Regex &&other) noexcept {
         swap(other);
         return *this;
     }
 
-    constexpr void swap(Regex &other) noexcept {
+    void swap(Regex &other) noexcept {
         fb::swap(t, other.t);
     }
 
     ~Regex() noexcept {
-        if (t)
-            regfree(t);
+        regfree(&t);
     }
 
 private:
-    regex_t *t = nullptr;
+    regex_t t;
 };
 
 template <>

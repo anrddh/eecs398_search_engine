@@ -330,7 +330,7 @@ private:
     Pred pred = fb::EqualTo<K>();
 
     void rehash_and_grow(SizeT n) {
-        Vector<Bucket> temp = buckets;
+        Vector<Bucket> temp = std::move(buckets);
         buckets.clear();
         num_elements = 0;
         num_ghosts = 0;

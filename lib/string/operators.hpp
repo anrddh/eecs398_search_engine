@@ -3,6 +3,7 @@
 #include "main.hpp"
 #include "../stddef.hpp"
 #include "../functional.hpp"
+#include "../Exception.hpp"
 
 #include <iostream>
 
@@ -66,13 +67,25 @@ namespace fb {
         }
     };
 
+    struct ToStringConvErr : public Exception {
+        ToStringConvErr(const char *msg_) : Exception(msg_) {}
+
+        [[nodiscard]] virtual const char * what() const noexcept override {
+            return msg;
+        }
+    };
+
     template <typename T>
     String toString(T);
 
     template <>
     inline String toString<int>( int value ) {
+        auto num = snprintf(nullptr, 0, "%d", value);
+        if (num <= 0)
+            throw ToStringConvErr("");
+
         String str;
-        str.resize(snprintf(nullptr, 0, "%d", value));
+        str.resize(num);
         auto numWritten = snprintf(str.data(), str.size() + 1, "%d", value);
         assert(numWritten == str.size());
         return str;

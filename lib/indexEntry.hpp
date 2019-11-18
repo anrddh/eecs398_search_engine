@@ -29,7 +29,7 @@ uint8_t ANCHOR_FLAG = 0b0001;
  * mem = add_num(mem, 1623, ITALICS_FLAG);
  * mem = add_num(mem, 610516583293);
  */
-inline char* add_num( char* curr, size_t num, uint8_t header = 0 ) 
+inline char* add_word_post( char* curr, size_t num, uint8_t header = 0 ) 
    {
    if (header) 
       {

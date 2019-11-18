@@ -55,9 +55,9 @@ namespace fb {
         }
 
         Vector( Vector<T>&& v ) noexcept
-            : size_(v.size()),
-              cap_(v.capacity()),
-              buf(std::move(v.buf)) {
+            : buf(std::move(v.buf)),
+              size_(v.size()),
+              cap_(v.capacity()) {
            v.size_ = 0;
            v.cap_ = 0;
         }

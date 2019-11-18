@@ -113,7 +113,6 @@ public:
             rehash_and_grow(buckets.size() * 2);
         }
         SizeT desired_bucket = hash(key) % buckets.size();
-        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -180,7 +179,6 @@ public:
             rehash_and_grow(buckets.size() * 2);
         }
         SizeT desired_bucket = hash(key) % buckets.size();
-        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if (buckets[desired_bucket].status != Status::Empty) {
             //search until an empty bucket

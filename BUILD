@@ -17,13 +17,3 @@ cc_library(
     strip_include_prefix = "external/openssl/include",
     visibility = ["//visibility:public"],
 )
-
-# -- BELOW HERE IS TEMPORARY -- #
-
-cc_binary(
-    name = "download_html",
-    srcs = ["DownloadHTML.cpp", "DownloadHTML.hpp", "parser/parser.hpp", "lib/stddef.hpp"],
-    deps = [
-        ":openssl",
-    ],
-)

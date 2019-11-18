@@ -58,7 +58,7 @@ public:
         return filePtr;
     }
 
-    [[nodiscard]] constexpr T & operator[](fb::SizeT idx) noexcept {
+    [[nodiscard]] constexpr T & operator[](fb::SizeT idx) const noexcept {
         return data()[idx];
     }
 

@@ -19,7 +19,7 @@ public:
     }
 
     Regex(const char *regex) {
-        auto rval = regcomp(&t, regex, REG_ICASE);
+        auto rval = regcomp(&t, regex, 0);
         if (rval) {
             fb::String str;
             str.resize(regerror(rval, &t, nullptr, 0) - 1);

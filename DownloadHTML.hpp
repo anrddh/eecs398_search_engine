@@ -17,7 +17,6 @@
 #include "lib/unordered_set.hpp"
 #include "lib/string.hpp"
 #include "lib/utility.hpp"
-// #include "lib/cstring.hpp"
 
 // URL wrapper class 
 class ParsedUrl
@@ -87,7 +86,7 @@ const fb::String ParsedUrl::defaultPort = "443";
 // Wrapper class to handle writing
 // Handles chunked encoding
 class BufferWriter
-{
+   {
    public:
       fb::String downloadedContent;
       bool chunked;
@@ -180,13 +179,13 @@ class BufferWriter
    };
 
 struct ConnectionAcception 
-{
+   {
    ConnectionAcception(const fb::String msg_) : msg(msg_)
       {
       }
 
    const fb::String msg;
-};
+   };
 
 // Wrapper class to handle http
 class ConnectionWrapper
@@ -342,19 +341,19 @@ bool headerEnd( )
    }
 
 bool checkFileType( const fb::StringView &headerView, const fb::Vector<fb::String> &acceptableTypes )
-{
+   {
    for ( const auto i : acceptableTypes )
       if ( headerView.find( i ) != fb::String::npos )
          return true;
 
    return false;
-}
+   }
 
 struct HeaderResult
-{
-fb::String response;
-bool fileTypeGood;
-};
+   {
+   fb::String response;
+   bool fileTypeGood;
+   };
 
 // Get header and parse relevant information
 // return apporpriate pair of DownloadStatus and redirectUrl

@@ -96,13 +96,13 @@ int main( int argc, char *argv[ ] )
       fb::String downloadedContent;
       auto ht = HTTPDownloader();
       auto a = ht.PrintHtml( url );
-      std::cout << "print html" << std::endl;
+      // std::cout << "print html" << std::endl;
       // std::cout << a << std::endl;
       std::cout << a.downloadedContent << std::endl;
-      std::cout << "response " << a.response << std::endl;
+      // std::cout << "response " << a.response << std::endl;
 
-      if ( a.response[0] == '4' )
-        std::cout << ht.header << std::endl;
+      // if ( a.response[0] == '4' )
+      //   std::cout << ht.header << std::endl;
 
       // auto htt = HTTPDownloader();
       // auto b = htt.PrintPlainTxt( url );

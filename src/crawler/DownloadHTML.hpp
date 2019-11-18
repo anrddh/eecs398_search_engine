@@ -17,7 +17,6 @@
 #include "lib/unordered_set.hpp"
 #include "lib/string.hpp"
 #include "lib/utility.hpp"
-// #include "lib/cstring.hpp"
 
 // URL wrapper class 
 class ParsedUrl
@@ -49,13 +48,9 @@ class ParsedUrl
          else
             {
             if ( end == fb::String::npos )
-            {
                Host = CompleteUrl.substr( start );
-            }
             else
-            {
                Host = CompleteUrl.substr( start, end - start );
-            }
 
             if ( Service == "http" )
                Port = "80";
@@ -76,7 +71,7 @@ class ParsedUrl
          };
 
       // print function for debugging
-      void print( )
+      void print( ) const
          {
          std::cout << "Complete Url = " << CompleteUrl << std::endl;
          std::cout << "Service = " << Service
@@ -91,16 +86,14 @@ const fb::String ParsedUrl::defaultPort = "443";
 // Wrapper class to handle writing
 // Handles chunked encoding
 class BufferWriter
-{
+   {
    public:
-      fb::String &downloadedContent;
+      fb::String downloadedContent;
       bool chunked;
 
-      BufferWriter( bool chunkedIn, fb::String &downloadedContentIn )
-      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" ),
-         downloadedContent( downloadedContentIn )
+      BufferWriter( bool chunkedIn )
+      : chunked( chunkedIn ), chunkSize( 0 ), chunkSizeString( "" )
          {
-         downloadedContent.clear( );
          }
 
       ~BufferWriter( )
@@ -185,6 +178,15 @@ class BufferWriter
          }
    };
 
+struct ConnectionAcception 
+   {
+   ConnectionAcception(const fb::String msg_) : msg(msg_)
+      {
+      }
+
+   const fb::String msg;
+   };
+
 // Wrapper class to handle http
 class ConnectionWrapper
    {
@@ -231,7 +233,7 @@ class ConnectionWrapper
          close( fd );
          std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
          std::cerr << "Failed at " << msg << std::endl;
-         throw 1;
+         throw ConnectionAcception( msg );
          }
 
       virtual ~ConnectionWrapper( )
@@ -304,6 +306,18 @@ class SSLWrapper : public ConnectionWrapper
       SSL *ssl;
    };
 
+class HTTPDownloader
+{
+public:
+
+HTTPDownloader( )
+   : header( "    " ) 
+   {
+   }
+
+fb::String redirectUrl;
+fb::String header;
+
 // GetMessage
 const fb::String GetGetMessage( const ParsedUrl &url )
    {
@@ -316,10 +330,7 @@ const fb::String GetGetMessage( const ParsedUrl &url )
    return getMessage;
    }
 
-const fb::String linkNotHTML = "LINK IS NOT HTML";
-
-
-bool headerEnd( const fb::String &header )
+bool headerEnd( )
    {
    const fb::String endHeader = "\r\n\r\n";
    fb::SizeT offset = header.size( ) - 4;
@@ -330,38 +341,39 @@ bool headerEnd( const fb::String &header )
    }
 
 bool checkFileType( const fb::StringView &headerView, const fb::Vector<fb::String> &acceptableTypes )
-{
+   {
    for ( const auto i : acceptableTypes )
       if ( headerView.find( i ) != fb::String::npos )
          return true;
 
    return false;
-}
+   }
 
-enum DownloadStatus
+struct HeaderResult
    {
-   redirect, typeMismatch, tooBig, good
+   fb::String response;
+   bool fileTypeGood;
    };
-
-using DownloadResult = fb::Pair<DownloadStatus, fb::String>;
 
 // Get header and parse relevant information
 // return apporpriate pair of DownloadStatus and redirectUrl
-DownloadResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer, 
+HeaderResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer, 
    const fb::Vector<fb::String> &acceptableTypes )
    {
    char buffer [ 10240 ];
    int bytes;
-   fb::String header = "    ";
    bool pastHeader = false;
-
-   DownloadStatus status = good;
-   fb::String redirectUrl;
 
    // some websites do not use capital case.
    const fb::String redirectIndicator = "ocation: ";
    const fb::String chunkedIndicator = "chunked";
    const fb::String endLineIndicator = "\r\n";
+
+   HeaderResult headerResult;
+   headerResult.fileTypeGood = true;
+
+   header = "    ";
+   redirectUrl.clear();
 
    while ( ( bytes =  connector->read( buffer ) ) > 0 )
       {
@@ -370,9 +382,12 @@ DownloadResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
          {
          header += buffer[ i ];
          // if end of header reached
-         if ( headerEnd( header ) )
+         if ( headerEnd( ) )
             {
-               // std::cout << header << std::endl;
+            fb::SizeT firstSpace = header.find( ' ', 4 );
+            fb::SizeT secondSpace = header.find( ' ', firstSpace );
+            headerResult.response = header.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+
             // check for chunked
             const fb::StringView headerView( header );
             if ( headerView.find( chunkedIndicator ) != fb::String::npos )
@@ -386,11 +401,9 @@ DownloadResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
                redirectUrl = header.substr(
                      startRedirectUrl + redirectIndicator.size( ),
                      endRedirectUrl - startRedirectUrl - redirectIndicator.size( ) );
-
-               status = DownloadStatus::redirect;
                }
             else if ( !checkFileType( headerView, acceptableTypes ) )
-               status = DownloadStatus::typeMismatch;
+               headerResult.fileTypeGood = false;
             else
                {
                // print the remaining message if no need to redirect
@@ -406,7 +419,7 @@ DownloadResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
       if ( pastHeader )
          break;
       }
-   return { status, redirectUrl };
+   return headerResult;
    }
 
 // Helper function to get the correct ConnectionWrapper
@@ -418,10 +431,18 @@ ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
       return new SSLWrapper( url );
    }
 
+struct DownloadResult 
+{
+   fb::String response;
+   fb::String downloadedContent;
+   bool fileTypeGood;
+   bool fileSmallEnough;
+};
+
 // Esatblish connection with the url and try to write to downloadedContent
 // Only download if type of the content matches and not too big
 // return apporpriate pair of DownloadStatus and redirectUrl
-DownloadResult PrintGetRedirect( const fb::String &url, fb::String &downloadedContent, 
+DownloadResult PrintGetRedirect( const fb::String &url,
    const fb::Vector<fb::String> &acceptableTypes )
    {
       // Parse the URL
@@ -440,65 +461,88 @@ DownloadResult PrintGetRedirect( const fb::String &url, fb::String &downloadedCo
    int bytes;
 
    // temporary filename
-   BufferWriter writer( false, downloadedContent );
+   BufferWriter writer( false );
 
    // Check for redirect and other relevant header info
-   DownloadResult result = parseHeader( connector, writer, acceptableTypes );
+   HeaderResult headerResult = parseHeader( connector, writer, acceptableTypes );
 
-   if ( result.first == DownloadStatus::redirect 
-         && (  !result.second.empty() && result.second[ 0 ] == '/' ) )
-      result.second = parsedUrl.Service + "://" + parsedUrl.Host + result.second;
+   DownloadResult dlResult;
+   dlResult.response = headerResult.response;
+   dlResult.fileTypeGood = headerResult.fileTypeGood;
+   dlResult.fileSmallEnough = true;
 
-   
-   // write the content if no redirect and link is html
-   if ( result.first == DownloadStatus::good )
+   // std::cout << "Sadas" << std::endl;
+   // std::cout << headerResult.response << "ss " << std::endl;
+   // std::cout << redirectUrl << std::endl;
+
+   if ( headerResult.response == "301"
+         && ( !redirectUrl.empty() && redirectUrl[ 0 ] == '/' ) )
+      redirectUrl = parsedUrl.Service + "://" + parsedUrl.Host + redirectUrl;
+   else if ( headerResult.response != "301" )
       {
-      while ( ( bytes =  connector->read( buffer ) ) > 0 
-            && !writer.contentTooBig( ) )
-         writer.print( buffer, bytes );
-      }
+      // write the content if no redirect and link is html
+      if ( headerResult.fileTypeGood )
+         {
+         while ( ( bytes =  connector->read( buffer ) ) > 0 
+               && !writer.contentTooBig( ) )
+         {
+            // std::cout << "downloading" << std::endl;
+            // std::cout << bytes << std::endl;
+            writer.print( buffer, bytes );
+         }
 
-   if ( writer.contentTooBig() )
-      {
-      downloadedContent.clear( );
-      result.first = DownloadStatus::tooBig;
+         }
+
+      if ( !writer.contentTooBig() )
+         {
+         // std::cout << "not too big" << std::endl;
+         dlResult.downloadedContent = writer.downloadedContent;
+         dlResult.fileSmallEnough = true;
+         }
+      else
+         dlResult.fileSmallEnough = false;
       }
 
    // clean up
    delete connector;
 
-   return result;
+   return dlResult;
    }
 
 // Write the content of the url except header to donloadedContent
 // redirect is handled to the extent that there is no loop in redirect
 // type of the content in url must match acceptableTypes
 // return true if download succeeds
-bool PrintFile( const fb::String &url, fb::String &downloadedContent,
+DownloadResult PrintFile( const fb::String &url,
       const fb::Vector<fb::String> &acceptableTypes )
    {
    fb::UnorderedSet<fb::String> visitedURLs;
 
    visitedURLs.insert( url );
 
-   DownloadResult result = { DownloadStatus::redirect, url };
+   DownloadResult result;
+   result.response = "301";
+   redirectUrl = url;
 
-   while ( result.first == DownloadStatus::redirect )
+   while ( result.response == "301" )
       {
-      result = PrintGetRedirect( result.second, downloadedContent, acceptableTypes );
-
+         // std::cout << "before redirect " << redirectUrl  << std::endl;
+      result = PrintGetRedirect( redirectUrl, acceptableTypes );
+      // std::cout << "redirect " << redirectUrl  << std::endl;
+      // std::cout << result.downloadedContent << std::endl;
       // If there is a loop, probably a bad website.
-      if ( result.first == DownloadStatus::typeMismatch || 
-         (result.first == DownloadStatus::redirect && visitedURLs.find( result.second ) != visitedURLs.end( ) ) )
+      if ( !result.fileSmallEnough || !result.fileTypeGood ||
+         ( result.response == "301" && visitedURLs.find( redirectUrl ) != visitedURLs.end( ) ) )
          {
-         downloadedContent.clear();
+            // std::cout  << "in break" << std::endl;
+            // std::cout << !result.fileTypeGood << std::endl;
          break;
          }
 
-      visitedURLs.insert( result.second );
+      visitedURLs.insert( redirectUrl );
       }
 
-   return result.first == DownloadStatus::good;
+   return result;
    }
 
 // Downlaod html file of given url handling redirect appropriately,
@@ -506,10 +550,10 @@ bool PrintFile( const fb::String &url, fb::String &downloadedContent,
 // downloadedContent will be cleared at beginning and if download fails
 // return true if donwload succeeds
 // exception thrown if cannot connect to url
-bool PrintHtml( const fb::String &url_in, fb::String &dowloadedContent )
+DownloadResult PrintHtml( const fb::String &url_in )
    {
    fb::Vector<fb::String> acceptableTypes = { "text/html" };
-   return PrintFile( url_in, dowloadedContent, acceptableTypes );
+   return PrintFile( url_in, acceptableTypes );
    }
 
 // Downlaod html file or txt file of given url handling redirect appropriately,
@@ -517,9 +561,11 @@ bool PrintHtml( const fb::String &url_in, fb::String &dowloadedContent )
 // downloadedContent will be cleared at beginning and if download fails
 // return true if donwload succeeds
 // exception thrown if cannot connect to url
-bool PrintPlainTxt( const fb::String &url_in, fb::String &dowloadedContent )
+DownloadResult PrintPlainTxt( const fb::String &url_in )
    {
    fb::Vector<fb::String> acceptableTypes = { "text/html", "text/plain" };
-   return PrintFile( url_in, dowloadedContent, acceptableTypes );
+   return PrintFile( url_in, acceptableTypes );
    }
+
+};
 

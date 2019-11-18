@@ -51,9 +51,9 @@ void *commandLineArgs( void * )
    fb::String userInput;
    do
       {
-      std::cout << "Shut down? (type 'SHUT DOWN!')" << std::endl;
-      std::cin >>  userInput;
-      if ( userInput == "SHUT DOWN!" )
+      std::cout << "Shut down? (type 'YES')" << std::endl;
+      std::cin >> userInput;
+      if ( userInput == "YES" )
          {
          std::cout << "Are you sure? (type 'YES')" << std::endl;
          std::cin >>  userInput;

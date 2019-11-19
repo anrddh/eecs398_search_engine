@@ -35,7 +35,6 @@ constexpr SizeT NUM_SAMPLE = 3;
 
 FrontierBin::FrontierBin( StringView filename, bool init )
     : localSeed( ++randSeedCounter ),
-      idx( localSeed ),
       toParse(filename, init) {}
 
 void FrontierBin::addUrl(const FrontierUrl &url) {

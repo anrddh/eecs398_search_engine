@@ -21,9 +21,10 @@ class Thread {
 
       Thread& operator=( Thread&& other ) noexcept {
          t.swap(other.t);
+         return *this;
       }
 
-      void join() noexcept 
+      void join() noexcept
       {
          pthread_join(*t.get(), nullptr);
       }

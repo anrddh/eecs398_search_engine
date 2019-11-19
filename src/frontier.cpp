@@ -7,6 +7,7 @@
 
 #include <fb/mutex.hpp>
 #include <fb/utility.hpp>
+#include <fb/string.hpp>
 #include <fb/string_view.hpp>
 
 #include <atomic>
@@ -43,7 +44,7 @@ void FrontierBin::addUrl(const FrontierUrl &url) {
 }
 
 Vector<SizeT> FrontierBin::getUrl( ) {
-    int rand_num[ NUM_TRY ];
+    SizeT rand_num[ NUM_TRY ];
     localSeedM.lock( );
     for ( SizeT i = 0;  i < NUM_TRY;  ++i )
         rand_num[ i ] = rand_r( &localSeed );
@@ -54,8 +55,8 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     if (toParse.size( ) < NUM_SAMPLE)
         return {}; // empty url
 
-    int max_ranking = 0; // Requires that any ranking of urls to be greater than 0
-    int max_idx;
+    SizeT max_ranking = 0; // Requires that any ranking of urls to be greater than 0
+    SizeT max_idx;
 
     // Find what to sample
     // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
@@ -75,7 +76,7 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     // then we will take them to be parsed
     // Note that it is possible that same url might be checked multiple times
     // However, this is not likely since there should be many urls in here each time
-    for ( int i = NUM_SAMPLE; i < NUM_TRY && !toParse.empty(); ++i ) {
+    for ( auto i = NUM_SAMPLE; i < NUM_TRY && !toParse.empty(); ++i ) {
         if ( toParse[ rand_num[i] % toParse.size() ].ranking >= max_ranking ) {
             urls_to_return.pushBack( toParse[ rand_num[i] % toParse.size() ].offset ) ;
             toParse[ rand_num[i] % toParse.size() ] = toParse.back();
@@ -95,7 +96,7 @@ void Frontier::init(String prefix, bool init) {
     ptr = new Frontier;
 
     FrontierBin *fbptr = reinterpret_cast<FrontierBin *>(frontiers);
-    for (int i = 0; i < NumFrontierBins; ++i) {
+    for (SizeT i = 0; i < NumFrontierBins; ++i) {
         auto fname = prefix + fb::toString(i);
         new (fbptr + i) FrontierBin(fname.data(), init);
     }

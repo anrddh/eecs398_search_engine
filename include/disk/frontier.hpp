@@ -1,14 +1,14 @@
 //  Created by Jaeyoon Kim on 11/10/19.
 #pragma once
 
-#include "DiskVec.hpp"
+#include <disk/disk_vec.hpp>
 
-#include "../../lib/vector.hpp"
-#include "../../lib/stddef.hpp"
-#include "../../lib/utility.hpp"
-#include "../../lib/thread.hpp"
-#include "../../lib/string.hpp"
-#include "../../lib/mutex.hpp"
+#include <fb/vector.hpp>
+#include <fb/stddef.hpp>
+#include <fb/utility.hpp>
+#include <fb/thread.hpp>
+#include <fb/string.hpp>
+#include <fb/mutex.hpp>
 
 constexpr fb::SizeT NumFrontierBins = 16;
 

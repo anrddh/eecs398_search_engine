@@ -5,7 +5,7 @@
 #include "../string_view.hpp"
 #include "../type_traits.hpp"
 #include "../functional.hpp"
-#include "../Exception.hpp"
+#include "../exception.hpp"
 
 #include <type_traits>
 #include <initializer_list>

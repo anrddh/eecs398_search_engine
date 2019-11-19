@@ -2,12 +2,12 @@
 // Edited by Aniruddh Agarwal 11/9/2019
 #pragma once
 
-#include "../../lib/stddef.hpp"
-#include "../../lib/Exception.hpp"
-#include "../../lib/string.hpp"
-#include "../../lib/string_view.hpp"
-#include "../../lib/file_descriptor.hpp"
-#include "../../lib/algorithm/copy.hpp"
+#include <fb/stddef.hpp>
+#include <fb/exception.hpp>
+#include <fb/string.hpp>
+#include <fb/string_view.hpp>
+#include <fb/file_descriptor.hpp>
+#include <fb/algorithm.hpp>
 
 #include <iostream> // TODO delete
 #include <atomic>

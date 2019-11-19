@@ -138,4 +138,4 @@ namespace fb {
         -> decltype(rhs.base() - lhs.base()) {
         return rhs.base() - lhs.base();
     }
-};
+}

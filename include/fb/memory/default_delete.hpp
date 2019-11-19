@@ -28,4 +28,4 @@ template <typename T> struct DefaultDelete<T[]> {
         delete[] ptr;
     }
 };
-}; // namespace fb
+} // namespace fb

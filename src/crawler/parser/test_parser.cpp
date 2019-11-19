@@ -13,6 +13,18 @@
 
 using namespace fb;
 
+void printFlag( const uint8_t flag )
+{
+   if ( flag & INDEX_WORD_TITLE )
+      std::cout << "title ";
+   if ( flag & INDEX_WORD_BOLD )
+      std::cout << "bold ";
+   if ( flag & INDEX_WORD_HEADER )
+      std::cout << "header ";
+   std::cout << std::endl;
+}
+
+
 int main ( int argc, char *argv[] ){
 
    // //ParsedUrl in_url(argv[1]);
@@ -61,5 +73,12 @@ int main ( int argc, char *argv[] ){
 
    outfile << retstr;
    outfile.close();
+
+   std::cout << parser.wordFlags.size() << std::endl;
+   for( const auto i : parser.wordFlags )
+      printFlag(i);
+
+   uint8_t aaa = 4;
+   std::cout << aaa << std::endl;
 
 }

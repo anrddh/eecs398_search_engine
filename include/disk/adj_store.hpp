@@ -2,11 +2,12 @@
 
 #pragma once
 
-#include "../../lib/string_view.hpp"
-#include "../../lib/stddef.hpp"
-#include "../../lib/utility.hpp"
-#include "../../lib/vector.hpp"
-#include "DiskVec.hpp"
+#include <disk/disk_vec.hpp>
+
+#include <fb/string_view.hpp>
+#include <fb/stddef.hpp>
+#include <fb/utility.hpp>
+#include <fb/vector.hpp>
 
 class AdjStore {
 public:

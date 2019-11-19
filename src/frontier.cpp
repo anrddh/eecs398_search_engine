@@ -2,12 +2,12 @@
 // * Edited by Aniruddh Agarwal to improve conformance with style and
 //   memory map frontier
 
-#include "Frontier.hpp"
-#include "DiskVec.hpp"
+#include <disk/frontier.hpp>
+#include <disk/disk_vec.hpp>
 
-#include "../../lib/mutex.hpp"
-#include "../../lib/utility.hpp"
-#include "../../lib/string_view.hpp"
+#include <fb/mutex.hpp>
+#include <fb/utility.hpp>
+#include <fb/string_view.hpp>
 
 #include <atomic>
 #include <iostream>

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../../lib/string.hpp"
-#include "../../lib/string_view.hpp"
-#include "../../lib/Exception.hpp"
-#include "../../lib/utility.hpp"
+#include <disk/disk_vec.hpp>
 
-#include "DiskVec.hpp"
+#include <fb/string.hpp>
+#include <fb/string_view.hpp>
+#include <fb/exception.hpp>
+#include <fb/utility.hpp>
 
 #include <stdint.h>
 

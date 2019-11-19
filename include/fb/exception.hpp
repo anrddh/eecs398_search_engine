@@ -9,6 +9,8 @@ namespace fb {
         ExceptionImpl(const char *msg_) noexcept : msg(msg_) {}
         ExceptionImpl(const T &msg_) : msg(msg_) {}
 
+        virtual ~ExceptionImpl() noexcept {}
+
         [[nodiscard]] virtual const char * what() const noexcept {
             return msg.data();
         }

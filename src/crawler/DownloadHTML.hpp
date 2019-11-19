@@ -1,6 +1,5 @@
 #pragma once
 
-#include <assert.h>
 #include <fcntl.h>
 #include <iostream>
 #include <netdb.h>
@@ -454,7 +453,8 @@ DownloadResult PrintGetRedirect( const fb::String &url,
    fb::String getMessage = GetGetMessage( parsedUrl );
 
    int sendResult = connector->write( getMessage );
-   assert( sendResult != - 1 );
+   if ( sendResult == -1 )
+      throw ConnectionAcception( "Cannot write" );
 
    // Read from the socket
    char buffer [ 10240 ];

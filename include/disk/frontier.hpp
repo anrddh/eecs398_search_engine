@@ -29,7 +29,6 @@ private:
     fb::Mutex localSeedM;
     fb::Mutex toParseM;
     unsigned int localSeed;
-    unsigned int idx;
     DiskVec<FrontierUrl> toParse;
 };
 

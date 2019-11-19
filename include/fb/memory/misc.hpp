@@ -10,4 +10,4 @@ T * addressof(T &arg) noexcept {
 template <typename T>
 const T * addressof(const T &&) = delete;
 
-};
+}

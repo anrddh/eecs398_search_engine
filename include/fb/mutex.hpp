@@ -53,4 +53,4 @@ public:
 private:
    L& mutex;
 };
-}; // Namespace fb
+} // Namespace fb

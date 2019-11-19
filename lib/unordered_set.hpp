@@ -129,10 +129,9 @@ public:
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
             }
-        }else{
-            //bucket is empty, so return end
-            return end();
         }
+        //bucket is empty, so return end
+        return end();
     }
 
     //Return an iterator to a given offset (really the next full bucket from the offset)

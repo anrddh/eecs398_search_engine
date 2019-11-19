@@ -46,7 +46,7 @@ namespace fb {
     inline std::istream & getline(std::istream &is, String &str) {
       str.clear();
 
-      char c;
+      char c = 0;
       while (is && (c = is.peek()) && c != '\n') {
           c = is.get();
           str += c;

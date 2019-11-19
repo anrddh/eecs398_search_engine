@@ -55,9 +55,9 @@ namespace fb {
         }
 
         Vector( Vector<T>&& v ) noexcept
-            : size_(v.size()),
-              cap_(v.capacity()),
-              buf(std::move(v.buf)) {
+            : buf(std::move(v.buf)),
+              size_(v.size()),
+              cap_(v.capacity()) {
            v.size_ = 0;
            v.cap_ = 0;
         }
@@ -222,7 +222,7 @@ namespace fb {
         }
 
         Iterator insert(ConstIterator pos, const T &value) {
-            auto idx = fb::distance(cbegin(), pos);
+            auto idx = static_cast<SizeT>(fb::distance(cbegin(), pos));
             alloc_mem(size() + 1);
 
             // TODO: make more efficient by avoiding default construction
@@ -236,7 +236,7 @@ namespace fb {
         }
 
         Iterator insert(ConstIterator pos, T &&value) {
-            auto idx = fb::distance(cbegin(), pos);
+            auto idx = static_cast<SizeT>(fb::distance(cbegin(), pos));
             alloc_mem(size() + 1);
 
             uninitializedDefaultConstruct(end(), end() + 1);
@@ -269,9 +269,9 @@ namespace fb {
                         std::is_base_of_v<InputIteratorTag,
                         typename IteratorTraits<It>::IteratorCategory>,
                         It> first, It last) {
-            auto count = fb::distance(first, last);
+            auto count = static_cast<SizeT>(fb::distance(first, last));
+            auto idx = static_cast<SizeT>(fb::distance(cbegin(), pos));
 
-            auto idx = fb::distance(cbegin(), pos);
             alloc_mem(size() + count);
 
             uninitializedDefaultConstruct(end(), end() + count);

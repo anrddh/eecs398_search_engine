@@ -55,7 +55,7 @@ Vector<SizeT> FrontierBin::getUrl( ) {
         return {}; // empty url
 
     SizeT max_ranking = 0; // Requires that any ranking of urls to be greater than 0
-    SizeT max_idx;
+    SizeT max_idx = 0;
 
     // Find what to sample
     // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls

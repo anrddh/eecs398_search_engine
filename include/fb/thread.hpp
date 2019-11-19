@@ -36,4 +36,4 @@ class Thread {
    private:
       UniquePtr<pthread_t> t;
 };
-};
+}

@@ -82,7 +82,7 @@ namespace fb {
         String str;
         str.resize(num);
         auto numWritten = snprintf(str.data(), str.size() + 1, "%d", value);
-        assert(numWritten == str.size());
+        assert(numWritten == static_cast<long long>(str.size()));
         return str;
     }
 }

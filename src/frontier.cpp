@@ -45,7 +45,7 @@ void FrontierBin::addUrl(const FrontierUrl &url) {
 Vector<SizeT> FrontierBin::getUrl( ) {
     int rand_num[ NUM_TRY ];
     localSeedM.lock( );
-    for ( int i = 0;  i < NUM_TRY;  ++i )
+    for ( SizeT i = 0;  i < NUM_TRY;  ++i )
         rand_num[ i ] = rand_r( &localSeed );
     localSeedM.unlock( );
 
@@ -59,7 +59,7 @@ Vector<SizeT> FrontierBin::getUrl( ) {
 
     // Find what to sample
     // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
-    for (int i = 0; i < NUM_SAMPLE; ++i) {
+    for (SizeT i = 0; i < NUM_SAMPLE; ++i) {
         if ( max_ranking < toParse[ rand_num[i] % toParse.size() ].ranking ) {
             max_ranking = toParse[ rand_num[i] % toParse.size() ].ranking;
             max_idx = rand_num[i] % toParse.size();

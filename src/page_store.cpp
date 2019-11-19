@@ -1,15 +1,16 @@
 //Created by Chandler Meyers 11/18/19
-#include "DiskVec.hpp"
 
-#include "../../lib/vector.hpp"
-#include "../../lib/stddef.hpp"
-#include "../../lib/utility.hpp"
-#include "../../lib/thread.hpp"
-#include "../../lib/string.hpp"
-#include "../../lib/mutex.hpp"
-#include <cstring> //strncpy
+#include <disk/disk_vec.hpp>
+#include <disk/page_store.hpp>
 
-#include "PageStore.hpp"
+#include <fb/vector.hpp>
+#include <fb/stddef.hpp>
+#include <fb/utility.hpp>
+#include <fb/thread.hpp>
+#include <fb/string.hpp>
+#include <fb/mutex.hpp>
+
+#include <string.h> //strncpy
 
 
 PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOffset(0),

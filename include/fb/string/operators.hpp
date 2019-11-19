@@ -87,6 +87,19 @@ namespace fb {
     }
 
     template <>
+    inline String toString<unsigned long>( unsigned long value ) {
+        auto num = snprintf(nullptr, 0, "%lu", value);
+        if (num <= 0)
+            throw ToStringConvErr("");
+
+        String str;
+        str.resize(num);
+        auto numWritten = snprintf(str.data(), str.size() + 1, "%lu", value);
+        assert(numWritten == static_cast<long long>(str.size()));
+        return str;
+    }
+
+    template <>
     inline String toString<unsigned long long>( unsigned long long value ) {
         auto num = snprintf(nullptr, 0, "%llu", value);
         if (num <= 0)

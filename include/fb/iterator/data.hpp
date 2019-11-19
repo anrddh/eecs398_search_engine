@@ -24,4 +24,4 @@ namespace fb {
     constexpr const E * data(std::initializer_list<E> il) noexcept {
         return il.begin();
     }
-};
+}

@@ -26,4 +26,4 @@ namespace fb {
     constexpr PtrDiffT ssize(const T (&)[N]) noexcept {
         return N;
     }
-};
+}

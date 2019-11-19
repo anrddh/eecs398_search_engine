@@ -23,4 +23,4 @@ namespace fb {
             return strtoll(str.data(), &pos_, base);
     }
 
-};
+}

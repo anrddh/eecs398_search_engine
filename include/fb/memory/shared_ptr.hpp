@@ -126,5 +126,5 @@ SharedPtr<T> MakeShared( Args... args )
    return SharedPtr<T>( new T{ args... } ); // TODO optimize manager / object caching.
    }
 
-}; // namespace fb
+} // namespace fb
 #endif /* SharedPtr_hpp */

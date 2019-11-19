@@ -61,7 +61,14 @@ public:
             return (*owner)[index].val;
         }
 
-         K& key() {
+        const K& key() {
+            return (*owner)[index].key;
+        }
+
+        //This is a top secret function. Do not call it. it gives you the power
+        //to change the keys in the hash table. Don't do that unless you are
+        //really, really sure...
+        K& bravery() {
             return (*owner)[index].key;
         }
 
@@ -114,7 +121,6 @@ public:
             rehash_and_grow(buckets.size() * 2);
         }
         SizeT desired_bucket = hash(key) % buckets.size();
-        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -128,6 +134,14 @@ public:
         }
         //bucket is empty, or key not found so return end
         return end();
+    }
+
+    //This function is for brave souls (or naive souls) only. It gives you the
+    //power to change a key inside the hash table. This is likely foolish, and
+    //you should make sure you have a very good reason for doing so
+    fb::Pair<K&, V&> functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
+        auto it = find(key);
+        return {it.bravery(), it*};
     }
 
     // returns a reference to the value in the bucket with the key, if it
@@ -180,7 +194,6 @@ public:
             rehash_and_grow(buckets.size() * 2);
         }
         SizeT desired_bucket = hash(key) % buckets.size();
-        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if (buckets[desired_bucket].status != Status::Empty) {
             //search until an empty bucket

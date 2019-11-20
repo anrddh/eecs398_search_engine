@@ -19,6 +19,10 @@
 //I'm begging you, let it be a byte, i dont want to do the math if it isnt
 using WordDescriptors = char;
 
+using Page = fb::Pair<fb::SizeT, fb::Pair<fb::StringView, fb::Vector<WordDescriptors>>>;
+
+extern std::atomic<fb::SizeT> NumThreads;
+
 struct PageHeader {
     fb::SizeT beginOffset;
     fb::SizeT VecOffset;
@@ -42,43 +46,8 @@ private:
     DiskVec<char> Pages;
 };
 
-class PageStore {
-    using Page = fb::Pair<fb::SizeT UrlOffset, fb::Pair<fb::StringView, fb::Vector<WordDescriptors>>>;
-public:
+void initializeFileName(fb::String fname);
 
-    PageStore(const fb::String& prefix) : Prefix(prefix) {}
+void addPage(Page page);
 
-    void addPage(Page page){
-        QueueMtx.lock();
-        PagesToAdd.push(std::move(page));
-        QueueMtx.unlock();
-        ++PagesCounter;
-        if(PagesCounter % numPages == 1){
-            pthread_create (nullptr, NULL, runBin, NULL);
-        }
-        QueueNECV.signal();
-    }
-
-    int runBin(){
-        PageBin Bin(Prefix + fb::toString(FileIndex), false);
-        ++FileIndex;
-        for(fb::SizeT i = 0; i < numPages; ++i){
-            QueueMtx.lock();
-            while (PagesToAdd.empty())
-                QueueNECV.wait(QueueMtx);
-            Page P = std::move(PagesToAdd.front());
-            PagesToAdd.pop();
-            QueueMtx.unlock();
-            Bin.addPage(Page.first, Page.second);
-        }
-    }
-
-private:
-    static constexpr fb::SizeT numPages = 5; //TODO: small for testing, raise for real deal. this is the number of pages per file
-    fb::Mutex QueueMtx;
-    fb::CV QueueNECV;
-    std::atomic<fb::SizeT> FileIndex;
-    std::atomic<fb::SizeT> PagesCounter;
-    const fb::String Prefix;
-    fb::queue<Page> PagesToAdd;
-};
+void * runBin(void *);

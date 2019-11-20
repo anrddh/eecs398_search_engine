@@ -2,23 +2,25 @@
 // TODO did Chandler contribute to this?
 //Structure of UrlInfo
 #include <string.h>
-#include <iostream> // TODO delete
-#include "../../lib/stddef.hpp"
-#include "../../lib/string_view.hpp"
-#include "../../lib/string.hpp"
-#include "../../lib/algorithm.hpp"
+#include <fb/stddef.hpp>
+#include <fb/stddef.hpp>
+#include <fb/string_view.hpp>
+#include <fb/string.hpp>
+#include <fb/algorithm.hpp>
 
 using namespace std;
 
-struct UrlInfo{
-   UrlInfo() : state('u') {}
-   fb::SizeT UrlOffset;
+struct UrlInfo {
+   // Must gaurentee that the UrlOffset is always valid (otherwise it should be zero)
+   std::atomic<fb::SizeT> UrlOffset;
    fb::Pair<fb::SizeT, fb::SizeT> AnchorTextOffsets; // [begin, end)
    fb::Pair<fb::SizeT, fb::SizeT> AdjListOffsets; // [begin, end)
    fb::SizeT AdjListBegin;
    fb::SizeT AdjListEnd;
-   char state; // 'u' for unfilled, 'f' for added to frontier, 'p' for completed parsing
+
+   // 'u' for unfinished, 'm' for currently modifying, 'p' for finished parsing
    // We are purposely avoiding enums since the value of the enum may differ on systems
+   std::atomci<char> state; 
 };
 
 inline fb::SizeT RankUrl(fb::StringView Url){

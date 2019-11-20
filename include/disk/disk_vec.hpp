@@ -58,7 +58,7 @@ public:
         return filePtr;
     }
 
-    [[nodiscard]] constexpr T & operator[](fb::SizeT idx) const noexcept {
+    [[nodiscard]] T & operator[](fb::SizeT idx) const noexcept {
         return data()[idx];
     }
 
@@ -83,10 +83,6 @@ public:
 
     fb::SizeT pushBack(const T &elt) {
         return insert(&elt, &elt + 1);
-    }
-
-    void popBack() {
-        cursor->fetch_sub(1);
     }
 
     T * begin() {

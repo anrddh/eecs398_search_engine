@@ -141,7 +141,7 @@ public:
     //you should make sure you have a very good reason for doing so
     fb::Pair<K&, V&> functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
         auto it = find(key);
-        return {it.bravery(), it*};
+        return {it.bravery(), *it};
     }
 
     // returns a reference to the value in the bucket with the key, if it

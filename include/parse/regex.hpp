@@ -27,10 +27,12 @@ public:
             assert(numWritten == str.size() - 1);
             throw Error(str);
         }
+        initd = true;
     }
 
     bool match(const char *needle) {
-        auto rval = regexec(&t, needle, 0, nullptr, 0);
+        assert(initd);
+        auto rval = regexec(&t, needle, 0, nullptr, REG_EXTENDED);
         return !rval;
     }
 
@@ -45,14 +47,17 @@ public:
 
     void swap(Regex &other) noexcept {
         fb::swap(t, other.t);
+        fb::swap(initd, other.initd);
     }
 
     ~Regex() noexcept {
-        regfree(&t);
+        if (initd)
+            regfree(&t);
     }
 
 private:
     regex_t t;
+    bool initd = false;
 };
 
 template <>

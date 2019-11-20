@@ -206,9 +206,9 @@ public:
         throw out_of_range();
     }
 
-    // insert returns whether inserted successfully
-    // (if the key already exists in the table, do nothing and return false).
-    bool insert(K& key, V& val) {
+    // insert returns an iterator to the inserted value
+    // if no value was inseted, returns end
+    Iterator insert(K& key, V& val) {
         if(num_elements+num_ghosts > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
@@ -220,7 +220,7 @@ public:
             while(buckets[desired_bucket].status != Status::Empty){
                 //if a bucket has the key, return
                 if(buckets[desired_bucket].status == Status::Filled && pred(buckets[desired_bucket].key, key)){
-                    return false;
+                    return end();
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
             }
@@ -237,7 +237,7 @@ public:
                     buckets[original_hash].val = std::move(val);
                     buckets[original_hash].status = Status::Filled;
                     num_elements++;
-                    return true;
+                    return Iterator(&buckets, original_hash);
                 }
             }
         }else{
@@ -246,7 +246,7 @@ public:
             buckets[original_hash].val = std::move(val);
             buckets[original_hash].status = Status::Filled;
             num_elements++;
-            return true;
+            return Iterator(&buckets, original_hash);
         }
 
     }

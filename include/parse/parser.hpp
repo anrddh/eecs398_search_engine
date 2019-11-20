@@ -1,9 +1,18 @@
 #pragma once
 
-#include "../lib/string.hpp"
 #include <iostream>
-#include "../lib/unordered_map.hpp"
-#include "../lib/stddef.hpp"
+
+#include <fb/string.hpp>
+#include <fb/unordered_map.hpp>
+#include <fb/unordered_set.hpp>
+#include <fb/stddef.hpp>
+
+// #include "../../index/index_builder.hpp"
+//flags
+constexpr uint8_t INDEX_WORD_TITLE = 0b0100;
+constexpr uint8_t INDEX_WORD_BOLD = 0b1000;
+constexpr uint8_t INDEX_WORD_HEADER = 0b0010;
+constexpr uint8_t INDEX_WORD_ANCHOR = 0b0001;
 
 namespace fb
 {
@@ -30,31 +39,22 @@ public:
 	fb::UnorderedMap<String, String> urlAnchorText;
 	bool inSpecialCharacter;
 	String specialCharacterString;
-	char lastChar;
-
-	fb::Vector<String> parsedWords;
 
 	Parser( const String &content_in, const String &domain_in )
 	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
-		specialCharacterString( "" ), lastChar( '0' )
+		specialCharacterString( "" )
 	{
 		initializeConversionMap( );
-		tagStack.pushBack( "DEFAULT" );
-		parsedWords.pushBack( "" );
-	}
+		initializeBoldTags( );
 
-	void convertParsedResult( )
-	{
-		for( auto i : parsedWords )
-		{
-			// std::cout << i << std::endl;
-			parsedResult += i + " ";
-		}
+		tagStack.pushBack( "DEFAULT" );
+
+		for ( int i = 0; i < 4; ++i )
+			flagCounter[i] = 0;
 	}
 
 	String getParsedResult( )
 		{
-		convertParsedResult();
 		return parsedResult;
 		}
 
@@ -70,24 +70,27 @@ public:
 			}
 		}
 
-	void addWord( String str )
+	void addWord( const String &str )
 		{
-		for ( auto i : str )
+		for ( const auto i : str )
 			addWord( i );
 		}
 
-	void addWord( char c )
+	void addWord( const char c )
 		{
 		if ( isSpace( c ) || ispunct( c ) || !isalnum( c ) )
 			{
-			if( !parsedWords.back( ).empty( ) )
-				parsedWords.pushBack("");
+			if ( parsedResult.back( ) != ' ' )
+				{
+				parsedResult += ' ';
+				wordFlags.pushBack( getWordFlag( ) );
+				}
 			}
 		else if ( isalnum(c) )
-			parsedWords.back( ) += c;
+			parsedResult += c;
 		}
 
-	void addToResult( char c )
+	void addToResult( const char c )
 		{
 		if( c == '&' )
 			inSpecialCharacter = true;
@@ -96,31 +99,21 @@ public:
 			if ( c == ';' )
 				{
 				inSpecialCharacter = false;
-				// parsedResult += getSpecialCharacter( );
 				addWord( getSpecialCharacter( ) );
 				specialCharacterString = "";
 				}
 			else
-				{
 				specialCharacterString += c;
-				}
 			}
 		else
-			{
-			if ( !( isSpace( c ) && isSpace( lastChar ) ) )
-				{
-				if ( isSpace( c ) )
-					c = ' ';
-				addWord( c );
-				lastChar = c;
-				}
-			}
+			addWord( c );
 		}
 
 	void parse( )
 		{
 		parsedResult.clear( );
 		parsedResult.reserve( content.size( ) );
+		parsedResult += ' ';
 
 		fb::SizeT index = 0;
 		try
@@ -160,6 +153,8 @@ public:
 			std::cout << "Anchor text: " << *i << std::endl;
 			}
 		}
+
+	fb::Vector<uint8_t> wordFlags;
 
 private:
 
@@ -254,21 +249,63 @@ private:
 		return index;
 		}
 
+	fb::UnorderedSet<fb::String> boldTags;
+
+	void initializeBoldTags()
+		{
+		boldTags.insert( "b" ); // bold
+		boldTags.insert( "strong" ); // bold
+		boldTags.insert( "u" ); // underline
+		boldTags.insert( "mark" ); // highlight
+		boldTags.insert( "i" ); // italic
+		boldTags.insert( "em" ); // italic
+		}
+
+	fb::UnorderedSet<fb::String> italicTags;
+	int flagCounter[4];
+
+	uint8_t getWordFlag( )
+		{
+		uint8_t result = 0;
+		if ( flagCounter[ 0 ] > 0 )
+			result += INDEX_WORD_TITLE;
+		if ( flagCounter[ 1 ] > 0 )
+			result += INDEX_WORD_BOLD;
+		if ( flagCounter[ 2 ] > 0 )
+			result += INDEX_WORD_HEADER;
+		return result;
+		}
+
+	void setFlagCounter( const String &tagType, int change )
+		{
+		if ( tagType == "title" )
+			flagCounter[0] += change;
+		else if ( boldTags.find( tagType ) != boldTags.end( ) )
+		{
+			flagCounter[1] += change;
+		}
+		else if ( tagType.size( ) == 2 && tagType[0] == 'h' )
+			flagCounter[2] += change;
+		}
+
 	// change tagStack appropriately
 	// opening tag or closing tag
 	void setTag( const String tagName )
 		{
-		// std::cout << "in set Tag" << std::endl;
 		if ( tagName[ 0 ] == '/' )
 			{
 			String tagType = tagName.substr( 1 );
 			if ( !tagStack.empty() && tagStack.back( ) == tagType )
+				{
 				tagStack.popBack( );
+				setFlagCounter( tagType, -1 );
+				}
 			}
 		else
 			{
 			String tagType = tagName;
 			tagStack.pushBack( tagType );
+			setFlagCounter( tagType, 1 );
 			}
 		}
 
@@ -344,7 +381,6 @@ private:
 
 		size_t last_index = skipSpacesBackward( i - 1 );
 		
-		// std::cout << "before " << tagName << " " << tagName.size() << std::endl;
 		// not self closing tag
 		if ( content[ last_index ] != '/' )
 			{
@@ -357,7 +393,7 @@ private:
 			else
 				setTag( tagName );
 			}
-		// std::cout << tagName << " " << tagName.size() << std::endl;
+
 		return i;
 		}
 
@@ -386,14 +422,13 @@ private:
 
 		// add anchor text to parsed result
 		addToResult( ' ' );
-		SizeT parsedIndex = parsedWords.size( ) - 1;
-		for ( auto i : anchorText )
+
+		SizeT parsedIndex = parsedResult.size( );
+		for ( const auto i : anchorText )
 			addToResult( i );
 		addToResult( ' ' );
 
-		String normalizedTest;
-		for ( ; parsedIndex < parsedWords.size( ); ++parsedIndex )
-			normalizedTest += parsedWords[ parsedIndex ] + " ";
+		String normalizedTest = parsedResult.substr( parsedIndex );
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 

@@ -10,6 +10,13 @@ namespace fb {
     struct Pair {
         T first;
         V second;
+
+        Pair() : first{}, second{} {}
+
+        Pair( const T &first_in, const V &second_in )
+        : first( first_in ), second( second_in )
+            {
+            }
     };
 
     template <typename T1, typename T2>

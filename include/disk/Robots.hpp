@@ -10,6 +10,9 @@
 #include <fb/string.hpp>
 #include <fb/string_view.hpp>
 #include <fb/utility.hpp>
+#include <fb/view.hpp>
+
+#include <iostream>
 
 class RobotsTxt {
 public:
@@ -18,10 +21,14 @@ public:
         return robot;
     }
 
-    bool canVisit(fb::StringView hostname, const char *loc) {
+    // "location has to be null-terminated"
+    bool canVisit(fb::StringView hostname, fb::StringView location) {
         auto it = robotsParsers.find(hostname);
         if (it == robotsParsers.end()) {
+            auto ht = HTTPDownloader();
             getRobotsTxt();
+            fb::String str = "http://google.com/robots.txt";
+            std::cout << ht.PrintPlainTxt(str);
             // get robots.txt file
         }
 
@@ -29,14 +36,18 @@ public:
         auto &disallowParsers = it->second;
 
         for (auto &regex : allowParsers)
-            if (regex.match(loc))
+            if (regex.match(location.data())) {
+                std::cout << "Decided to allow " << location << " while matching\n";
                 return true;
+            }
 
         for (auto &regex : disallowParsers)
-            if (regex.match(loc))
+            if (regex.match(location.data())) {
+                std::cout << "Decided to disallow " << location << " while matching\n";
                 return false;
+            }
 
-        return allowParsers.empty() && disallowParsers.empty();
+        return true;
     }
 
     fb::StringView getLineFromStr(fb::StringView str) {
@@ -48,48 +59,67 @@ public:
         return str.substr(pos + 1);
     }
 
-    static fb::Pair<fb::Vector<Regex>,fb::Vector<Regex>>
-    constructRobotParser(fb::StringView robotsTxt) {
-        constexpr auto userAgentStr = "User-agent: *\n"_sv;
+    void constructRobotParser(fb::StringView hostname, fb::String &robotsTxt) {
+        constexpr auto userAgentStr = "User-agent: .*\n"_sv;
         constexpr auto disallowStr = "Disallow: "_sv;
         constexpr auto allowStr = "Allow: "_sv;
 
         fb::Pair<fb::Vector<Regex>,fb::Vector<Regex>> pair;
 
-        auto pos = robotsTxt.find("U"_sv);
-        robotsTxt.removePrefix(pos + userAgentStr.size());
+        if (robotsTxt.empty()) {
+            robotsParsers[hostname] = std::move(pair);
+            return;
+        }
 
-        if (robotsTxt.empty() || pos == fb::StringView::npos)
-            return pair;
+        auto oneBeforeEnd = robotsTxt.end() - 1;
+        for (auto it = robotsTxt.begin(); it != oneBeforeEnd; ++it)
+            if (*(it+1) == '*' && *it != '\\') {
+                it = robotsTxt.insert(it+1, '.');
+                oneBeforeEnd = robotsTxt.end() - 1;
+            }
+
+        std::cout << robotsTxt << std::endl;
+
+        fb::StringView robotsTxtView (robotsTxt.data(), robotsTxt.size());
+        auto pos = robotsTxtView.find(userAgentStr);
+        robotsTxtView.removePrefix(pos + userAgentStr.size());
+
+        if (robotsTxtView.empty() || pos == fb::StringView::npos) {
+            robotsParsers[hostname] = std::move(pair);
+            return;
+        }
 
         while (true) {
             bool allow = false;
-            if (robotsTxt.front() == allowStr.front()) {
-                robotsTxt.removePrefix(allowStr.size());
+            if (robotsTxtView.front() == allowStr.front()) {
+                robotsTxtView.removePrefix(allowStr.size());
                 allow = true;
-            } else if (robotsTxt.front() == disallowStr.front())
-                robotsTxt.removePrefix(disallowStr.size());
+            } else if (robotsTxtView.front() == disallowStr.front())
+                robotsTxtView.removePrefix(disallowStr.size());
             else
                 break;
 
-            auto pos = robotsTxt.find('\n');
-            if (robotsTxt.empty() || pos == fb::StringView::npos)
+            auto pos = robotsTxtView.find('\n');
+            if (robotsTxtView.empty() || pos == fb::StringView::npos)
                 break;
 
-            *((char *) robotsTxt.data() + pos) = '\0';
+            robotsTxt[robotsTxtView.data() + pos - robotsTxt.data()] = 0;
 
-            if (allow)
-                pair.first.emplaceBack(robotsTxt.data());
-            else
-                pair.second.emplaceBack(robotsTxt.data());
+            if (allow) {
+                std::cout << "Allowing: " << robotsTxtView.data() << '\n';
+                pair.first.emplaceBack(robotsTxtView.data());
+            } else {
+                std::cout << "Disallowing: " << robotsTxtView.data() << '\n';
+                pair.second.emplaceBack(robotsTxtView.data());
+            }
 
-            robotsTxt.removePrefix(pos + 1);
+            robotsTxtView.removePrefix(pos + 1);
 
-            if (robotsTxt.empty())
+            if (robotsTxtView.empty())
                 break;
         }
 
-        return pair;
+        robotsParsers[hostname] = std::move(pair);
     }
 
     void getRobotsTxt() {

@@ -1,23 +1,101 @@
-#include <fb/stddef.hpp>
+#include <parse/parser.hpp>
+#include <http/download_html.hpp>
+#include <tcp/worker_url_tcp.hpp>
 
-#include <exception>
+#include <fb/thread.hpp>
+#include <fb/cv.hpp>
+#include <fb/mutex.hpp>
 
-using fb::SizeT;
+#include <iostream>
 
-struct ArgError : std::exception {};
+constexpr int NUM_THREAD = 100;
 
-struct args_t {
-    SizeT window_size;
-};
+fb::Mutex endLock;
+fb::CV endCV;
 
-args_t parse_arguments(int argc, char **argv);
+void *parsePages( void * ) 
+   {
+   while( true )
+      {
+      auto urlPair = get_url_to_parse( );
 
-constexpr string_view UsageHint = "Usage: ./ParserDriver <master-hostname <master-port>\n";
+	  if ( urlPair.second.empty( ) )
+         {
+         endCV.signal();
+         return nullptr;
+         }
 
-int main(int argc, char **argv) try {
+	  try
+         {
+         auto downloader = HTTPDownloader( );
+         fb::String result = downloader.PrintHtml( urlPair.second );
 
-} catch (const ArgError &e) {
-}
+         ParsedUrl url( downloader.finalUrl );
 
-args_t parse_arguments(int argc, char **argv) {
-}
+         auto parser = fb::Parser( result,
+            url.Service + "://" + url.Host );
+
+         fb::Vector< fb::Pair<fb::String, fb::String> > links;
+
+         for ( auto iter = parser.urlAnchorText.begin( );  
+         	iter != parser.urlAnchorText.end( );  ++iter )
+          links.emplaceBack( iter.key( ), *iter );
+
+         ParsedPage pp = { urlPair.first, links };
+
+         add_parsed( pp );
+   		}
+		catch ( ConnectionException e )
+   		{
+         }
+      }
+   }
+
+void *commandLineArgs( void * )
+   {
+   fb::String userInput;
+   do
+	  {
+	  std::cout << "Shut down? (type 'YES')" << std::endl;
+	  std::cin >> userInput;
+	  if ( userInput == "YES" )
+		 {
+		 std::cout << "Are you sure? (type 'YES')" << std::endl;
+		 std::cin >>  userInput;
+		 if ( userInput == "YES" )
+			{
+			std::cout << "Really really sure? (type 'YES')" << std::endl;
+			std::cin >> userInput;
+			if ( userInput == "YES" )
+			   {
+			   std::cout << "OK... Bye World" <<  std::endl;
+			   break;
+			   }
+			}
+		 }
+	  }
+   while ( std::cin >> userInput );
+   initiate_shut_down( );
+   }
+
+int main( int argc, char **argv )
+   {
+   fb::Thread argsThreads( commandLineArgs, nullptr );
+
+   fb::Vector<fb::Thread> threads;
+   for ( int i = 0;  i < NUM_THREAD;  ++i )
+	  threads.emplaceBack( parsePages, nullptr );
+
+   endLock.lock( );
+
+   while ( !should_shutdown( ) )
+	  endCV.wait( endLock );
+
+   endLock.unlock( );
+
+   for ( int i = 0;  i < NUM_THREAD;  ++i )
+	  threads[i].join( );
+
+   argsThreads.join( );
+
+   }

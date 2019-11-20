@@ -85,6 +85,12 @@ public:
         return insert(&elt, &elt + 1);
     }
 
+    // WARNING popBack might introduce race conditions
+    // Only use popBack when you locked this object
+    void popBack() {
+        return --*cursor;
+    }
+
     T * begin() {
         return filePtr;
     }

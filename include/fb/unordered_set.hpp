@@ -118,7 +118,6 @@ public:
             rehash_and_grow(buckets.size() * 2);
         }
         SizeT desired_bucket = hash(key) % buckets.size();
-        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if(buckets[desired_bucket].status != Status::Empty){
             //search until an empty bucket
@@ -129,10 +128,9 @@ public:
                 }
                 desired_bucket = (desired_bucket+1) % buckets.size();
             }
-        }else{
-            //bucket is empty, so return end
-            return end();
         }
+        //bucket is empty, so return end
+        return end();
     }
 
     //Return an iterator to a given offset (really the next full bucket from the offset)
@@ -192,7 +190,6 @@ public:
         }
 
         SizeT desired_bucket = hash(key) % buckets.size();
-        SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if (buckets[desired_bucket].status != SetStatus::Empty) {
             //search until an empty bucket

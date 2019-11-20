@@ -14,13 +14,6 @@ constexpr uint8_t INDEX_WORD_BOLD = 0b1000;
 constexpr uint8_t INDEX_WORD_HEADER = 0b0010;
 constexpr uint8_t INDEX_WORD_ANCHOR = 0b0001;
 
-struct wordProps{
-	bool is_title : 1;
-	bool is_bold : 1;
-	bool is_header : 1;
-}
-
-
 namespace fb
 {
 // Simple exception class for reporting String errors

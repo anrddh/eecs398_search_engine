@@ -1,6 +1,6 @@
 #include <parse/parser.hpp>
-#include <http/download_http.hpp>
-#include "worker_url_tcp.hpp"
+#include <http/download_html.hpp>
+#include <tcp/worker_url_tcp.hpp>
 
 #include <fb/thread.hpp>
 #include <fb/cv.hpp>

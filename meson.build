@@ -26,6 +26,7 @@ executable('master',
            master_driver, master_source_files,
            include_directories: inc,
            dependencies: [readline_dep, threads_dep, ssl_dep, zlib_dep])
-#executable('worker',
-#           worker_driver, worker_source_files,
-#           include_directories: inc)
+executable('worker',
+           worker_driver, worker_source_files,
+           include_directories: inc,
+           dependencies: [ssl_dep])

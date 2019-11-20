@@ -1,7 +1,7 @@
 // Created by Jaeyoon Kim 11/9/2019
 #pragma once
-#include "../../lib/string.hpp"
-#include "url_tcp.hpp"
+#include <fb/string.hpp>
+#include <tcp/url_tcp.hpp>
 
 // This is a TCP inteface for worker computers
 

@@ -65,13 +65,6 @@ public:
             return (*owner)[index].key;
         }
 
-        //This is a top secret function. Do not call it. it gives you the power
-        //to change the keys in the hash table. Don't do that unless you are
-        //really, really sure...
-        K& bravery() {
-            return (*owner)[index].key;
-        }
-
         V* operator->() {
             return &(*owner)[index].val;
         }
@@ -85,6 +78,10 @@ public:
         }
 
     private:
+        K& bravery() {
+            return (*owner)[index].key;
+        }
+
         Vector<Bucket> *owner;
         SizeT index;
     };

@@ -1,0 +1,21 @@
+When the parser returns parsed page data, it will be stored on disk by the PageStore class.
+This file gives the specification for how this data is stored.
+We presume that the index builder will use this specification to construct the index from these files.
+
+1 of the following:
+- (sizeof(std::atomic<fb::SizeT>)) Bytes: Cursor
+    These bytes are reserved by the atomic cursor which is used to write to the file.
+    This should be 8 bytes, but may depend on implementation of std::atomic.
+- 8 Bytes: Number of Pages, N <= 50000
+    This SizeT gives the number of pages which are stored in this file. This number should be crash safe, meaning the following:
+    If N many pages were safely completed and stored in this file, this value will be N.
+50000 of the following:
+- 24 Bytes: Page Headers
+    The first 8 bytes gives the location of the beginning of a page within this document.
+    The second 8 bytes gives the location of the beginning of the vector of WordDescriptors corresponding to the same page.
+    The third 8 bytes gives the UrlOffset (UrlID) of the URL corresponding to the same page.
+N of the following:
+- (Size of page) + 1 bytes: page
+    The raw text of the page, as returned by the parser, followed by a null character.
+- (Number of words in page) bytes: vector of WordDescriptors
+    One byte per word in page which describes its encoding, as specified by the parser.

@@ -31,7 +31,8 @@ void PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::StringView, fb::Vector<W
     auto idy = Pages.insert(page.second.begin(), page.second.end());
 
     //put in the page header
-    PageHeader header = { idx, idy, UrlOffset };
+    //Note, we add sizeof(std::atomic<fb::SizeT>) to the in-file offsets, due to the cursor at the beginning of the file
+    PageHeader header = { idx + sizeof(std::atomic<fb::SizeT>), idy + sizeof(std::atomic<fb::SizeT>), UrlOffset };
     memcpy(Pages.data() + PageHeadersOffset + PageCount * sizeof(PageHeader), &header, sizeof(PageHeader));
 
     //increment the page counter

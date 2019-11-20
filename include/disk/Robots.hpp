@@ -1,23 +1,21 @@
 #pragma once
 
-#include "DiskVec.hpp"
-#include "regex.hpp"
+#include <disk/disk_vec.hpp>
+#include <parse/regex.hpp>
+#include <http/download_html.hpp>
+
 //#include "DownloadHTML.hpp"
 
-#include "../../lib/unordered_map.hpp"
-#include "../../lib/string.hpp"
-#include "../../lib/string_view.hpp"
-#include "../../lib/utility.hpp"
+#include <fb/unordered_map.hpp>
+#include <fb/string.hpp>
+#include <fb/string_view.hpp>
+#include <fb/utility.hpp>
 
 class RobotsTxt {
 public:
-    static void init( fb::StringView filename, bool init ) {
-        delete ptr;
-        ptr = new RobotsTxt(filename, init);
-    }
-
     static RobotsTxt & getRobots() {
-        return *ptr;
+        static RobotsTxt robot;
+        return robot;
     }
 
     bool canVisit(fb::StringView hostname, const char *loc) {
@@ -40,8 +38,6 @@ public:
 
         return allowParsers.empty() && disallowParsers.empty();
     }
-
-    RobotsTxt(fb::StringView filename, bool init) : robots(filename, init) {}
 
     fb::StringView getLineFromStr(fb::StringView str) {
         auto pos = str.find('\n');
@@ -99,10 +95,11 @@ public:
     void getRobotsTxt() {
     }
 
-    static RobotsTxt *ptr;
+private:
+    RobotsTxt() = default;
+
     fb::UnorderedMap<fb::StringView, unsigned int> robotsLoc;
     fb::UnorderedMap<fb::StringView,
                  fb::Pair<fb::Vector<Regex>,
                           fb::Vector<Regex>>> robotsParsers;
-    DiskVec<char> robots;
 };

@@ -1,4 +1,4 @@
-#include "../parser.hpp"
+#include <parse/parser.hpp>
 
 #include <string.h>
 #include <unistd.h>

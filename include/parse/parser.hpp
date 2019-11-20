@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-#include "../../lib/string.hpp"
-#include "../../lib/unordered_map.hpp"
-#include "../../lib/unordered_set.hpp"
-#include "../../lib/stddef.hpp"
+#include <fb/string.hpp>
+#include <fb/unordered_map.hpp>
+#include <fb/unordered_set.hpp>
+#include <fb/stddef.hpp>
 
 // #include "../../index/index_builder.hpp"
 //flags

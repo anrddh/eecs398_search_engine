@@ -40,7 +40,7 @@ public:
             index_ = index_ % owner->size();
             index = index_;
             //counter protects us from infinitely looping through an empty set
-            int counter = 0;
+            SizeT counter = 0;
             while((*owner)[index].status != Status::Filled && counter < owner->size()) {
                 counter++;
                 index++;

@@ -356,11 +356,10 @@ HTTPDownloader( )
       return true;
       }
 
-   bool checkFileType( const fb::StringView &headerView, const fb::Vector<fb::String> &acceptableTypes )
+   bool checkFileType( const fb::StringView &headerView, const fb::StringView &acceptableType )
       {
-      for ( const auto i : acceptableTypes )
-         if ( headerView.find( i ) != fb::String::npos )
-            return true;
+      if ( headerView.find( acceptableType ) != fb::String::npos )
+         return true;
 
       return false;
       }
@@ -368,7 +367,7 @@ HTTPDownloader( )
    // Get header and parse relevant information
    // return apporpriate pair of DownloadStatus and redirectUrl
    void parseHeader( ConnectionWrapper *connector, BufferWriter &writer, 
-      const fb::Vector<fb::String> &acceptableTypes )
+      const fb::StringView &acceptableType )
       {
       char buffer [ 10240 ];
       int bytes;
@@ -416,7 +415,7 @@ HTTPDownloader( )
                   else
                      throw RedirectException( redirectUrl );
                   }
-               else if ( !checkFileType( headerView, acceptableTypes ) )
+               else if ( !checkFileType( headerView, acceptableType ) )
                   throw ConnectionException( "File type mismatch" );
 
                // check for chunked
@@ -457,7 +456,7 @@ HTTPDownloader( )
    // Only download if type of the content matches and not too big
    // return apporpriate pair of DownloadStatus and redirectUrl
    fb::String PrintGetRedirect( const fb::String &url,
-      const fb::Vector<fb::String> &acceptableTypes )
+      const fb::StringView &acceptableType )
       {
          // Parse the URL
       ParsedUrl parsedUrl( url );
@@ -481,7 +480,7 @@ HTTPDownloader( )
       // Check for redirect and other relevant header info
       try
          {
-         parseHeader( wrapper.connector, writer, acceptableTypes );
+         parseHeader( wrapper.connector, writer, acceptableType );
          }
       catch ( RedirectException& e )
          {
@@ -503,10 +502,10 @@ HTTPDownloader( )
 
    // Write the content of the url except header to donloadedContent
    // redirect is handled to the extent that there is no loop in redirect
-   // type of the content in url must match acceptableTypes
+   // type of the content in url must match acceptableType
    // return true if download succeeds
-   fb::String PrintFile( const fb::String &url,
-         const fb::Vector<fb::String> &acceptableTypes )
+   fb::String PrintFile( const fb::String url,
+         const fb::StringView &acceptableType )
       {
       fb::UnorderedSet<fb::String> visitedURLs;
 
@@ -519,7 +518,7 @@ HTTPDownloader( )
          {
          try
             {
-            return PrintGetRedirect( redirectUrl, acceptableTypes );
+            return PrintGetRedirect( redirectUrl, acceptableType );
             }
          catch ( RedirectException e )
             {
@@ -539,10 +538,10 @@ HTTPDownloader( )
    // downloadedContent will be cleared at beginning and if download fails
    // return true if donwload succeeds
    // exception thrown if cannot connect to url
-   fb::String PrintHtml( const fb::String &url_in )
+   fb::String PrintHtml( const fb::String url_in )
       {
-      fb::Vector<fb::String> acceptableTypes = { "text/html" };
-      return PrintFile( url_in, acceptableTypes );
+      fb::StringView acceptableType = "text/html"_sv;
+      return PrintFile( url_in, acceptableType );
       }
 
    // Downlaod html file or txt file of given url handling redirect appropriately,
@@ -550,10 +549,10 @@ HTTPDownloader( )
    // downloadedContent will be cleared at beginning and if download fails
    // return true if donwload succeeds
    // exception thrown if cannot connect to url
-   fb::String PrintPlainTxt( const fb::String &url_in )
+   fb::String PrintPlainTxt( const fb::String url_in )
       {
-      fb::Vector<fb::String> acceptableTypes = { "text/plain" };
-      return PrintFile( url_in, acceptableTypes );
+      fb::StringView acceptableType = "text/plain"_sv;
+      return PrintFile( url_in, acceptableType );
       }
 
 };

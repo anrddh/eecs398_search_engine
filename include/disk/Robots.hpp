@@ -28,7 +28,7 @@ public:
             auto ht = HTTPDownloader();
             getRobotsTxt();
             fb::String str = "http://google.com/robots.txt";
-            std::cout << ht.PrintPlainTxt(str).downloadedContent;
+            std::cout << ht.PrintPlainTxt(str);
             // get robots.txt file
         }
 

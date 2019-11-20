@@ -28,7 +28,8 @@ struct Hash {};
 //Hash instance for SizeT type
 template <>
 struct Hash<SizeT> {
-    constexpr SizeT operator() ( const SizeT &data ) const noexcept {
+    // Jin Soo removed constexpr
+    SizeT operator() ( const SizeT &data ) const noexcept {
         return fnvHash( (char *) &data, sizeof(data) );
     }
 };

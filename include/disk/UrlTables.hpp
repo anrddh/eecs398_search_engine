@@ -18,13 +18,9 @@
 // difficult to compile
 class UrlOffsetTable {
 public:
-   static void init() {
-       delete ptr;
-       ptr = new UrlOffsetTable();
-   }
-
    static UrlOffsetTable & getTable() {
-       return *ptr;
+      static UrlOffsetTable unique_obj();
+      return unique_obj;
    }
 
    // Will find the offset (if this string was seen
@@ -56,17 +52,51 @@ private:
 };
 
 // Same as above
+// We need to hard code the file we save to
 class UrlInfoTable {
 public:
-    static void init() {
-        delete ptr;
-        ptr = new UrlInfoTable();
-    }
-
+   // Meyer's method for singletons
     static UrlInfoTable & getTable() {
-        return *ptr;
+       static UrlInfoTable unique_obj;
+       return &unique_obj;
     }
 
+    void HandleParsedPage(ParsedPage&& pp) {
+      fb::SizeT hash = hasher(pp.url_offset);
+      info_hashes[hash % NumBins].second.lock();
+      UrlInfo& info = info_hashes[hash % NumBins].first[ pp.url_offset ];
+      assert(info.state != 'p');
+      info.UrlOffset = pp.url_offset;
+      info.state = 'p';
+      Vector<SizeT> adj_list;
+      for (const fb::Pair<fb::String, fb::String>& link : pp.links) {
+         SizeT link_offset = UrlOffsetTable::getTable().getOffset(link.first());
+         adj_list.pushBack(link_offset);
+      }
+      auto adj_pair = addList( adj_list );
+      info.AdjListBegin = adj_pair.first;
+      info.AdjListEnd = adj_pair.second;
+      info_hashes[hash % NumBins].second.unlock();
+
+      for (int i = 0; i < adj_list.size(); ++i) {
+         fb::SizeT link_hash = hasher(adj_list[i]);
+         info_hashes[hash % NumBins].second.lock();
+         
+         UrlInfor& link_info = info_hashes[hash % NumBins].first[ adj_list[i] ];
+         link_info.AnchorTextOffsets = addStr(pp.link[i].second,
+               link_info.AnchorTextOffsets);
+         if (link_info.state == 'u') {
+            link_info.state = 'f'; // will add it to the frontier
+            info_hashes[hash % NumBins].second.unlock();
+            
+         } else {
+            info_hashes[hash % NumBins].second.unlock();
+         }
+      }
+    }
+
+
+    // TODO is this function even used...?
    UrlInfo &get_info( fb::StringView str ) {
       fb::SizeT hash = hasher(str);
       fb::AutoLock<fb::Mutex> l(info_hashes[hash % NumBins].second);
@@ -77,8 +107,7 @@ private:
    UrlInfoTable(){}
 
    constexpr static fb::SizeT NumBins = 256;
-   static UrlInfoTable *ptr;
    //The unorderedmaps link the hashes of urls to the associated url infos
-   fb::Pair<fb::UnorderedMap<fb::StringView, UrlInfo>, fb::Mutex> info_hashes[256];
-   fb::Hash<fb::StringView> hasher;
+   fb::Pair<fb::UnorderedMap<fb::SizeT, UrlInfo>, fb::Mutex> info_hashes[NumBins];
+   fb::Hash<fb::SizeT> hasher;
 };

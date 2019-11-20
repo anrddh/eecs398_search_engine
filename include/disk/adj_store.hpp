@@ -20,6 +20,7 @@ public:
         return *ptr;
     }
 
+    // Returns begin of adj list and then end of adj list
     fb::Pair<fb::SizeT, fb::SizeT> addList(fb::Vector<fb::SizeT> in_list) {
         fb::SizeT idx = lists.insert(in_list.begin(), in_list.end());
         return {idx, idx + in_list.size()};

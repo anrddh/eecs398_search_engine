@@ -11,13 +11,14 @@
 using namespace std;
 
 struct UrlInfo{
-    fb::SizeT UrlOffset;
-    fb::SizeT AnchorTestBegin;
-    fb::SizeT AnchorTestEnd;
-    fb::SizeT AdjListBegin;
-    fb::SizeT AdjListEnd;
-    fb::SizeT UrlRank; //TODO: does this need to be here?
-    int * Page; //TODO: reference to the saved page
+   UrlInfo() : state('u') {}
+   fb::SizeT UrlOffset;
+   fb::Pair<fb::SizeT, fb::SizeT> AnchorTextOffsets; // [begin, end)
+   fb::Pair<fb::SizeT, fb::SizeT> AdjListOffsets; // [begin, end)
+   fb::SizeT AdjListBegin;
+   fb::SizeT AdjListEnd;
+   char state; // 'u' for unfilled, 'f' for added to frontier, 'p' for completed parsing
+   // We are purposely avoiding enums since the value of the enum may differ on systems
 };
 
 inline fb::SizeT RankUrl(fb::StringView Url){

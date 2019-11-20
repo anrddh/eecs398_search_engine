@@ -18,15 +18,27 @@ namespace fb {
         return !( lhs == rhs );
     }
 
+    inline std::ostream & operator<< (std::ostream &os, const String &str) {
+        os << str.data();
+        return os;
+    }
+
     inline String operator+ (const String &lhs, const StringView rhs) {
         String temp(lhs);
         temp += rhs;
         return temp;
     }
 
-    inline std::ostream & operator<< (std::ostream &os, const String &str) {
-        os << str.data();
-        return os;
+    inline String operator+ (const String &lhs, const String &rhs) {
+        String temp(lhs);
+        temp += rhs;
+        return temp;
+    }
+
+    inline String operator+ (const String &lhs, const char *rhs) {
+        String temp(lhs);
+        temp += rhs;
+        return temp;
     }
 
     inline std::istream & operator>> (std::istream &is, String &str) {

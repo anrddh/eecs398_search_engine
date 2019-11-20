@@ -11,7 +11,16 @@
 #include <fb/mutex.hpp>
 
 #include <string.h> //strncpy
+#include <iostream>
 
+constexpr fb::SizeT numPages = 5; //TODO: small for testing, raise for real deal. this is the number of pages per file
+fb::Mutex QueueMtx;
+fb::CV QueueNECV;
+std::atomic<fb::SizeT> FileIndex(0);
+std::atomic<fb::SizeT> PagesCounter(0);
+std::atomic<fb::SizeT> NumThreads(0);
+fb::String Prefix;
+fb::Queue<Page> PagesToAdd;
 
 PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOffset(0),
                 PageHeadersOffset(0), PagesBeginOffset(0), Pages(filename, init) {
@@ -38,4 +47,40 @@ void PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::StringView, fb::Vector<W
     //increment the page counter
     ++PageCount;
     memcpy(Pages.data() + PageCountOffset, &PageCount, sizeof(PageCount));
+}
+
+void initializeFileName(fb::String fname){
+    Prefix = std::move(fname);
+}
+
+void addPage(Page page){
+   QueueMtx.lock();
+   PagesToAdd.push(std::move(page));
+   QueueMtx.unlock();
+   ++PagesCounter;
+   if(PagesCounter % numPages == 1){
+       pthread_t p;
+       pthread_create(&p, nullptr, runBin, NULL);
+       pthread_detach(p);
+   }
+   QueueNECV.signal();
+}
+
+void * runBin(void *){
+    NumThreads.fetch_add(1);
+    fb::SizeT Index = FileIndex;
+    FileIndex.fetch_add(1);
+    PageBin Bin(Prefix + fb::toString(Index), false);
+    fb::SizeT i = 0;
+    for( ; i < numPages; ++i){
+        QueueMtx.lock();
+        while (PagesToAdd.empty())
+            QueueNECV.wait(QueueMtx);
+        Page P = std::move(PagesToAdd.front());
+        PagesToAdd.pop();
+        QueueMtx.unlock();
+        Bin.addPage(P.first, P.second);
+    }
+    NumThreads.fetch_sub(1);
+    return nullptr;
 }

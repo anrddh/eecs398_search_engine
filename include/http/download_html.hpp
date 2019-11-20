@@ -1,28 +1,28 @@
 #pragma once
 
+#include <fb/stddef.hpp>
+#include <fb/unordered_set.hpp>
+#include <fb/string.hpp>
+#include <fb/utility.hpp>
+
+#include <iostream>
+
 #include <assert.h>
 #include <fcntl.h>
-#include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
-
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "lib/stddef.hpp"
-#include "lib/unordered_set.hpp"
-#include "lib/string.hpp"
-#include "lib/utility.hpp"
-
-// URL wrapper class 
+// URL wrapper class
 class ParsedUrl
    {
    public:
-      static const fb::String defaultPort; 
+      static const fb::String defaultPort;
       const fb::String CompleteUrl;
       fb::String Service, Host, Port, Path;
 
@@ -66,7 +66,7 @@ class ParsedUrl
             Path = "";
          }
 
-      ~ParsedUrl( ) 
+      ~ParsedUrl( )
          {
          };
 
@@ -75,7 +75,7 @@ class ParsedUrl
          {
          std::cout << "Complete Url = " << CompleteUrl << std::endl;
          std::cout << "Service = " << Service
-               << ", Host = " << Host << ", Port = " << Port 
+               << ", Host = " << Host << ", Port = " << Port
                << ", Path = " << Path << std::endl;
          }
    };
@@ -166,7 +166,7 @@ class BufferWriter
          {
          if ( chunkSizeString.size() >= 2 )
             {
-            if ( chunkSizeString[chunkSizeString.size( ) - 2 ] == '\r' 
+            if ( chunkSizeString[chunkSizeString.size( ) - 2 ] == '\r'
                   && chunkSizeString[chunkSizeString.size( ) - 1 ] == '\n' )
                {
                chunkSizeString = chunkSizeString.substr(
@@ -178,7 +178,7 @@ class BufferWriter
          }
    };
 
-struct ConnectionAcception 
+struct ConnectionAcception
    {
    ConnectionAcception(const fb::String msg_) : msg(msg_)
       {
@@ -196,7 +196,7 @@ class ConnectionWrapper
 
       // http connection
       ConnectionWrapper( ParsedUrl &url_in )
-      : url(url_in) 
+      : url(url_in)
          {
          // Get the host address
          struct addrinfo *address, hints;
@@ -241,7 +241,7 @@ class ConnectionWrapper
          close( socketFD );
          }
 
-      virtual int read( char *buffer ) 
+      virtual int read( char *buffer )
          {
          return recv( socketFD, buffer, sizeof ( buffer ), 0 );
          }
@@ -258,7 +258,7 @@ class SSLWrapper : public ConnectionWrapper
    {
    public:
       SSLWrapper( ParsedUrl &url_in )
-      : ConnectionWrapper( url_in ) 
+      : ConnectionWrapper( url_in )
          {
          // Add SSL layer around http
          SSL_library_init( );
@@ -295,7 +295,7 @@ class SSLWrapper : public ConnectionWrapper
       }
 
       virtual ~SSLWrapper( )
-         {     
+         {
          SSL_shutdown( ssl );
          SSL_free( ssl );
          SSL_CTX_free( ctx );
@@ -311,7 +311,7 @@ class HTTPDownloader
 public:
 
 HTTPDownloader( )
-   : header( "    " ) 
+   : header( "    " )
    {
    }
 
@@ -321,12 +321,12 @@ fb::String header;
 // GetMessage
 const fb::String GetGetMessage( const ParsedUrl &url )
    {
-   fb::String getMessage = 
+   fb::String getMessage =
          "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n" +
          "User-Agent: LinuxGetSsl/2.0 (Linux)\r\n" +
          "Accept: */*\r\n" +
          "Accept-Encoding: identity\r\n" +
-         "Connection: close\r\n\r\n"; 
+         "Connection: close\r\n\r\n";
    return getMessage;
    }
 
@@ -357,7 +357,7 @@ struct HeaderResult
 
 // Get header and parse relevant information
 // return apporpriate pair of DownloadStatus and redirectUrl
-HeaderResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer, 
+HeaderResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
    const fb::Vector<fb::String> &acceptableTypes )
    {
    char buffer [ 10240 ];
@@ -411,7 +411,7 @@ HeaderResult parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
                writer.addContent( url_comment.data( ), url_comment.size( ) );
                writer.print( buffer + i + 1, bytes - i - 1 );
                }
-            
+
             pastHeader = true;
             break;
             }
@@ -431,7 +431,7 @@ ConnectionWrapper * ConnectionWrapperFactory( ParsedUrl &url )
       return new SSLWrapper( url );
    }
 
-struct DownloadResult 
+struct DownloadResult
 {
    fb::String response;
    fb::String downloadedContent;
@@ -483,7 +483,7 @@ DownloadResult PrintGetRedirect( const fb::String &url,
       // write the content if no redirect and link is html
       if ( headerResult.fileTypeGood )
          {
-         while ( ( bytes =  connector->read( buffer ) ) > 0 
+         while ( ( bytes =  connector->read( buffer ) ) > 0
                && !writer.contentTooBig( ) )
          {
             // std::cout << "downloading" << std::endl;
@@ -568,4 +568,3 @@ DownloadResult PrintPlainTxt( const fb::String &url_in )
    }
 
 };
-

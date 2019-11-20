@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../lib/string_view.hpp"
-#include "../../lib/Exception.hpp"
-#include "../../lib/utility.hpp"
+#include <fb/string_view.hpp>
+#include <fb/exception.hpp>
+#include <fb/utility.hpp>
 
 #include <assert.h>
 #include <regex.h>

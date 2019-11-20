@@ -289,7 +289,7 @@ namespace fb {
 
         template <typename ... Args>
         Iterator emplace(ConstIterator pos, Args &&... args) {
-            auto idx = fb::distance(cbegin(), pos);
+            auto idx = static_cast<SizeT>(fb::distance(cbegin(), pos));
             alloc_mem(size() + 1);
             uninitializedDefaultConstruct(end(), end() + 1);
             for (auto i = size(); i > idx; --i)

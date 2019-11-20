@@ -332,6 +332,7 @@ HTTPDownloader( )
    }
 
    fb::String header;
+   fb::String finalUrl;
 
    // GetMessage
    const fb::String GetGetMessage( const ParsedUrl &url )
@@ -502,7 +503,7 @@ HTTPDownloader( )
             throw ConnectionException( "File too big" );
          }
 
-      // clean up
+      finalUrl = url;
       return writer.downloadedContent;
       }
 

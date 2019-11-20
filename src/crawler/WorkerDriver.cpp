@@ -27,11 +27,11 @@ void *parsePages( void * )
 
 
       auto downloader = HTTPDownloader( );
-      auto result = downloader.PrintHtml( urlPair.second );
+      fb::String result = downloader.PrintHtml( urlPair.second );
 
-      ParsedUrl url( downloader.redirectUrl );
+      ParsedUrl url( downloader.finalUrl );
 
-      auto parser = fb::Parser( result.downloadedContent,
+      auto parser = fb::Parser( result,
             url.Service + "://" + url.Host );
 
       fb::Vector< fb::Pair<fb::String, fb::String> > links;

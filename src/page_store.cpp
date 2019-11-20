@@ -16,7 +16,7 @@
 PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOffset(0),
                 PageHeadersOffset(0), PagesBeginOffset(0), Pages(filename, init) {
     PageCountOffset = Pages.reserve(sizeof(fb::SizeT));
-    PageHeadersOffset = Pages.reserve(numPages * 2 * sizeof(fb::SizeT));
+    PageHeadersOffset = Pages.reserve(numPages * sizeof(PageHeader));
     PagesBeginOffset = Pages.size();
 }
 
@@ -28,14 +28,13 @@ void PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::StringView, fb::Vector<W
     Pages.data()[idx + page.first.size()] = 0;
 
     //copy the vector in
-    Pages.insert(page.second.begin(), page.second.end());
+    auto idy = Pages.insert(page.second.begin(), page.second.end());
 
     //put in the page header
-    PageHeader header = { idx, UrlOffset };
+    PageHeader header = { idx, idy, UrlOffset };
     memcpy(Pages.data() + PageHeadersOffset + PageCount * sizeof(PageHeader), &header, sizeof(PageHeader));
 
     //increment the page counter
     ++PageCount;
-    //fb::copy(&PageCount, &PageCount + sizeof(PageCount), Pages.data() + PageCountOffset);
     memcpy(Pages.data() + PageCountOffset, &PageCount, sizeof(PageCount));
 }

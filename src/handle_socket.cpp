@@ -103,6 +103,7 @@ void* handle_socket_helper(void* sock_ptr) {
    FileDesc sock(* (int *) sock_ptr);
    delete (int *) sock_ptr;
 
+   std::cout << "handle_socket helper 0" << std::endl;
    try {
    if ( recv_int(sock) != VERFICATION_CODE ) {
       throw SocketException("Incorrect verfication code");

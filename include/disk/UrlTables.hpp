@@ -16,7 +16,7 @@
 #include "fb/unordered_set.hpp"
 
 // TODO don't hard code this
-const fb::String UrlInfoTableName = "url_info_table.txt"
+const fb::String UrlInfoTableName = "url_info_table.txt";
 
 // Same as above
 // We need to hard code the file we save to

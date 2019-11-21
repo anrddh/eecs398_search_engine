@@ -14,13 +14,11 @@ constexpr int NUM_THREAD = 100;
 fb::Mutex endLock;
 fb::CV endCV;
 
-void *parsePages( void * ) 
+void *parsePages( void * )
    {
    while( true )
       {
-      std::cout << "am i running" << std::endl;
       auto urlPair = get_url_to_parse( );
-      std::cout << "got url" << std::endl;
 
 	  if ( urlPair.second.empty( ) )
          {
@@ -42,7 +40,7 @@ void *parsePages( void * )
 
          fb::Vector< fb::Pair<fb::String, fb::String> > links;
 
-         for ( auto iter = parser.urlAnchorText.begin( );  
+         for ( auto iter = parser.urlAnchorText.begin( );
          	iter != parser.urlAnchorText.end( );  ++iter )
          links.emplaceBack( iter.key( ), *iter );
 
@@ -89,8 +87,6 @@ void *commandLineArgs( void * )
 
 int main( int argc, char **argv )
    {
-      std::cout << argv[1] << std::endl;
-      std::cout << atoi(argv[2]) << std::endl;
    set_master_ip( argv[1], atoi(argv[2]) );
    fb::Thread argsThreads( commandLineArgs, nullptr );
 

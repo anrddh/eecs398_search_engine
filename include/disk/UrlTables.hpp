@@ -15,49 +15,6 @@
 #include "fb/unordered_map.hpp"
 #include "fb/unordered_set.hpp"
 
-/*
-   I don't think this code is no long needed
-
-// Number of bins is currently just hardcoded to 256,
-// because template singletons are apparently very
-// difficult to compile
-class UrlOffsetTable {
-public:
-   static UrlOffsetTable & getTable() {
-      static UrlOffsetTable unique_obj();
-      return unique_obj;
-   }
-
-   // Will find the offset (if this string was seen
-   fb::SizeT getOffset( fb::StringView str ) {
-      fb::SizeT hash = hasher(str);
-      fb::AutoLock<fb::Mutex> l(offset_hashes[hash % NumBins].second);
-      return offset_hashes[hash % NumBins].first.find( str, hash );
-   }
-
-   fb::StringView accessOffset(fb::SizeT offset) {
-      return UrlStore::getStore().getUrl(offset);
-   }
-
-private:
-   UrlOffsetTable() {
-      for (int i = 0; i < NumBins; ++i){
-         offset_hashes[i].first.set_string_list();
-      }
-   }
-
-   constexpr static fb::SizeT NumBins = 256;
-   static UrlOffsetTable *ptr;
-
-   fb::Pair<OffsetLookupChunk<fb::StringView,
-                              fb::SizeT,
-                              fb::Hash<fb::StringView>>,
-            fb::Mutex> offset_hashes[NumBins];
-   fb::Hash<fb::StringView> hasher;
-};
-
-*/
-
 // Same as above
 // We need to hard code the file we save to
 class UrlInfoTable {

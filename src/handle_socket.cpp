@@ -107,20 +107,27 @@ void* handle_socket_helper(void* sock_ptr) {
    if ( recv_int(sock) != VERFICATION_CODE ) {
       throw SocketException("Incorrect verfication code");
    }
+   std::cout << "handle_socket helper 1" << std::endl;
 
       while (true)  {
          char message_type = recv_char(sock);
          if (message_type == 'R') {
+            std::cout << "handle_socket helper 2" << std::endl;
             handle_request(sock);
          } else if (message_type == 'S') {
+            std::cout << "handle_socket helper 3" << std::endl;
             handle_send(sock);
          } else if (message_type == 'T')  {
+            std::cout << "handle_socket helper 4" << std::endl;
             term_mtx.lock();
+            std::cout << "handle_socket helper 5" << std::endl;
             if (do_terminate) {
+            std::cout << "handle_socket helper 6" << std::endl;
                term_mtx.unlock();
                send_char(sock, 'T');
                return nullptr;
             } else {
+            std::cout << "handle_socket helper 7" << std::endl;
                term_mtx.unlock();
                send_char(sock, 'N');
             }

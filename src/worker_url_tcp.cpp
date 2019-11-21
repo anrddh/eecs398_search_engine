@@ -118,6 +118,7 @@ void* talk_to_master(void*) {
          std::cout << "talk_to_master 1" << std::endl;
          // Send the parsed info
          parsed_m.lock();
+         // TODO this is a bug. should be not empty
          if (urls_parsed.empty()) 
          {
             std::cout << "talk_to_master 2" << std::endl;
@@ -145,7 +146,7 @@ void* talk_to_master(void*) {
 
          std::cout << "talk_to_master 8" << std::endl;
          send_char(sock, 'T');
-         std::cout << "talk_to_master 9" << std::endl;
+         std::cout << "talk_to_master 9" << std::endl; // Last thing that printed
          char terminate_state = recv_char(sock);
          std::cout << "talk_to_master 10" << std::endl;
 

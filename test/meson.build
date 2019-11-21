@@ -1,17 +1,14 @@
 test_robots_1 = executable('test-robots-1',
                            ['main.cpp', 'test-robots-1.cpp'],
-                           include_directories : inc,
-                           dependencies: [ssl_dep])
+                           include_directories : inc)
 
 test_robots_2_http = executable('test-robots-2-http',
                                 ['main.cpp', 'test-robots-2-http.cpp'],
-                                include_directories : inc,
-                                dependencies: [ssl_dep])
+                                include_directories : inc)
 
 test_parser = executable('test_parser',
                       ['test_parser.cpp'],
-                      include_directories : inc,
-                      dependencies: [ssl_dep])
+                      include_directories : inc)
 
 test_pagestore = executable('test_pagestore',
 			['test-pagestore.cpp', '../src/page_store.cpp'],

@@ -13,6 +13,6 @@ test_parser = executable('test_parser',
                       include_directories : inc,
                       dependencies: [ssl_dep])
 
-test('Robots 1', test_robots_1)
-test('Robots 2 (HTTP)', test_robots_2_http)
+test('Robots 1', test_robots_1, suite: 'robots')
+test('Robots 2 (HTTP)', test_robots_2_http, suite: 'robots')
 test('Parser', test_parser)

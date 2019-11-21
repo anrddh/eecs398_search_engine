@@ -2,26 +2,6 @@
 
 #include "doctest.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <streambuf>
-
-//TEST_CASE( "RobotsTxt" ) {
-//    auto &robots = RobotsTxt::getRobots();
-//
-//    std::ifstream t("/Users/anrddh/google_robots.txt");
-//    std::string str((std::istreambuf_iterator<char>(t)),
-//                    std::istreambuf_iterator<char>());
-//
-//    fb::String googleRobots(str.data(), str.size());
-//
-//    robots.constructRobotParser("www.google.com", googleRobots);
-//
-//    CHECK( robots.canVisit("www.google.com", "/?hl=") );
-//    CHECK( ! robots.canVisit("www.google.com", "/purchases") );
-//}
-
 TEST_CASE( "RobotsTxt Test 1" ) {
     auto &robots = RobotsTxt::getRobots();
 
@@ -30,7 +10,7 @@ Disallow: /fish\n";
 
     robots.constructRobotParser("test.com", robots1);
     CHECK( ! robots.canVisit("test.com", "/fish") );
-    CHECK( (robots.canVisitImpl("test.com", "/fish.html") >> 1) == 0 );
+    CHECK( ! robots.canVisit("test.com", "/fish.html") );
     CHECK( ! robots.canVisit("test.com", "/fish.html") );
     CHECK( ! robots.canVisit("test.com", "/fish/salmon.html") );
     CHECK( ! robots.canVisit("test.com", "/fishheads") );

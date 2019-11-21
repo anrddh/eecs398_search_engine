@@ -1,0 +1,9 @@
+When anchor text is discovered, it is stored on disk by the AnchorStore class.
+This file gives the specification for how that data is stored.
+
+1 of the following:
+- (sizeof(std::atomic<fb::SizeT>)) Bytes: Cursor
+    *These bytes are reserved by the atomic cursor which is used to write to the file.
+    *This should be 8 bytes, but may depend on implementation of std::atomic.
+The rest of the file is an array of the following:
+- TODO: Finish writing this.

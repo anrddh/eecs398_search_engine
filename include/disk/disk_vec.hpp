@@ -17,7 +17,9 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
+//TODO: Change back! just for testing its smaller!
+//constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
+constexpr fb::SizeT MAXFILESIZE = 0x20000000; // 512 MiB
 
 // This is the class that represents an array saved on disk
 // ASSUMES that there won't be more than 128 Gb of data

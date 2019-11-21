@@ -686,4 +686,4 @@ void initializeConversionMap( )
 	bool inSpecialCharacter;
 	
 };
-};
+}

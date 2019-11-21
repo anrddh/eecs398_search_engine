@@ -62,6 +62,9 @@ private:
 class UrlInfoTable {
 public:
    // Meyer's method for singletons
+   // Note that c++11 standard guarantees
+   // that the constructor will finish the constructor
+   // before the object is ever returned
     static UrlInfoTable & getTable() {
        static UrlInfoTable unique_obj;
        return &unique_obj;
@@ -97,13 +100,16 @@ public:
       // This we default initialize 
       fb::Pair<StringView&, SizeT&> url_info_pair = 
          info_hash.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
-               UrlStore::getStore().getUrl(pp.url_offset));
+               UrlStore::getStore().getUrl( pp.url_offset ));
 
       // This means that we have never seen before
       assert(url_info_pair.second != 0);
 
       // url info object associated with this url
-      UrlInfo& info = url_info.[ url_info_pair.second ];
+      UrlInfo& info = url_info[ url_info_pair.second ];
+
+      assert( info.UrlOffset == 0 || info.UrlOffset == pp.url_offset );
+      info.UrlOffset = pp.url_offset;
 
       // We need to call copy on the atomic to get a correct snapshot
       char state = info.state;
@@ -147,16 +153,41 @@ public:
       return adj_list;
     }
 
+private:
 
-    // TODO is this function even used...?
-   UrlInfo &get_info( fb::StringView str ) {
-      fb::SizeT hash = hasher(str);
-      fb::AutoLock<fb::Mutex> l(info_hashes[hash % NumBins].second);
-      return info_hashes[hash % NumBins].first[str];
+   char* get_function_name() {
+      char* fname = getenv("url_info_file_name");
+      if (fname == nullptr) 
+      {
+         return "url_info_default_file_name";
+      }
+      else
+      {
+         return fname;
+      }
    }
 
-private:
-   UrlInfoTable(){}
+   // The constructor should be called only once
+   // It will recover the file name of the url_info (disk_vec)
+   // and load it. Then it will reconstruct the hash table that 
+   // maps url_offset to url_info_offset
+   // Note that the lock will not be grabbed when the constructor is running
+   UrlInfoTable() : url_info(get_function_name()) 
+   {
+      for ( SizeT url_info_offset = 0; url_info_offset < url_info.size(); ++url_info_offset )
+      {
+         if ( url_info[ url_info_offset ].UrlOffset == 0 )
+         {
+            continue;
+         }
+
+         StringView url = UrlStore::getStore().getUrl( pp.url_offset );
+         fb::SizeT hash = hasher( url );
+
+         info_hashes[hash % NumBins].first[ url ] = url_info_offset;
+      }
+   }
+
 
     // Adds the anchor text
     // If this was the first occurence this url was seen, initialize urls info
@@ -165,7 +196,7 @@ private:
     // This function grabs locks from info_hashes, so the caller should ensure that
     // it is not holding any locks from info_hashes
     SizeT add_link(const String& link, const String& anchor_text ) {
-      fb::SizeT hash = hasher( UrlStore::getStore().getUrl( link ) );
+      fb::SizeT hash = hasher( link );
       fb::Pair<fb::UnorderedMap<fb::StringView, SizeT>, fb::Mutex> info_hash 
          = info_hashes[hash % NumBins];
 

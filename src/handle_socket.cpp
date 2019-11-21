@@ -19,6 +19,26 @@ CV term_cv;
 int num_threads = 0;
 bool do_terminate = false;
 
+class ThreadLifeTracker {
+public:
+   ThreadLifeTracker() 
+   {
+      term_mtx.lock();
+      ++num_threads;
+      term_mtx.unlock();
+   }
+
+   ~ThreadLifeTracker()
+   {
+      term_mtx.lock();
+      if (--num_threads == 0)
+      {
+         term_cv.signal();
+      }
+      term_mtx.unlock();
+   }
+}
+
 void terminate_workers() {
    term_mtx.lock();
    do_terminate = true;
@@ -77,6 +97,8 @@ void* handle_socket(void* sock_ptr) {
 }
 
 void* handle_socket_helper(void* sock_ptr) {
+   ThreadLifeTracker tlt;
+
    FileDesc sock(* (int *) sock_ptr);
    delete (int *) sock_ptr;
 
@@ -101,19 +123,14 @@ void* handle_socket_helper(void* sock_ptr) {
                term_mtx.unlock();
                send_char(sock, 'N');
             }
-         } else if (message_type == 'F') {
-            term_mtx.lock();
-            if (--num_threads == 0) {
-               term_cv.signal();
-            }
-            term_mtx.unlock();
-         } 
+         }
          else {
             throw SocketException("Wrong message type");
          }
       }
    } catch (SocketException& se) {
       // TODO log error
+      std::cerr << "SocketException caught in handle_socket_helper. Error: " << se.what() << std::endl;
       return nullptr;
    }
 }

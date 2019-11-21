@@ -1,20 +1,21 @@
 // Created by Jaeyoon Kim 11/7/19
 #pragma once
 
-#include "UrlStore.hpp"
+#include "url_store.hpp"
 #include "offset_lookup.hpp"
 #include "UrlInfo.hpp"
+#include "adj_store.hpp"
+#include "anchor_store.hpp"
 
-#include "../../lib/mutex.hpp"
-#include "../../lib/utility.hpp" // for pair
-#include "../../lib/string.hpp"
-#include "../../lib/string_view.hpp"
-#include "../../lib/stddef.hpp"
-#include "../../lib/unordered_map.hpp"
-#include "../../lib/unordered_set.hpp"
+#include "fb/mutex.hpp"
+#include "fb/utility.hpp" // for pair
+#include "fb/string.hpp"
+#include "fb/string_view.hpp"
+#include "fb/stddef.hpp"
+#include "fb/unordered_map.hpp"
+#include "fb/unordered_set.hpp"
 
 /*
-
    I don't think this code is no long needed
 
 // Number of bins is currently just hardcoded to 256,
@@ -67,7 +68,7 @@ public:
    // before the object is ever returned
     static UrlInfoTable & getTable() {
        static UrlInfoTable unique_obj;
-       return &unique_obj;
+       return unique_obj;
     }
 
     // Adds a new url
@@ -85,22 +86,26 @@ public:
     //
     // Returns url_offsets of urls we have seen for the first time
     // (i.e. these urls should be added to the frontier)
-    fb::Vector<SizeT> HandleParsedPage(ParsedPage&& pp) {
+    fb::Vector<fb::SizeT> HandleParsedPage(ParsedPage&& pp) {
        // When we are adding links we have found:
        //
        // if this url was never seen before, then add the url
        // to disk_vec. Then construct a new url_info in disk_vec.
        // Then add the url to the frontier (check robots.txt first)
       fb::SizeT hash = hasher( UrlStore::getStore().getUrl(pp.url_offset) );
-      fb::Pair<fb::UnorderedMap<fb::StringView, SizeT>, fb::Mutex> info_hash 
+      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hash 
          = info_hashes[hash % NumBins];
 
       info_hash.second.lock();
 
+
+
       // This we default initialize 
-      fb::Pair<StringView&, SizeT&> url_info_pair = 
-         info_hash.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
-               UrlStore::getStore().getUrl( pp.url_offset ));
+      fb::StringView url = 
+               UrlStore::getStore().getUrl( pp.url_offset );
+      fb::Pair<fb::StringView&, fb::SizeT&> url_info_pair = 
+         info_hash.first.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
+               url);
 
       // This means that we have never seen before
       assert(url_info_pair.second != 0);
@@ -121,7 +126,7 @@ public:
          // In this case the master will add the urls back to the frontier
          // but the worker might parse the page and send it back to master
          info_hash.second.unlock();
-         return;
+         return {};
       }
 
       // Even though we set it to be parsed,
@@ -132,20 +137,20 @@ public:
       info_hash.second.unlock();
 
 
-      Vector<SizeT> adj_list;
+      fb::Vector<fb::SizeT> adj_list;
 
       for (const fb::Pair<fb::String, fb::String>& link : pp.links) {
          // TODO we need to check with robots.txt if we should add should parse this link
          // We will only add to the adj_list if it is allowed by robots.txt
-         SizeT url_offset = adj_list.pushBack( add_link(link.first, link.second) );
+         fb::SizeT url_offset = add_link(link.first, link.second);
          if ( url_offset != 0 )
          {
-            adj_list.url_offset;
+            adj_list.pushBack( url_offset );
          }
       }
 
       info_hash.second.lock();
-      info.AdjListOffset = addList( adj_list );
+      info.AdjListOffsets = AdjStore::getStore().addList( adj_list );
       info_hashes[hash % NumBins].second.unlock();
       info.state = 'p'; // set the page to be parsed
       info_hash.second.unlock();
@@ -174,14 +179,14 @@ private:
    // Note that the lock will not be grabbed when the constructor is running
    UrlInfoTable() : url_info(get_function_name()) 
    {
-      for ( SizeT url_info_offset = 0; url_info_offset < url_info.size(); ++url_info_offset )
+      for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size(); ++url_info_offset )
       {
          if ( url_info[ url_info_offset ].UrlOffset == 0 )
          {
             continue;
          }
 
-         StringView url = UrlStore::getStore().getUrl( pp.url_offset );
+         fb::StringView url = UrlStore::getStore().getUrl( url_info[ url_info_offset ].UrlOffset );
          fb::SizeT hash = hasher( url );
 
          info_hashes[hash % NumBins].first[ url ] = url_info_offset;
@@ -195,18 +200,19 @@ private:
     // otherwise, it returns 0.
     // This function grabs locks from info_hashes, so the caller should ensure that
     // it is not holding any locks from info_hashes
-    SizeT add_link(const String& link, const String& anchor_text ) {
+    // link can't be const ref in order to use functionThatIsOnlyForJaeyoonInThatOneSpecialCase
+   fb::SizeT add_link(fb::StringView link, fb::StringView anchor_text ) 
+   {
       fb::SizeT hash = hasher( link );
-      fb::Pair<fb::UnorderedMap<fb::StringView, SizeT>, fb::Mutex> info_hash 
+      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hash 
          = info_hashes[hash % NumBins];
 
-      AutoLock<Mutex> l(info_hash.second);
+      fb::AutoLock<fb::Mutex> l(info_hash.second);
 
       // This we default initialize 
-      fb::Pair<StringView&, SizeT&> url_info_pair = 
-         info_hash.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
-               UrlStore::getStore().getUrl(pp.url_offset)
-               );
+      fb::Pair<fb::StringView&, fb::SizeT&> url_info_pair = 
+         info_hash.first.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
+               link );
 
       bool is_new_url = (url_info_pair.second == 0);
 
@@ -222,7 +228,7 @@ private:
          // Usually, it would be very bad to modify the key
          // However in this case, the equality operator and the hash does not
          // change since they both represent the same string
-         SizeT url_offset = UrlStore::getStore().addUrl( link );
+         fb::SizeT url_offset = UrlStore::getStore().addUrl( link );
          url_info_pair.first = UrlStore::getStore().getUrl( url_offset );
          url_info_pair.second = url_info.reserve(1);
          url_info[url_info_pair.second].state = 'u';
@@ -246,10 +252,10 @@ private:
    constexpr static fb::SizeT NumBins = 256;
    //The unorderedmaps link the hashes of urls to the associated url infos
    // unordered map from stringView (that points to disk vec of urls
-   fb::Pair<fb::UnorderedMap<fb::StringView, SizeT>, fb::Mutex> info_hashes[NumBins];
+   fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hashes[NumBins];
 
    // TODO we need to initialize this thing
    // with a file
    DiskVec<UrlInfo> url_info;
-   fb::Hash<fb::SizeT> hasher;
+   fb::Hash<fb::StringView> hasher;
 };

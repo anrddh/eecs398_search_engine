@@ -3,10 +3,10 @@
 
 //This is essentially an unordered_map, but it does not store the keys in the buckets
 //This is intended to look up a file offset, and comparisons will then be done using the lookup
-#include "../../lib/functional.hpp"
-#include "../../lib/string.hpp"
-#include "../../lib/vector.hpp"
-#include "UrlStore.hpp"
+#include "fb/functional.hpp"
+#include "fb/string.hpp"
+#include "fb/vector.hpp"
+#include "url_store.hpp"
 
 #define INITIAL_SIZE 1024
 
@@ -196,7 +196,6 @@ public:
             rehash_and_grow();
         }
         fb::SizeT desired_bucket = hash(key) % buckets.size();
-        fb::SizeT original_hash = desired_bucket;
         //if the bucket is not empty
         if (buckets[desired_bucket].status != Status::Empty) {
             //search until an empty bucket

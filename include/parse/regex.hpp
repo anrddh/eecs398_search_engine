@@ -30,8 +30,10 @@ public:
         initd = true;
     }
 
-    bool match(const char *needle) {
-        assert(initd);
+    bool match(const char *needle) const noexcept {
+        if (!initd)
+            return false;
+
         auto rval = regexec(&t, needle, 0, nullptr, REG_EXTENDED);
         return !rval;
     }

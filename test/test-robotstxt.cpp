@@ -18,8 +18,8 @@
 //
 //    robots.constructRobotParser("www.google.com", googleRobots);
 //
-//    CHECK( robots.canVisit("www.google.com"_sv, "/?hl=") );
-//    CHECK( ! robots.canVisit("www.google.com"_sv, "/purchases") );
+//    CHECK( robots.canVisit("www.google.com", "/?hl=") );
+//    CHECK( ! robots.canVisit("www.google.com", "/purchases") );
 //}
 
 TEST_CASE( "RobotsTxt Test 1" ) {
@@ -29,15 +29,16 @@ TEST_CASE( "RobotsTxt Test 1" ) {
 Disallow: /fish\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish.html") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish/salmon.html") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fishheads") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fishheads/yummy.html") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish.php?id=anything") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish.asp") );
-    CHECK( robots.canVisit("test.com"_sv, "/catfish") );
-    CHECK( robots.canVisit("test.com"_sv, "/?id=fish") );
+    CHECK( ! robots.canVisit("test.com", "/fish") );
+    CHECK( (robots.canVisitImpl("test.com", "/fish.html") >> 1) == 0 );
+    CHECK( ! robots.canVisit("test.com", "/fish.html") );
+    CHECK( ! robots.canVisit("test.com", "/fish/salmon.html") );
+    CHECK( ! robots.canVisit("test.com", "/fishheads") );
+    CHECK( ! robots.canVisit("test.com", "/fishheads/yummy.html") );
+    CHECK( ! robots.canVisit("test.com", "/fish.php?id=anything") );
+    CHECK( robots.canVisit("test.com", "/Fish.asp") );
+    CHECK( robots.canVisit("test.com", "/catfish") );
+    CHECK( robots.canVisit("test.com", "/?id=fish") );
 }
 
 TEST_CASE( "RobotsTxt Test 2" ) {
@@ -47,15 +48,15 @@ TEST_CASE( "RobotsTxt Test 2" ) {
 Allow: /fish\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/fish") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish/salmon.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fishheads") );
-    CHECK( robots.canVisit("test.com"_sv, "/fishheads/yummy.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish.php?id=anything") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish.asp") );
-    CHECK( robots.canVisit("test.com"_sv, "/catfish") );
-    CHECK( robots.canVisit("test.com"_sv, "/?id=fish") );
+    CHECK( robots.canVisit("test.com", "/fish") );
+    CHECK( robots.canVisit("test.com", "/fish.html") );
+    CHECK( robots.canVisit("test.com", "/fish/salmon.html") );
+    CHECK( robots.canVisit("test.com", "/fishheads") );
+    CHECK( robots.canVisit("test.com", "/fishheads/yummy.html") );
+    CHECK( robots.canVisit("test.com", "/fish.php?id=anything") );
+    CHECK( robots.canVisit("test.com", "/Fish.asp") );
+    CHECK( robots.canVisit("test.com", "/catfish") );
+    CHECK( robots.canVisit("test.com", "/?id=fish") );
 }
 
 TEST_CASE( "RobotsTxt Test 3" ) {
@@ -65,15 +66,15 @@ TEST_CASE( "RobotsTxt Test 3" ) {
 Disallow: /fish*\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish.html") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish/salmon.html") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fishheads") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fishheads/yummy.html") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish.php?id=anything") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish.asp") );
-    CHECK( robots.canVisit("test.com"_sv, "/catfish") );
-    CHECK( robots.canVisit("test.com"_sv, "/?id=fish") );
+    CHECK( ! robots.canVisit("test.com", "/fish") );
+    CHECK( ! robots.canVisit("test.com", "/fish.html") );
+    CHECK( ! robots.canVisit("test.com", "/fish/salmon.html") );
+    CHECK( ! robots.canVisit("test.com", "/fishheads") );
+    CHECK( ! robots.canVisit("test.com", "/fishheads/yummy.html") );
+    CHECK( ! robots.canVisit("test.com", "/fish.php?id=anything") );
+    CHECK( robots.canVisit("test.com", "/Fish.asp") );
+    CHECK( robots.canVisit("test.com", "/catfish") );
+    CHECK( robots.canVisit("test.com", "/?id=fish") );
 }
 
 TEST_CASE( "RobotsTxt Test 4" ) {
@@ -83,15 +84,15 @@ TEST_CASE( "RobotsTxt Test 4" ) {
 Allow: /fish*\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/fish") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish/salmon.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fishheads") );
-    CHECK( robots.canVisit("test.com"_sv, "/fishheads/yummy.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish.php?id=anything") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish.asp") );
-    CHECK( robots.canVisit("test.com"_sv, "/catfish") );
-    CHECK( robots.canVisit("test.com"_sv, "/?id=fish") );
+    CHECK( robots.canVisit("test.com", "/fish") );
+    CHECK( robots.canVisit("test.com", "/fish.html") );
+    CHECK( robots.canVisit("test.com", "/fish/salmon.html") );
+    CHECK( robots.canVisit("test.com", "/fishheads") );
+    CHECK( robots.canVisit("test.com", "/fishheads/yummy.html") );
+    CHECK( robots.canVisit("test.com", "/fish.php?id=anything") );
+    CHECK( robots.canVisit("test.com", "/Fish.asp") );
+    CHECK( robots.canVisit("test.com", "/catfish") );
+    CHECK( robots.canVisit("test.com", "/?id=fish") );
 }
 
 TEST_CASE( "RobotsTxt Test 5" ) {
@@ -101,12 +102,12 @@ TEST_CASE( "RobotsTxt Test 5" ) {
 Disallow: /fish/\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish/") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish/?id=anything") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish/salmon.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish/Salmon.asp") );
+    CHECK( ! robots.canVisit("test.com", "/fish/") );
+    CHECK( ! robots.canVisit("test.com", "/fish/?id=anything") );
+    CHECK( ! robots.canVisit("test.com", "/fish/salmon.html") );
+    CHECK( robots.canVisit("test.com", "/fish") );
+    CHECK( robots.canVisit("test.com", "/fish.html") );
+    CHECK( robots.canVisit("test.com", "/Fish/Salmon.asp") );
 }
 
 TEST_CASE( "RobotsTxt Test 6" ) {
@@ -116,12 +117,12 @@ TEST_CASE( "RobotsTxt Test 6" ) {
 Allow: /fish/\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/fish/") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish/?id=anything") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish/salmon.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish") );
-    CHECK( robots.canVisit("test.com"_sv, "/fish.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish/Salmon.asp") );
+    CHECK( robots.canVisit("test.com", "/fish/") );
+    CHECK( robots.canVisit("test.com", "/fish/?id=anything") );
+    CHECK( robots.canVisit("test.com", "/fish/salmon.html") );
+    CHECK( robots.canVisit("test.com", "/fish") );
+    CHECK( robots.canVisit("test.com", "/fish.html") );
+    CHECK( robots.canVisit("test.com", "/Fish/Salmon.asp") );
 }
 
 TEST_CASE( "RobotsTxt Test 7" ) {
@@ -131,13 +132,13 @@ TEST_CASE( "RobotsTxt Test 7" ) {
 Disallow: /*.php\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( ! robots.canVisit("test.com"_sv, "/filename.php") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/folder/filename.php") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/folder/filename.php?parameters") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/folder/any.php.file.html") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/filename.php/") );
-    CHECK( robots.canVisit("test.com"_sv, "/") );
-    CHECK( robots.canVisit("test.com"_sv, "/windows.PHP") );
+    CHECK( ! robots.canVisit("test.com", "/filename.php") );
+    CHECK( ! robots.canVisit("test.com", "/folder/filename.php") );
+    CHECK( ! robots.canVisit("test.com", "/folder/filename.php?parameters") );
+    CHECK( ! robots.canVisit("test.com", "/folder/any.php.file.html") );
+    CHECK( ! robots.canVisit("test.com", "/filename.php/") );
+    CHECK( robots.canVisit("test.com", "/") );
+    CHECK( robots.canVisit("test.com", "/windows.PHP") );
 }
 
 TEST_CASE( "RobotsTxt Test 8" ) {
@@ -147,13 +148,13 @@ TEST_CASE( "RobotsTxt Test 8" ) {
 Allow: /*.php\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/filename.php") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/filename.php") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/filename.php?parameters") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/any.php.file.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/filename.php/") );
-    CHECK( robots.canVisit("test.com"_sv, "/") );
-    CHECK( robots.canVisit("test.com"_sv, "/windows.PHP") );
+    CHECK( robots.canVisit("test.com", "/filename.php") );
+    CHECK( robots.canVisit("test.com", "/folder/filename.php") );
+    CHECK( robots.canVisit("test.com", "/folder/filename.php?parameters") );
+    CHECK( robots.canVisit("test.com", "/folder/any.php.file.html") );
+    CHECK( robots.canVisit("test.com", "/filename.php/") );
+    CHECK( robots.canVisit("test.com", "/") );
+    CHECK( robots.canVisit("test.com", "/windows.PHP") );
 }
 
 
@@ -164,13 +165,13 @@ TEST_CASE( "RobotsTxt Test 9" ) {
 Disallow: /*.php$\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( ! robots.canVisit("test.com"_sv, "/filename.php") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/folder/filename.php") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/filename.php?parameters") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/any.php.file.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/filename.php/") );
-    CHECK( robots.canVisit("test.com"_sv, "/") );
-    CHECK( robots.canVisit("test.com"_sv, "/windows.PHP") );
+    CHECK( ! robots.canVisit("test.com", "/filename.php") );
+    CHECK( ! robots.canVisit("test.com", "/folder/filename.php") );
+    CHECK( robots.canVisit("test.com", "/folder/filename.php?parameters") );
+    CHECK( robots.canVisit("test.com", "/folder/any.php.file.html") );
+    CHECK( robots.canVisit("test.com", "/filename.php/") );
+    CHECK( robots.canVisit("test.com", "/") );
+    CHECK( robots.canVisit("test.com", "/windows.PHP") );
 }
 
 TEST_CASE( "RobotsTxt Test 10" ) {
@@ -180,13 +181,13 @@ TEST_CASE( "RobotsTxt Test 10" ) {
 Allow: /*.php$\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/filename.php") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/filename.php") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/filename.php?parameters") );
-    CHECK( robots.canVisit("test.com"_sv, "/folder/any.php.file.html") );
-    CHECK( robots.canVisit("test.com"_sv, "/filename.php/") );
-    CHECK( robots.canVisit("test.com"_sv, "/") );
-    CHECK( robots.canVisit("test.com"_sv, "/windows.PHP") );
+    CHECK( robots.canVisit("test.com", "/filename.php") );
+    CHECK( robots.canVisit("test.com", "/folder/filename.php") );
+    CHECK( robots.canVisit("test.com", "/folder/filename.php?parameters") );
+    CHECK( robots.canVisit("test.com", "/folder/any.php.file.html") );
+    CHECK( robots.canVisit("test.com", "/filename.php/") );
+    CHECK( robots.canVisit("test.com", "/") );
+    CHECK( robots.canVisit("test.com", "/windows.PHP") );
 }
 
 TEST_CASE( "RobotsTxt Test 11" ) {
@@ -196,9 +197,9 @@ TEST_CASE( "RobotsTxt Test 11" ) {
 Disallow: /fish*.php\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( ! robots.canVisit("test.com"_sv, "/fish.php") );
-    CHECK( ! robots.canVisit("test.com"_sv, "/fishheads/catfish.php?parameters") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish.PHP") );
+    CHECK( ! robots.canVisit("test.com", "/fish.php") );
+    CHECK( ! robots.canVisit("test.com", "/fishheads/catfish.php?parameters") );
+    CHECK( robots.canVisit("test.com", "/Fish.PHP") );
 }
 
 
@@ -209,9 +210,9 @@ TEST_CASE( "RobotsTxt Test 12" ) {
 Allow: /fish*.php\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/fish.php") );
-    CHECK( robots.canVisit("test.com"_sv, "/fishheads/catfish.php?parameters") );
-    CHECK( robots.canVisit("test.com"_sv, "/Fish.PHP") );
+    CHECK( robots.canVisit("test.com", "/fish.php") );
+    CHECK( robots.canVisit("test.com", "/fishheads/catfish.php?parameters") );
+    CHECK( robots.canVisit("test.com", "/Fish.PHP") );
 }
 
 
@@ -223,7 +224,7 @@ Allow: /p\n\
 Disallow: /\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/page") );
+    CHECK( robots.canVisit("test.com", "/page") );
 }
 
 TEST_CASE( "RobotsTxt Test 14" ) {
@@ -234,7 +235,7 @@ Allow: /folder\n\
 Disallow: /folder\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/folder/page") );
+    CHECK( robots.canVisit("test.com", "/folder/page") );
 }
 
 TEST_CASE( "RobotsTxt Test 15" ) {
@@ -245,7 +246,7 @@ Allow: /page\n\
 Disallow: /*.htm\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/page.htm") );
+    CHECK( robots.canVisit("test.com", "/page.htm") );
 }
 
 TEST_CASE( "RobotsTxt Test 16" ) {
@@ -256,7 +257,7 @@ Allow: /$\n\
 Disallow: /\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( robots.canVisit("test.com"_sv, "/") );
+    CHECK( robots.canVisit("test.com", "/") );
 }
 
 TEST_CASE( "RobotsTxt Test 17" ) {
@@ -267,5 +268,5 @@ Allow: /$\n\
 Disallow: /\n";
 
     robots.constructRobotParser("test.com", robots1);
-    CHECK( ! robots.canVisit("test.com"_sv, "/page.htm") );
+    CHECK( ! robots.canVisit("test.com", "/page.htm") );
 }

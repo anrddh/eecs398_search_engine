@@ -88,7 +88,7 @@ public:
     // WARNING popBack might introduce race conditions
     // Only use popBack when you locked this object
     void popBack() {
-        return --*cursor;
+        --cursor;
     }
 
     T * begin() {

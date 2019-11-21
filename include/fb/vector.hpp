@@ -301,7 +301,7 @@ namespace fb {
         }
 
         Iterator erase(ConstIterator pos) {
-            auto idx = fb::distance(cbegin(), pos);
+            auto idx = static_cast<SizeT>(fb::distance(cbegin(), pos));
             --size_;
             for (auto i = idx; i < size(); ++i)
                 data()[i] = std::move(data()[i+1]);

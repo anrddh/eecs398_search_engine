@@ -1,14 +1,16 @@
 // Added by Jaeyoon Kim 11/15/2019
-#include "worker_url_tcp.hpp"
-#include "url_tcp.hpp"
-#include "../../lib/vector.hpp"
-#include "../../lib/queue.hpp"
-#include "../../lib/mutex.hpp"
-#include "../../lib/cv.hpp"
-#include "../../lib/utility.hpp"
-#include "../../lib/file_descriptor.hpp"
-#include "../../lib/Exception.hpp"
-#include "../../lib/thread.hpp"
+#include <tcp/url_tcp.hpp>
+#include <tcp/worker_url_tcp.hpp>
+
+#include <fb/vector.hpp>
+#include <fb/queue.hpp>
+#include <fb/mutex.hpp>
+#include <fb/cv.hpp>
+#include <fb/utility.hpp>
+#include <fb/file_descriptor.hpp>
+#include <fb/exception.hpp>
+#include <fb/thread.hpp>
+
 #include <cassert>
 #include <string.h>
 #include <errno.h>
@@ -51,7 +53,7 @@ void initiate_shut_down() {
    shutting_down = true;
 }
 
-// get_url_to_parse will return an 
+// get_url_to_parse will return an
 // url to parse and its unique id (offset)
 // from master
 Pair<SizeT, String> get_url_to_parse() {
@@ -141,20 +143,20 @@ void* talk_to_master(void*) {
          // If we are short on urls to parse,
          // request for more
          to_parse_m.lock();
-         if (urls_to_parse.size() < MIN_BUFFER_SIZE) 
+         if (urls_to_parse.size() < MIN_BUFFER_SIZE)
          {
             to_parse_m.unlock();
             Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
             to_parse_m.lock();
-            for ( int i = 0; i < urls.size(); ++i ) 
+            for ( int i = 0; i < urls.size(); ++i )
             {
                urls_to_parse.push( std::move( urls[i] ) );
             }
 
             to_parse_cv.broadcast();
             to_parse_m.unlock();
-         } 
-         else 
+         }
+         else
          {
             to_parse_m.unlock();
          }
@@ -182,19 +184,19 @@ Vector< Pair<SizeT, String> > checkout_urls(int sock) {
 }
 
 // Child Machine: First letter S (char),  number of pages (int)
-//    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
+//    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text]
 //    x num_links many times ] x NUM_URLS_PER_SEND
 void send_parsed_pages(int sock, Vector<ParsedPage> pages_to_send) {
    send_char(sock, 'S');
 
-   int size = pages_to_send.size(); 
+   int size = pages_to_send.size();
    send_int(sock, size);
 
    for (int i = 0; i < size; ++i) {
       assert( !pages_to_send.empty() );
       ParsedPage page = std::move( pages_to_send.back() );
       pages_to_send.popBack();
-      send_uint64_t( sock, page.url_offset ); // convert back to 
+      send_uint64_t( sock, page.url_offset ); // convert back to
       send_int( sock, page.links.size() );
       for ( int j = 0; j < page.links.size(); ++j) {
          send_str( sock, page.links[j].first );

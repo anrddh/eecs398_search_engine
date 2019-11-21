@@ -14,40 +14,54 @@
 
 #include <iostream>
 
-class RobotsTxt {
+constexpr auto Err404 = "404"_sv;
+
+template <typename Hostname = fb::String>
+class RobotsImpl {
 public:
-    static RobotsTxt & getRobots() {
-        static RobotsTxt robot;
+    using HostnameType = Hostname;
+
+    static RobotsImpl & getRobots() {
+        static RobotsImpl robot;
         return robot;
     }
 
+    bool canVisit(HostnameType hostname, fb::StringView location) {
+        return canVisitImpl(hostname, location) & 1;
+    }
+
     // "location has to be null-terminated"
-    bool canVisit(fb::StringView hostname, fb::StringView location) {
+    char canVisitImpl(const HostnameType &hostname, fb::StringView location) {
+        int to_return = 0;
+
         auto it = robotsParsers.find(hostname);
         if (it == robotsParsers.end()) {
-            auto ht = HTTPDownloader();
-            getRobotsTxt();
-            fb::String str = "http://google.com/robots.txt";
-            std::cout << ht.PrintPlainTxt(str);
-            // get robots.txt file
+            ++to_return;
+            to_return <<= 1;
+            try {
+                HTTPDownloader ht;
+                auto file = ht.PrintPlainTxt(hostname + location);
+                constructRobotParser(hostname, file);
+            } catch(const ConnectionException &e) {
+                if (e.msg == Err404)
+                    robotsParsers[hostname];
+
+                return ++to_return;
+            }
         }
 
         auto &allowParsers = it->first;
         auto &disallowParsers = it->second;
 
         for (auto &regex : allowParsers)
-            if (regex.match(location.data())) {
-                std::cout << "Decided to allow " << location << " while matching\n";
-                return true;
-            }
+            if (regex.match(location.data()))
+                return ++to_return;
 
         for (auto &regex : disallowParsers)
-            if (regex.match(location.data())) {
-                std::cout << "Decided to disallow " << location << " while matching\n";
-                return false;
-            }
+            if (regex.match(location.data()))
+                return to_return;
 
-        return true;
+        return ++to_return;
     }
 
     fb::StringView getLineFromStr(fb::StringView str) {
@@ -59,7 +73,7 @@ public:
         return str.substr(pos + 1);
     }
 
-    void constructRobotParser(fb::StringView hostname, fb::String &robotsTxt) {
+    void constructRobotParser(const HostnameType &hostname, fb::String &robotsTxt) {
         constexpr auto userAgentStr = "User-agent: .*\n"_sv;
         constexpr auto disallowStr = "Disallow: "_sv;
         constexpr auto allowStr = "Allow: "_sv;
@@ -77,8 +91,6 @@ public:
                 it = robotsTxt.insert(it+1, '.');
                 oneBeforeEnd = robotsTxt.end() - 1;
             }
-
-        std::cout << robotsTxt << std::endl;
 
         fb::StringView robotsTxtView (robotsTxt.data(), robotsTxt.size());
         auto pos = robotsTxtView.find(userAgentStr);
@@ -105,12 +117,15 @@ public:
 
             robotsTxt[robotsTxtView.data() + pos - robotsTxt.data()] = 0;
 
-            if (allow) {
-                std::cout << "Allowing: " << robotsTxtView.data() << '\n';
-                pair.first.emplaceBack(robotsTxtView.data());
-            } else {
-                std::cout << "Disallowing: " << robotsTxtView.data() << '\n';
-                pair.second.emplaceBack(robotsTxtView.data());
+
+            try {
+                if (allow)
+                    pair.first.emplaceBack(robotsTxtView.data());
+                else
+                    pair.second.emplaceBack(robotsTxtView.data());
+            } catch(Regex::Error &e) {
+                std::cerr << "Could not construct regular expression for: robotsTxtView.data()\n";
+                std::cerr << "Error: " << e.what() << '\n';
             }
 
             robotsTxtView.removePrefix(pos + 1);
@@ -126,10 +141,11 @@ public:
     }
 
 private:
-    RobotsTxt() = default;
+    RobotsImpl() = default;
 
-    fb::UnorderedMap<fb::StringView, unsigned int> robotsLoc;
-    fb::UnorderedMap<fb::StringView,
-                 fb::Pair<fb::Vector<Regex>,
-                          fb::Vector<Regex>>> robotsParsers;
+    fb::UnorderedMap<HostnameType,
+                     fb::Pair<fb::Vector<Regex>,
+                              fb::Vector<Regex>>> robotsParsers;
 };
+
+using RobotsTxt = RobotsImpl<>;

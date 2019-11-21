@@ -7,6 +7,7 @@
 #include <fb/thread.hpp>
 #include <fb/memory.hpp>
 #include <fb/string.hpp>
+#include <tcp/handle_socket.hpp>
 
 #include <exception>
 #include <iostream>
@@ -25,7 +26,7 @@
 using fb::FileDesc;
 using fb::StringView;
 using fb::String;
-//using fb::Thread;
+using fb::Thread;
 
 using std::cerr;
 using std::cout;
@@ -89,7 +90,7 @@ int main(int argc, char **argv) try {
     Frontier::init("/tmp/frontier-bin.", false);
 
     auto sock = parseArguments( argc, argv );
-    // Thread socket_handler(handle_socket, sockptr);
+    Thread socket_handler(handle_socket, &sock);
 
     while (true) {
         auto &urlStore = UrlStore::getStore();
@@ -141,7 +142,7 @@ int main(int argc, char **argv) try {
         }
     }
 
-    // socket_handler.join();
+    socket_handler.join();
 } catch (const ArgError &) {
     cerr << UsageHint;
     return 1;

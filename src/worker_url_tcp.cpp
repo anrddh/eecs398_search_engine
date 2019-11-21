@@ -117,7 +117,7 @@ void* talk_to_master(void*) {
          parsed_m.lock();
          if (urls_parsed.empty()) 
          {
-            parsed_m.lock();
+            parsed_m.unlock();
          } 
          else 
          {

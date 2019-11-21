@@ -29,7 +29,7 @@ PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOf
     PagesBeginOffset = Pages.size();
 }
 
-void PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::StringView, fb::Vector<WordDescriptors>> page){
+void PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page){
 
     //copy the page data in
     auto idx = Pages.reserve(page.first.size() + 1);

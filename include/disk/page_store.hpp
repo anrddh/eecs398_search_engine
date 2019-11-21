@@ -33,7 +33,7 @@ class PageBin {
 public:
     PageBin(fb::StringView filename, bool init);
 
-    void addPage(fb::SizeT UrlOffset, fb::Pair<fb::StringView, fb::Vector<WordDescriptors>> page);
+    void addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page);
 
     fb::Pair<fb::String, fb::Vector<WordDescriptors>> getPage(fb::SizeT offset);
 

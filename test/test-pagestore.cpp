@@ -2,7 +2,7 @@
 
 using namespace fb;
 
-using Page = fb::Pair<fb::SizeT, fb::Pair<fb::StringView, fb::Vector<WordDescriptors>>>;
+using Page = fb::Pair<fb::SizeT, fb::Pair<fb::String, fb::Vector<WordDescriptors>>>;
 
 int main(){
 

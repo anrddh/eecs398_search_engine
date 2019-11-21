@@ -6,6 +6,8 @@
 
 #include <unistd.h>
 
+#include <iostream> // TODO delete
+
 namespace fb {
 
     struct FileDesc {
@@ -24,6 +26,7 @@ namespace fb {
         FileDesc() = default;
 
         FileDesc(int fd_in) : fd(fd_in) {
+            std::cout << "FileDesc got" << fd_in << std::endl; 
             if (fd_in <= -1)
                 throw ConstructionError("Invalid file descriptor.");
         }
@@ -51,6 +54,7 @@ namespace fb {
 
         ~FileDesc() {
            if ( fd != -1) {
+            std::cout << "closing " << fd << std::endl; 
             close(fd);
            }
         }

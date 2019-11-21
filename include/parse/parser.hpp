@@ -684,6 +684,6 @@ void initializeConversionMap( )
 	String specialCharacterString;
 
 	bool inSpecialCharacter;
-	
 };
+
 }

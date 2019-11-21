@@ -1,14 +1,13 @@
 // Added by Jaeyoon Kim 11/16/2019
-#include "handle_socket.hpp"
-#include "master_url_tcp.hpp"
-#include "Frontier.hpp"
-#include "UrlStore.hpp"
-#include "UrlTables.hpp"
-#include "UrlStore.hpp"
-#include "../../lib/Exception.hpp"
-#include "../../lib/thread.hpp"
-#include "../../lib/cv.hpp"
-#include "../../lib/file_descriptor.hpp"
+#include "tcp/handle_socket.hpp"
+#include "tcp/master_url_tcp.hpp"
+#include "disk/frontier.hpp"
+#include "disk/UrlTables.hpp"
+#include "disk/url_store.hpp"
+#include "fb/exception.hpp"
+#include "fb/thread.hpp"
+#include "fb/cv.hpp"
+#include "fb/file_descriptor.hpp"
 #include <sys/socket.h> 
 #include <iostream> 
 #include <errno.h> 
@@ -39,7 +38,7 @@ public:
       }
       term_mtx.unlock();
    }
-}
+};
 
 void terminate_workers() {
    term_mtx.lock();
@@ -141,14 +140,18 @@ void* handle_socket_helper(void* sock_ptr) {
 // and the socket will be closed
 void handle_send(int sock) {
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
-   Vector<SizeT> to_add_to_frontier = 
-      UrlInfoTable::getTable().HandleParsedPage( std::move(pages) );
+   
+   for (int i = 0; i < pages.size(); ++i) {
+      Vector<SizeT> to_add_to_frontier = 
+         UrlInfoTable::getTable().HandleParsedPage( std::move( pages[i] ) );
 
-   for (SizeT url_offset : to_add_to_frontier ) 
-   {
-      StringView url = UrlStore::getStore().getUrl( url_offset );
-      Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
+      for (SizeT url_offset : to_add_to_frontier ) 
+      {
+         StringView url = UrlStore::getStore().getUrl( url_offset );
+         Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
+      }
    }
+
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls
@@ -159,14 +162,15 @@ void handle_request(int sock) {
    try {
       send_urls(sock, urls_to_parse);
    }
-   catch( SocketExcept& se) 
+   catch( SocketException& se) 
    {
       std::cerr << "SocketException in handle_request: " << se.what() 
          << " --- Will place urls back in to the frontier" << std::endl;
 
-      for ( SizeT url_offsets : urls_to_parse )
+      for ( SizeT url_offset : urls_to_parse )
       {
-         Frontier::getFrontier().addUrl( url_offset );
+         StringView url = UrlStore::getStore().getUrl( url_offset );
+         Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
       }
    }
 }

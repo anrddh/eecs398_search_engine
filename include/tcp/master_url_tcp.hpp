@@ -1,7 +1,7 @@
 // Created by Jaeyoon Kim 11/13/2019
 #pragma once
-#include "../../lib/string.hpp"
-#include "../../lib/vector.hpp"
+#include "fb/string.hpp"
+#include "fb/vector.hpp"
 #include "url_tcp.hpp"
 
 // Given offsets for urls, sends over offset adn urls (by reading the saved urls)

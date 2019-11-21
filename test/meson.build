@@ -21,7 +21,8 @@ test_pagestore = executable('test_pagestore',
 
 test_worker = executable('test-worker',
                         ['../src/worker_driver.cpp'], worker_source_files,
-                        include_directories : inc)
+                        include_directories : inc,
+                        dependencies: [threads_dep])
 
 
 test('Robots 1', test_robots_1, suite: 'robots')

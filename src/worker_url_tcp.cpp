@@ -139,35 +139,46 @@ void* talk_to_master(void*) {
          // and terminate accordingly
          if (shutting_down) 
          {
+            std::cout << "talk_to_master 7" << std::endl;
             return nullptr;
          }
 
+         std::cout << "talk_to_master 8" << std::endl;
          send_char(sock, 'T');
+         std::cout << "talk_to_master 9" << std::endl;
          char terminate_state = recv_char(sock);
+         std::cout << "talk_to_master 10" << std::endl;
 
          if ( terminate_state == 'T' ) 
          {
+            std::cout << "talk_to_master 11" << std::endl;
             shutting_down = true;
             return nullptr;
          } 
          else if ( terminate_state != 'N' ) 
          {
+            std::cout << "talk_to_master 12" << std::endl;
             throw SocketException("Invalid terminate state");
          }
 
+         std::cout << "talk_to_master 13" << std::endl;
          // If we are short on urls to parse,
          // request for more
          to_parse_m.lock();
          if (urls_to_parse.size() < MIN_BUFFER_SIZE)
          {
+            std::cout << "talk_to_master 14" << std::endl;
             to_parse_m.unlock();
+            std::cout << "talk_to_master 15" << std::endl;
             Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
+            std::cout << "talk_to_master 16" << std::endl;
             to_parse_m.lock();
             for ( int i = 0; i < urls.size(); ++i )
             {
                urls_to_parse.push( std::move( urls[i] ) );
             }
 
+            std::cout << "talk_to_master 17" << std::endl;
             to_parse_cv.broadcast();
             to_parse_m.unlock();
          }
@@ -180,6 +191,7 @@ void* talk_to_master(void*) {
       {
          std::cerr << "SocketException in talk to master. Error: " << se.what() << std::endl;
       }
+      std::cout << "talk_to_master 17" << std::endl;
    }
 }
 

@@ -39,8 +39,7 @@ public:
 	fb::Vector<uint8_t> wordFlags;
 
 	Parser( const String &content_in, const String &domain_in )
-	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
-		specialCharacterString( "" )
+	: domain( domain_in ), content( content_in ), inSpecialCharacter( false )
 	{
 		initializeConversionMap( );
 		initializeBoldTags( );
@@ -102,10 +101,6 @@ public:
 		}
 
 private:
-	fb::UnorderedMap<String, String> characterConversionMap;
-	bool inSpecialCharacter;
-	String specialCharacterString;
-
 	String getSpecialCharacter( )
 		{
 		try 
@@ -195,7 +190,7 @@ private:
 		return url;
 		}
 
-	String contentEqualErrorMsg( const fb::SizeT start, const String &rhs ) const
+	String contentEqualErrorMsg( ) const
 		{
 		String errorMsg = "Comparison out of range.\n";
 		// errorMsg.append( "Start Index: " + std::to_string( start ) + "\n" );
@@ -209,7 +204,7 @@ private:
 	bool contentEqual( const fb::SizeT start, const String &rhs ) const
 		{
 		if ( start + rhs.size( ) > content.size( ) )
-			throw ParserException( contentEqualErrorMsg( start, rhs ) );
+			throw ParserException( contentEqualErrorMsg( ) );
 
 		for ( size_t i = 0;  i < rhs.size( );  ++i )
 			if ( content[ start + i ] != rhs[ i ] )
@@ -223,7 +218,7 @@ private:
 	bool contentEqualIgnoreCase( const fb::SizeT start, const String & rhs ) const
 		{
 		if ( start + rhs.size( ) > content.size( ) )
-			throw ParserException( contentEqualErrorMsg( start, rhs ) );
+			throw ParserException( contentEqualErrorMsg( ) );
 
 		for ( size_t i = 0;  i < rhs.size( );  ++i )
 			if ( tolower( content[ start + i ] ) != tolower( rhs[ i ] ) )
@@ -675,14 +670,20 @@ void initializeConversionMap( )
 	characterConversionMap[ "yuml"] = "y";
 	}
 
+	// stack to contain the tags
+	fb::Vector<String> tagStack;
+
+	fb::UnorderedMap<String, String> characterConversionMap;
+
 	// domain name of html page being parsed
 	const String domain;
 	// content of the html page to parse
 	const String & content;
 
 	String parsedResult;
+	String specialCharacterString;
 
-	// stack to contain the tags
-	fb::Vector<String> tagStack;
+	bool inSpecialCharacter;
+	
 };
 };

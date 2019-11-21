@@ -115,9 +115,12 @@ void* talk_to_master(void*) {
       try {
          // Send the parsed info
          parsed_m.lock();
-         if (urls_parsed.empty()) {
+         if (urls_parsed.empty()) 
+         {
             parsed_m.lock();
-         } else {
+         } 
+         else 
+         {
             Vector< ParsedPage > local; // first val url, second val parsed page
             local.swap(urls_parsed);
             parsed_m.unlock();
@@ -126,17 +129,21 @@ void* talk_to_master(void*) {
 
          // Check if we should terminate
          // and terminate accordingly
-         if (shutting_down) {
+         if (shutting_down) 
+         {
             return nullptr;
          }
 
          send_char(sock, 'T');
          char terminate_state = recv_char(sock);
 
-         if ( terminate_state == 'T' ) {
+         if ( terminate_state == 'T' ) 
+         {
             shutting_down = true;
             return nullptr;
-         } else if ( terminate_state != 'N' ) {
+         } 
+         else if ( terminate_state != 'N' ) 
+         {
             throw SocketException("Invalid terminate state");
          }
 
@@ -160,8 +167,10 @@ void* talk_to_master(void*) {
          {
             to_parse_m.unlock();
          }
-      } catch (SocketException& se) {
-         // TODO log error
+      } 
+      catch (SocketException& se) 
+      {
+         std::cerr << "SocketException in talk to master. Error: " << se.what() << std::endl;
       }
    }
 }

@@ -4,7 +4,7 @@
 
 namespace fb {
 
-/* Wrapper around pthread cv to 
+/* Wrapper around pthread cv to
  * match c++ cond_var more closely
  */
 class CV {
@@ -31,4 +31,4 @@ public:
 private:
    pthread_cond_t cv;
 };
-};
+}

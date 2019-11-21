@@ -2,7 +2,7 @@
 #pragma once
 #include <fb/string.hpp>
 #include <fb/vector.hpp>
-#include <fb/Exception.hpp>
+#include <fb/exception.hpp>
 #include <fb/stddef.hpp>
 #include <fb/string.hpp>
 #include <arpa/inet.h> // htonl and ntohl
@@ -14,9 +14,9 @@
 //                   sends url_offset (uint64_t), url (string)
 //                   All urls are null terminated
 // Child Machine: First letter S (char),  number of pages (int)
-//    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text] 
+//    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text]
 //    x num_links many times ] x NUM_URLS_PER_SEND
-// 
+//
 // Child Machine T First letter C (char) - ask if master wants to terminate
 // Master responds T (char) - do terminate
 //                 N (char) - not terminating
@@ -36,7 +36,7 @@ constexpr int NUM_RETRY = 3;
 
 // every TCP message to master must start with sending this value
 // and will be checked for the correct code
-const uint32_t VERFICATION_CODE = 1513424; 
+const uint32_t VERFICATION_CODE = 1513424;
 
 struct ParsedPage {
    fb::SizeT url_offset;

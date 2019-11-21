@@ -1,10 +1,28 @@
 // Added by Jaeyoon Kim 11/15/2019
 
-#include "url_tcp.hpp"
+#include <tcp/url_tcp.hpp>
+
 // The header for endian (for changing endianess for uint64_t)
 // might be different for other os
-#if defined(OS_MACOSX)
-  #include <machine/endian.h>
+#if defined(OS_MACOSX) || defined(__APPLE__)
+
+  #include <libkern/OSByteOrder.h>
+
+  #define htobe16(x) OSSwapHostToBigInt16(x)
+  #define htole16(x) OSSwapHostToLittleInt16(x)
+  #define be16toh(x) OSSwapBigToHostInt16(x)
+  #define le16toh(x) OSSwapLittleToHostInt16(x)
+
+  #define htobe32(x) OSSwapHostToBigInt32(x)
+  #define htole32(x) OSSwapHostToLittleInt32(x)
+  #define be32toh(x) OSSwapBigToHostInt32(x)
+  #define le32toh(x) OSSwapLittleToHostInt32(x)
+
+  #define htobe64(x) OSSwapHostToBigInt64(x)
+  #define htole64(x) OSSwapHostToLittleInt64(x)
+  #define be64toh(x) OSSwapBigToHostInt64(x)
+  #define le64toh(x) OSSwapLittleToHostInt64(x)
+
 #elif defined(OS_SOLARIS)
   #include <sys/isa_defs.h>
   #ifdef _LITTLE_ENDIAN
@@ -86,7 +104,7 @@ String recv_str(int sock) {
 
    String url;
    url.resize( size ); // resize to length of string (not counting null character)
-   
+
    // Need to write null character as well
    if (recv(sock, url.data(), size + 1, MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_str failed");

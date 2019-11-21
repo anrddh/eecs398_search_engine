@@ -15,48 +15,8 @@
 #include "fb/unordered_map.hpp"
 #include "fb/unordered_set.hpp"
 
-/*
-   I don't think this code is no long needed
-
-// Number of bins is currently just hardcoded to 256,
-// because template singletons are apparently very
-// difficult to compile
-class UrlOffsetTable {
-public:
-   static UrlOffsetTable & getTable() {
-      static UrlOffsetTable unique_obj();
-      return unique_obj;
-   }
-
-   // Will find the offset (if this string was seen
-   fb::SizeT getOffset( fb::StringView str ) {
-      fb::SizeT hash = hasher(str);
-      fb::AutoLock<fb::Mutex> l(offset_hashes[hash % NumBins].second);
-      return offset_hashes[hash % NumBins].first.find( str, hash );
-   }
-
-   fb::StringView accessOffset(fb::SizeT offset) {
-      return UrlStore::getStore().getUrl(offset);
-   }
-
-private:
-   UrlOffsetTable() {
-      for (int i = 0; i < NumBins; ++i){
-         offset_hashes[i].first.set_string_list();
-      }
-   }
-
-   constexpr static fb::SizeT NumBins = 256;
-   static UrlOffsetTable *ptr;
-
-   fb::Pair<OffsetLookupChunk<fb::StringView,
-                              fb::SizeT,
-                              fb::Hash<fb::StringView>>,
-            fb::Mutex> offset_hashes[NumBins];
-   fb::Hash<fb::StringView> hasher;
-};
-
-*/
+// TODO don't hard code this
+const fb::String UrlInfoTableName = "url_info_table.txt"
 
 // Same as above
 // We need to hard code the file we save to
@@ -159,25 +119,12 @@ public:
     }
 
 private:
-
-   char* get_function_name() {
-      char* fname = getenv("url_info_file_name");
-      if (fname == nullptr) 
-      {
-         return "url_info_default_file_name";
-      }
-      else
-      {
-         return fname;
-      }
-   }
-
    // The constructor should be called only once
    // It will recover the file name of the url_info (disk_vec)
    // and load it. Then it will reconstruct the hash table that 
    // maps url_offset to url_info_offset
    // Note that the lock will not be grabbed when the constructor is running
-   UrlInfoTable() : url_info(get_function_name()) 
+   UrlInfoTable() : url_info(UrlInfoTableName) 
    {
       for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size(); ++url_info_offset )
       {

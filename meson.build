@@ -12,8 +12,11 @@ add_global_link_arguments('-I/usr/local/opt/openssl/include', '-L/usr/local/opt/
 
 endif
 
-ssl_dep = dependency('openssl')#meson.get_compiler('cpp').find_library('openssl', required: false)
+if build_machine.system() == 'linux'
 
+add_global_link_arguments('-I/usr/include/openssl', '-L/usr/lib/x86_64-linux-gnu', '-lssl', '-lcrypto', language: 'cpp')
+
+endif
 
 
 threads_dep = dependency('threads')
@@ -30,22 +33,10 @@ subdir('include')
 subdir('src')
 subdir('test')
 
-
-if build_machine.system() == 'darwin'
-
 executable('master',
            master_driver, master_source_files,
            include_directories: inc,
            dependencies: [readline_dep, threads_dep])
-
-else
-
-executable('master',
-           master_driver, master_source_files,
-           include_directories: inc,
-           dependencies: [readline_dep, threads_dep, ssl_dep])
-
-endif
 
 
 #executable('worker',

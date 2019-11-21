@@ -1,8 +1,8 @@
 // Created by Jaeyoon Kim 11/15/2019
-#include "master_url_tcp.hpp"
-#include "url_tcp.hpp"
-#include "UrlTables.hpp"
-#include "../../lib/vector.hpp"
+#include "tcp/master_url_tcp.hpp"
+#include "tcp/url_tcp.hpp"
+#include "disk/UrlTables.hpp"
+#include "fb/vector.hpp"
 #include <iostream>
 
 using namespace fb;
@@ -12,7 +12,7 @@ void send_urls(int sock, const Vector<SizeT>& urls_to_parse) {
 
    for (int i = 0; i < urls_to_parse.size(); ++i) {
       send_uint64_t(sock, urls_to_parse[i]);
-      send_str(sock, UrlOffsetTable::getTable().accessOffset( urls_to_parse[ i ]));
+      send_str(sock, UrlStore::getStore().getUrl( urls_to_parse[ i ] ) );
    }
 }
 

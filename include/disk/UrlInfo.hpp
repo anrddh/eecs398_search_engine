@@ -20,7 +20,7 @@ struct UrlInfo {
 
    // 'u' for unfinished, 'm' for currently modifying, 'p' for finished parsing
    // We are purposely avoiding enums since the value of the enum may differ on systems
-   std::atomci<char> state; 
+   std::atomic<char> state; 
 };
 
 inline fb::SizeT RankUrl(fb::StringView Url){
@@ -28,7 +28,7 @@ inline fb::SizeT RankUrl(fb::StringView Url){
 
    fb::SizeT start = 0;
    fb::SizeT end = Url.find( "://", 0, 3 );
-   fb::StringView Service, Host, Domain;
+   fb::StringView Service, Domain;
 
    if ( end != fb::String::npos )
       {
@@ -44,7 +44,7 @@ inline fb::SizeT RankUrl(fb::StringView Url){
       }
 
    end = Url.find( "/", start, 1);
-   int begin_TLD; // top level domain (com, org, ...)
+   int begin_TLD = 0; // top level domain (com, org, ...)
 
    for (int i = end - 1; i >= start; --i) {
       if (Url[i] == '.') {

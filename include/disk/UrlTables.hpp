@@ -15,6 +15,9 @@
 #include "fb/unordered_map.hpp"
 #include "fb/unordered_set.hpp"
 
+// TODO don't hard code this
+const fb::String UrlInfoTableName = "url_info_table.txt"
+
 // Same as above
 // We need to hard code the file we save to
 class UrlInfoTable {
@@ -116,25 +119,12 @@ public:
     }
 
 private:
-
-   char* get_function_name() {
-      char* fname = getenv("url_info_file_name");
-      if (fname == nullptr) 
-      {
-         return "url_info_default_file_name";
-      }
-      else
-      {
-         return fname;
-      }
-   }
-
    // The constructor should be called only once
    // It will recover the file name of the url_info (disk_vec)
    // and load it. Then it will reconstruct the hash table that 
    // maps url_offset to url_info_offset
    // Note that the lock will not be grabbed when the constructor is running
-   UrlInfoTable() : url_info(get_function_name()) 
+   UrlInfoTable() : url_info(UrlInfoTableName) 
    {
       for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size(); ++url_info_offset )
       {

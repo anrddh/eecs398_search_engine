@@ -3,6 +3,8 @@
 #include "master_url_tcp.hpp"
 #include "Frontier.hpp"
 #include "UrlStore.hpp"
+#include "UrlTables.hpp"
+#include "UrlStore.hpp"
 #include "../../lib/Exception.hpp"
 #include "../../lib/thread.hpp"
 #include "../../lib/cv.hpp"
@@ -18,6 +20,26 @@ Mutex term_mtx;
 CV term_cv;
 int num_threads = 0;
 bool do_terminate = false;
+
+class ThreadLifeTracker {
+public:
+   ThreadLifeTracker() 
+   {
+      term_mtx.lock();
+      ++num_threads;
+      term_mtx.unlock();
+   }
+
+   ~ThreadLifeTracker()
+   {
+      term_mtx.lock();
+      if (--num_threads == 0)
+      {
+         term_cv.signal();
+      }
+      term_mtx.unlock();
+   }
+}
 
 void terminate_workers() {
    term_mtx.lock();
@@ -77,6 +99,8 @@ void* handle_socket(void* sock_ptr) {
 }
 
 void* handle_socket_helper(void* sock_ptr) {
+   ThreadLifeTracker tlt;
+
    FileDesc sock(* (int *) sock_ptr);
    delete (int *) sock_ptr;
 
@@ -101,19 +125,13 @@ void* handle_socket_helper(void* sock_ptr) {
                term_mtx.unlock();
                send_char(sock, 'N');
             }
-         } else if (message_type == 'F') {
-            term_mtx.lock();
-            if (--num_threads == 0) {
-               term_cv.signal();
-            }
-            term_mtx.unlock();
-         } 
+         }
          else {
             throw SocketException("Wrong message type");
          }
       }
    } catch (SocketException& se) {
-      // TODO log error
+      std::cerr << "SocketException caught in handle_socket_helper. Error: " << se.what() << std::endl;
       return nullptr;
    }
 }
@@ -123,6 +141,14 @@ void* handle_socket_helper(void* sock_ptr) {
 // and the socket will be closed
 void handle_send(int sock) {
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
+   Vector<SizeT> to_add_to_frontier = 
+      UrlInfoTable::getTable().HandleParsedPage( std::move(pages) );
+
+   for (SizeT url_offset : to_add_to_frontier ) 
+   {
+      StringView url = UrlStore::getStore().getUrl( url_offset );
+      Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
+   }
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls
@@ -130,5 +156,17 @@ void handle_send(int sock) {
 // and the socket will be closed
 void handle_request(int sock) {
    Vector<SizeT> urls_to_parse = Frontier::getFrontier().getUrl();
-   send_urls(sock, urls_to_parse);
+   try {
+      send_urls(sock, urls_to_parse);
+   }
+   catch( SocketExcept& se) 
+   {
+      std::cerr << "SocketException in handle_request: " << se.what() 
+         << " --- Will place urls back in to the frontier" << std::endl;
+
+      for ( SizeT url_offsets : urls_to_parse )
+      {
+         Frontier::getFrontier().addUrl( url_offset );
+      }
+   }
 }

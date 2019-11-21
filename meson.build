@@ -12,7 +12,7 @@ add_global_link_arguments('-I/usr/local/opt/openssl/include', '-L/usr/local/opt/
 
 endif
 
-if build.machine.system() == 'linux'
+if build_machine.system() == 'linux'
 
 add_global_link_arguments('-I/usr/include/openssl', '-L/usr/lib/x86_64-linux-gnu', '-lssl', '-lcrypto', language: 'cpp')
 

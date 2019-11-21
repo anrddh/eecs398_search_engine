@@ -6,24 +6,33 @@
 using namespace fb;
 
 // file structure:
-// 1) 4 bytes (size of the whole table)
-// 2) 4 bytes per offset into the file
-// 3) posting lists
+// 1) 1 byte endianess
+// 2) 4 bytes (size of the whole table)
+// 3) EOD posting list
+// 4) 4 bytes per offset into the file
+// 5) posting lists
     
 // posting list structure:
 // 1) word (null terminated) 
 // 2) 4 bytes (num documents in this posting list)
 // 3) 4 bytes (num occurences = length of posting list)
-// 4) 4 bytes (abs word num of the last word in posting list) 
-// 5) skip table
-// 6) posts
+// 4) skip table
+// 5) posts
+// 6) sentinel
+
+// EOD post structure
+// 1) 1 byte null character
+// 2) 4 byte
+// 3) 4 byte
+// 4) 4 bytes offset to previous
+// 5) 8 bytes document ID
 
 
 // TO DO: Fill this in
 constexpr int SKIP_TABLE_BYTES = 0;
 
-// need to read a single posting list and add all the nums to vector
-void trans_posting_list(char* current, std::vector<uint64_t> &all){
+// read a single posting list and add all the nums to vector
+void read_posting_list(char* current, std::vector<uint64_t> &posting_list){
 	uint64_t num = 0;
 	uint8_t header = 0;
 	while(true){
@@ -31,14 +40,28 @@ void trans_posting_list(char* current, std::vector<uint64_t> &all){
 		if(num == 0){
 			break;
 		}else{
-			all.push_back(num);
+			posting_list.push_back(num);
+		}
+	}
+}
+
+// read EOD posting list and add values to vector
+void read_EOD_posting_list(char* current, std::vector<std::pair<uint32_t,uint64_t>> &EOD_posting_list){
+	uint32_t delta = 0;
+	uint64_t url_id = 0;
+	while(true){
+		current = read_document_post(current, delta, url_id);
+		if(delta == 0){
+			break;
+		}else{
+			EOD_posting_list.push_back(std::pair<uint32_t,uint64_t>(delta, url_id));
 		}
 	}
 }
 
 // given pointer to start of file, creates a vector of vectors
 // where each vector is a posting list containing offsets
-void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &all, std::vector<std::string> &words){
+void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &all, std::vector<std::string> &words, std::vector<std::pair<uint32_t,uint64_t>> &EOD_posting_list){
 	std::vector<uint64_t> posting_list;
 	char* start = current;
 	//cast to a 4 byte type
@@ -72,7 +95,7 @@ void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &al
 		current += 3;
 		//cast to a 1 byte type
 		(char*)(current);
-		trans_posting_list(current, posting_list);
+		read_posting_list(current, posting_list);
 		all.push_back(posting_list);
 	}
 }

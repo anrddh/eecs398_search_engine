@@ -101,10 +101,12 @@ int open_socket_to_master() {
    {
       throw SocketException("TCP socket: Failed in connect");
    }
+   std::cout << "open sock to master 1" << std::endl;
 
    // Finished establishing socket
    // Send verfication message
    send_int(sock, VERFICATION_CODE);
+   std::cout << "open sock to master 2" << std::endl;
 
    return sock;
 }
@@ -113,18 +115,24 @@ void* talk_to_master(void*) {
    while (true) {
       FileDesc sock(open_socket_to_master());
       try {
+         std::cout << "talk_to_master 1" << std::endl;
          // Send the parsed info
          parsed_m.lock();
          if (urls_parsed.empty()) 
          {
+            std::cout << "talk_to_master 2" << std::endl;
             parsed_m.unlock();
          } 
          else 
          {
+            std::cout << "talk_to_master 3" << std::endl;
             Vector< ParsedPage > local; // first val url, second val parsed page
             local.swap(urls_parsed);
+            std::cout << "talk_to_master 4" << std::endl;
             parsed_m.unlock();
+            std::cout << "talk_to_master 5" << std::endl;
             send_parsed_pages( sock, local );
+            std::cout << "talk_to_master 6" << std::endl;
          }
 
          // Check if we should terminate

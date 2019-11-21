@@ -12,7 +12,7 @@ add_global_link_arguments('-I/usr/local/opt/openssl/include', '-L/usr/local/opt/
 
 endif
 
-ssl_dep = dependency('openssl')#meson.get_compiler('cpp').find_library('openssl', required: false)
+ssl_dep = dependency('openssl', required: false)#meson.get_compiler('cpp').find_library('openssl', required: false)
 
 
 

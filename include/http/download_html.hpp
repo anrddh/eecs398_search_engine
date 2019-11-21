@@ -36,10 +36,12 @@ class ParsedUrl
             Service = CompleteUrl.substr( start, end - start );
             start = end + 3;
             }
+         else
+            Service  = "https";
 
          end = CompleteUrlView.find( "/", start, 1 );
          fb::SizeT HostEnd = CompleteUrlView.find( ":", start, 1 );
-         if ( HostEnd < end )
+         if ( HostEnd < end && end != fb::String::npos )
             {
             Host = CompleteUrl.substr( start, HostEnd - start );
             Port = CompleteUrl.substr( HostEnd + 1, end - HostEnd - 1 );

@@ -8,8 +8,7 @@ project('fantastic_bugs', 'cpp',
 
 threads_dep = dependency('threads')
 readline_dep = meson.get_compiler('cpp').find_library('readline', required : false)
-ssl_dep = dependency('openssl')
-zlib_dep = dependency('zlib')
+ssl_dep = meson.get_compiler('cpp').find_library('openssl', required: false)#dependency('openssl')
 
 project_sources = []
 master_source_files = []
@@ -25,8 +24,7 @@ subdir('test')
 executable('master',
            master_driver, master_source_files,
            include_directories: inc,
-           dependencies: [readline_dep, threads_dep, ssl_dep, zlib_dep])
-executable('worker',
-           worker_driver, worker_source_files,
-           include_directories: inc,
-           dependencies: [ssl_dep])
+           dependencies: [readline_dep, threads_dep, ssl_dep])
+#executable('worker',
+#           worker_driver, worker_source_files,
+#           include_directories: inc)

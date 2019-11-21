@@ -17,9 +17,9 @@
 //TODO: Change this structure to whatever jinsoo provides
 //should in theory be just a byte, make this a lot easier if it is
 //I'm begging you, let it be a byte, i dont want to do the math if it isnt
-using WordDescriptors = char;
+using WordDescriptors = uint8_t;
 
-using Page = fb::Pair<fb::SizeT, fb::Pair<fb::StringView, fb::Vector<WordDescriptors>>>;
+using Page = fb::Pair<fb::SizeT, fb::Pair<fb::String, fb::Vector<WordDescriptors>>>;
 
 extern std::atomic<fb::SizeT> NumThreads;
 

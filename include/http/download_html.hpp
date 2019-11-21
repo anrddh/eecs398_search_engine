@@ -371,7 +371,6 @@ HTTPDownloader( )
       {
       char buffer [ 10240 ];
       int bytes;
-      bool pastHeader = false;
 
       // some websites do not use capital case.
       const fb::String redirectIndicator = "ocation: ";

@@ -1,6 +1,7 @@
 #include <parse/parser.hpp>
 #include <http/download_html.hpp>
 #include <tcp/worker_url_tcp.hpp>
+#include <disk/page_store.hpp>
 
 #include <fb/thread.hpp>
 #include <fb/cv.hpp>
@@ -35,20 +36,25 @@ void *parsePages( void * )
          auto parser = fb::Parser( result,
             url.Service + "://" + url.Host );
 
+         parser.parse( );
+
          fb::Vector< fb::Pair<fb::String, fb::String> > links;
 
          for ( auto iter = parser.urlAnchorText.begin( );  
          	iter != parser.urlAnchorText.end( );  ++iter )
-          links.emplaceBack( iter.key( ), *iter );
+         links.emplaceBack( iter.key( ), *iter );
 
          ParsedPage pp = { urlPair.first, links };
 
          add_parsed( pp );
+
+         addPage( { urlPair.first, {  parser.getParsedResult( ), parser.wordFlags } } );
    		}
 		catch ( ConnectionException e )
    		{
          }
       }
+   return nullptr;
    }
 
 void *commandLineArgs( void * )
@@ -76,6 +82,7 @@ void *commandLineArgs( void * )
 	  }
    while ( std::cin >> userInput );
    initiate_shut_down( );
+   return nullptr;
    }
 
 int main( int argc, char **argv )

@@ -35,10 +35,8 @@ bool isSpace( char c )
 class Parser
 {
 public:
-	fb::UnorderedMap<String, String> characterConversionMap;
 	fb::UnorderedMap<String, String> urlAnchorText;
-	bool inSpecialCharacter;
-	String specialCharacterString;
+	fb::Vector<uint8_t> wordFlags;
 
 	Parser( const String &content_in, const String &domain_in )
 	: content( content_in ), domain( domain_in ), inSpecialCharacter( false ),
@@ -57,6 +55,56 @@ public:
 		{
 		return parsedResult;
 		}
+
+	void parse( )
+		{
+		parsedResult.clear( );
+		parsedResult.reserve( content.size( ) );
+		parsedResult += ' ';
+
+		fb::SizeT index = 0;
+		try
+			{
+			while ( index < content.size( ) )
+				{
+				if ( content[ index ] == '<' )
+					{
+					index = handleTag( index );
+					addToResult( ' ' );
+					}
+				else
+					{
+					if ( content[ index ] == '{' )
+						index = seekSubstr(index, "}");
+					else if ( content[ index ] == '}')
+					{
+					}
+
+					addToResult( content[ index ] );
+					}
+				++index;
+				}
+			}
+		catch ( const ParserException & e )
+			{
+			std::cerr << "Caught exception in " << domain << std::endl;
+			std::cerr << e.msg << std::endl;
+			}
+		}
+
+	void printUrls( )
+		{
+		for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
+			{
+			std::cout << "URL is: " << i.key() << std::endl;
+			std::cout << "Anchor text: " << *i << std::endl;
+			}
+		}
+
+private:
+	fb::UnorderedMap<String, String> characterConversionMap;
+	bool inSpecialCharacter;
+	String specialCharacterString;
 
 	String getSpecialCharacter( )
 		{
@@ -109,55 +157,6 @@ public:
 			addWord( c );
 		}
 
-	void parse( )
-		{
-		parsedResult.clear( );
-		parsedResult.reserve( content.size( ) );
-		parsedResult += ' ';
-
-		fb::SizeT index = 0;
-		try
-			{
-			while ( index < content.size( ) )
-				{
-				if ( content[ index ] == '<' )
-					{
-					index = handleTag( index );
-					addToResult( ' ' );
-					}
-				else
-					{
-					if ( content[ index ] == '{' )
-						index = seekSubstr(index, "}");
-					else if ( content[ index ] == '}')
-					{
-					}
-
-					addToResult( content[ index ] );
-					}
-				++index;
-				}
-			}
-		catch ( const ParserException & e )
-			{
-			std::cerr << "Caught exception in " << domain << std::endl;
-			std::cerr << e.msg << std::endl;
-			}
-		}
-
-	void printUrls( )
-		{
-		for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
-			{
-			std::cout << "URL is: " << i.key() << std::endl;
-			std::cout << "Anchor text: " << *i << std::endl;
-			}
-		}
-
-	fb::Vector<uint8_t> wordFlags;
-
-private:
-
 	// exclusive end
 	fb::SizeT find( const fb::SizeT start, const fb::SizeT end, const String &rhs )
 		{
@@ -189,7 +188,7 @@ private:
 		// For example, we might have
 		// href="https://www.nytimes.com/es/ href =    "https://www.nytimes.com/es/
 		// it mighbe be possible to just add the substring until the space, but we will see.
-		for ( int i = 0;  i < url.size( );  ++i )
+		for ( fb::SizeT i = 0;  i < url.size( );  ++i )
 			if ( url[ i ] == ' ' )
 				return "";
 
@@ -498,8 +497,6 @@ private:
 	// return the index of ">" of end of the closing tag of a script
 	fb::SizeT handleScript( fb::SizeT index ) const
 		{
-		bool inSingleQuote = false;
-		bool inDoubleQuote = false;
 		while( index < content.size( ) )
 			{
 			char c = content[ index ];
@@ -533,7 +530,7 @@ private:
 			return index;
 		}
 
-void initializeConversionMap()
+void initializeConversionMap( )
 	{
 	characterConversionMap[ "#192"] = "A";
 	characterConversionMap[ "#193"] = "A";

@@ -86,6 +86,7 @@ struct Args {
 FileDesc parseArguments( int argc, char **argv );
 
 int main(int argc, char **argv) try {
+   std::cout << "hello world" << std::endl;
     UrlStore::init(UrlStoreFileName, false);
     Frontier::init("/tmp/frontier-bin.", false);
 

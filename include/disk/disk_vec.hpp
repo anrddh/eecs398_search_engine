@@ -19,7 +19,7 @@
 
 //TODO: Change back! just for testing its smaller!
 //constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
-constexpr fb::SizeT MAXFILESIZE = 0x200;
+constexpr fb::SizeT MAXFILESIZE = 0x20000;
 
 // This is the class that represents an array saved on disk
 // ASSUMES that there won't be more than 128 Gb of data
@@ -50,6 +50,7 @@ public:
         else
             cursor = static_cast<std::atomic<fb::SizeT> *>(ptr);
         filePtr = reinterpret_cast<T *>(cursor + 1);
+        std::cout << "DiskVec initialized. cursor " << cursor << " fileptr " << filePtr << std::endl;
     }
 
     ~DiskVec() noexcept {

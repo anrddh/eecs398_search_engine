@@ -85,24 +85,13 @@ struct Args {
 
 FileDesc parseArguments( int argc, char **argv );
 
-bool fd_is_valid(int fd)
-{
-    return fcntl(fd, F_GETFD) != -1 || errno != EBADF;
-}
-
-#define PORT 8080
-
 int main(int argc, char **argv) try {
-    //UrlStore::init(UrlStoreFileName, false);
-    //Frontier::init("/tmp/frontier-bin.", false);
-    perror("perror 1"); 
+    UrlStore::init(UrlStoreFileName, false);
+    Frontier::init("/tmp/frontier-bin.", false);
 
     FileDesc sock = parseArguments( argc, argv );
-    perror("perror 2"); 
-    int sock_val = sock; // TODO delete
     std::cout << "main got socket" << sock << std::endl;
-    handle_socket(&sock_val);
-    //Thread socket_handler(handle_socket, &sock_val);
+    Thread socket_handler(handle_socket, &sock );
 
     while (true) {
         auto &urlStore = UrlStore::getStore();
@@ -154,7 +143,7 @@ int main(int argc, char **argv) try {
         }
     }
 
-    //socket_handler.join();
+    socket_handler.join();
 } catch (const ArgError &) {
     cerr << UsageHint;
     return 1;
@@ -167,37 +156,30 @@ struct AddrInfo {
 
     AddrInfo( const char *port ) {
        std::cout << "got port " << port << std::endl;
-         perror("perror 3"); 
         addrinfo hints;
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_flags = AI_PASSIVE;
-         perror("perror 4"); 
 
        std::cout << "got port " << port << std::endl;
         int rval = getaddrinfo(nullptr, port, &hints, &res);
-         perror("perror 5"); 
         if (rval) {
            cerr << gai_strerror(rval) << '\n';
            throw AddrError();
         }
-         perror("perror 6"); 
     }
 
     FileDesc getBoundSocket() const {
-         perror("perror 7"); 
         FileDesc sock (socket(res->ai_family,
                               res->ai_socktype,
                               res->ai_protocol));
 
-         perror("perror 8"); 
         if (bind(sock, res->ai_addr, res->ai_addrlen)) {
             cerr << "Could not bind:\n";
             perror("");
             throw AddrError();
         }
-         perror("perror 9"); 
 
         return sock;
     }

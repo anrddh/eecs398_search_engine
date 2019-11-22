@@ -89,10 +89,12 @@ void *commandLineArgs( void * )
 
 int main( int argc, char **argv )
    {
-      std::cout << argv[1] << std::endl;
-      std::cout << atoi(argv[2]) << std::endl;
+   std::cout << argv[1] << std::endl;
+   std::cout << atoi(argv[2]) << std::endl;
    set_master_ip( argv[1], atoi(argv[2]) );
    fb::Thread argsThreads( commandLineArgs, nullptr );
+
+   SSLWrapper::SSLInit( );
 
    fb::Vector<fb::Thread> threads;
    for ( int i = 0;  i < NUM_THREAD;  ++i )

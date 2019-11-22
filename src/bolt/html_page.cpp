@@ -71,19 +71,19 @@ private:
   }
 };
 
-HtmlPage::HtmlPage() : htmlTemplate(std::make_unique<HtmlTemplate>()) {}
+HtmlPage::HtmlPage() : htmlTemplate(fb::makeUnique<HtmlTemplate>()) {}
 
 HtmlPage::HtmlPage(const HtmlPage& other)
    : header(other.header),
      templateVariables(other.templateVariables),
-     htmlTemplate(std::make_unique<HtmlTemplate>(*other.htmlTemplate))
+     htmlTemplate(fb::makeUnique<HtmlTemplate>(*other.htmlTemplate))
    { }
 
 HtmlPage& HtmlPage::operator=(const HtmlPage& other) 
    {
    if (this != &other) 
       {
-      htmlTemplate = std::make_unique<HtmlTemplate>(*other.htmlTemplate);
+      htmlTemplate = fb::makeUnique<HtmlTemplate>(*other.htmlTemplate);
       header = other.header;
       templateVariables = other.templateVariables;
       }

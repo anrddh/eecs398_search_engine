@@ -12,8 +12,8 @@ HttpType getHttpType(fb::String type) {
 }
 }  // namespace
 
-HttpRequest::HttpRequest(std::unique_ptr<HttpConnection>& conn) {
-  const std::unique_ptr<char[]>& rawReq = conn->getRawRequest();
+HttpRequest::HttpRequest(fb::UniquePtr<HttpConnection>& conn) {
+  const fb::UniquePtr<char[]>& rawReq = conn->getRawRequest();
   int length = conn->getRawRequestLength();
   BufferedReader bf(rawReq, length);
   parseType(bf);

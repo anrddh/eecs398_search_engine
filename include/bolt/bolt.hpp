@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory>
-
+#include "fb/memory.hpp"
 #include "html_page.hpp"
 
 class BoltImpl;
@@ -23,5 +22,5 @@ class Bolt {
   Bolt operator=(Bolt const &other) = delete;
 
  private:
-  std::unique_ptr<BoltImpl> pImpl;
+  fb::UniquePtr<BoltImpl> pImpl;
 };

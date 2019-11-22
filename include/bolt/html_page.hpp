@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory>
-
+#include "fb/memory.hpp"
 #include "fb/string.hpp"
 #include "fb/unordered_map.hpp"
 
@@ -42,5 +41,5 @@ public:
 
 private:
    fb::UnorderedMap<fb::String, fb::String> templateVariables;
-   std::unique_ptr<HtmlTemplate> htmlTemplate;
+   fb::UniquePtr<HtmlTemplate> htmlTemplate;
    };

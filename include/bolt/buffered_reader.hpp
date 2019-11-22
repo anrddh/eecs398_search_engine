@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory> 
-
+#include "fb/memory.hpp" 
 #include "fb/algorithm.hpp"
 #include "fb/string.hpp"
 
@@ -9,7 +8,7 @@ class BufferedReader
    {
 public:
    explicit BufferedReader(const char *buf, int len);
-   explicit BufferedReader(const std::unique_ptr<char[]> &buf, int len);
+   explicit BufferedReader(const fb::UniquePtr<char[]> &buf, int len);
 
    fb::String nextLine();
 

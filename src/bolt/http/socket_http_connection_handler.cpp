@@ -9,24 +9,24 @@
 #include "bolt/http/socket_http_connection_handler.hpp"
 #include "bolt/constants.hpp"
 
-SocketHttpConnection::SocketHttpConnection(std::unique_ptr<char[]> rawRequest,
+SocketHttpConnection::SocketHttpConnection(fb::UniquePtr<char[]> rawRequest,
                                            int len, int sock)
     : requestBuf(std::move(rawRequest)), length(len), clientHandle(sock) { }
 
-std::unique_ptr<char[]>& SocketHttpConnection::getRawRequest() 
+fb::UniquePtr<char[]>& SocketHttpConnection::getRawRequest() 
    {
    return requestBuf;
    }
 
-void SocketHttpConnection::setRawResponse(std::unique_ptr<char[]> response,
+void SocketHttpConnection::setRawResponse(fb::UniquePtr<char[]> response,
                                           int len) 
    {
-   responseBuf = std::make_unique<char[]>(len);
+   responseBuf = fb::makeUnique<char[]>(len);
    memcpy(responseBuf.get(), response.get(), len);
    this->length = len;
    }
 
-std::unique_ptr<char[]> SocketHttpConnection::getRawResponse() 
+fb::UniquePtr<char[]> SocketHttpConnection::getRawResponse() 
    {
    return std::move(responseBuf);
    }
@@ -63,7 +63,7 @@ void SocketHttpConnectionHandler::setup() {
       }
    }
 
-std::unique_ptr<HttpConnection> SocketHttpConnectionHandler::getRequest() 
+fb::UniquePtr<HttpConnection> SocketHttpConnectionHandler::getRequest() 
    {
    int clientHandle;
    if ((clientHandle = accept(serverHandle, 0, 0)) < 0) 
@@ -83,17 +83,17 @@ std::unique_ptr<HttpConnection> SocketHttpConnectionHandler::getRequest()
    /*for(int i = 0; i < bytesRead; ++i) {
       std::cout << requestBuffer[i];
    }*/
-   std::unique_ptr<char[]> uniqueBuffer = std::make_unique<char[]>(bytesRead);
+   fb::UniquePtr<char[]> uniqueBuffer = fb::makeUnique<char[]>(bytesRead);
    memcpy(uniqueBuffer.get(), requestBuffer, bytesRead);
 
-   std::unique_ptr<HttpConnection> conn = std::make_unique<SocketHttpConnection>(
+   fb::UniquePtr<HttpConnection> conn = fb::makeUnique<SocketHttpConnection>(
          std::move(uniqueBuffer), bytesRead, clientHandle);
 
    return conn;
    }
 
 void SocketHttpConnectionHandler::sendResponse(
-    std::unique_ptr<HttpConnection> conn) {
+    fb::UniquePtr<HttpConnection> conn) {
   SocketHttpConnection *sockConn = (SocketHttpConnection *)conn.get();
   int bytesWritten =
       write(sockConn->getClientHandle(), sockConn->getRawResponse().get(),

@@ -11,7 +11,7 @@
 #include "bolt/http/http_request.hpp"
 
 Bolt::Bolt()
-    : pImpl(std::make_unique<BoltImpl>(
+    : pImpl(fb::makeUnique<BoltImpl>(
           HttpConnectionHandlerFactory::getHttpConnectionHandler())) {}
 
 Bolt::Bolt(Bolt &&other) : pImpl(std::move(other.pImpl)) {}
@@ -61,7 +61,7 @@ HtmlPage BoltDefaultDefaultPage()
    return page;
    }
 
-BoltImpl::BoltImpl(std::unique_ptr<HttpConnectionHandler> ch)
+BoltImpl::BoltImpl(fb::UniquePtr<HttpConnectionHandler> ch)
     : default_page(BoltDefaultDefaultPage), connHandler(std::move(ch)) {}
 
 void BoltImpl::run() 
@@ -77,15 +77,15 @@ void BoltImpl::serveNextRequest()
    {
    try 
       {
-      std::unique_ptr<HttpConnection> conn = getNextConnection();
+      fb::UniquePtr<HttpConnection> conn = getNextConnection();
 
       HttpRequest request(conn);
 
       HtmlPage page = getHtmlPage(request.getPath());
 
       fb::String response = createResponse(page);
-      std::unique_ptr<char[]> responseBuf =
-            std::make_unique<char[]>(response.size());
+      fb::UniquePtr<char[]> responseBuf =
+            fb::makeUnique<char[]>(response.size());
       memcpy(responseBuf.get(), response.data(), response.size());
       conn->setRawResponse(std::move(responseBuf), response.size());
       connHandler->sendResponse(std::move(conn));
@@ -96,7 +96,7 @@ void BoltImpl::serveNextRequest()
       }
    }
 
-std::unique_ptr<HttpConnection> BoltImpl::getNextConnection() 
+fb::UniquePtr<HttpConnection> BoltImpl::getNextConnection() 
    {
    return connHandler->getRequest();
    }

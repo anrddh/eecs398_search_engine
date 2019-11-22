@@ -1,26 +1,26 @@
 #pragma once
 
-#include <memory>
+#include "fb/memory.hpp"
 
 #include "bolt/http/http_connection_handler.hpp"
 
 class SocketHttpConnection : public HttpConnection {
  public:
-  SocketHttpConnection(std::unique_ptr<char[]> rawRequest, int len, int sock);
+  SocketHttpConnection(fb::UniquePtr<char[]> rawRequest, int len, int sock);
 
-  std::unique_ptr<char[]>& getRawRequest();
+  fb::UniquePtr<char[]>& getRawRequest();
   int getRawRequestLength();
 
-  void setRawResponse(std::unique_ptr<char[]> response, int len);
+  void setRawResponse(fb::UniquePtr<char[]> response, int len);
 
-  std::unique_ptr<char[]> getRawResponse();
+  fb::UniquePtr<char[]> getRawResponse();
   int getRawResponseLength();
 
   int getClientHandle();
 
  private:
-  std::unique_ptr<char[]> responseBuf;
-  std::unique_ptr<char[]> requestBuf;
+  fb::UniquePtr<char[]> responseBuf;
+  fb::UniquePtr<char[]> requestBuf;
   int length;
   int clientHandle;
 };
@@ -28,8 +28,8 @@ class SocketHttpConnection : public HttpConnection {
 class SocketHttpConnectionHandler : public HttpConnectionHandler {
  public:
   void setup();
-  std::unique_ptr<HttpConnection> getRequest();
-  void sendResponse(std::unique_ptr<HttpConnection> conn);
+  fb::UniquePtr<HttpConnection> getRequest();
+  void sendResponse(fb::UniquePtr<HttpConnection> conn);
 
  private:
   int serverHandle;

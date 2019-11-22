@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include "fb/memory.hpp"
 #include "fb/string.hpp"
 #include "fb/unordered_map.hpp"
 
@@ -11,7 +11,7 @@
 class BoltImpl 
    {
 public:
-   BoltImpl(std::unique_ptr<HttpConnectionHandler> ch);
+   BoltImpl(fb::UniquePtr<HttpConnectionHandler> ch);
 
    void run();
 
@@ -25,9 +25,9 @@ private:
    fb::UnorderedMap<fb::String, HtmlPage (*)()> mappings;
    HtmlPage (*default_page)();
 
-   std::unique_ptr<HttpConnectionHandler> connHandler;
+   fb::UniquePtr<HttpConnectionHandler> connHandler;
 
    const HtmlPage getHtmlPage(fb::String);
 
-   std::unique_ptr<HttpConnection> getNextConnection();
+   fb::UniquePtr<HttpConnection> getNextConnection();
    };

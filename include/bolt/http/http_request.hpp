@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory>
-
+#include "fb/memory.hpp"
 #include "fb/string.hpp"
 #include "fb/unordered_map.hpp"
 
@@ -12,7 +11,7 @@ enum HttpType { GET, POST, OTHER };
 
 class HttpRequest {
  public:
-  HttpRequest(std::unique_ptr<HttpConnection> &conn);
+  HttpRequest(fb::UniquePtr<HttpConnection> &conn);
   HttpType getType();
   fb::String getPath();
   fb::String getHeader(fb::String headerKey);

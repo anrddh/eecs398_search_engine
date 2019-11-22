@@ -3,7 +3,7 @@
 BufferedReader::BufferedReader(const char *buf, int len)
    : front((char *)buf), current(buf), length(len) {}
 
-BufferedReader::BufferedReader(const std::unique_ptr<char[]> &buf, int len)
+BufferedReader::BufferedReader(const fb::UniquePtr<char[]> &buf, int len)
    : front(buf.get()), current(buf.get()), length(len) {}
 
 fb::String BufferedReader::nextLine() 

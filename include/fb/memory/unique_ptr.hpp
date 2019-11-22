@@ -32,6 +32,11 @@ public:
     constexpr UniquePtr(NullPtrT,
                         EnableIfT<defConstPtr, int> = 0) noexcept {}
 
+    template<typename OtherType>
+    constexpr UniquePtr(UniquePtr<OtherType>&& other,
+                        EnableIfT<std::is_base_of_v<T, OtherType>, int> = 0) 
+      noexcept : owner{other.release()}, deleter{std::move(other.getDeleter())} {}
+
     constexpr explicit UniquePtr(Pointer p,
                                  EnableIfT<defConstPtr, int> = 0)
         noexcept : owner{p} {}
@@ -52,6 +57,14 @@ public:
         deleter = rhs.getDeleter();
         return *this;
     }
+
+   template<typename OtherType>
+   EnableIfT<std::is_base_of_v<T, OtherType>, UniquePtr&> 
+   operator=(UniquePtr<OtherType>&& rhs) noexcept {
+      owner = rhs.release();
+      deleter = rhs.getDeleter();
+      return *this;
+   }
 
     ~UniquePtr() noexcept {
         if (get())
@@ -113,7 +126,7 @@ public:
 private:
     static constexpr bool defConstPtr =
         std::is_default_constructible_v<DeleterType> &&
-        IsPointerV<DeleterType>;
+        !IsPointerV<DeleterType>;
 
 public:
     constexpr UniquePtr(EnableIfT<defConstPtr, int> = 0) noexcept {}
@@ -139,6 +152,7 @@ public:
     [[nodiscard]] constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
         owner = rhs.release();
         deleter = rhs.getDeleter();
+        return *this;
     }
 
     ~UniquePtr() noexcept {

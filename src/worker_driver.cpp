@@ -93,6 +93,7 @@ int main( int argc, char **argv )
    fb::Thread argsThreads( commandLineArgs, nullptr );
 
    SSLWrapper::SSLInit( );
+   initializeFileName( "/tmp/page_store" );
 
    fb::Vector<fb::Thread> threads;
    for ( int i = 0;  i < NUM_THREAD;  ++i )

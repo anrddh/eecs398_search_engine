@@ -10,6 +10,10 @@ test_parser = executable('test_parser',
                       ['test_parser.cpp'],
                       include_directories : inc)
 
+test_master_tcp = executable('test_master_tcp',
+                      ['test_master_tcp.cpp'],
+                      include_directories : inc)
+
 test_download = executable('test_download',
                         ['test_download.cpp'],
                         include_directories : inc)

@@ -1,11 +1,11 @@
 // Added by Jaeyoon Kim 11/15/2019
 
-#include "master_url_tcp.hpp"
-#include "handle_socket.hpp"
-#include "../../lib/string.hpp"
-#include "../../lib/vector.hpp"
-#include "../../lib/thread.hpp"
-#include "../../lib/file_descriptor.hpp"
+#include "tcp/master_url_tcp.hpp"
+#include "tcp/handle_socket.hpp"
+#include "fb/string.hpp"
+#include "fb/vector.hpp"
+#include "fb/thread.hpp"
+#include "fb/file_descriptor.hpp"
 #include <unistd.h> 
 #include <stdio.h> 
 #include <sys/socket.h> 
@@ -16,7 +16,7 @@
 
 using namespace std;
 using namespace fb;
-#define PORT 8992
+#define PORT 8080
 int main(int argc, char const *argv[]) 
 { 
     int server_fd, sock, valread; 
@@ -43,12 +43,14 @@ int main(int argc, char const *argv[])
     address.sin_port = htons( PORT ); 
        
     // Forcefully attaching socket to the port 8080 
-    if (bind(server_fd, (struct sockaddr *)&address,  
-                                 sizeof(address))<0) 
+    bind(server_fd, (struct sockaddr *) &address, sizeof(address));
+    /*
+    if (bind(server_fd, (struct sockaddr *) &address, sizeof(address))) 
     { 
         perror("bind failed"); 
         exit(EXIT_FAILURE); 
     } 
+    */
 
     cout << "got server socket of " << server_fd << endl;
 

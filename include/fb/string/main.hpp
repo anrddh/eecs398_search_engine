@@ -43,6 +43,15 @@ namespace fb {
 
         BasicString(const char *cstr) : BasicString(cstr, strlen(cstr)) {}
 
+        template<typename Iter>
+        BasicString(Iter a, Iter b) : buf(0) {
+            while(a != b && a != 0) {
+               buf.pushBack(*a);
+               ++a;
+            }
+            buf.pushBack(0);
+        }
+
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= size())

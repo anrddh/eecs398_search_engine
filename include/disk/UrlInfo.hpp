@@ -8,6 +8,7 @@
 #include <fb/string_view.hpp>
 #include <fb/string.hpp>
 #include <fb/algorithm.hpp>
+#include <http/download_html.hpp>
 
 using namespace std;
 
@@ -27,36 +28,22 @@ struct UrlInfo {
 inline fb::SizeT RankUrl(fb::StringView Url){
    fb::SizeT rank = 0;
 
-   fb::SizeT start = 0;
-   fb::SizeT end = Url.find( "://", 0, 3 );
-   fb::StringView Service, Domain;
+   fb::String url_str( Url.data( ), Url.size( ) );
 
-   if ( end != fb::String::npos )
-      {
-      Service = Url.substr( start, end - start );
-      if ( Service.compare("https") == 0 ) {
-         rank += 1000;
-      } else if ( Service.compare("http") == 0 ) {
-         rank += 500;
-      } else {
-         // TODO assert false? This shouldn't happen
-      }
-      start = end + 3;
-      }
+   ParsedUrl parsed_url( url_str );
+   if ( parsed_url.Service == "https" )
+      rank += 1000;
+   else if ( parsed_url.Service == "http" )
+      rank += 500;
 
-   end = Url.find( "/", start, 1);
-   int begin_TLD = 0; // top level domain (com, org, ...)
-
-   for (int i = end - 1; i >= start; --i) {
-      if (Url[i] == '.') {
-         begin_TLD = i;
-         break;
-      }
+   fb::SizeT start = parsed_url.Host.find( ".", 0, 1 );
+   fb::StringView Domain;
+   if ( start != fb::String::npos )
+   {
+      Domain = parsed_url.substr( start + 1 );
+      std::cout << Domain << std::endl;
    }
 
-   Domain = Url.substr(begin_TLD + 1, end - begin_TLD - 1);
-
-   // TODO account for more TLD's
    if ( Domain.compare("gov") == 0 ) {
       rank += 1000;
    } else if ( Domain.compare("edu") == 0 ) {
@@ -74,4 +61,54 @@ inline fb::SizeT RankUrl(fb::StringView Url){
    int add_val = 1000 - 4 * Url.size();
    rank += (add_val > 0) ? add_val : 0;
    return rank;
+
+
+
+   // fb::SizeT start = 0;
+   // fb::SizeT end = Url.find( "://", 0, 3 );
+   // fb::StringView Service, Domain;
+
+   // if ( end != fb::String::npos )
+   //    {
+   //    Service = Url.substr( start, end - start );
+   //    if ( Service.compare("https") == 0 ) {
+   //       rank += 1000;
+   //    } else if ( Service.compare("http") == 0 ) {
+   //       rank += 500;
+   //    } else {
+   //       // TODO assert false? This shouldn't happen
+   //    }
+   //    start = end + 3;
+   //    }
+
+   // end = Url.find( "/", start, 1);
+   // int begin_TLD = 0; // top level domain (com, org, ...)
+
+   // for (int i = end - 1; i >= start; --i) {
+   //    if (Url[i] == '.') {
+   //       begin_TLD = i;
+   //       break;
+   //    }
+   // }
+
+   // Domain = Url.substr(begin_TLD + 1, end - begin_TLD - 1);
+
+   // // TODO account for more TLD's
+   // if ( Domain.compare("gov") == 0 ) {
+   //    rank += 1000;
+   // } else if ( Domain.compare("edu") == 0 ) {
+   //    rank += 1000;
+   // } else if ( Domain.compare("org") == 0 ) {
+   //    rank += 800;
+   // } else if ( Domain.compare("com") == 0 ) {
+   //    rank += 500;
+   // } else if ( Domain.compare("net") == 0 ) {
+   //    rank += 300;
+   // } else if ( Domain.compare("biz") == 0 ) {
+   //    rank += 200;
+   // }
+
+   // int add_val = 1000 - 4 * Url.size();
+   // rank += (add_val > 0) ? add_val : 0;
+   // return rank;
 }

@@ -1,5 +1,7 @@
 #include <disk/url_store.hpp>
 #include <disk/frontier.hpp>
+#include <disk/UrlTables.hpp>
+#include <disk/UrlInfo.hpp>
 
 #include <fb/stddef.hpp>
 #include <fb/file_descriptor.hpp>
@@ -119,9 +121,14 @@ int main(int argc, char **argv) try {
 
             String url;
             while (fb::getline(file, url)) {
-                auto idx = urlStore.addUrl(url);
-                frontier.addUrl({ idx, 0 });
-                cout << url << "\t\t\t\tidx: " << idx << '\n';
+               fb::SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
+               if ( url_offset == 0)
+               {
+                  continue;
+               }
+               fb::SizeT rank = RankUrl( UrlStore::getStore().getUrl( url_offset ) );
+               frontier.addUrl({ url_offset, rank });
+               cout << url << "\t\t\t\toffset: " << url_offset << '\n';
             }
         } else if (firstWord == "status"_sv) {
 
@@ -175,7 +182,7 @@ struct AddrInfo {
                               res->ai_socktype,
                               res->ai_protocol));
 
-        if (bind(sock, res->ai_addr, res->ai_addrlen)) {
+        if (::bind(sock, res->ai_addr, res->ai_addrlen)) {
             cerr << "Could not bind:\n";
             perror("");
             throw AddrError();

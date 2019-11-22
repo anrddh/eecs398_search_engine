@@ -59,11 +59,9 @@ void* handle_socket(void* sock_ptr) {
    int sock;
 
    std::cout << "(inside) got socket of " << server_fd << std::endl;
-   std::cout << "fd 0 fcntl " << fcntl(0, F_GETFD) << std::endl;
 
    while (true) {
       std::cout << "before listen" << std::endl;
-   std::cout << "fd 0 fcntl " << fcntl(0, F_GETFD) << std::endl;
       if (listen(server_fd, 3) < 0) 
       { 
          std::cout << "listen error" << std::endl;
@@ -72,7 +70,6 @@ void* handle_socket(void* sock_ptr) {
           exit(EXIT_FAILURE); 
       } 
       std::cout << "after listen" << std::endl;
-   std::cout << "fd 0 fcntl " << fcntl(0, F_GETFD) << std::endl;
       
       term_mtx.lock();
       if (do_terminate) {
@@ -81,15 +78,12 @@ void* handle_socket(void* sock_ptr) {
       }
       term_mtx.unlock();
 
-   std::cout << "fd 0 fcntl " << fcntl(0, F_GETFD) << std::endl;
 
-          perror("before accept"); 
-      if ((sock = accept(server_fd, nullptr, nullptr) < 0))
+      if ((sock = accept(server_fd, nullptr, nullptr)) < 0)
       { 
           perror("accept"); 
           exit(EXIT_FAILURE); 
       } 
-   std::cout << "fd 0 fcntl " << fcntl(0, F_GETFD) << std::endl;
 
       std::cout << "(accept) got socket of " << sock << std::endl;
 

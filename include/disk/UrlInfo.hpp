@@ -1,6 +1,7 @@
 // Written by Jaeyoon Kim 11/17/2019
 // TODO did Chandler contribute to this?
 //Structure of UrlInfo
+#pragma once
 #include <string.h>
 #include <fb/stddef.hpp>
 #include <fb/stddef.hpp>

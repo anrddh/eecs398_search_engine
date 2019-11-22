@@ -7,6 +7,8 @@
 #include "adj_store.hpp"
 #include "anchor_store.hpp"
 
+#include "tcp/url_tcp.hpp" // for ParsedPage
+
 #include "fb/mutex.hpp"
 #include "fb/utility.hpp" // for pair
 #include "fb/string.hpp"
@@ -33,11 +35,11 @@ public:
 
     // Adds a new url
     // copies url to the disk, and initializes url_info struct
-    // returns true on success
+    // returns url_offset of the page if this the first time seen
     // returns false if this url was already seen before
-    bool addSeed( fb::StringView url ) 
+    fb::SizeT addSeed( fb::StringView url ) 
     {
-       return (0 != add_link(url, ""));
+       return add_link(url, "");
     }
 
     // This code should be only used on pages
@@ -58,8 +60,6 @@ public:
 
       info_hash.second.lock();
 
-
-
       // This we default initialize 
       fb::StringView url = 
                UrlStore::getStore().getUrl( pp.url_offset );
@@ -68,7 +68,12 @@ public:
                url);
 
       // This means that we have never seen before
-      assert(url_info_pair.second != 0);
+      if (url_info_pair.second == 0)
+      {
+         std::cerr << "Error: HandleParsedPage has never seen url offset of " 
+            << pp.url_offset << std::endl;
+         info_hash.second.unlock();
+      }
 
       // url info object associated with this url
       UrlInfo& info = url_info[ url_info_pair.second ];

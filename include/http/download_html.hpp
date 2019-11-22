@@ -58,7 +58,7 @@ class ParsedUrl
             else if ( Service == "https" )
                Port = "443";
             else
-               Port = defaultPort;
+               Port = "443";
             }
 
          if ( end != fb::String::npos )
@@ -82,7 +82,7 @@ class ParsedUrl
    };
 
 // Default port for https
-const fb::String ParsedUrl::defaultPort = "443";
+// const fb::String ParsedUrl::defaultPort = "443";
 
 // Wrapper class to handle writing
 // Handles chunked encoding

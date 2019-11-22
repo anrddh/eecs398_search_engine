@@ -40,7 +40,7 @@ inline fb::SizeT RankUrl(fb::StringView Url){
    fb::StringView Domain;
    if ( start != fb::String::npos )
    {
-      Domain = parsed_url.substr( start + 1 );
+      Domain = parsed_url.Host.substr( start + 1 );
       std::cout << Domain << std::endl;
    }
 

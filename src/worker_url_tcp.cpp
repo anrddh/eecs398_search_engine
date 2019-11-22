@@ -101,98 +101,83 @@ int open_socket_to_master() {
    {
       throw SocketException("TCP socket: Failed in connect");
    }
-   std::cout << "open sock to master 1" << std::endl;
 
    // Finished establishing socket
    // Send verfication message
    send_int(sock, VERFICATION_CODE);
-   std::cout << "open sock to master 2" << std::endl;
 
    return sock;
+}
+
+void* talk_to_master_helper(int sock) {
+   while (true) {
+      // Send the parsed info
+      parsed_m.lock();
+      if (urls_parsed.empty()) 
+      {
+         parsed_m.unlock();
+      } 
+      else 
+      {
+         Vector< ParsedPage > local; // first val url, second val parsed page
+         local.swap(urls_parsed);
+         parsed_m.unlock();
+         send_parsed_pages( sock, local );
+      }
+
+      // Check if we should terminate
+      // and terminate accordingly
+      if (shutting_down) 
+      {
+         return nullptr;
+      }
+
+      send_char(sock, 'T');
+      char terminate_state = recv_char(sock);
+
+      if ( terminate_state == 'T' ) 
+      {
+         shutting_down = true;
+         return nullptr;
+      } 
+      else if ( terminate_state != 'N' ) 
+      {
+         throw SocketException("Invalid terminate state");
+      }
+
+      // If we are short on urls to parse,
+      // request for more
+      to_parse_m.lock();
+      if (urls_to_parse.size() < MIN_BUFFER_SIZE)
+      {
+         to_parse_m.unlock();
+         Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
+         to_parse_m.lock();
+         for ( int i = 0; i < urls.size(); ++i )
+         {
+            urls_to_parse.push( std::move( urls[i] ) );
+         }
+
+         to_parse_cv.broadcast();
+         to_parse_m.unlock();
+      }
+      else
+      {
+         to_parse_m.unlock();
+      }
+   }
 }
 
 void* talk_to_master(void*) {
    while (true) {
       FileDesc sock(open_socket_to_master());
       try {
-         std::cout << "talk_to_master 1" << std::endl;
-         // Send the parsed info
-         parsed_m.lock();
-         // TODO this is a bug. should be not empty
-         if (urls_parsed.empty()) 
-         {
-            std::cout << "talk_to_master 2" << std::endl;
-            parsed_m.unlock();
-         } 
-         else 
-         {
-            std::cout << "talk_to_master 3" << std::endl;
-            Vector< ParsedPage > local; // first val url, second val parsed page
-            local.swap(urls_parsed);
-            std::cout << "talk_to_master 4" << std::endl;
-            parsed_m.unlock();
-            std::cout << "talk_to_master 5" << std::endl;
-            send_parsed_pages( sock, local );
-            std::cout << "talk_to_master 6" << std::endl;
-         }
-
-         // Check if we should terminate
-         // and terminate accordingly
-         if (shutting_down) 
-         {
-            std::cout << "talk_to_master 7" << std::endl;
-            return nullptr;
-         }
-
-         std::cout << "talk_to_master 8" << std::endl;
-         send_char(sock, 'T');
-         std::cout << "talk_to_master 9" << std::endl; // Last thing that printed
-         char terminate_state = recv_char(sock);
-         std::cout << "talk_to_master 10" << std::endl;
-
-         if ( terminate_state == 'T' ) 
-         {
-            std::cout << "talk_to_master 11" << std::endl;
-            shutting_down = true;
-            return nullptr;
-         } 
-         else if ( terminate_state != 'N' ) 
-         {
-            std::cout << "talk_to_master 12" << std::endl;
-            throw SocketException("Invalid terminate state");
-         }
-
-         std::cout << "talk_to_master 13" << std::endl;
-         // If we are short on urls to parse,
-         // request for more
-         to_parse_m.lock();
-         if (urls_to_parse.size() < MIN_BUFFER_SIZE)
-         {
-            std::cout << "talk_to_master 14" << std::endl;
-            to_parse_m.unlock();
-            std::cout << "talk_to_master 15" << std::endl;
-            Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
-            std::cout << "talk_to_master 16" << std::endl;
-            to_parse_m.lock();
-            for ( int i = 0; i < urls.size(); ++i )
-            {
-               urls_to_parse.push( std::move( urls[i] ) );
-            }
-
-            std::cout << "talk_to_master 17" << std::endl;
-            to_parse_cv.broadcast();
-            to_parse_m.unlock();
-         }
-         else
-         {
-            to_parse_m.unlock();
-         }
-      } 
+         return talk_to_master_helper(sock);
+      }
       catch (SocketException& se) 
       {
          std::cerr << "SocketException in talk to master. Error: " << se.what() << std::endl;
       }
-      std::cout << "talk_to_master 17" << std::endl;
    }
 }
 

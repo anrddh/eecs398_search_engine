@@ -25,6 +25,15 @@ struct UrlInfo {
    std::atomic<char> state; 
 };
 
+inline int findLast( fb::StringView Host, char c )
+{
+   int last = -1;
+   for ( int i = 0;  i < Host.size( );  ++i )
+      if ( Host[i] == c )
+         last = i;
+   return last;
+}
+
 inline fb::SizeT RankUrl(fb::StringView Url){
    std::cout << "RankUrl: " << Url << std::endl;
    fb::SizeT rank = 0;
@@ -37,12 +46,15 @@ inline fb::SizeT RankUrl(fb::StringView Url){
    else if ( parsed_url.Service == "http" )
       rank += 500;
 
-   fb::SizeT start = parsed_url.Host.find( ".", 0, 1 );
+   // fb::SizeT start = parsed_url.Host.find( '.' );
+   int start = findLast( parsed_url.Host, '.' );
+
    fb::StringView Domain;
-   if ( start != fb::String::npos )
+   std::cout << "Host: " << parsed_url.Host << std::endl;
+   if ( start != -1 )
    {
       Domain = parsed_url.Host.substr( start + 1 );
-      std::cout << Domain << std::endl;
+      std::cout << "Domain: " << Domain << std::endl;
    }
 
    if ( Domain.compare("gov") == 0 ) {

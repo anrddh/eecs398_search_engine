@@ -55,7 +55,7 @@ public:
        // to disk_vec. Then construct a new url_info in disk_vec.
        // Then add the url to the frontier (check robots.txt first)
       fb::SizeT hash = hasher( UrlStore::getStore().getUrl(pp.url_offset) );
-      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hash 
+      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash 
          = info_hashes[hash % NumBins];
 
       info_hash.second.lock();
@@ -139,6 +139,7 @@ private:
          }
 
          fb::StringView url = UrlStore::getStore().getUrl( url_info[ url_info_offset ].UrlOffset );
+         std::cout << "in url info table ctor add url " << url << std::endl;
          fb::SizeT hash = hasher( url );
 
          info_hashes[hash % NumBins].first[ url ] = url_info_offset;
@@ -191,9 +192,9 @@ private:
          AnchorStore::getStore().addStr( anchor_text, 
                url_info[ url_info_pair.second ].AnchorTextOffsets );
 
-      if ( is_new_url)
+      if ( is_new_url )
       {
-         return url_info_pair.second;
+         return url_info[ url_info_pair.second ].UrlOffset;
       }
       else
       {

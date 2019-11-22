@@ -124,8 +124,11 @@ int main(int argc, char **argv) try {
                fb::SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
                if ( url_offset == 0)
                {
+                  std::cout << "url " << url << " was already in UrlInfoTable" << std::endl;
                   continue;
                }
+
+               std::cout << "Got url " << url << " stored it as " << UrlStore::getStore().getUrl( url_offset ) << std::endl;
                fb::SizeT rank = RankUrl( UrlStore::getStore().getUrl( url_offset ) );
                frontier.addUrl({ url_offset, rank });
                cout << url << "\t\t\t\toffset: " << url_offset << '\n';

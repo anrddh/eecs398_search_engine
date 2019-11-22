@@ -137,6 +137,7 @@ public:
     //power to change a key inside the hash table. This is likely foolish, and
     //you should make sure you have a very good reason for doing so
     fb::Pair<K&, V&> functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
+        (*this)[key];
         auto it = find(key);
         return {it.bravery(), *it};
     }

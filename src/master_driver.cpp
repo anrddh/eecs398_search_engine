@@ -86,8 +86,8 @@ struct Args {
 FileDesc parseArguments( int argc, char **argv );
 
 int main(int argc, char **argv) try {
-    //UrlStore::init(UrlStoreFileName, false);
-    //Frontier::init("/tmp/frontier-bin.", false);
+    UrlStore::init(UrlStoreFileName, false);
+    Frontier::init("/tmp/frontier-bin.", false);
 
     FileDesc sock = parseArguments( argc, argv );
     std::cout << "main got socket" << sock << std::endl;

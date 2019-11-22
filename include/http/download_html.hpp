@@ -275,13 +275,17 @@ class ConnectionWrapper
 class SSLWrapper : public ConnectionWrapper
    {
    public:
+
+      static void SSLInit()
+         {
+         SSL_library_init( );
+         OpenSSL_add_all_algorithms( );
+         }
+
       SSLWrapper( ParsedUrl &url_in )
       : ConnectionWrapper( url_in )
          {
          // Add SSL layer around http
-         SSL_library_init( );
-         OpenSSL_add_all_algorithms( );
-
          ctx = SSL_CTX_new( SSLv23_method( ) );
          if ( !ctx )
             recordFailedLink( "ssl ctx" );

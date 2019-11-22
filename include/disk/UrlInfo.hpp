@@ -25,6 +25,7 @@ struct UrlInfo {
 };
 
 inline fb::SizeT RankUrl(fb::StringView Url){
+   std::cout << "RankUrl: " << Url << std::endl;
    fb::SizeT rank = 0;
 
    fb::SizeT start = 0;

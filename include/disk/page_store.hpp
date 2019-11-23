@@ -19,7 +19,13 @@
 //I'm begging you, let it be a byte, i dont want to do the math if it isnt
 using WordDescriptors = uint8_t;
 
-using Page = fb::Pair<fb::SizeT, fb::Pair<fb::String, fb::Vector<WordDescriptors>>>;
+// Written by Jaeyoon 
+struct Page {
+   fb::SizeT UrlOffset;
+   fb::String page_str;
+   fb::Vector<WordDescriptors> word_headers;
+}
+
 
 extern std::atomic<fb::SizeT> NumThreads;
 

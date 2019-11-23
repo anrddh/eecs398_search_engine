@@ -34,7 +34,7 @@ void *parsePages( void * )
 
          ParsedUrl url( downloader.finalUrl );
 
-         auto parser = fb::Parser( result, url );
+         fb::Parser parser( result, url );
 
          parser.parse( );
 
@@ -48,7 +48,7 @@ void *parsePages( void * )
 
          add_parsed( pp );
 
-         addPage( { urlPair.first, {  parser.getParsedResult( ), parser.wordFlags } } );
+         addPage( parser.extractPage( urlPair.first ) ); // TODO I think move ctor will be called? -Jaeyoon
    		}
 		catch ( ConnectionException e )
    		{

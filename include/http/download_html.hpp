@@ -214,7 +214,7 @@ class ConnectionWrapper
 
       // http connection
       ConnectionWrapper( ParsedUrl &url_in )
-      : url(url_in)
+      : url(url_in), socketFD( -1 )
          {
          // Get the host address
          struct addrinfo *address, hints;
@@ -245,10 +245,10 @@ class ConnectionWrapper
 
       void recordFailedLink( fb::String msg )
          {
-         int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
-         ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
-               url.CompleteUrl.size( ) + 1 );
-         close( fd );
+         // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
+         // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
+         //       url.CompleteUrl.size( ) + 1 );
+         // close( fd );
          std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
          std::cerr << "Failed at " << msg << std::endl;
          throw ConnectionException( msg );
@@ -256,7 +256,8 @@ class ConnectionWrapper
 
       virtual ~ConnectionWrapper( )
          {
-         close( socketFD );
+         if ( socketFD != -1 )
+            close( socketFD );
          }
 
       virtual int read( char *buffer )

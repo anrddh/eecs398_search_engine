@@ -333,6 +333,19 @@ public:
     Pred key_eq() {
         return pred;
     }
+
+    // Moves this unordered map to vector
+    // invalidates this object
+    Vector<Pair<K, V>> convert_to_vector() {
+       Vector<Pair<K, V>> vec;
+       for (SizeT i = 0; i < buckets.size(); ++i) {
+          if ( buckets[i].status == Status::Filled ) {
+            vec.emplaceBack( std::move( buckets[i].key ), std::move( buckets[i].val ) );
+          }
+       }
+
+       return vec;
+    }
 private:
     SizeT num_elements = 0;
     SizeT num_ghosts = 0;

@@ -71,8 +71,7 @@ void addPage(Page page){
 
 void * runBin(void *){
     NumThreads.fetch_add(1);
-    fb::SizeT Index = FileIndex;
-    FileIndex.fetch_add(1);
+    fb::SizeT Index = FileIndex.fetch_add(1);
     // std::cout << "PrefiX: " << Prefix << std::endl;
     PageBin Bin(Prefix + fb::toString(Index), false);
     fb::SizeT i = 0;

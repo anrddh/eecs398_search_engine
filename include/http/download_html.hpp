@@ -187,9 +187,9 @@ class BufferWriter
          }
    };
 
-struct ConnectionException 
+struct ConnectionException
    {
-   ConnectionException( const fb::String msg_ ) 
+   ConnectionException( const fb::String msg_ )
       : msg(msg_)
       {
       }
@@ -243,7 +243,7 @@ class ConnectionWrapper
             socketFD = fb::FileDesc( socket( address->ai_family,
                address->ai_socktype, address->ai_protocol ) );
             int set = 1;
-            setsockopt(socketFD, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+            setsockopt(socketFD, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {
@@ -330,7 +330,7 @@ class SSLWrapper : public ConnectionWrapper
 
       virtual int write( const fb::String &message )
       {
-         // GOT this code from 
+         // GOT this code from
          // https://riptutorial.com/posix/example/17424/handle-sigpipe-generated-by-write---in-a-thread-safe-manner
          sigset_t sig_block, sig_restore, sig_pending;
 
@@ -385,7 +385,7 @@ class SSLWrapper : public ConnectionWrapper
 
       virtual ~SSLWrapper( )
          {
-         // GOT this code from 
+         // GOT this code from
          // https://riptutorial.com/posix/example/17424/handle-sigpipe-generated-by-write---in-a-thread-safe-manner
          sigset_t sig_block, sig_restore, sig_pending;
 
@@ -398,7 +398,7 @@ class SSLWrapper : public ConnectionWrapper
            * not to the whole process.
            */
           if (pthread_sigmask(SIG_BLOCK, &sig_block, &sig_restore) != 0) {
-              return -1;
+              // return -1;
           }
 
           /* Check if SIGPIPE is already pending.
@@ -410,7 +410,7 @@ class SSLWrapper : public ConnectionWrapper
 
           if (sigpipe_pending == -1) {
               pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
-              return -1;
+          //     return -1;
           }
 
          SSL_shutdown( ssl );
@@ -437,7 +437,6 @@ class SSLWrapper : public ConnectionWrapper
           }
 
           pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
-          return ret;
          }
 
    private:
@@ -460,12 +459,12 @@ HTTPDownloader( )
    // GetMessage
    const fb::String GetGetMessage( const ParsedUrl &url )
       {
-      fb::String getMessage = 
+      fb::String getMessage =
             "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n" +
             "User-Agent: LinuxGetSsl/2.0 (Linux)\r\n" +
             "Accept: */*\r\n" +
             "Accept-Encoding: identity\r\n" +
-            "Connection: close\r\n\r\n"; 
+            "Connection: close\r\n\r\n";
       return getMessage;
       }
 
@@ -489,7 +488,7 @@ HTTPDownloader( )
 
    // Get header and parse relevant information
    // return apporpriate pair of DownloadStatus and redirectUrl
-   void parseHeader( ConnectionWrapper *connector, BufferWriter &writer, 
+   void parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
       const fb::StringView &acceptableType )
       {
       char buffer [ 10240 ];
@@ -514,7 +513,7 @@ HTTPDownloader( )
                {
                fb::SizeT firstSpace = header.find( ' ', 4 );
                fb::SizeT secondSpace = header.find( ' ', firstSpace );
-               response = header.substr(firstSpace + 1, 
+               response = header.substr(firstSpace + 1,
                      secondSpace - firstSpace - 1);
 
                const fb::StringView headerView( header );
@@ -526,7 +525,7 @@ HTTPDownloader( )
                if ( response[0] == '3' )
                   {
                   fb::SizeT startRedirectUrl = headerView.find( redirectIndicator );
-                  fb::SizeT endRedirectUrl = headerView.find( endLineIndicator, 
+                  fb::SizeT endRedirectUrl = headerView.find( endLineIndicator,
                         startRedirectUrl );
                   fb::String redirectUrl = header.substr(
                         startRedirectUrl + redirectIndicator.size( ),
@@ -571,7 +570,7 @@ HTTPDownloader( )
             {
             delete connector;
             }
-         
+
       };
 
    // Esatblish connection with the url and try to write to downloadedContent

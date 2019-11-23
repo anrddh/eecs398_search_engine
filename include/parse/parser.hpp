@@ -398,6 +398,7 @@ private:
 	void handleHTML( fb::SizeT start, fb::SizeT end ) const
 		{
 		fb::StringView htmlTag( content.data( ) + start, end - start );
+		std::cout << htmlTag << std::endl;
 		fb::SizeT index = htmlTag.find( "lang"_sv );
 		if ( index != fb::StringView::npos )
 			{
@@ -453,7 +454,7 @@ private:
 					if( url[ 0 ] == '/' )
 					{
 						if( url[ 1 ] == '/' )
-							url = parsedUrl.Service +  "://" + url;
+							url = parsedUrl.Service +  ":" + url;
 						else
 							url = parsedUrl.Service + "://" + parsedUrl.Host + url;
 					}

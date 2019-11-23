@@ -160,7 +160,9 @@ int main(int argc, char **argv) try {
            cout << "Frontier size: " << frontier.size() << endl;
 
         } else if (firstWord == "shutdown"_sv) {
-
+           terminate_workers();
+           //socket_handler.join();
+           return 0;
         } else if (firstWord == "info"_sv) {
 
         } else if (firstWord == "init"_sv) {

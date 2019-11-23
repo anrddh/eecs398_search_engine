@@ -236,7 +236,7 @@ class ConnectionWrapper
             socketFD = fb::FileDesc( socket( address->ai_family,
                address->ai_socktype, address->ai_protocol ) );
             }
-         catch ( ConstructionError & e )
+         catch ( fb::FileDesc::ConstructionError & e )
             {
             recordFailedLink( "socket" );
             }

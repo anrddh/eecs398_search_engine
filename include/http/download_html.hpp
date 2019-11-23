@@ -214,7 +214,7 @@ class ConnectionWrapper
 
       // http connection
       ConnectionWrapper( ParsedUrl &url_in )
-      : url(url_in)
+      : url(url_in), socketFD( -1 )
          {
          // Get the host address
          struct addrinfo *address, hints;
@@ -256,7 +256,8 @@ class ConnectionWrapper
 
       virtual ~ConnectionWrapper( )
          {
-         close( socketFD );
+         if ( socketFD != -1 )
+            close( socketFD );
          }
 
       virtual int read( char *buffer )

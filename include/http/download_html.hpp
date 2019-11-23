@@ -19,6 +19,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+// Signal handling
+#include <sys/signal.h>
+#include <unistd.h>
+#include <time.h>
+#include <errno.h>
+
 class ParsedUrl
    {
    public:
@@ -235,6 +241,8 @@ class ConnectionWrapper
             {
             socketFD = fb::FileDesc( socket( address->ai_family,
                address->ai_socktype, address->ai_protocol ) );
+            int set = 1;
+            setsockopt(socketFD, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {
@@ -321,14 +329,114 @@ class SSLWrapper : public ConnectionWrapper
 
       virtual int write( const fb::String &message )
       {
-         return SSL_write( ssl, message.data( ), message.size( ) );
+         // GOT this code from 
+         // https://riptutorial.com/posix/example/17424/handle-sigpipe-generated-by-write---in-a-thread-safe-manner
+         sigset_t sig_block, sig_restore, sig_pending;
+
+          sigemptyset(&sig_block);
+          sigaddset(&sig_block, SIGPIPE);
+
+          /* Block SIGPIPE for this thread.
+           *
+           * This works since kernel sends SIGPIPE to the thread that called write(),
+           * not to the whole process.
+           */
+          if (pthread_sigmask(SIG_BLOCK, &sig_block, &sig_restore) != 0) {
+              return -1;
+          }
+
+          /* Check if SIGPIPE is already pending.
+           */
+          int sigpipe_pending = -1;
+          if (sigpending(&sig_pending) != -1) {
+              sigpipe_pending = sigismember(&sig_pending, SIGPIPE);
+          }
+
+          if (sigpipe_pending == -1) {
+              pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
+              return -1;
+          }
+
+          fb::SizeT ret = SSL_write( ssl, message.data( ), message.size( ) );
+
+          /* Fetch generated SIGPIPE if write() failed with EPIPE.
+           *
+           * However, if SIGPIPE was already pending before calling write(), it was
+           * also generated and blocked by caller, and caller may expect that it can
+           * fetch it later. Since signals are not queued, we don't fetch it in this
+           * case.
+           */
+          if (ret == -1 && errno == EPIPE && sigpipe_pending == 0) {
+              struct timespec ts;
+              ts.tv_sec = 0;
+              ts.tv_nsec = 0;
+
+              int sig;
+              while ((sig = sigtimedwait(&sig_block, 0, &ts)) == -1) {
+                  if (errno != EINTR)
+                      break;
+              }
+          }
+
+          pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
+          return ret;
       }
 
       virtual ~SSLWrapper( )
          {
+         // GOT this code from 
+         // https://riptutorial.com/posix/example/17424/handle-sigpipe-generated-by-write---in-a-thread-safe-manner
+         sigset_t sig_block, sig_restore, sig_pending;
+
+          sigemptyset(&sig_block);
+          sigaddset(&sig_block, SIGPIPE);
+
+          /* Block SIGPIPE for this thread.
+           *
+           * This works since kernel sends SIGPIPE to the thread that called write(),
+           * not to the whole process.
+           */
+          if (pthread_sigmask(SIG_BLOCK, &sig_block, &sig_restore) != 0) {
+              return -1;
+          }
+
+          /* Check if SIGPIPE is already pending.
+           */
+          int sigpipe_pending = -1;
+          if (sigpending(&sig_pending) != -1) {
+              sigpipe_pending = sigismember(&sig_pending, SIGPIPE);
+          }
+
+          if (sigpipe_pending == -1) {
+              pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
+              return -1;
+          }
+
          SSL_shutdown( ssl );
          SSL_free( ssl );
          SSL_CTX_free( ctx );
+
+          /* Fetch generated SIGPIPE if write() failed with EPIPE.
+           *
+           * However, if SIGPIPE was already pending before calling write(), it was
+           * also generated and blocked by caller, and caller may expect that it can
+           * fetch it later. Since signals are not queued, we don't fetch it in this
+           * case.
+           */
+          if (errno == EPIPE && sigpipe_pending == 0) {
+              struct timespec ts;
+              ts.tv_sec = 0;
+              ts.tv_nsec = 0;
+
+              int sig;
+              while ((sig = sigtimedwait(&sig_block, 0, &ts)) == -1) {
+                  if (errno != EINTR)
+                      break;
+              }
+          }
+
+          pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
+          return ret;
          }
 
    private:

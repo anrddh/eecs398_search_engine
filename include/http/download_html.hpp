@@ -3,6 +3,7 @@
 #include <fb/stddef.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/string.hpp>
+#include <fb/string_view.hpp>
 #include <fb/utility.hpp>
 #include <fb/file_descriptor.hpp>
 #include <fb/mutex.hpp>
@@ -26,6 +27,9 @@
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
+
+void recordFailedLink( fb::StringView msg );
+void recordFailedLink( fb::String msg );
 
 class ParsedUrl
    {
@@ -236,7 +240,7 @@ class ConnectionWrapper
                url.Port.data( ), &hints, &address );
 
          if ( getaddrResult != 0 )
-            recordFailedLink( "getaddrResult" );
+            recordFailedLink( "getaddrResult"_sv );
 
          // Create a TCP/IP socket
          try
@@ -248,7 +252,7 @@ class ConnectionWrapper
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {
-            recordFailedLink( "socket" );
+            recordFailedLink( "socket"_sv );
             }
          // if ( socketFD == -1 )
             // recordFailedLink( "socket" );
@@ -257,7 +261,7 @@ class ConnectionWrapper
          int connectResult = connect( socketFD,
                address->ai_addr, address->ai_addrlen );
          if ( connectResult != 0 )
-            recordFailedLink( "connectResult" );
+            recordFailedLink( "connectResult"_sv );
 
          freeaddrinfo( address );
          }
@@ -308,22 +312,22 @@ class SSLWrapper : public ConnectionWrapper
          // Add SSL layer around http
          ctx = SSL_CTX_new( SSLv23_method( ) );
          if ( !ctx )
-            recordFailedLink( "ssl ctx" );
+            recordFailedLink( "ssl ctx"_sv );
 
          ssl = SSL_new( ctx );
          if ( !ssl )
-            recordFailedLink( "ssl" );
+            recordFailedLink( "ssl"_sv );
 
          SSL_set_fd( ssl, socketFD );
 
          // Needed for SNI websites
          int r = SSL_set_tlsext_host_name( ssl, url_in.Host.data( ) );
          if ( r != 1 )
-            recordFailedLink( "ssl set host name" );
+            recordFailedLink( "ssl set host name"_sv );
 
          r = SSL_connect( ssl );
          if ( r != 1 )
-            recordFailedLink( "ssl connect" );
+            recordFailedLink( "ssl connect"_sv );
          }
 
       virtual int read( char *buffer )
@@ -681,7 +685,7 @@ HTTPDownloader( )
 
 };
 
-inline void recordFailedLink( fb::String msg )
+inline void recordFailedLink( fb::StringView msg )
    {
    // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
    // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
@@ -693,3 +697,7 @@ inline void recordFailedLink( fb::String msg )
    std::cerr << syscall(SYS_gettid) << std::endl;
    throw ConnectionException( msg );
    }
+
+inline void recordFailedLink( fb::String msg ) {
+    recordFailedLink({ msg.data(), msg.size() });
+}

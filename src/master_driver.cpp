@@ -122,8 +122,6 @@ int main(int argc, char **argv) try {
 
 
     while (true) {
-        auto &urlStore = UrlStore::getStore();
-
         auto buf = getReadline();
         if (!buf)
             break;

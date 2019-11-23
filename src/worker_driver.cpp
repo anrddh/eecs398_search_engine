@@ -85,7 +85,7 @@ void *commandLineArgs( void * )
    return nullptr;
    }
 
-int main( int argc, char **argv )
+int main( int, char **argv )
    {
    std::cout << argv[1] << std::endl;
    std::cout << atoi(argv[2]) << std::endl;

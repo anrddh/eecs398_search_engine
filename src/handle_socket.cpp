@@ -8,9 +8,9 @@
 #include "fb/thread.hpp"
 #include "fb/cv.hpp"
 #include "fb/file_descriptor.hpp"
-#include <sys/socket.h> 
-#include <iostream> 
-#include <errno.h> 
+#include <sys/socket.h>
+#include <iostream>
+#include <errno.h>
 
 using namespace fb;
 
@@ -22,7 +22,7 @@ bool do_terminate = false;
 
 class ThreadLifeTracker {
 public:
-   ThreadLifeTracker() 
+   ThreadLifeTracker()
    {
       term_mtx.lock();
       ++num_threads;
@@ -60,12 +60,12 @@ void* handle_socket(void* sock_ptr) {
 
 
    while (true) {
-      if (listen(server_fd, 3) < 0) 
-      { 
-          perror("listen"); 
-          exit(EXIT_FAILURE); 
-      } 
-      
+      if (listen(server_fd, 3) < 0)
+      {
+          perror("listen");
+          exit(EXIT_FAILURE);
+      }
+
       term_mtx.lock();
       if (do_terminate) {
          term_mtx.unlock();
@@ -75,10 +75,10 @@ void* handle_socket(void* sock_ptr) {
 
 
       if ((sock = accept(server_fd, nullptr, nullptr)) < 0)
-      { 
-          perror("accept"); 
-          exit(EXIT_FAILURE); 
-      } 
+      {
+          perror("accept");
+          exit(EXIT_FAILURE);
+      }
 
 
       term_mtx.lock();
@@ -132,16 +132,16 @@ void* handle_socket_helper(void* sock_ptr) {
 }
 
 // Given dynamically allocated socket (int) that is sending parsing pages
-// delete will be called on the socket 
+// delete will be called on the socket
 // and the socket will be closed
 void handle_send(int sock) {
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
-   
-   for (int i = 0; i < pages.size(); ++i) {
-      Vector<SizeT> to_add_to_frontier = 
+
+   for (SizeT i = 0; i < pages.size(); ++i) {
+      Vector<SizeT> to_add_to_frontier =
          UrlInfoTable::getTable().HandleParsedPage( std::move( pages[i] ) );
 
-      for (SizeT url_offset : to_add_to_frontier ) 
+      for (SizeT url_offset : to_add_to_frontier )
       {
          StringView url = UrlStore::getStore().getUrl( url_offset );
          Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
@@ -151,16 +151,16 @@ void handle_send(int sock) {
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls
-// delete will be called on the socket 
+// delete will be called on the socket
 // and the socket will be closed
 void handle_request(int sock) {
    Vector<SizeT> urls_to_parse = Frontier::getFrontier().getUrl();
    try {
       send_urls(sock, urls_to_parse);
    }
-   catch( SocketException& se) 
+   catch( SocketException& se)
    {
-      std::cerr << "SocketException in handle_request: " << se.what() 
+      std::cerr << "SocketException in handle_request: " << se.what()
          << " --- Will place urls back in to the frontier" << std::endl;
 
       for ( SizeT url_offset : urls_to_parse )

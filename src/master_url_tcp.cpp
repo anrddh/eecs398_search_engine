@@ -10,7 +10,7 @@ using namespace fb;
 void send_urls(int sock, const Vector<SizeT>& urls_to_parse) {
    send_int(sock, urls_to_parse.size());
 
-   for (int i = 0; i < urls_to_parse.size(); ++i) {
+   for (SizeT i = 0; i < urls_to_parse.size(); ++i) {
       send_uint64_t(sock, urls_to_parse[i]);
       send_str(sock, UrlStore::getStore().getUrl( urls_to_parse[ i ] ) );
    }

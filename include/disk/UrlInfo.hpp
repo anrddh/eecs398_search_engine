@@ -22,13 +22,13 @@ struct UrlInfo {
 
    // 'u' for unfinished, 'm' for currently modifying, 'p' for finished parsing
    // We are purposely avoiding enums since the value of the enum may differ on systems
-   std::atomic<char> state; 
+   std::atomic<char> state;
 };
 
 inline int findLast( fb::StringView Host, char c )
 {
    int last = -1;
-   for ( int i = 0;  i < Host.size( );  ++i )
+   for ( fb::SizeT i = 0;  i < Host.size( );  ++i )
       if ( Host[i] == c )
          last = i;
    return last;

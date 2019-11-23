@@ -25,7 +25,7 @@ void printFlag( const uint8_t flag )
 }
 
 
-int main ( int argc, char *argv[] ){
+int main (int, char **argv){
 
    // //ParsedUrl in_url(argv[1]);
 

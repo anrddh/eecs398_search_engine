@@ -81,7 +81,7 @@ void add_parsed( ParsedPage pp ) {
 }
 
 int open_socket_to_master() {
-   int sock = 0, valread;
+   int sock = 0;
    struct sockaddr_in serv_addr;
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
    {
@@ -113,11 +113,11 @@ void* talk_to_master_helper(int sock) {
    while (true) {
       // Send the parsed info
       parsed_m.lock();
-      if (urls_parsed.empty()) 
+      if (urls_parsed.empty())
       {
          parsed_m.unlock();
-      } 
-      else 
+      }
+      else
       {
          Vector< ParsedPage > local; // first val url, second val parsed page
          local.swap(urls_parsed);
@@ -127,7 +127,7 @@ void* talk_to_master_helper(int sock) {
 
       // Check if we should terminate
       // and terminate accordingly
-      if (shutting_down) 
+      if (shutting_down)
       {
          return nullptr;
       }
@@ -135,12 +135,12 @@ void* talk_to_master_helper(int sock) {
       send_char(sock, 'T');
       char terminate_state = recv_char(sock);
 
-      if ( terminate_state == 'T' ) 
+      if ( terminate_state == 'T' )
       {
          shutting_down = true;
          return nullptr;
-      } 
-      else if ( terminate_state != 'N' ) 
+      }
+      else if ( terminate_state != 'N' )
       {
          throw SocketException("Invalid terminate state");
       }
@@ -153,7 +153,7 @@ void* talk_to_master_helper(int sock) {
          to_parse_m.unlock();
          Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
          to_parse_m.lock();
-         for ( int i = 0; i < urls.size(); ++i )
+         for ( fb::SizeT i = 0; i < urls.size(); ++i )
          {
             urls_to_parse.push( std::move( urls[i] ) );
          }
@@ -174,7 +174,7 @@ void* talk_to_master(void*) {
       try {
          return talk_to_master_helper(sock);
       }
-      catch (SocketException& se) 
+      catch (SocketException& se)
       {
          std::cerr << "SocketException in talk to master. Error: " << se.what() << std::endl;
       }
@@ -213,7 +213,7 @@ void send_parsed_pages(int sock, Vector<ParsedPage> pages_to_send) {
       pages_to_send.popBack();
       send_uint64_t( sock, page.url_offset ); // convert back to
       send_int( sock, page.links.size() );
-      for ( int j = 0; j < page.links.size(); ++j) {
+      for ( fb::SizeT j = 0; j < page.links.size(); ++j) {
          send_str( sock, page.links[j].first );
          send_str( sock, page.links[j].second );
       }

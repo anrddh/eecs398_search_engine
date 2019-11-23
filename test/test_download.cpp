@@ -13,7 +13,7 @@ void writeVisitedUrls(fb::String url)
     std::ofstream outfile;
 
     outfile.open("visted_urls.txt", std::ios_base::app);
-    outfile << url << "\n"; 
+    outfile << url << "\n";
 }
 
 fb::String readString( fb::String filename )
@@ -33,7 +33,7 @@ void saveString( const fb::String &content, fb::String filename )
    outfile.close();
 }
 
-int main( int argc, char *argv[ ] ) 
+int main()
     {
    std::cout << "sadsa" << std::endl;
     fb::Queue<fb::String> urls;
@@ -55,11 +55,11 @@ int main( int argc, char *argv[ ] )
         fb::String content;
      fb::String filename = "htmls_eecs482/";
 
-     
-     fb::String result;
-      
 
-     for(int i = 0; i < url.size(); ++i)
+     fb::String result;
+
+
+     for(fb::SizeT i = 0; i < url.size(); ++i)
          {
          if(isalnum(url[i]))
              filename += url[i];
@@ -100,7 +100,7 @@ int main( int argc, char *argv[ ] )
    //  fb::String url = argv[ 1 ];
    // std::cout << "Try downloading html file" << std::endl;
    // auto ht = HTTPDownloader();
-   // try 
+   // try
    //    {
    //    auto a = ht.PrintHtml( url );
    //    std::cout << a << std::endl;
@@ -112,7 +112,7 @@ int main( int argc, char *argv[ ] )
 
    // std::cout << "Try downloading txt file" << std::endl;
    // auto htt = HTTPDownloader();
-   // try 
+   // try
    //    {
    //    auto a = htt.PrintPlainTxt( url );
    //    std::cout << a << std::endl;

@@ -405,8 +405,8 @@ private:
 			fb::SizeT new_index = htmlTag.find( "en"_sv, index );
 			if ( new_index == fb::StringView::npos )
 				new_index = htmlTag.find( "EN"_sv, index );
-				if ( new_index == fb::StringView::npos )
-					throw ParserException( "language not english" );
+			if ( new_index == fb::StringView::npos )
+				throw ParserException( "language not english" );
 			}
 		}
 

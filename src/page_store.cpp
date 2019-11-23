@@ -83,7 +83,6 @@ void * runBin(void *){
     fb::SizeT Index = FileIndex.fetch_add(1);
     PageBin Bin(Prefix + fb::toString(Index), false);
     fb::SizeT i = 0;
-    fb::SizeT EndOffset = 0;
     for( ; i < numPages; ++i){
         QueueMtx.lock();
         while (PagesToAdd.empty())
@@ -91,7 +90,7 @@ void * runBin(void *){
         Page P = std::move(PagesToAdd.front());
         PagesToAdd.pop();
         QueueMtx.unlock();
-        EndOffset = Bin.addPage(P.first, P.second);
+        Bin.addPage(P.first, P.second);
     }
 
     if (ftruncate(Bin.file_descriptor(), Bin.size() + 32)) {

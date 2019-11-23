@@ -187,6 +187,8 @@ private:
          url_info[url_info_pair.second].state = 'u';
          url_info[url_info_pair.second].UrlOffset = url_offset;
 
+         std::cout << "In add link: " << link << " " << url_info_pair.first << std::endl;
+
          // TODO this is just for debugging
          // delete below
          assert( info_hash.first[ link ] == url_info_pair.second );

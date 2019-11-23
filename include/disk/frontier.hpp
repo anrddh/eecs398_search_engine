@@ -25,6 +25,8 @@ public:
 
     fb::Vector<fb::SizeT> getUrl( );
 
+    fb::SizeT size() const;
+
 private:
     fb::Mutex localSeedM;
     fb::Mutex toParseM;
@@ -39,6 +41,10 @@ public:
     static Frontier & getFrontier();
 
     void addUrl(const FrontierUrl &url);
+
+    // Note that this prints the estimate for the current size
+    // but due to race conditions, it might not be exact
+    fb::SizeT size() const;
 
     fb::Vector<fb::SizeT> getUrl() const;
 

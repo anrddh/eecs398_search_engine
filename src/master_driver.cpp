@@ -159,6 +159,7 @@ int main(int argc, char **argv) try {
                cout << url << "\t\t\t\toffset: " << url_offset << '\n';
             }
         } else if (firstWord == "status"_sv) {
+           cout << "Frontier size: " << frontier.size() << endl;
 
         } else if (firstWord == "shutdown"_sv) {
 

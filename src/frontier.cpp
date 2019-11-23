@@ -42,6 +42,11 @@ void FrontierBin::addUrl(const FrontierUrl &url) {
     toParse.pushBack( url );
 }
 
+SizeT FrontierBin::size() const 
+{
+   return toParse.size();
+}
+
 Vector<SizeT> FrontierBin::getUrl( ) {
     SizeT rand_num[ NUM_TRY ];
     localSeedM.lock( );
@@ -103,6 +108,15 @@ void Frontier::init(String prefix, bool init) {
 
 Frontier & Frontier::getFrontier() {
     return *ptr;
+}
+
+SizeT Frontier::size() const {
+   SizeT total = 0;
+   for (SizeT i = 0; i < NumFrontierBins; ++i) 
+   {
+      total += reinterpret_cast<FrontierBin* >(frontiers + i * sizeof(FrontierBin))->size();
+   }
+   return total;
 }
 
 void Frontier::addUrl(const FrontierUrl &url) {

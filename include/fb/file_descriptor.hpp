@@ -26,7 +26,7 @@ namespace fb {
         FileDesc() = default;
 
         FileDesc(int fd_in) : fd(fd_in) {
-            std::cout << "FileDesc got" << fd_in << std::endl; 
+            std::cout << "FileDesc got" << fd_in << std::endl;
             if (fd_in <= -1)
                 throw ConstructionError("Invalid file descriptor.");
         }
@@ -40,7 +40,7 @@ namespace fb {
             return *this;
         }
 
-        FileDesc(FileDesc &rhs) {
+        FileDesc(const FileDesc &rhs) {
             auto new_desc = dup(rhs.fd);
             if (new_desc == -1)
                 throw ConstructionError("Failed to dup.");
@@ -54,7 +54,7 @@ namespace fb {
 
         ~FileDesc() {
            if ( fd != -1) {
-            std::cout << "closing " << fd << std::endl; 
+            std::cout << "closing " << fd << std::endl;
             close(fd);
            }
         }

@@ -33,9 +33,13 @@ class PageBin {
 public:
     PageBin(fb::StringView filename, bool init);
 
-    void addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page);
+    fb::SizeT addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page);
 
     fb::Pair<fb::String, fb::Vector<WordDescriptors>> getPage(fb::SizeT offset);
+
+    fb::FileDesc file_descriptor() const {
+        return Pages.file_descriptor();
+    }
 
 private:
     static constexpr fb::SizeT numPages = 5; //TODO: small for testing, raise for real deal

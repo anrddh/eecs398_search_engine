@@ -48,8 +48,7 @@ public:
 
     // move assignment operator
     constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
-        owner = rhs.release();
-        deleter = rhs.getDeleter();
+        swap(rhs):
         return *this;
     }
 
@@ -113,7 +112,7 @@ public:
 private:
     static constexpr bool defConstPtr =
         std::is_default_constructible_v<DeleterType> &&
-        IsPointerV<DeleterType>;
+        !IsPointerV<DeleterType>;
 
 public:
     constexpr UniquePtr(EnableIfT<defConstPtr, int> = 0) noexcept {}
@@ -137,8 +136,8 @@ public:
 
     // move assignment operator
     [[nodiscard]] constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
-        owner = rhs.release();
-        deleter = rhs.getDeleter();
+        swap(rhs);
+        return *this;
     }
 
     ~UniquePtr() noexcept {

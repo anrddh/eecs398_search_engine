@@ -29,7 +29,8 @@ PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOf
     PagesBeginOffset = Pages.size();
 }
 
-void PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page){
+//returns the end offset
+fb::SizeT PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page){
 
     //copy the page data in
     auto idx = Pages.reserve(page.first.size() + 1);
@@ -47,6 +48,8 @@ void PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordD
     //increment the page counter
     ++PageCount;
     memcpy(Pages.data() + PageCountOffset, &PageCount, sizeof(PageCount));
+
+    return idy + page.second.size();
 }
 
 void initializeFileName(fb::String fname){
@@ -70,8 +73,10 @@ void * runBin(void *){
     NumThreads.fetch_add(1);
     fb::SizeT Index = FileIndex;
     FileIndex.fetch_add(1);
+    // std::cout << "PrefiX: " << Prefix << std::endl;
     PageBin Bin(Prefix + fb::toString(Index), false);
     fb::SizeT i = 0;
+    fb::SizeT EndOffset = 0;
     for( ; i < numPages; ++i){
         QueueMtx.lock();
         while (PagesToAdd.empty())
@@ -79,8 +84,9 @@ void * runBin(void *){
         Page P = std::move(PagesToAdd.front());
         PagesToAdd.pop();
         QueueMtx.unlock();
-        Bin.addPage(P.first, P.second);
+        EndOffset = Bin.addPage(P.first, P.second);
     }
+    ftruncate(Bin.file_descriptor(), EndOffset);
     NumThreads.fetch_sub(1);
     return nullptr;
 }

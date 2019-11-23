@@ -32,9 +32,10 @@ template <typename T>
 class DiskVec {
 public:
     DiskVec(fb::StringView fname, bool init = false)  {
-        fb::FileDesc fd = open(fname.data(),
+        fb::FileDesc f = open(fname.data(),
                                O_RDWR | O_CREAT,
                                S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+        fd = f;
 
         if (ftruncate(fd, MAXFILESIZE))
             throw fb::Exception("SavedObj: Failed to truncate file.");
@@ -55,6 +56,10 @@ public:
 
     ~DiskVec() noexcept {
         munmap(static_cast<void *>(cursor), MAXFILESIZE);
+    }
+
+    fb::FileDesc file_descriptor() const noexcept {
+        return fd;
     }
 
     [[nodiscard]] constexpr T * data() const noexcept {
@@ -112,5 +117,6 @@ public:
 
 private:
     T *filePtr;
+    fb::FileDesc fd;
     std::atomic<fb::SizeT> *cursor;
 };

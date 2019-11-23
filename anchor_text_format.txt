@@ -5,5 +5,15 @@ This file gives the specification for how that data is stored.
 - (sizeof(std::atomic<fb::SizeT>)) Bytes: Cursor
     *These bytes are reserved by the atomic cursor which is used to write to the file.
     *This should be 8 bytes, but may depend on implementation of std::atomic.
-The rest of the file is an array of the following:
-- TODO: Finish writing this.
+The rest of the file is an array of the following structures:
+- 64 Bytes: Chunk (56 bytes text, 8 bytes offset)
+    *The first 56 bytes are anchor text corresponding to some URL.
+    *The final 8 bytes are an offset into the array of chunks, which refers to
+     the next chunk which contains anchor text corresponding to the same URL.
+    *Additional notes: We do not distinguish the boundary between different anchor
+     text for the same URL. For example, if two different anchor texts "Hello!"
+     and "World!" are both discovered for the same URL, the resulting text in the
+     anchor text file may contain "Hello! World!", "World! Hello!", or "Hello!"
+     and "World!" may even be separated by other anchor text.
+    *The purpose of chunking the anchor text into a fixed size is so that multiple
+     threads can write concurrently to this file, by advancing a shared atomic cursor.

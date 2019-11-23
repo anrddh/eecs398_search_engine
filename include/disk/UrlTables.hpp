@@ -157,7 +157,7 @@ private:
    fb::SizeT add_link(fb::StringView link, fb::StringView anchor_text ) 
    {
       fb::SizeT hash = hasher( link );
-      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hash 
+      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash 
          = info_hashes[hash % NumBins];
 
       fb::AutoLock<fb::Mutex> l(info_hash.second);
@@ -186,6 +186,10 @@ private:
          url_info_pair.second = url_info.reserve(1);
          url_info[url_info_pair.second].state = 'u';
          url_info[url_info_pair.second].UrlOffset = url_offset;
+
+         // TODO this is just for debugging
+         // delete below
+         assert( info_hash.first[ link ] == url_info_pair.second );
       }
 
       url_info[url_info_pair.second].AnchorTextOffsets = 

@@ -35,7 +35,6 @@ inline int findLast( fb::StringView Host, char c )
 }
 
 inline fb::SizeT RankUrl(fb::StringView Url){
-   std::cout << "RankUrl: " << Url << std::endl;
    fb::SizeT rank = 0;
 
    fb::String url_str( Url.data( ), Url.size( ) );
@@ -50,11 +49,9 @@ inline fb::SizeT RankUrl(fb::StringView Url){
    int start = findLast( parsed_url.Host, '.' );
 
    fb::StringView Domain;
-   std::cout << "Host: " << parsed_url.Host << std::endl;
    if ( start != -1 )
    {
       Domain = parsed_url.Host.substr( start + 1 );
-      std::cout << "Domain: " << Domain << std::endl;
    }
 
    if ( Domain.compare("gov") == 0 ) {

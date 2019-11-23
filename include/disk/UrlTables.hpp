@@ -54,21 +54,19 @@ public:
        // if this url was never seen before, then add the url
        // to disk_vec. Then construct a new url_info in disk_vec.
        // Then add the url to the frontier (check robots.txt first)
-      fb::SizeT hash = hasher( UrlStore::getStore().getUrl(pp.url_offset) );
+      fb::StringView url = 
+               UrlStore::getStore().getUrl( pp.url_offset );
+      fb::SizeT hash = hasher( url );
       fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash 
          = info_hashes[hash % NumBins];
 
       info_hash.second.lock();
 
       // This we default initialize 
-      fb::StringView url = 
-               UrlStore::getStore().getUrl( pp.url_offset );
-      fb::Pair<fb::StringView&, fb::SizeT&> url_info_pair = 
-         info_hash.first.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
-               url);
+      fb::SizeT& url_info_offset = info_hash.first[ url ];
 
       // This means that we have never seen before
-      if (url_info_pair.second == 0)
+      if ( url_info_offset == 0)
       {
          std::cerr << "Error: HandleParsedPage has never seen url offset of " 
             << pp.url_offset << std::endl;
@@ -76,7 +74,7 @@ public:
       }
 
       // url info object associated with this url
-      UrlInfo& info = url_info[ url_info_pair.second ];
+      UrlInfo& info = url_info[ url_info_offset ];
 
       assert( info.UrlOffset == 0 || info.UrlOffset == pp.url_offset );
       info.UrlOffset = pp.url_offset;
@@ -116,7 +114,6 @@ public:
 
       info_hash.second.lock();
       info.AdjListOffsets = AdjStore::getStore().addList( adj_list );
-      info_hashes[hash % NumBins].second.unlock();
       info.state = 'p'; // set the page to be parsed
       info_hash.second.unlock();
 
@@ -131,14 +128,16 @@ private:
    // Note that the lock will not be grabbed when the constructor is running
    UrlInfoTable() : url_info(UrlInfoTableName) 
    {
-      for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size(); ++url_info_offset )
+      for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size(); 
+            ++url_info_offset )
       {
          if ( url_info[ url_info_offset ].UrlOffset == 0 )
          {
             continue;
          }
 
-         fb::StringView url = UrlStore::getStore().getUrl( url_info[ url_info_offset ].UrlOffset );
+         fb::StringView url = UrlStore::getStore().getUrl( 
+               url_info[ url_info_offset ].UrlOffset );
          std::cout << "in url info table ctor add url " << url << std::endl;
          fb::SizeT hash = hasher( url );
 
@@ -187,6 +186,7 @@ private:
          url_info[url_info_pair.second].state = 'u';
          url_info[url_info_pair.second].UrlOffset = url_offset;
 
+         // Debug msg
          std::cout << "In add link: " << link << " " << url_info_pair.first << std::endl;
 
          // TODO this is just for debugging

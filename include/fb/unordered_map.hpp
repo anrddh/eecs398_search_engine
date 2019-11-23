@@ -103,8 +103,9 @@ public:
 
     //Returns an iterator to the first element in the map
     Iterator begin() {
-        int count = 0;
-        while (count < buckets.size() && buckets[count].status != Status::Filled) count++;
+        SizeT count = 0;
+        while (count < buckets.size() && buckets[count].status != Status::Filled)
+            ++count;
         return Iterator(&buckets, count);
     }
 

@@ -15,7 +15,10 @@
 #include <string.h>
 #include <errno.h>
 
-constexpr fb::SizeT numPages = 500; //TODO: small for testing, raise for real deal. this is the number of pages per file
+// TODO: small for testing, raise for real deal. this is the number of
+// pages per file
+constexpr fb::SizeT numPages = 500;
+
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;
 std::atomic<fb::SizeT> FileIndex(0);
@@ -32,8 +35,9 @@ PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOf
 }
 
 //returns the end offset
-fb::SizeT PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page){
-
+fb::SizeT PageBin::addPage(fb::SizeT UrlOffset,
+                           fb::Pair<fb::String,
+                           fb::Vector<WordDescriptors>> page){
     //copy the page data in
     auto idx = Pages.reserve(page.first.size() + 1);
     page.first.copy(Pages.data() + idx, page.first.size());
@@ -42,10 +46,13 @@ fb::SizeT PageBin::addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<
     //copy the vector in
     auto idy = Pages.insert(page.second.begin(), page.second.end());
 
-    //put in the page header
-    //Note, we add sizeof(std::atomic<fb::SizeT>) to the in-file offsets, due to the cursor at the beginning of the file
-    PageHeader header = { idx + sizeof(std::atomic<fb::SizeT>), idy + sizeof(std::atomic<fb::SizeT>), UrlOffset };
-    memcpy(Pages.data() + PageHeadersOffset + PageCount * sizeof(PageHeader), &header, sizeof(PageHeader));
+    //put in the page header Note, we add
+    //sizeof(std::atomic<fb::SizeT>) to the in-file offsets, due to
+    //the cursor at the beginning of the file
+    PageHeader header = { idx + sizeof(std::atomic<fb::SizeT>),
+        idy + sizeof(std::atomic<fb::SizeT>), UrlOffset };
+    memcpy(Pages.data() + PageHeadersOffset + PageCount * sizeof(PageHeader),
+           &header, sizeof(PageHeader));
 
     //increment the page counter
     ++PageCount;
@@ -74,9 +81,9 @@ void addPage(Page page){
 void * runBin(void *){
     NumThreads.fetch_add(1);
     fb::SizeT Index = FileIndex.fetch_add(1);
-    // std::cout << "PrefiX: " << Prefix << std::endl;
     PageBin Bin(Prefix + fb::toString(Index), false);
     fb::SizeT i = 0;
+    fb::SizeT EndOffset = 0;
     for( ; i < numPages; ++i){
         QueueMtx.lock();
         while (PagesToAdd.empty())
@@ -90,7 +97,7 @@ void * runBin(void *){
     if (ftruncate(Bin.file_descriptor(), Bin.size() + 32)) {
         fb::String err = fb::String("Failed to truncate file: ") +
             fb::String(strerror(errno));
-        throw Error(err);
+        throw PageBin::Error(err);
     }
 
     NumThreads.fetch_sub(1);

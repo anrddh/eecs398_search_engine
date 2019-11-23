@@ -414,26 +414,31 @@ private:
 		String url = extractURL( tagStartIndex, tagEndIndex );
 		String anchorText = content.substr( tagEndIndex, index - tagEndIndex );
 
-		// add anchor text to parsed result
-		addToResult( ' ' );
-
-		SizeT parsedIndex = parsedResult.size( );
-		for ( const auto i : anchorText )
-			addToResult( i );
-		addToResult( ' ' );
-
-		String normalizedTest = parsedResult.substr( parsedIndex );
-
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if ( url.size( ) )
+		if ( !url.startsWith( "mailto:" ) && !url.startsWith( "tel:" ) )
 			{
-			if( url[ 0 ] != '#' )
-				{
-				if( url[ 0 ] == '/' )
-					url = domain + url;
+			// add anchor text to parsed result
+			addToResult( ' ' );
 
-				urlAnchorText[ url ] += " " + normalizedTest;
+			SizeT parsedIndex = parsedResult.size( );
+			for ( const auto i : anchorText )
+				addToResult( i );
+			addToResult( ' ' );
+
+			String normalizedTest = parsedResult.substr( parsedIndex );
+
+			if ( url.size( ) )
+				{
+				if( url[ 0 ] != '#' )
+					{
+					if( url[ 0 ] == '/' )
+						url = domain + url;
+					else if ( url[ 0 ] == '.' )
+						url = domain + "/" + url;
+
+					urlAnchorText[ url ] += " " + normalizedTest;
+					}
 				}
 			}
 

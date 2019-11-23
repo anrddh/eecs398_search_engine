@@ -135,8 +135,8 @@ int main(int argc, char **argv) try {
                }
 
                std::cout << "Got url " << url << " stored it as " << UrlStore::getStore().getUrl( url_offset ) << std::endl;
-               //fb::SizeT rank = RankUrl( UrlStore::getStore().getUrl( url_offset ) );
-               frontier.addUrl({ url_offset, 0 });
+               fb::SizeT rank = RankUrl( UrlStore::getStore().getUrl( url_offset ) );
+               frontier.addUrl({ url_offset, rank });
                cout << url << "\t\t\t\toffset: " << url_offset << '\n';
             }
         } else if (firstWord == "status"_sv) {

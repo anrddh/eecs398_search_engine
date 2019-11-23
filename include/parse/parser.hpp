@@ -416,7 +416,7 @@ private:
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if ( !url.startsWith( "mailto:" ) && !url.startsWith( "tel:" ) )
+		if ( !url.startsWith( "mailto:" ) && !url.startsWith( "tel:" ) && !url.startsWith( '?' ) )
 			{
 			// add anchor text to parsed result
 			addToResult( ' ' );

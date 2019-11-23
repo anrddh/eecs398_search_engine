@@ -106,6 +106,7 @@ int main( int, char **argv )
    while ( !should_shutdown( ) )
 	  endCV.wait( endLock );
 
+   std::cout << "Shutting down" << std::endl;
    endLock.unlock( );
 
    for ( int i = 0;  i < NUM_THREAD;  ++i )

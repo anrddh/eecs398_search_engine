@@ -71,8 +71,7 @@ void addPage(Page page){
 
 void * runBin(void *){
     NumThreads.fetch_add(1);
-    fb::SizeT Index = FileIndex;
-    FileIndex.fetch_add(1);
+    fb::SizeT Index = FileIndex.fetch_add(1);
     // std::cout << "PrefiX: " << Prefix << std::endl;
     PageBin Bin(Prefix + fb::toString(Index), false);
     fb::SizeT i = 0;
@@ -86,7 +85,7 @@ void * runBin(void *){
         QueueMtx.unlock();
         EndOffset = Bin.addPage(P.first, P.second);
     }
-    ftruncate(Bin.file_descriptor(), EndOffset);
+    ftruncate(Bin.file_descriptor(), Bin.size() + 32);
     NumThreads.fetch_sub(1);
     return nullptr;
 }

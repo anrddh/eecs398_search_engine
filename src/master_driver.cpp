@@ -2,6 +2,8 @@
 #include <disk/frontier.hpp>
 #include <disk/UrlTables.hpp>
 #include <disk/UrlInfo.hpp>
+#include <disk/anchor_store.hpp>
+#include <disk/adj_store.hpp>
 
 #include <fb/stddef.hpp>
 #include <fb/file_descriptor.hpp>
@@ -38,6 +40,8 @@ constexpr auto DriverPrompt = ">> ";
 constexpr auto UsageHint =
     "Usage: ./MasterDriver <port> [PARSE:] []\n"_sv;
 constexpr auto UrlStoreFileName = "/tmp/urlstore.file"_sv;
+constexpr auto AnchorStoreFileName = "/tmp/anchorstore.file"_sv;
+constexpr auto AdjStoreFileName = "/tmp/adjstore.file"_sv;
 
 template <typename T>
 struct FreeDeleter { void operator()(char *p) { free(p); } };
@@ -90,6 +94,8 @@ FileDesc parseArguments( int argc, char **argv );
 int main(int argc, char **argv) try {
     UrlStore::init(UrlStoreFileName, false);
     Frontier::init("/tmp/frontier-bin.", false);
+    AnchorStore::init(AnchorStoreFileName);
+    AdjStore::init(AdjStoreFileName, false);
 
     FileDesc sock = parseArguments( argc, argv );
     std::cout << "main got socket" << sock << std::endl;

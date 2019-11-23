@@ -31,11 +31,14 @@ constexpr fb::SizeT MAXFILESIZE = 0x2000000;
 template <typename T>
 class DiskVec {
 public:
-    DiskVec(fb::StringView fname, bool init = false)  {
-        fb::FileDesc f = open(fname.data(),
-                               O_RDWR | O_CREAT,
-                               S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
-        fd = f;
+    DiskVec(fb::StringView fname, bool init = false) : fd(open(fname.data(),
+                           O_RDWR | O_CREAT,
+                           S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH))  {
+        // fb::FileDesc fd = open(fname.data(),
+        //                        O_RDWR | O_CREAT,
+        //                        S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+
+
 
         if (ftruncate(fd, MAXFILESIZE))
             throw fb::Exception("SavedObj: Failed to truncate file.");
@@ -58,7 +61,7 @@ public:
         munmap(static_cast<void *>(cursor), MAXFILESIZE);
     }
 
-    fb::FileDesc file_descriptor() const noexcept {
+    int file_descriptor() const {
         return fd;
     }
 

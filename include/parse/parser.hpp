@@ -105,7 +105,7 @@ public:
 private:
 	String getSpecialCharacter( )
 		{
-		try 
+		try
 			{
 			return characterConversionMap.at( specialCharacterString );
 			}
@@ -364,7 +364,7 @@ private:
 			return seekSubstr( i , "-->" );
 
 		String tagName;
-		for ( ;  content[ i ] != ' ' 
+		for ( ;  content[ i ] != ' '
 				&& content[ i ] != '>' && i < content.size( );  ++i )
 			tagName += tolower( content[ i ] );
 
@@ -376,7 +376,7 @@ private:
 			}
 
 		size_t last_index = skipSpacesBackward( i - 1 );
-		
+
 		// not self closing tag
 		if ( content[ last_index ] != '/' )
 			{
@@ -398,7 +398,7 @@ private:
 	void handleHTML( fb::SizeT start, fb::SizeT end ) const
 		{
 		fb::StringView htmlTag( content.data( ) + start, end - start );
-		std::cout << htmlTag << std::endl;
+		// std::cout << htmlTag << std::endl;
 		fb::SizeT index = htmlTag.find( "lang"_sv );
 		if ( index != fb::StringView::npos )
 			{

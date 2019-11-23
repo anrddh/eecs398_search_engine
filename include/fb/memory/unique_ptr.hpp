@@ -48,7 +48,7 @@ public:
 
     // move assignment operator
     constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
-        swap(rhs):
+        swap(rhs);
         return *this;
     }
 

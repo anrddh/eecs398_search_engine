@@ -97,7 +97,7 @@ void * runBin(void *){
     if (ftruncate(Bin.file_descriptor(), Bin.size() + 32)) {
         fb::String err = fb::String("Failed to truncate file: ") +
             fb::String(strerror(errno));
-        throw PageBin::Error(err);
+        throw fb::Exception(err);
     }
 
     NumThreads.fetch_sub(1);

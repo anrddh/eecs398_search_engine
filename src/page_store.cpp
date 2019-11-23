@@ -85,7 +85,7 @@ void * runBin(void *){
         QueueMtx.unlock();
         EndOffset = Bin.addPage(P.first, P.second);
     }
-    ftruncate(Bin.file_descriptor(), EndOffset);
+    ftruncate(Bin.file_descriptor(), Bin.size() + 32);
     NumThreads.fetch_sub(1);
     return nullptr;
 }

@@ -4,6 +4,7 @@
 #include <fb/unordered_set.hpp>
 #include <fb/string.hpp>
 #include <fb/utility.hpp>
+#include <fb/file_descriptor.hpp>
 
 #include <iostream>
 
@@ -210,11 +211,12 @@ class ConnectionWrapper
    {
    public:
       ParsedUrl &url;
-      int socketFD;
+      // int socketFD;
+      fb::FileDesc socketFD;
 
       // http connection
       ConnectionWrapper( ParsedUrl &url_in )
-      : url(url_in), socketFD( -1 )
+      : url(url_in)
          {
          // Get the host address
          struct addrinfo *address, hints;
@@ -229,10 +231,17 @@ class ConnectionWrapper
             recordFailedLink( "getaddrResult" );
 
          // Create a TCP/IP socket
-         socketFD = socket( address->ai_family,
-               address->ai_socktype, address->ai_protocol );
-         if ( socketFD == -1 )
+         try
+            {
+            socketFD = fb::FileDesc( socket( address->ai_family,
+               address->ai_socktype, address->ai_protocol ) );
+            }
+         catch ( fb::FileDesc::ConstructionError & e )
+            {
             recordFailedLink( "socket" );
+            }
+         // if ( socketFD == -1 )
+            // recordFailedLink( "socket" );
 
          // Connect the socket to the host address
          int connectResult = connect( socketFD,
@@ -256,8 +265,6 @@ class ConnectionWrapper
 
       virtual ~ConnectionWrapper( )
          {
-         if ( socketFD != -1 )
-            close( socketFD );
          }
 
       virtual int read( char *buffer )

@@ -22,6 +22,7 @@ void *parsePages( void * )
 
 	  if ( urlPair.second.empty( ) )
          {
+         std::cout << "Got empty link" << std::endl;
          endCV.signal();
          return nullptr;
          }
@@ -54,6 +55,7 @@ void *parsePages( void * )
    		{
          }
       }
+   std::cout << "True evaluating to false?" << std::endl;
    return nullptr;
    }
 

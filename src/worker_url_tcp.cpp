@@ -24,8 +24,8 @@ int master_port;
 // Constantly talks to master
 void* talk_to_master(void*);
 
-void set_master_ip( const String& master_ip_, int master_port_ ) {
-   master_ip = master_ip_;
+void set_master_ip( StringView master_ip_, int master_port_ ) {
+   master_ip = String(master_ip_.data(), master_ip_.size());
    master_port = master_port_;
    Thread t(talk_to_master, nullptr);
    t.detach();

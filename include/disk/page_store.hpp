@@ -37,8 +37,12 @@ public:
 
     fb::Pair<fb::String, fb::Vector<WordDescriptors>> getPage(fb::SizeT offset);
 
-    fb::FileDesc file_descriptor() const {
+    int file_descriptor() const {
         return Pages.file_descriptor();
+    }
+
+    fb::SizeT size(){
+        return Pages.size();
     }
 
 private:

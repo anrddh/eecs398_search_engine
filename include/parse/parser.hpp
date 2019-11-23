@@ -384,11 +384,27 @@ private:
 				i = handleAnchor( start_index, i + 1 );
 			else if ( tagName == "style" )
 				i = handleStyle( start_index );
+			else if ( tagName == "html" )
+				handleHTML( start_index, last_index );
 			else
 				setTag( tagName );
 			}
 
 		return i;
+		}
+
+	void handleHTML( fb::SizeT start, fb::SizeT end ) const
+		{
+		fb::StringView htmlTag( content.data( ) + start, end - start );
+		fb::SizeT index = htmlTag.find( "lang"_sv );
+		if ( index != fb::StringView::npos )
+			{
+			fb::SizeT new_index = htmlTag.find( "en"_sv, index );
+			if ( new_index == fb::StringView::npos )
+				new_index = htmlTag.find( "EN"_sv, index );
+				if ( new_index == fb::StringView::npos )
+					throw ParserException( "language not english" );
+			}
 		}
 
 	fb::SizeT handleStyle( fb::SizeT index ) const
@@ -416,7 +432,7 @@ private:
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if ( !url.startsWith( "mailto:" ) && !url.startsWith( "tel:" ) && !url.startsWith( '?' ) )
+		if ( !url.startsWith( "mailto:" ) && !url.startsWith( "tel:" ) && !url.startsWith( '?' ) && !url.startsWith( "ftp:" ) )
 			{
 			// add anchor text to parsed result
 			addToResult( ' ' );

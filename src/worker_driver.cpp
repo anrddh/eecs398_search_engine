@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-constexpr int NUM_THREAD = 100;
+constexpr int NUM_THREAD = 50;
 
 fb::Mutex endLock;
 fb::CV endCV;

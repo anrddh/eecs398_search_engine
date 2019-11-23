@@ -6,6 +6,7 @@
 #include <fb/unordered_map.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/stddef.hpp>
+#include <http/download_html.hpp>
 
 // #include "../../index/index_builder.hpp"
 //flags
@@ -37,9 +38,10 @@ class Parser
 public:
 	fb::UnorderedMap<String, String> urlAnchorText;
 	fb::Vector<uint8_t> wordFlags;
+	const ParsedUrl parsedUrl;
 
-	Parser( const String &content_in, const String &domain_in )
-	: domain( domain_in ), content( content_in ), inSpecialCharacter( false )
+	Parser( const String &content_in, const ParsedUrl parsedUrl_in )
+	:  parsedUrl( parsedUrl_in ), content( content_in ), inSpecialCharacter( false )
 	{
 		initializeConversionMap( );
 		initializeBoldTags( );
@@ -86,7 +88,7 @@ public:
 			}
 		catch ( const ParserException & e )
 			{
-			std::cerr << "Caught exception in " << domain << std::endl;
+			std::cerr << "Caught exception in " << parsedUrl.CompleteUrl << std::endl;
 			std::cerr << e.msg << std::endl;
 			}
 		}
@@ -432,7 +434,7 @@ private:
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if ( !url.startsWith( "mailto:" ) && !url.startsWith( "tel:" ) && !url.startsWith( '?' ) && !url.startsWith( "ftp:" ) )
+		if ( url.startsWith( "http://" ) || url.startsWith( "https://" ) || url.startsWith( '.' ) || url.startsWith( '/' ) )
 			{
 			// add anchor text to parsed result
 			addToResult( ' ' );
@@ -449,9 +451,14 @@ private:
 				if( url[ 0 ] != '#' )
 					{
 					if( url[ 0 ] == '/' )
-						url = domain + url;
+					{
+						if( url[ 1 ] == '/' )
+							url = parsedUrl.Service +  "://" + url;
+						else
+							url = parsedUrl.Service + "://" + parsedUrl.Host + url;
+					}
 					else if ( url[ 0 ] == '.' )
-						url = domain + "/" + url;
+						url = parsedUrl.Service + "://" + parsedUrl.Host + "/" + url;
 
 					urlAnchorText[ url ] += " " + normalizedTest;
 					}
@@ -696,8 +703,6 @@ void initializeConversionMap( )
 
 	fb::UnorderedMap<String, String> characterConversionMap;
 
-	// domain name of html page being parsed
-	const String domain;
 	// content of the html page to parse
 	const String & content;
 

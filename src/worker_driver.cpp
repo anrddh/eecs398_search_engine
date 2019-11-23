@@ -34,8 +34,7 @@ void *parsePages( void * )
 
          ParsedUrl url( downloader.finalUrl );
 
-         auto parser = fb::Parser( result,
-            url.Service + "://" + url.Host );
+         auto parser = fb::Parser( result, url );
 
          parser.parse( );
 

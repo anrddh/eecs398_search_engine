@@ -48,7 +48,7 @@ inline fb::SizeT RankUrl(fb::StringView Url){
    // fb::SizeT start = parsed_url.Host.find( '.' );
    int start = findLast( parsed_url.Host, '.' );
 
-   fb::StringView Domain;
+   fb::String Domain;
    if ( start != -1 )
    {
       Domain = parsed_url.Host.substr( start + 1 );

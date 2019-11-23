@@ -97,13 +97,32 @@ int main(int argc, char **argv) try {
     AnchorStore::init(AnchorStoreFileName);
     AdjStore::init(AdjStoreFileName, false);
 
+    auto &frontier = Frontier::getFrontier();
+
     FileDesc sock = parseArguments( argc, argv );
     std::cout << "main got socket" << sock << std::endl;
     Thread socket_handler(handle_socket, &sock );
 
+    ifstream file;
+    file.open("../etc/Seeds/newUrls.txt");
+
+    String url;
+    while (fb::getline(file, url)) {
+        fb::SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
+        if ( url_offset == 0) {
+            std::cout << "url " << url << " was already in UrlInfoTable" << std::endl;
+            continue;
+        }
+
+        std::cout << "Got url " << url << " stored it as " << UrlStore::getStore().getUrl( url_offset ) << std::endl;
+        //fb::SizeT rank = RankUrl( UrlStore::getStore().getUrl( url_offset ) );
+        frontier.addUrl({ url_offset, 0 });
+        cout << url << "\t\t\t\toffset: " << url_offset << '\n';
+    }
+
+
     while (true) {
         auto &urlStore = UrlStore::getStore();
-        auto &frontier = Frontier::getFrontier();
 
         auto buf = getReadline();
         if (!buf)

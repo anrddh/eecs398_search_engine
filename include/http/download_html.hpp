@@ -235,6 +235,8 @@ class ConnectionWrapper
             {
             socketFD = fb::FileDesc( socket( address->ai_family,
                address->ai_socktype, address->ai_protocol ) );
+            int set = 1;
+            setsockopt(socketFD, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {

@@ -58,7 +58,7 @@ public:
                UrlStore::getStore().getUrl( pp.url_offset );
       std::cout << "Handling parsed page " << url << "\n";
       for (const fb::Pair<fb::String, fb::String>& link : pp.links) {
-         std::cout << "\thas links " << link.first << "\n";
+         std::cout << "\thas " << link.first << "\n";
       }
 
       fb::SizeT hash = hasher( url );

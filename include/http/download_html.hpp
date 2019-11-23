@@ -364,7 +364,7 @@ class SSLWrapper : public ConnectionWrapper
               return -1;
           }
 
-          fb::SizeT ret = SSL_write( ssl, message.data( ), message.size( ) );
+          int ret = SSL_write( ssl, message.data( ), message.size( ) );
 
           /* Fetch generated SIGPIPE if write() failed with EPIPE.
            *

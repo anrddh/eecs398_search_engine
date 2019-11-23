@@ -60,7 +60,7 @@ namespace fb {
            }
         }
 
-        operator int() noexcept {
+        operator int() const noexcept {
             return fd;
         }
     };

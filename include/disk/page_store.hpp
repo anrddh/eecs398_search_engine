@@ -31,6 +31,8 @@ struct PageHeader {
 
 class PageBin {
 public:
+    struct Error : fb::Exception {};
+
     PageBin(fb::StringView filename, bool init);
 
     fb::SizeT addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page);

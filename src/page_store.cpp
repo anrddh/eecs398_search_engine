@@ -10,8 +10,10 @@
 #include <fb/string.hpp>
 #include <fb/mutex.hpp>
 
-#include <string.h> //strncpy
 #include <iostream>
+
+#include <string.h>
+#include <errno.h>
 
 constexpr fb::SizeT numPages = 500; //TODO: small for testing, raise for real deal. this is the number of pages per file
 fb::Mutex QueueMtx;
@@ -75,7 +77,6 @@ void * runBin(void *){
     // std::cout << "PrefiX: " << Prefix << std::endl;
     PageBin Bin(Prefix + fb::toString(Index), false);
     fb::SizeT i = 0;
-    fb::SizeT EndOffset = 0;
     for( ; i < numPages; ++i){
         QueueMtx.lock();
         while (PagesToAdd.empty())
@@ -85,7 +86,13 @@ void * runBin(void *){
         QueueMtx.unlock();
         EndOffset = Bin.addPage(P.first, P.second);
     }
-    ftruncate(Bin.file_descriptor(), Bin.size() + 32);
+
+    if (ftruncate(Bin.file_descriptor(), Bin.size() + 32)) {
+        fb::String err = fb::String("Failed to truncate file: ") +
+            fb::String(strerror(errno));
+        throw Error(err);
+    }
+
     NumThreads.fetch_sub(1);
     return nullptr;
 }

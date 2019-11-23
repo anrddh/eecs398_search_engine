@@ -5,6 +5,7 @@
 #include <fb/string.hpp>
 #include <fb/utility.hpp>
 #include <fb/file_descriptor.hpp>
+#include <fb/mutex.hpp>
 
 #include <iostream>
 
@@ -17,7 +18,12 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/syscall.h>
 #include <unistd.h>
+
+// extern fb::Mutex cerrLock;
+
+void recordFailedLink( fb::String msg );
 
 class ParsedUrl
    {
@@ -180,9 +186,9 @@ class BufferWriter
          }
    };
 
-struct ConnectionException 
+struct ConnectionException
    {
-   ConnectionException( const fb::String msg_ ) 
+   ConnectionException( const fb::String msg_ )
       : msg(msg_)
       {
       }
@@ -236,7 +242,7 @@ class ConnectionWrapper
             socketFD = fb::FileDesc( socket( address->ai_family,
                address->ai_socktype, address->ai_protocol ) );
             int set = 1;
-            setsockopt(socketFD, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+            setsockopt(socketFD, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {
@@ -254,16 +260,18 @@ class ConnectionWrapper
          freeaddrinfo( address );
          }
 
-      void recordFailedLink( fb::String msg )
-         {
-         // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
-         // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
-         //       url.CompleteUrl.size( ) + 1 );
-         // close( fd );
-         std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
-         std::cerr << "Failed at " << msg << std::endl;
-         throw ConnectionException( msg );
-         }
+      // void recordFailedLink( fb::String msg )
+      //    {
+      //    // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
+      //    // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
+      //    //       url.CompleteUrl.size( ) + 1 );
+      //    // close( fd );
+      //    // fb::AutoLock lock(cerrLock);
+      //    std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
+      //    std::cerr << "Failed at " << msg << std::endl;
+      //    std::cerr << syscall(SYS_gettid) << std::endl;
+      //    throw ConnectionException( msg );
+      //    }
 
       virtual ~ConnectionWrapper( )
          {
@@ -353,12 +361,12 @@ HTTPDownloader( )
    // GetMessage
    const fb::String GetGetMessage( const ParsedUrl &url )
       {
-      fb::String getMessage = 
+      fb::String getMessage =
             "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n" +
             "User-Agent: LinuxGetSsl/2.0 (Linux)\r\n" +
             "Accept: */*\r\n" +
             "Accept-Encoding: identity\r\n" +
-            "Connection: close\r\n\r\n"; 
+            "Connection: close\r\n\r\n";
       return getMessage;
       }
 
@@ -382,7 +390,7 @@ HTTPDownloader( )
 
    // Get header and parse relevant information
    // return apporpriate pair of DownloadStatus and redirectUrl
-   void parseHeader( ConnectionWrapper *connector, BufferWriter &writer, 
+   void parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
       const fb::StringView &acceptableType )
       {
       char buffer [ 10240 ];
@@ -407,7 +415,7 @@ HTTPDownloader( )
                {
                fb::SizeT firstSpace = header.find( ' ', 4 );
                fb::SizeT secondSpace = header.find( ' ', firstSpace );
-               response = header.substr(firstSpace + 1, 
+               response = header.substr(firstSpace + 1,
                      secondSpace - firstSpace - 1);
 
                const fb::StringView headerView( header );
@@ -419,7 +427,7 @@ HTTPDownloader( )
                if ( response[0] == '3' )
                   {
                   fb::SizeT startRedirectUrl = headerView.find( redirectIndicator );
-                  fb::SizeT endRedirectUrl = headerView.find( endLineIndicator, 
+                  fb::SizeT endRedirectUrl = headerView.find( endLineIndicator,
                         startRedirectUrl );
                   fb::String redirectUrl = header.substr(
                         startRedirectUrl + redirectIndicator.size( ),
@@ -464,7 +472,7 @@ HTTPDownloader( )
             {
             delete connector;
             }
-         
+
       };
 
    // Esatblish connection with the url and try to write to downloadedContent
@@ -571,3 +579,16 @@ HTTPDownloader( )
       }
 
 };
+
+inline void recordFailedLink( fb::String msg )
+   {
+   // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
+   // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
+   //       url.CompleteUrl.size( ) + 1 );
+   // close( fd );
+   // fb::AutoLock lock(cerrLock);
+   // std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
+   std::cerr << "Failed at " << msg << std::endl;
+   std::cerr << syscall(SYS_gettid) << std::endl;
+   throw ConnectionException( msg );
+   }

@@ -13,7 +13,7 @@
 #include <string.h> //strncpy
 #include <iostream>
 
-constexpr fb::SizeT numPages = 5; //TODO: small for testing, raise for real deal. this is the number of pages per file
+constexpr fb::SizeT numPages = 500; //TODO: small for testing, raise for real deal. this is the number of pages per file
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;
 std::atomic<fb::SizeT> FileIndex(0);

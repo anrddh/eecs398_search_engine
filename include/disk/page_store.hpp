@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    static constexpr fb::SizeT numPages = 5; //TODO: small for testing, raise for real deal
+    static constexpr fb::SizeT numPages = 500; //TODO: small for testing, raise for real deal
     fb::SizeT PageCount ;
     fb::SizeT PageCountOffset;
     fb::SizeT PageHeadersOffset;

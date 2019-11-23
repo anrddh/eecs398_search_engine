@@ -47,8 +47,9 @@ namespace fb {
             fd = new_desc;
         }
 
-        FileDesc & operator=(FileDesc rhs) {
-            fb::swap(fd, rhs.fd);
+        FileDesc & operator=(const FileDesc &rhs) {
+            auto temp = rhs;
+            fb::swap(fd, temp.fd);
             return *this;
         }
 

@@ -27,4 +27,4 @@ bool should_shutdown();
 // The thread that got an empty url should stop parsing
 // since there are no more urls that needs to be parsed
 fb::Pair<fb::SizeT, fb::String> get_url_to_parse();
-void add_parsed( ParsedPage pp ); // Use move ctor if possible
+void add_parsed( ParsedPage&& pp ); // Use move ctor if possible

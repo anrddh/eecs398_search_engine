@@ -1,12 +1,13 @@
 #pragma once
 
-#include "utility.hpp"
+#include <fb/utility.hpp>
+#include <debug.hpp>
+#include <disk/logfile.hpp>
 
 #include <exception>
 
 #include <unistd.h>
 
-#include <iostream> // TODO delete
 
 namespace fb {
 
@@ -26,7 +27,7 @@ namespace fb {
         FileDesc() = default;
 
         FileDesc(int fd_in) : fd(fd_in) {
-            std::cout << "FileDesc got" << fd_in << std::endl;
+            log(logfile, "FileDesc got", fd_in, '\n');
             if (fd_in <= -1)
                 throw ConstructionError("Invalid file descriptor.");
         }
@@ -54,10 +55,9 @@ namespace fb {
         }
 
         ~FileDesc() {
-           if ( fd != -1) {
-            std::cout << "closing " << fd << std::endl;
-            close(fd);
-           }
+            if ( fd != -1) {
+                close(fd);
+            }
         }
 
         operator int() const noexcept {

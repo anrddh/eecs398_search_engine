@@ -3,8 +3,13 @@
 #include <fb/stddef.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/string.hpp>
+#include <fb/string_view.hpp>
 #include <fb/utility.hpp>
 #include <fb/file_descriptor.hpp>
+#include <fb/mutex.hpp>
+
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 #include <iostream>
 
@@ -17,13 +22,17 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 // Signal handling
 #include <sys/signal.h>
+#include <signal.h>
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
+
+void recordFailedLink( fb::String msg );
 
 class ParsedUrl
    {
@@ -79,13 +88,11 @@ class ParsedUrl
          };
 
       // print function for debugging
-      void print( ) const
-         {
-         std::cout << "Complete Url = " << CompleteUrl << std::endl;
-         std::cout << "Service = " << Service
-               << ", Host = " << Host << ", Port = " << Port
+      void print( ) const {
+          log("Complete Url = ", CompleteUrl, '\n', "Service = ", Service,
+              ", Host = ", Host, ", Port = ", Port,
                << ", Path = " << Path << std::endl;
-         }
+      }
    };
 
 // Default port for https
@@ -188,8 +195,8 @@ class BufferWriter
 
 struct ConnectionException
    {
-   ConnectionException( const fb::String msg_ )
-      : msg(msg_)
+   ConnectionException( fb::String msg_ )
+       : msg(std::move(msg_))
       {
       }
 
@@ -260,16 +267,18 @@ class ConnectionWrapper
          freeaddrinfo( address );
          }
 
-      void recordFailedLink( fb::String msg )
-         {
-         // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
-         // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
-         //       url.CompleteUrl.size( ) + 1 );
-         // close( fd );
-         std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
-         std::cerr << "Failed at " << msg << std::endl;
-         throw ConnectionException( msg );
-         }
+      // void recordFailedLink( fb::String msg )
+      //    {
+      //    // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
+      //    // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
+      //    //       url.CompleteUrl.size( ) + 1 );
+      //    // close( fd );
+      //    // fb::AutoLock lock(cerrLock);
+      //    std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
+      //    std::cerr << "Failed at " << msg << std::endl;
+      //    std::cerr << syscall(SYS_gettid) << std::endl;
+      //    throw ConnectionException( msg );
+      //    }
 
       virtual ~ConnectionWrapper( )
          {
@@ -304,7 +313,7 @@ class SSLWrapper : public ConnectionWrapper
          // Add SSL layer around http
          ctx = SSL_CTX_new( SSLv23_method( ) );
          if ( !ctx )
-            recordFailedLink( "ssl ctx" );
+            recordFailedLink( "ssl ctx");
 
          ssl = SSL_new( ctx );
          if ( !ssl )
@@ -357,7 +366,7 @@ class SSLWrapper : public ConnectionWrapper
               return -1;
           }
 
-          fb::SizeT ret = SSL_write( ssl, message.data( ), message.size( ) );
+          int ret = SSL_write( ssl, message.data( ), message.size( ) );
 
           /* Fetch generated SIGPIPE if write() failed with EPIPE.
            *
@@ -676,3 +685,9 @@ HTTPDownloader( )
       }
 
 };
+
+inline void recordFailedLink( fb::String msg ) {
+   std::cerr << "Failed at " << msg << std::endl;
+   std::cerr << syscall(SYS_gettid) << std::endl;
+   throw ConnectionException(std::move(msg));
+}

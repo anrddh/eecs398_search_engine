@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-constexpr int NUM_THREAD = 100;
+constexpr int NUM_THREAD = 50;
 
 fb::Mutex endLock;
 fb::CV endCV;
@@ -34,21 +34,15 @@ void *parsePages( void * )
 
          ParsedUrl url( downloader.finalUrl );
 
-         auto parser = fb::Parser( result, url );
+         fb::Parser parser( result, url );
 
          parser.parse( );
 
          fb::Vector< fb::Pair<fb::String, fb::String> > links;
 
-         for ( auto iter = parser.urlAnchorText.begin( );
-         	iter != parser.urlAnchorText.end( );  ++iter )
-         links.emplaceBack( iter.key( ), *iter );
+         add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );
 
-         ParsedPage pp = { urlPair.first, links };
-
-         add_parsed( pp );
-
-         addPage( { urlPair.first, {  parser.getParsedResult( ), parser.wordFlags } } );
+         addPage( parser.extractPage( urlPair.first ) ); // TODO I think move ctor will be called? -Jaeyoon
    		}
 		catch ( ConnectionException e )
    		{

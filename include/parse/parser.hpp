@@ -6,70 +6,11 @@
 #include <fb/unordered_map.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/stddef.hpp>
-// #include <http/download_html.hpp>
+#include <disk/page_store.hpp>
+#include <http/download_html.hpp>
 
-class ParsedUrl
-   {
-   public:
-      static const fb::String defaultPort;
-      const fb::String CompleteUrl;
-      fb::String Service, Host, Port, Path;
-
-      ParsedUrl( const fb::String &url )
-        : CompleteUrl( url )
-         {
-         fb::SizeT start = 0;
-         fb::StringView CompleteUrlView( CompleteUrl );
-         fb::SizeT end = CompleteUrlView.find( "://", 0, 3 );
-         if ( end != fb::String::npos )
-            {
-            Service = CompleteUrl.substr( start, end - start );
-            start = end + 3;
-            }
-         else
-            Service  = "https";
-
-         end = CompleteUrlView.find( "/", start, 1 );
-         fb::SizeT HostEnd = CompleteUrlView.find( ":", start, 1 );
-         if ( HostEnd < end && end != fb::String::npos )
-            {
-            Host = CompleteUrl.substr( start, HostEnd - start );
-            Port = CompleteUrl.substr( HostEnd + 1, end - HostEnd - 1 );
-            }
-         else
-            {
-            if ( end == fb::String::npos )
-               Host = CompleteUrl.substr( start );
-            else
-               Host = CompleteUrl.substr( start, end - start );
-
-            if ( Service == "http" )
-               Port = "80";
-            else if ( Service == "https" )
-               Port = "443";
-            else
-               Port = "443";
-            }
-
-         if ( end != fb::String::npos )
-            Path = CompleteUrl.substr( end + 1 );
-         else
-            Path = "";
-         }
-
-      ~ParsedUrl( )
-         {
-         };
-
-      // print function for debugging
-      void print( ) const
-         {
-         std::cout << "Complete Url = " << CompleteUrl << std::endl;
-         std::cout << "Service = " << Service
-               << ", Host = " << Host << ", Port = " << Port
-               << ", Path = " << Path << std::endl;
-         }
-   };
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 // #include "../../index/index_builder.hpp"
 //flags
@@ -115,9 +56,19 @@ public:
 			flagCounter[i] = 0;
 	}
 
-	String getParsedResult( )
+   // This function will invalidate the parser object
+   // Written by Jaeyoon Kim
+   Page extractPage( SizeT UrlOffset )
+      {
+      Page p;
+      p.UrlOffset = UrlOffset;
+      p.page_str = std::move( parsedResult );
+      p.word_headers = std::move( wordFlags );
+      return p; // TODO check this does elide ctor
+      }
+	String&& getParsedResult( )
 		{
-		return parsedResult;
+		return std::move(parsedResult);
 		}
 
 	void parse( )
@@ -160,15 +111,15 @@ public:
 		{
 		for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
 			{
-			std::cout << "URL is: " << i.key() << std::endl;
-			std::cout << "Anchor text: " << *i << std::endl;
+                log(logfile, "URL is: ", i.key(), '\n',
+                    "Anchor text: ", *i, '\n');
 			}
 		}
 
 private:
 	String getSpecialCharacter( )
 		{
-		try 
+		try
 			{
 			return characterConversionMap.at( specialCharacterString );
 			}
@@ -427,7 +378,7 @@ private:
 			return seekSubstr( i , "-->" );
 
 		String tagName;
-		for ( ;  content[ i ] != ' ' 
+		for ( ;  content[ i ] != ' '
 				&& content[ i ] != '>' && i < content.size( );  ++i )
 			tagName += tolower( content[ i ] );
 
@@ -439,7 +390,7 @@ private:
 			}
 
 		size_t last_index = skipSpacesBackward( i - 1 );
-		
+
 		// not self closing tag
 		if ( content[ last_index ] != '/' )
 			{

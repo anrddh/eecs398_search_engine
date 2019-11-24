@@ -1,43 +1,47 @@
 // Created by Jaeyoon Kim 11/7/19
 #pragma once
 
-#include "url_store.hpp"
-#include "offset_lookup.hpp"
-#include "UrlInfo.hpp"
-#include "adj_store.hpp"
-#include "anchor_store.hpp"
+#include <disk/url_store.hpp>
+#include <disk/offset_lookup.hpp>
+#include <disk/UrlInfo.hpp>
+#include <disk/adj_store.hpp>
+#include <disk/anchor_store.hpp>
 
-#include "tcp/url_tcp.hpp" // for ParsedPage
+#include <disk/logfile.hpp>
+#include <debug>
 
-#include "fb/mutex.hpp"
-#include "fb/utility.hpp" // for pair
-#include "fb/string.hpp"
-#include "fb/string_view.hpp"
-#include "fb/stddef.hpp"
-#include "fb/unordered_map.hpp"
-#include "fb/unordered_set.hpp"
+#include <tcp/url_tcp.hpp> // for ParsedPage
 
-// TODO don't hard code this
-const fb::String UrlInfoTableName = "url_info_table.txt";
+#include <fb/mutex.hpp>
+#include <fb/utility.hpp> // for pair
+#include <fb/string.hpp>
+#include <fb/string_view.hpp>
+#include <fb/stddef.hpp>
+#include <fb/unordered_map.hpp>
+#include <fb/unordered_set.hpp>
 
 // Same as above
 // We need to hard code the file we save to
 class UrlInfoTable {
 public:
+    static void init(fb::StringView filename) {
+        delete ptr;
+        ptr = new UrlInfoTable(filename);
+    }
+
    // Meyer's method for singletons
    // Note that c++11 standard guarantees
    // that the constructor will finish the constructor
    // before the object is ever returned
     static UrlInfoTable & getTable() {
-       static UrlInfoTable unique_obj;
-       return unique_obj;
+        return *ptr;
     }
 
     // Adds a new url
     // copies url to the disk, and initializes url_info struct
     // returns url_offset of the page if this the first time seen
     // returns false if this url was already seen before
-    fb::SizeT addSeed( fb::StringView url ) 
+    fb::SizeT addSeed( fb::StringView url )
     {
        return add_link(url, "");
     }
@@ -54,26 +58,22 @@ public:
        // if this url was never seen before, then add the url
        // to disk_vec. Then construct a new url_info in disk_vec.
        // Then add the url to the frontier (check robots.txt first)
-      fb::StringView url = 
+      fb::StringView url =
                UrlStore::getStore().getUrl( pp.url_offset );
-      std::cout << "Handling parsed page " << url << "\n";
-      for (const fb::Pair<fb::String, fb::String>& link : pp.links) {
-         std::cout << "\thas " << link.first << "\n";
-      }
 
       fb::SizeT hash = hasher( url );
-      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash 
+      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
          = info_hashes[hash % NumBins];
 
       info_hash.second.lock();
 
-      // This we default initialize 
+      // This we default initialize
       fb::SizeT& url_info_offset = info_hash.first[ url ];
 
       // This means that we have never seen before
       if ( url_info_offset == 0)
       {
-         std::cerr << "Error: HandleParsedPage has never seen url offset of " 
+         std::cerr << "Error: HandleParsedPage has never seen url offset of "
             << pp.url_offset << std::endl;
          info_hash.second.unlock();
       }
@@ -86,11 +86,11 @@ public:
 
       // We need to call copy on the atomic to get a correct snapshot
       char state = info.state;
-      if (state == 'm' || state == 'p') 
+      if (state == 'm' || state == 'p')
       {
          // This page has already been parsed before
          // this might happen if the master is sending urls via tcp.
-         // The child received a couple of urls, but the tcp failed. 
+         // The child received a couple of urls, but the tcp failed.
          // In this case the master will add the urls back to the frontier
          // but the worker might parse the page and send it back to master
          info_hash.second.unlock();
@@ -128,12 +128,12 @@ public:
 private:
    // The constructor should be called only once
    // It will recover the file name of the url_info (disk_vec)
-   // and load it. Then it will reconstruct the hash table that 
+   // and load it. Then it will reconstruct the hash table that
    // maps url_offset to url_info_offset
    // Note that the lock will not be grabbed when the constructor is running
-   UrlInfoTable() : url_info(UrlInfoTableName) 
+    UrlInfoTable(fb::StringView fname) : url_info(fname)
    {
-      for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size(); 
+      for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size();
             ++url_info_offset )
       {
          if ( url_info[ url_info_offset ].UrlOffset == 0 )
@@ -141,9 +141,9 @@ private:
             continue;
          }
 
-         fb::StringView url = UrlStore::getStore().getUrl( 
+         fb::StringView url = UrlStore::getStore().getUrl(
                url_info[ url_info_offset ].UrlOffset );
-         std::cout << "in url info table ctor add url " << url << std::endl;
+         log(logfile, "in url info table ctor add url ", url, '\n');
          fb::SizeT hash = hasher( url );
 
          info_hashes[hash % NumBins].first[ url ] = url_info_offset;
@@ -158,20 +158,20 @@ private:
     // This function grabs locks from info_hashes, so the caller should ensure that
     // it is not holding any locks from info_hashes
     // link can't be const ref in order to use functionThatIsOnlyForJaeyoonInThatOneSpecialCase
-   fb::SizeT add_link(fb::StringView link, fb::StringView anchor_text ) 
+   fb::SizeT add_link(fb::StringView link, fb::StringView anchor_text )
    {
       fb::SizeT hash = hasher( link );
-      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash 
+      fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
          = info_hashes[hash % NumBins];
 
       fb::AutoLock<fb::Mutex> l(info_hash.second);
 
-      // This we default initialize 
-      fb::Pair<fb::StringView&, fb::SizeT&> url_info_pair = 
+      // This we default initialize
+      fb::Pair<fb::StringView*, fb::SizeT*> url_info_pair =
          info_hash.first.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
                link );
 
-      bool is_new_url = (url_info_pair.second == 0);
+      bool is_new_url = (*url_info_pair.second == 0);
 
       if ( is_new_url )
       {
@@ -186,23 +186,23 @@ private:
          // However in this case, the equality operator and the hash does not
          // change since they both represent the same string
          fb::SizeT url_offset = UrlStore::getStore().addUrl( link );
-         url_info_pair.first = UrlStore::getStore().getUrl( url_offset );
-         url_info_pair.second = url_info.reserve(1);
-         url_info[url_info_pair.second].state = 'u';
-         url_info[url_info_pair.second].UrlOffset = url_offset;
+         *url_info_pair.first = UrlStore::getStore().getUrl( url_offset );
+         *url_info_pair.second = url_info.reserve(1);
+         url_info[ *url_info_pair.second].state = 'u';
+         url_info[ *url_info_pair.second].UrlOffset = url_offset;
 
          // TODO this is just for debugging
          // delete below
-         assert( info_hash.first[ link ] == url_info_pair.second );
+         assert( info_hash.first[ link ] == *url_info_pair.second );
       }
 
-      url_info[url_info_pair.second].AnchorTextOffsets = 
-         AnchorStore::getStore().addStr( anchor_text, 
-               url_info[ url_info_pair.second ].AnchorTextOffsets );
+      url_info[ *url_info_pair.second ].AnchorTextOffsets =
+         AnchorStore::getStore().addStr( anchor_text,
+               url_info[ *url_info_pair.second ].AnchorTextOffsets );
 
       if ( is_new_url )
       {
-         return url_info[ url_info_pair.second ].UrlOffset;
+         return url_info[ *url_info_pair.second ].UrlOffset;
       }
       else
       {
@@ -211,6 +211,9 @@ private:
     }
 
    constexpr static fb::SizeT NumBins = 256;
+
+    static UrlInfoTable *ptr;
+
    //The unorderedmaps link the hashes of urls to the associated url infos
    // unordered map from stringView (that points to disk vec of urls
    fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hashes[NumBins];

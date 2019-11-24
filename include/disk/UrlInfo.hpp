@@ -51,7 +51,7 @@ inline fb::SizeT RankUrl(fb::StringView Url){
    fb::StringView Domain;
    if ( start != -1 )
    {
-      Domain = parsed_url.Host.substr( start + 1 );
+      Domain = fb::StringView(parsed_url.Host).substr( start + 1 );
    }
 
    if ( Domain.compare("gov") == 0 ) {

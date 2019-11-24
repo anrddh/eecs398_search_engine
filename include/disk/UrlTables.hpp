@@ -131,16 +131,16 @@ public:
             auto it = info_hashes[ hash % NumBins ].first.find( url );
             assert( it != info_hashes[ hash % NumBins ].first.end() );
             if (*it != i) {
-               std::cout << "i = " << i << " has url " << 
-                  UrlStore::getStore().getUrl( url_info[ i ].UrlOffset ) << std::endl;
-               std::cout << "*it = " << i << " has url " << 
-                  UrlStore::getStore().getUrl( url_info[ *it ].UrlOffset );
+                std::cout << "i = " << i << " has url " <<
+                UrlStore::getStore().getUrl( url_info[ i ].UrlOffset ) << std::endl;
+                std::cout << "*it = " << i << " has url " <<
+                UrlStore::getStore().getUrl( url_info[ *it ].UrlOffset );
                assert(false);
             }
 
-            fb::Vector<fb::SizeT> links = 
+            fb::Vector<fb::SizeT> links =
                AdjStore::getStore().getList(
-                     url_info[i].AdjListOffsets.first, 
+                     url_info[i].AdjListOffsets.first,
                      url_info[i].AdjListOffsets.second);
 
             for ( fb::SizeT link_offset : links ) {
@@ -163,22 +163,22 @@ public:
 
        auto it = info_hashes[ hash % NumBins ].first.find( url );
        if (it == info_hashes[ hash % NumBins ].first.end()) {
-          std::cout << "This page does not exist!" << std::endl;
+           //std::cout << "This page does not exist!" << std::endl;
           return;
        }
        fb::SizeT url_info_offset = *it;
 
-       std::cout << "Info for page " << url << std::endl;
+       //std::cout << "Info for page " << url << std::endl;
 
-      fb::Vector<fb::SizeT> links = 
+      fb::Vector<fb::SizeT> links =
          AdjStore::getStore().getList(
-               url_info[ url_info_offset ].AdjListOffsets.first, 
+               url_info[ url_info_offset ].AdjListOffsets.first,
                url_info[ url_info_offset ].AdjListOffsets.second);
 
       for ( fb::SizeT link_offset : links ) {
          fb::StringView link_url =
             UrlStore::getStore().getUrl( link_offset );
-         std::cout << "\tHas link " << link_url << std::endl;
+         //std::cout << "\tHas link " << link_url << std::endl;
       }
     }
 

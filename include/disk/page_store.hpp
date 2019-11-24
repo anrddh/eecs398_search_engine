@@ -29,6 +29,8 @@ struct Page {
    fb::Vector<WordDescriptors> word_headers;
 };
 
+void page_store_init_shutdown();
+
 struct PageHeader {
     fb::SizeT beginOffset;
     fb::SizeT VecOffset;
@@ -63,6 +65,6 @@ private:
 
 void initializeFileName(fb::String fname);
 
-void addPage(Page page);
+void addPage(Page&& page);
 
 void * runBin(void *);

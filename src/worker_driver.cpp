@@ -189,7 +189,7 @@ void * parsePages( void * )
 
          add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );
 
-         addPage( parser.extractPage( urlPair.first ) ); // TODO I think move ctor will be called? -Jaeyoon
+         addPage( std::move(parser.extractPage( urlPair.first )) );
    		}
 		catch ( ConnectionException e )
    		{

@@ -4,11 +4,11 @@
 #include "index_data_structures.hpp"
 
 
-template<typename Hash, int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
+template<typename Hash, int NUM_SKIP_TABLE_BITS>
 class IndexChunkBuilder {
 public:
-   IndexChunkBuilder(std::string filename, uint32_t capacity, const fb::Vector<DocIdInfo> &documents) 
-      : tableSize(capacity), file(open(filename.data(), O_RDWR | O_CREAT)) 
+   IndexChunkBuilder(std::string filename, uint32_t capacity, const fb::Vector<DocIdInfo> &documents, int num_tokens) 
+      : tableSize(capacity), file(open(filename.data(), O_RDWR | O_CREAT)), MAX_TOKEN_BITS(getHighestBit(num_tokens)) 
       { 
       if(file == -1) 
          {
@@ -18,10 +18,11 @@ public:
       unsigned int dictionarySize = (tableSize + 2) * sizeof(unsigned int);
       start = (unsigned int *) mmap(nullptr, dictionarySize, PROT_READ | PROT_WRITE, MAP_PRIVATE, file, 0);
       start[0] = 1;
-      start[1] = tableSize;
-      dictionary = start + 2;
+      start[1] = MAX_TOKEN_BITS;
+      start[2] = tableSize;
+      dictionary = start + 3;
 
-      nextAvailableLocation = (tableSize + 2) * sizeof(unsigned int);
+      nextAvailableLocation = (tableSize + 3) * sizeof(unsigned int);
       nextAvailableLocation += writeEODList(documents);
       }
 
@@ -47,6 +48,7 @@ uint32_t nextAvailableLocation;
 uint32_t tableSize;
 Hash hash;
 int file;
+int MAX_TOKEN_BITS;
 };
 
 template<typename Hash, int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
@@ -71,7 +73,7 @@ void IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK>::writePost
    unsigned long maxListLength = (word.size() + 1) + (getSizeOfSkipTable(NUM_SKIP_TABLE_BITS)) + (4 * offsets.size());
    char * postingListLocation = (char *) mmap(nullptr, maxListLength, PROT_READ | PROT_WRITE, MAP_PRIVATE, file, nextAvailableLocation);
 
-   PostingListBuilder<NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK, DocIdInfo> builder(word, postingListLocation, docCount, offsets.size());
+   PostingListBuilder<NUM_SKIP_TABLE_BITS, DocIdInfo> builder(word, postingListLocation, docCount, offsets.size());
    for(const AbsoluteWordInfo &word : offsets) 
       {
       builder.addPost(word);
@@ -88,7 +90,7 @@ void IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK>::writeEODL
    unsigned long maxListLength = 1 + (getSizeOfSkipTable(NUM_SKIP_TABLE_BITS)) + (12 + documents.size());
    char * postingListLocation = (char *) mmap(nullptr, maxListLength, PROT_READ | PROT_WRITE, MAP_PRIVATE, file, nextAvailableLocation);
 
-   PostingListBuilder<NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK, DocIdInfo> builder(fb::String(), postingListLocation, documents.size(), documents.size());
+   PostingListBuilder<NUM_SKIP_TABLE_BITS, DocIdInfo> builder(fb::String(), postingListLocation, documents.size(), documents.size());
    for(const DocIdInfo &post : documents)
       {
       builder.addEODPost(post);

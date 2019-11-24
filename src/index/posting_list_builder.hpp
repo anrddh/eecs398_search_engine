@@ -12,12 +12,13 @@ struct EODPost {
    uint64_t url_uid;
 };
 
-template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK, typename PostType>
+template<int NUM_SKIP_TABLE_BITS, typename PostType>
 class PostingListBuilder 
    {
 public:
 
-   PostingListBuilder(const fb::String &word, char * location, int numDocs, int numOccurences) : beginning(location), lastLocation(0) 
+   PostingListBuilder(const fb::String &word, char * location, int numDocs, int numOccurences, int MAX_TOKEN_BITS_) 
+      : beginning(location), lastLocation(0), nextSkipTableEntry(0), MAX_TOKEN_BITS(MAX_TOKEN_BITS_)
       {
       strcpy(beginning, word.data());
       
@@ -83,19 +84,6 @@ private:
    char * currentPostPosition;
    unsigned int * skipTableStart;
    unsigned int lastLocation;
-   unsigned int nextSkipTableEntry = 0;
-   };
-
-template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
-class PostingListBuilder<NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK, AbsoluteWordInfo>
-   {
-public:
-   
-   };
-
-template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
-class PostingListBuilder<NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK, DocIdInfo>
-   {
-public:
-   
+   unsigned int nextSkipTableEntry;
+   int MAX_TOKEN_BITS;
    };

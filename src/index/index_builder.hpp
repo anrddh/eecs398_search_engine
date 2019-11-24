@@ -21,27 +21,38 @@
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
 
-//
-// constexptr int MAX_BITS_PER_CHUNK = 28;
-// constexptr int TOKEN_THRESHOLD = 2 << MAX_BITS_PER_CHUNK; //134,217,728; // 2^27
+int getHighestBit(int num)
+   {
+   int val = 0;
+   while(num)
+      {
+      ++val;
+      num =>> 1;
+      }
 
-template<int NUM_SKIP_TABLE_BITS, int MAX_BITS_PER_CHUNK>
+   return val;
+   }
+
+template<int NUM_SKIP_TABLE_BITS>
 class IndexBuilder {
 public:
    // root must contain a trailing '/'
    IndexBuilder(fb::String path) : root(path) { 
       int file;
-      if((file = open((path + "master").data(), O_RDWR)) > 0) {
-         masterIndexData = (MasterIndexData *) mmap(nullptr, sizeof(MasterIndexData), PROT_READ | PROT_WRITE, MAP_PRIVATE, file, 0);
+      if((file = open((path + "master").data(), 
+                        O_RDWR | O_CREAT, 
+                        S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH)) > 0) {
+         masterIndexData = (MasterIndexData *) mmap(nullptr, sizeof(MasterIndexData), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0);
       } else {
-         // TODO: create file from scratch
+         // throw error or smthing.
+
       }
       close(file);
       
       tokenCount = 1;
    }
    
-   void build_chunk(size_t* start_of_file){
+   void build_chunk(size_t* start_of_file) {
       // move past first 16 bytes
       // the page headers end where the first page starts
       size_t* current_doc_offset = start_of_file + 2;
@@ -118,7 +129,7 @@ private:
       {
       WriteToDiskInput input = *(WriteToDiskInput *)arg;
 
-      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS, MAX_BITS_PER_CHUNK> indexChunkBuilder(input.filename, input.map.bucket_count());
+      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, input.map.bucket_count());
 
       for(auto iter = input.map.begin(); iter != input.map.end(); ++iter)
          {

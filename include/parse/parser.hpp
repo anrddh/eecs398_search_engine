@@ -414,7 +414,7 @@ private:
 		fb::String htmlLower = content.substr( start, end - start );
 		// there are so many insane people online. lower case everything
 		// to keep myself sane
-		for ( int i = 0;  i < htmlLower.size( );  ++i )
+		for ( fb::SizeT i = 0;  i < htmlLower.size( );  ++i )
 			htmlLower[ i ] = tolower( htmlLower[ i ] );
 		fb::StringView htmlTag( htmlLower.data( ), htmlLower.size( ) );
 		std::cout << htmlTag << std::endl;

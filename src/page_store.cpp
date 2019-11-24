@@ -17,7 +17,6 @@
 
 // TODO: small for testing, raise for real deal. this is the number of
 // pages per file
-constexpr fb::SizeT numPages = 500;
 
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;

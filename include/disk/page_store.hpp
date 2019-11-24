@@ -13,6 +13,7 @@
 #include <fb/cv.hpp>
 #include <pthread.h>
 
+constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
 
 //TODO: Change this structure to whatever jinsoo provides
 //should in theory be just a byte, make this a lot easier if it is
@@ -48,7 +49,6 @@ public:
     }
 
 private:
-    static constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
     fb::SizeT PageCount ;
     fb::SizeT PageCountOffset;
     fb::SizeT PageHeadersOffset;

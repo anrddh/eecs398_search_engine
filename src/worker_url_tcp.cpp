@@ -1,6 +1,7 @@
 // Added by Jaeyoon Kim 11/15/2019
 #include <tcp/url_tcp.hpp>
 #include <tcp/worker_url_tcp.hpp>
+#include <tcp/addr_info.hpp>
 
 #include <fb/vector.hpp>
 #include <fb/queue.hpp>
@@ -18,15 +19,13 @@
 
 using namespace fb;
 
-String master_ip;
-int master_port;
+AddrInfo masterLoc;
 
 // Constantly talks to master
 void* talk_to_master(void*);
 
-void set_master_ip( StringView master_ip_, int master_port_ ) {
-   master_ip = String(master_ip_.data(), master_ip_.size());
-   master_port = master_port_;
+void set_master_ip(AddrInfo loc) {
+   masterLoc = std::move(loc);
    Thread t(talk_to_master, nullptr);
    t.detach();
 }
@@ -80,27 +79,8 @@ void add_parsed( ParsedPage&& pp ) {
    return;
 }
 
-int open_socket_to_master() {
-   int sock = 0;
-   struct sockaddr_in serv_addr;
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-   {
-      throw SocketException("TCP socket: Failed to construct socket");
-   }
-
-   serv_addr.sin_family = AF_INET;
-   serv_addr.sin_port = htons(master_port);
-
-   // Convert IPv4 and IPv6 addresses from text to binary form
-   if(inet_pton(AF_INET, master_ip.data(), &serv_addr.sin_addr) <= 0)
-   {
-      throw SocketException("TCP socket: Failed in inet_pton");
-   }
-
-   if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-   {
-      throw SocketException("TCP socket: Failed in connect");
-   }
+fb::FileDesc open_socket_to_master() {
+   auto sock = masterLoc.getConnectedSocket();
 
    // Finished establishing socket
    // Send verfication message
@@ -172,7 +152,7 @@ void* talk_to_master_helper(int sock) {
 
 void* talk_to_master(void*) {
    while (true) {
-      FileDesc sock(open_socket_to_master());
+      auto sock = open_socket_to_master();
       try {
          return talk_to_master_helper(sock);
       }

@@ -10,6 +10,7 @@
 
 #include <tcp/handle_socket.hpp>
 #include <tcp/constants.hpp>
+#include <tcp/addr_info.hpp>
 
 #include <fb/stddef.hpp>
 #include <fb/file_descriptor.hpp>
@@ -151,45 +152,6 @@ int main(int argc, char **argv) try {
     return 1;
 }
 
-struct AddrInfo {
-    addrinfo *res = nullptr;
-
-    struct AddrError : std::exception {};
-
-    AddrInfo( const char *port ) {
-        addrinfo hints;
-        memset(&hints, 0, sizeof(hints));
-        hints.ai_family = AF_UNSPEC;
-        hints.ai_socktype = SOCK_STREAM;
-        hints.ai_flags = AI_PASSIVE;
-
-        int rval = getaddrinfo(nullptr, port, &hints, &res);
-        if (rval) {
-           cerr << gai_strerror(rval) << '\n';
-           throw AddrError();
-        }
-    }
-
-    FileDesc getBoundSocket() const {
-        FileDesc sock (socket(res->ai_family,
-                              res->ai_socktype,
-                              res->ai_protocol));
-
-        if (::bind(sock, res->ai_addr, res->ai_addrlen)) {
-            cerr << "Could not bind:\n";
-            perror("");
-            throw AddrError();
-        }
-
-        return sock;
-    }
-
-    ~AddrInfo() noexcept {
-        if (res)
-            freeaddrinfo(res);
-    }
-};
-
 FileDesc parseArguments(int argc, char **argv) try {
     option long_opts[] = {
         {"port",     required_argument, nullptr, 'p'},
@@ -287,9 +249,9 @@ FileDesc parseArguments(int argc, char **argv) try {
 
     if (adj.empty()) {
         std::cout << "Using default adjacency store file: " << DefaultAdjStoreFile << '\n';
-        AnchorStore::init(DefaultAdjStoreFile);
+        AdjStore::init(DefaultAdjStoreFile);
     } else {
-        AnchorStore::init(adj);
+        AdjStore::init(adj);
     }
 
     if (urlinfo.empty()) {
@@ -299,10 +261,10 @@ FileDesc parseArguments(int argc, char **argv) try {
         UrlInfoTable::init(urlinfo);
     }
 
-    AddrInfo info(port.empty() ? DefaultPort : port.data());
+    AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
     return info.getBoundSocket();
 } catch( const AddrInfo::AddrError & ) {
-    throw ArgError();
+   throw ArgError();
 } catch ( const FileDesc::ConstructionError &e ) {
    cerr << e.what() << '\n';
    throw ArgError();

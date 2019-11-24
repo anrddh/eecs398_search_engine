@@ -89,9 +89,8 @@ class ParsedUrl
 
       // print function for debugging
       void print( ) const {
-          log("Complete Url = ", CompleteUrl, '\n', "Service = ", Service,
-              ", Host = ", Host, ", Port = ", Port,
-               << ", Path = " << Path << std::endl;
+          log(logfile, "Complete Url = ", CompleteUrl, '\n', "Service = ", Service,
+              ", Host = ", Host, ", Port = ", Port, ", Path = ", Path, '\n');
       }
    };
 

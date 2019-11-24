@@ -41,6 +41,7 @@ int main(int argc, char **argv) try {
 
     fb::String userInput;
     do {
+       print_tcp_status();
         std::cout << "Shut down? (type 'YES')\n";
         std::cin >> userInput;
         if ( userInput == "YES" ) {
@@ -58,6 +59,7 @@ int main(int argc, char **argv) try {
     } while (std::cin >> userInput);
 
    initiate_shut_down();
+   page_store_init_shutdown();
    std::cout << "Shutting down." << std::endl;
    for (auto &thread : threads)
        thread.join();

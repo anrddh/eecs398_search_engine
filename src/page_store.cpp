@@ -18,10 +18,6 @@
 // TODO: small for testing, raise for real deal. this is the number of
 // pages per file
 
-std::atomic<bool> need_to_shutdown = false;
-void page_store_init_shutdown() {
-   need_to_shutdown = true;
-}
 
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;
@@ -30,6 +26,12 @@ std::atomic<fb::SizeT> PagesCounter(0);
 std::atomic<fb::SizeT> NumThreads(0);
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
+std::atomic<bool> need_to_shutdown = false;
+
+void page_store_init_shutdown() {
+   need_to_shutdown = true;
+   QueueNECV.broadcast();
+}
 
 PageBin::PageBin(fb::StringView filename) : PageCount(0), PageCountOffset(0),
                 PageHeadersOffset(0), PagesBeginOffset(0), Pages(filename) {

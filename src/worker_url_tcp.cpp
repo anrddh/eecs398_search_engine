@@ -34,8 +34,16 @@ Mutex to_parse_m;
 CV to_parse_cv;
 Queue<Pair<SizeT, String>> urls_to_parse;
 
+
 Mutex parsed_m;
 Vector< ParsedPage > urls_parsed; // first val url, second val parsed page
+
+void print_tcp_status() {
+   to_parse_m.lock();
+   std::cout << "Num urls to parse " << urls_to_parse.size() << " " 
+      << " num urls parsed " << urls_parsed.size() << std::endl;
+   to_parse_m.unlock();
+}
 
 // helper function
 void send_parsed_pages(int sock, Vector<ParsedPage> pages_to_send);
@@ -99,7 +107,6 @@ void* talk_to_master_helper(int sock) {
       }
       else
       {
-         std::cout << "parsed has size " << urls_parsed.size() << std::endl;
          Vector< ParsedPage > local; // first val url, second val parsed page
          local.swap(urls_parsed);
          parsed_m.unlock();
@@ -129,7 +136,6 @@ void* talk_to_master_helper(int sock) {
       // If we are short on urls to parse,
       // request for more
       to_parse_m.lock();
-      std::cout << "to parse has size " << urls_to_parse.size() << std::endl;
       if (urls_to_parse.size() < MIN_BUFFER_SIZE)
       {
          to_parse_m.unlock();

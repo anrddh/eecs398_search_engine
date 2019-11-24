@@ -6,6 +6,11 @@
 #include <fb/unordered_map.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/stddef.hpp>
+#include <disk/page_store.hpp>
+#include <http/download_html.hpp>
+
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 // #include "../../index/index_builder.hpp"
 //flags
@@ -37,9 +42,10 @@ class Parser
 public:
 	fb::UnorderedMap<String, String> urlAnchorText;
 	fb::Vector<uint8_t> wordFlags;
+	const ParsedUrl parsedUrl;
 
-	Parser( const String &content_in, const String &domain_in )
-	: domain( domain_in ), content( content_in ), inSpecialCharacter( false )
+	Parser( const String &content_in, const ParsedUrl parsedUrl_in )
+	:  parsedUrl( parsedUrl_in ), content( content_in ), inSpecialCharacter( false )
 	{
 		initializeConversionMap( );
 		initializeBoldTags( );
@@ -50,9 +56,19 @@ public:
 			flagCounter[i] = 0;
 	}
 
-	String getParsedResult( )
+   // This function will invalidate the parser object
+   // Written by Jaeyoon Kim
+   Page extractPage( SizeT UrlOffset )
+      {
+      Page p;
+      p.UrlOffset = UrlOffset;
+      p.page_str = std::move( parsedResult );
+      p.word_headers = std::move( wordFlags );
+      return p; // TODO check this does elide ctor
+      }
+	String&& getParsedResult( )
 		{
-		return parsedResult;
+		return std::move(parsedResult);
 		}
 
 	void parse( )
@@ -86,7 +102,7 @@ public:
 			}
 		catch ( const ParserException & e )
 			{
-			std::cerr << "Caught exception in " << domain << std::endl;
+			std::cerr << "Caught exception in " << parsedUrl.CompleteUrl << std::endl;
 			std::cerr << e.msg << std::endl;
 			}
 		}
@@ -95,15 +111,15 @@ public:
 		{
 		for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
 			{
-			std::cout << "URL is: " << i.key() << std::endl;
-			std::cout << "Anchor text: " << *i << std::endl;
+                log(logfile, "URL is: ", i.key(), '\n',
+                    "Anchor text: ", *i, '\n');
 			}
 		}
 
 private:
 	String getSpecialCharacter( )
 		{
-		try 
+		try
 			{
 			return characterConversionMap.at( specialCharacterString );
 			}
@@ -362,7 +378,7 @@ private:
 			return seekSubstr( i , "-->" );
 
 		String tagName;
-		for ( ;  content[ i ] != ' ' 
+		for ( ;  content[ i ] != ' '
 				&& content[ i ] != '>' && i < content.size( );  ++i )
 			tagName += tolower( content[ i ] );
 
@@ -374,7 +390,7 @@ private:
 			}
 
 		size_t last_index = skipSpacesBackward( i - 1 );
-		
+
 		// not self closing tag
 		if ( content[ last_index ] != '/' )
 			{
@@ -384,11 +400,27 @@ private:
 				i = handleAnchor( start_index, i + 1 );
 			else if ( tagName == "style" )
 				i = handleStyle( start_index );
+			else if ( tagName == "html" )
+				handleHTML( start_index, last_index );
 			else
 				setTag( tagName );
 			}
 
 		return i;
+		}
+
+	void handleHTML( fb::SizeT start, fb::SizeT end ) const
+		{
+		fb::StringView htmlTag( content.data( ) + start, end - start );
+		fb::SizeT index = htmlTag.find( "lang"_sv );
+		if ( index != fb::StringView::npos )
+			{
+			fb::SizeT new_index = htmlTag.find( "en"_sv, index );
+			if ( new_index == fb::StringView::npos )
+				new_index = htmlTag.find( "EN"_sv, index );
+			if ( new_index == fb::StringView::npos )
+				throw ParserException( "language not english" );
+			}
 		}
 
 	fb::SizeT handleStyle( fb::SizeT index ) const
@@ -414,26 +446,36 @@ private:
 		String url = extractURL( tagStartIndex, tagEndIndex );
 		String anchorText = content.substr( tagEndIndex, index - tagEndIndex );
 
-		// add anchor text to parsed result
-		addToResult( ' ' );
-
-		SizeT parsedIndex = parsedResult.size( );
-		for ( const auto i : anchorText )
-			addToResult( i );
-		addToResult( ' ' );
-
-		String normalizedTest = parsedResult.substr( parsedIndex );
-
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if ( url.size( ) )
+		if ( url.startsWith( "http://" ) || url.startsWith( "https://" ) || url.startsWith( '.' ) || url.startsWith( '/' ) )
 			{
-			if( url[ 0 ] != '#' )
-				{
-				if( url[ 0 ] == '/' )
-					url = domain + url;
+			// add anchor text to parsed result
+			addToResult( ' ' );
 
-				urlAnchorText[ url ] += " " + normalizedTest;
+			SizeT parsedIndex = parsedResult.size( );
+			for ( const auto i : anchorText )
+				addToResult( i );
+			addToResult( ' ' );
+
+			String normalizedTest = parsedResult.substr( parsedIndex );
+
+			if ( url.size( ) )
+				{
+				if( url[ 0 ] != '#' )
+					{
+					if( url[ 0 ] == '/' )
+					{
+						if( url[ 1 ] == '/' )
+							url = parsedUrl.Service +  ":" + url;
+						else
+							url = parsedUrl.Service + "://" + parsedUrl.Host + url;
+					}
+					else if ( url[ 0 ] == '.' )
+						url = parsedUrl.Service + "://" + parsedUrl.Host + "/" + url;
+
+					urlAnchorText[ url ] += " " + normalizedTest;
+					}
 				}
 			}
 
@@ -675,8 +717,6 @@ void initializeConversionMap( )
 
 	fb::UnorderedMap<String, String> characterConversionMap;
 
-	// domain name of html page being parsed
-	const String domain;
 	// content of the html page to parse
 	const String & content;
 

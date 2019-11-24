@@ -1,0 +1,19 @@
+sudo: false
+
+os:
+  - linux
+
+language:
+  - cpp
+
+services:
+  - docker
+
+before_install:
+  - docker pull anrddh/eesc398_search_engine:yakkety
+
+script:
+  - echo FROM anrddh/eesc398_search_engine:yakkety > Dockerfile
+  - echo ADD . /root >> Dockerfile
+  - docker build -t withgit .
+  - docker run withgit /bin/sh -c "cd /root && TRAVIS=true CC=$CC CXX=$CXX meson builddir && ninja -C builddir test"

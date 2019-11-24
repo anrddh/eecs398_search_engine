@@ -13,13 +13,20 @@
 #include <fb/cv.hpp>
 #include <pthread.h>
 
+constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
 
 //TODO: Change this structure to whatever jinsoo provides
 //should in theory be just a byte, make this a lot easier if it is
 //I'm begging you, let it be a byte, i dont want to do the math if it isnt
 using WordDescriptors = uint8_t;
 
-using Page = fb::Pair<fb::SizeT, fb::Pair<fb::String, fb::Vector<WordDescriptors>>>;
+// Written by Jaeyoon 
+struct Page {
+   fb::SizeT UrlOffset;
+   fb::String page_str;
+   fb::Vector<WordDescriptors> word_headers;
+};
+
 
 extern std::atomic<fb::SizeT> NumThreads;
 
@@ -31,14 +38,23 @@ struct PageHeader {
 
 class PageBin {
 public:
-    PageBin(fb::StringView filename, bool init);
+    struct Error : fb::Exception {};
 
-    void addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page);
+    PageBin(fb::StringView filename);
+
+    fb::SizeT addPage(Page&& p);
 
     fb::Pair<fb::String, fb::Vector<WordDescriptors>> getPage(fb::SizeT offset);
 
+    int file_descriptor() const {
+        return Pages.file_descriptor();
+    }
+
+    fb::SizeT size(){
+        return Pages.size();
+    }
+
 private:
-    static constexpr fb::SizeT numPages = 5; //TODO: small for testing, raise for real deal
     fb::SizeT PageCount ;
     fb::SizeT PageCountOffset;
     fb::SizeT PageHeadersOffset;

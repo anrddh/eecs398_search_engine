@@ -2,13 +2,14 @@
 #pragma once
 #include <fb/string.hpp>
 #include <tcp/url_tcp.hpp>
+#include <fb/string_view.hpp>
 
 // This is a TCP inteface for worker computers
 
 
 // This function must be run ONLY ONCE and must be called
 // before any other functions are called
-void set_master_ip( const fb::String& master_ip_, int master_port_ );
+void set_master_ip( fb::StringView master_ip_, int master_port_ );
 
 // Tell system to initiate shut down
 // We will no longer recieve any new pages to parse from master
@@ -26,4 +27,4 @@ bool should_shutdown();
 // The thread that got an empty url should stop parsing
 // since there are no more urls that needs to be parsed
 fb::Pair<fb::SizeT, fb::String> get_url_to_parse();
-void add_parsed( ParsedPage pp ); // Use move ctor if possible
+void add_parsed( ParsedPage&& pp ); // Use move ctor if possible

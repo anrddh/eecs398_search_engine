@@ -11,9 +11,9 @@
 
 class AdjStore {
 public:
-    static void init(fb::StringView filename, bool init) {
+    static void init(fb::StringView filename) {
         delete ptr;
-        ptr = new AdjStore(filename, init);
+        ptr = new AdjStore(filename);
     }
 
     static AdjStore & getStore() {
@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    AdjStore(fb::StringView filename, bool init) : lists(filename, init) {}
+    AdjStore(fb::StringView filename) : lists(filename) {}
 
     static AdjStore *ptr;
     DiskVec<fb::SizeT> lists;

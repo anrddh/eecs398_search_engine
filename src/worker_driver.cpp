@@ -9,21 +9,20 @@
 
 #include <iostream>
 
-constexpr int NUM_THREAD = 100;
+constexpr int NUM_THREAD = 50;
 
 fb::Mutex endLock;
 fb::CV endCV;
 
-void *parsePages( void * ) 
+void *parsePages( void * )
    {
    while( true )
       {
-      std::cout << "am i running" << std::endl;
       auto urlPair = get_url_to_parse( );
-      std::cout << "got url" << std::endl;
 
 	  if ( urlPair.second.empty( ) )
          {
+         std::cout << "Got empty link" << std::endl;
          endCV.signal();
          return nullptr;
          }
@@ -35,27 +34,21 @@ void *parsePages( void * )
 
          ParsedUrl url( downloader.finalUrl );
 
-         auto parser = fb::Parser( result,
-            url.Service + "://" + url.Host );
+         fb::Parser parser( result, url );
 
          parser.parse( );
 
          fb::Vector< fb::Pair<fb::String, fb::String> > links;
 
-         for ( auto iter = parser.urlAnchorText.begin( );  
-         	iter != parser.urlAnchorText.end( );  ++iter )
-         links.emplaceBack( iter.key( ), *iter );
+         add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );
 
-         ParsedPage pp = { urlPair.first, links };
-
-         add_parsed( pp );
-
-         addPage( { urlPair.first, {  parser.getParsedResult( ), parser.wordFlags } } );
+         addPage( parser.extractPage( urlPair.first ) ); // TODO I think move ctor will be called? -Jaeyoon
    		}
 		catch ( ConnectionException e )
    		{
          }
       }
+   std::cout << "True evaluating to false?" << std::endl;
    return nullptr;
    }
 
@@ -87,12 +80,15 @@ void *commandLineArgs( void * )
    return nullptr;
    }
 
-int main( int argc, char **argv )
+int main( int, char **argv )
    {
-      std::cout << argv[1] << std::endl;
-      std::cout << atoi(argv[2]) << std::endl;
+   std::cout << argv[1] << std::endl;
+   std::cout << atoi(argv[2]) << std::endl;
    set_master_ip( argv[1], atoi(argv[2]) );
    fb::Thread argsThreads( commandLineArgs, nullptr );
+
+   SSLWrapper::SSLInit( );
+   initializeFileName( "/tmp/page_store" );
 
    fb::Vector<fb::Thread> threads;
    for ( int i = 0;  i < NUM_THREAD;  ++i )
@@ -103,6 +99,7 @@ int main( int argc, char **argv )
    while ( !should_shutdown( ) )
 	  endCV.wait( endLock );
 
+   std::cout << "Shutting down" << std::endl;
    endLock.unlock( );
 
    for ( int i = 0;  i < NUM_THREAD;  ++i )

@@ -1,6 +1,7 @@
 // Added by Jaeyoon Kim 11/15/2019
 
 #include <tcp/url_tcp.hpp>
+#include <iostream>
 
 // The header for endian (for changing endianess for uint64_t)
 // might be different for other os
@@ -67,7 +68,7 @@ void send_int(int sock, uint32_t num) {
 uint32_t recv_int(int sock) {
    uint32_t num;
 
-   if (recv(sock, &num, sizeof(uint32_t), MSG_WAITALL) < 0) {
+   if (recv(sock, &num, sizeof(uint32_t), MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_int failed");
    }
    return ntohl(num);

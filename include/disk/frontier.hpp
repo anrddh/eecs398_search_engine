@@ -19,11 +19,13 @@ struct FrontierUrl {
 
 class FrontierBin {
 public:
-    FrontierBin(fb::StringView filename, bool init);
+    FrontierBin(fb::StringView filename);
 
     void addUrl(const FrontierUrl &url);
 
     fb::Vector<fb::SizeT> getUrl( );
+
+    fb::SizeT size() const;
 
 private:
     fb::Mutex localSeedM;
@@ -34,11 +36,15 @@ private:
 
 class Frontier {
 public:
-    static void init(fb::String prefix, bool init);
+    static void init(fb::String prefix);
 
     static Frontier & getFrontier();
 
     void addUrl(const FrontierUrl &url);
+
+    // Note that this prints the estimate for the current size
+    // but due to race conditions, it might not be exact
+    fb::SizeT size() const;
 
     fb::Vector<fb::SizeT> getUrl() const;
 

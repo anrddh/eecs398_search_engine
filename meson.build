@@ -15,6 +15,7 @@ endif
 if build_machine.system() == 'linux'
 
 add_global_link_arguments('-I/usr/include/openssl', '-L/usr/lib/x86_64-linux-gnu', '-lssl', '-lcrypto', language: 'cpp')
+add_global_arguments('-g', language : 'cpp')
 
 endif
 
@@ -39,6 +40,7 @@ executable('master',
            dependencies: [readline_dep, threads_dep])
 
 
-#executable('worker',
-#           worker_driver, worker_source_files,
-#           include_directories: inc)
+executable('worker',
+           worker_driver, worker_source_files,
+                      include_directories: inc,
+                      dependencies: [readline_dep, threads_dep])

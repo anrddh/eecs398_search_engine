@@ -3,7 +3,13 @@
 #include <fb/stddef.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/string.hpp>
+#include <fb/string_view.hpp>
 #include <fb/utility.hpp>
+#include <fb/file_descriptor.hpp>
+#include <fb/mutex.hpp>
+
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 #include <iostream>
 
@@ -16,7 +22,17 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/syscall.h>
 #include <unistd.h>
+
+// Signal handling
+#include <sys/signal.h>
+#include <signal.h>
+#include <unistd.h>
+#include <time.h>
+#include <errno.h>
+
+void recordFailedLink( fb::String msg );
 
 class ParsedUrl
    {
@@ -58,7 +74,7 @@ class ParsedUrl
             else if ( Service == "https" )
                Port = "443";
             else
-               Port = defaultPort;
+               Port = "443";
             }
 
          if ( end != fb::String::npos )
@@ -72,17 +88,15 @@ class ParsedUrl
          };
 
       // print function for debugging
-      void print( ) const
-         {
-         std::cout << "Complete Url = " << CompleteUrl << std::endl;
-         std::cout << "Service = " << Service
-               << ", Host = " << Host << ", Port = " << Port
+      void print( ) const {
+          log("Complete Url = ", CompleteUrl, '\n', "Service = ", Service,
+              ", Host = ", Host, ", Port = ", Port,
                << ", Path = " << Path << std::endl;
-         }
+      }
    };
 
 // Default port for https
-const fb::String ParsedUrl::defaultPort = "443";
+// const fb::String ParsedUrl::defaultPort = "443";
 
 // Wrapper class to handle writing
 // Handles chunked encoding
@@ -179,10 +193,10 @@ class BufferWriter
          }
    };
 
-struct ConnectionException 
+struct ConnectionException
    {
-   ConnectionException( const fb::String msg_ ) 
-      : msg(msg_)
+   ConnectionException( fb::String msg_ )
+       : msg(std::move(msg_))
       {
       }
 
@@ -210,7 +224,8 @@ class ConnectionWrapper
    {
    public:
       ParsedUrl &url;
-      int socketFD;
+      // int socketFD;
+      fb::FileDesc socketFD;
 
       // http connection
       ConnectionWrapper( ParsedUrl &url_in )
@@ -229,10 +244,19 @@ class ConnectionWrapper
             recordFailedLink( "getaddrResult" );
 
          // Create a TCP/IP socket
-         socketFD = socket( address->ai_family,
-               address->ai_socktype, address->ai_protocol );
-         if ( socketFD == -1 )
+         try
+            {
+            socketFD = fb::FileDesc( socket( address->ai_family,
+               address->ai_socktype, address->ai_protocol ) );
+            int set = 1;
+            setsockopt(socketFD, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
+            }
+         catch ( fb::FileDesc::ConstructionError & e )
+            {
             recordFailedLink( "socket" );
+            }
+         // if ( socketFD == -1 )
+            // recordFailedLink( "socket" );
 
          // Connect the socket to the host address
          int connectResult = connect( socketFD,
@@ -243,20 +267,21 @@ class ConnectionWrapper
          freeaddrinfo( address );
          }
 
-      void recordFailedLink( fb::String msg )
-         {
-         int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
-         ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
-               url.CompleteUrl.size( ) + 1 );
-         close( fd );
-         std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
-         std::cerr << "Failed at " << msg << std::endl;
-         throw ConnectionException( msg );
-         }
+      // void recordFailedLink( fb::String msg )
+      //    {
+      //    // int fd = open( "failed_links.txt", O_WRONLY | O_APPEND | O_CREAT, 0666 );
+      //    // ::write( fd, ( url.CompleteUrl + "\n" ).data( ),
+      //    //       url.CompleteUrl.size( ) + 1 );
+      //    // close( fd );
+      //    // fb::AutoLock lock(cerrLock);
+      //    std::cerr << "Failed connecting to link: " << url.CompleteUrl << std::endl;
+      //    std::cerr << "Failed at " << msg << std::endl;
+      //    std::cerr << syscall(SYS_gettid) << std::endl;
+      //    throw ConnectionException( msg );
+      //    }
 
       virtual ~ConnectionWrapper( )
          {
-         close( socketFD );
          }
 
       virtual int read( char *buffer )
@@ -275,16 +300,20 @@ class ConnectionWrapper
 class SSLWrapper : public ConnectionWrapper
    {
    public:
+
+      static void SSLInit()
+         {
+         SSL_library_init( );
+         OpenSSL_add_all_algorithms( );
+         }
+
       SSLWrapper( ParsedUrl &url_in )
       : ConnectionWrapper( url_in )
          {
          // Add SSL layer around http
-         SSL_library_init( );
-         OpenSSL_add_all_algorithms( );
-
          ctx = SSL_CTX_new( SSLv23_method( ) );
          if ( !ctx )
-            recordFailedLink( "ssl ctx" );
+            recordFailedLink( "ssl ctx");
 
          ssl = SSL_new( ctx );
          if ( !ssl )
@@ -309,14 +338,113 @@ class SSLWrapper : public ConnectionWrapper
 
       virtual int write( const fb::String &message )
       {
-         return SSL_write( ssl, message.data( ), message.size( ) );
+         // GOT this code from
+         // https://riptutorial.com/posix/example/17424/handle-sigpipe-generated-by-write---in-a-thread-safe-manner
+         sigset_t sig_block, sig_restore, sig_pending;
+
+          sigemptyset(&sig_block);
+          sigaddset(&sig_block, SIGPIPE);
+
+          /* Block SIGPIPE for this thread.
+           *
+           * This works since kernel sends SIGPIPE to the thread that called write(),
+           * not to the whole process.
+           */
+          if (pthread_sigmask(SIG_BLOCK, &sig_block, &sig_restore) != 0) {
+              return -1;
+          }
+
+          /* Check if SIGPIPE is already pending.
+           */
+          int sigpipe_pending = -1;
+          if (sigpending(&sig_pending) != -1) {
+              sigpipe_pending = sigismember(&sig_pending, SIGPIPE);
+          }
+
+          if (sigpipe_pending == -1) {
+              pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
+              return -1;
+          }
+
+          int ret = SSL_write( ssl, message.data( ), message.size( ) );
+
+          /* Fetch generated SIGPIPE if write() failed with EPIPE.
+           *
+           * However, if SIGPIPE was already pending before calling write(), it was
+           * also generated and blocked by caller, and caller may expect that it can
+           * fetch it later. Since signals are not queued, we don't fetch it in this
+           * case.
+           */
+          if (ret == -1 && errno == EPIPE && sigpipe_pending == 0) {
+              struct timespec ts;
+              ts.tv_sec = 0;
+              ts.tv_nsec = 0;
+
+              int sig;
+              while ((sig = sigtimedwait(&sig_block, 0, &ts)) == -1) {
+                  if (errno != EINTR)
+                      break;
+              }
+          }
+
+          pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
+          return ret;
       }
 
       virtual ~SSLWrapper( )
          {
+         // GOT this code from
+         // https://riptutorial.com/posix/example/17424/handle-sigpipe-generated-by-write---in-a-thread-safe-manner
+         sigset_t sig_block, sig_restore, sig_pending;
+
+          sigemptyset(&sig_block);
+          sigaddset(&sig_block, SIGPIPE);
+
+          /* Block SIGPIPE for this thread.
+           *
+           * This works since kernel sends SIGPIPE to the thread that called write(),
+           * not to the whole process.
+           */
+          if (pthread_sigmask(SIG_BLOCK, &sig_block, &sig_restore) != 0) {
+              // return -1;
+          }
+
+          /* Check if SIGPIPE is already pending.
+           */
+          int sigpipe_pending = -1;
+          if (sigpending(&sig_pending) != -1) {
+              sigpipe_pending = sigismember(&sig_pending, SIGPIPE);
+          }
+
+          if (sigpipe_pending == -1) {
+              pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
+          //     return -1;
+          }
+
          SSL_shutdown( ssl );
          SSL_free( ssl );
          SSL_CTX_free( ctx );
+
+          /* Fetch generated SIGPIPE if write() failed with EPIPE.
+           *
+           * However, if SIGPIPE was already pending before calling write(), it was
+           * also generated and blocked by caller, and caller may expect that it can
+           * fetch it later. Since signals are not queued, we don't fetch it in this
+           * case.
+           */
+          if (errno == EPIPE && sigpipe_pending == 0) {
+              struct timespec ts;
+              ts.tv_sec = 0;
+              ts.tv_nsec = 0;
+
+              int sig;
+              while ((sig = sigtimedwait(&sig_block, 0, &ts)) == -1) {
+                  if (errno != EINTR)
+                      break;
+              }
+          }
+
+          pthread_sigmask(SIG_SETMASK, &sig_restore, NULL);
          }
 
    private:
@@ -339,12 +467,12 @@ HTTPDownloader( )
    // GetMessage
    const fb::String GetGetMessage( const ParsedUrl &url )
       {
-      fb::String getMessage = 
+      fb::String getMessage =
             "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n" +
             "User-Agent: LinuxGetSsl/2.0 (Linux)\r\n" +
             "Accept: */*\r\n" +
             "Accept-Encoding: identity\r\n" +
-            "Connection: close\r\n\r\n"; 
+            "Connection: close\r\n\r\n";
       return getMessage;
       }
 
@@ -368,7 +496,7 @@ HTTPDownloader( )
 
    // Get header and parse relevant information
    // return apporpriate pair of DownloadStatus and redirectUrl
-   void parseHeader( ConnectionWrapper *connector, BufferWriter &writer, 
+   void parseHeader( ConnectionWrapper *connector, BufferWriter &writer,
       const fb::StringView &acceptableType )
       {
       char buffer [ 10240 ];
@@ -393,7 +521,7 @@ HTTPDownloader( )
                {
                fb::SizeT firstSpace = header.find( ' ', 4 );
                fb::SizeT secondSpace = header.find( ' ', firstSpace );
-               response = header.substr(firstSpace + 1, 
+               response = header.substr(firstSpace + 1,
                      secondSpace - firstSpace - 1);
 
                const fb::StringView headerView( header );
@@ -405,7 +533,7 @@ HTTPDownloader( )
                if ( response[0] == '3' )
                   {
                   fb::SizeT startRedirectUrl = headerView.find( redirectIndicator );
-                  fb::SizeT endRedirectUrl = headerView.find( endLineIndicator, 
+                  fb::SizeT endRedirectUrl = headerView.find( endLineIndicator,
                         startRedirectUrl );
                   fb::String redirectUrl = header.substr(
                         startRedirectUrl + redirectIndicator.size( ),
@@ -450,7 +578,7 @@ HTTPDownloader( )
             {
             delete connector;
             }
-         
+
       };
 
    // Esatblish connection with the url and try to write to downloadedContent
@@ -557,3 +685,9 @@ HTTPDownloader( )
       }
 
 };
+
+inline void recordFailedLink( fb::String msg ) {
+   std::cerr << "Failed at " << msg << std::endl;
+   std::cerr << syscall(SYS_gettid) << std::endl;
+   throw ConnectionException(std::move(msg));
+}

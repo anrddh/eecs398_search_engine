@@ -1,10 +1,13 @@
 #pragma once
 
-#include "utility.hpp"
+#include <fb/utility.hpp>
+#include <debug.hpp>
+#include <disk/logfile.hpp>
 
 #include <exception>
 
 #include <unistd.h>
+
 
 namespace fb {
 
@@ -24,6 +27,7 @@ namespace fb {
         FileDesc() = default;
 
         FileDesc(int fd_in) : fd(fd_in) {
+            log(logfile, "FileDesc got", fd_in, '\n');
             if (fd_in <= -1)
                 throw ConstructionError("Invalid file descriptor.");
         }
@@ -37,25 +41,26 @@ namespace fb {
             return *this;
         }
 
-        FileDesc(FileDesc &rhs) {
+        FileDesc(const FileDesc &rhs) {
             auto new_desc = dup(rhs.fd);
             if (new_desc == -1)
                 throw ConstructionError("Failed to dup.");
             fd = new_desc;
         }
 
-        FileDesc & operator=(FileDesc rhs) {
-            fb::swap(fd, rhs.fd);
+        FileDesc & operator=(const FileDesc &rhs) {
+            auto temp = rhs;
+            fb::swap(fd, temp.fd);
             return *this;
         }
 
         ~FileDesc() {
-           if ( fd != -1) {
-            close(fd);
-           }
+            if ( fd != -1) {
+                close(fd);
+            }
         }
 
-        operator int() noexcept {
+        operator int() const noexcept {
             return fd;
         }
     };

@@ -8,6 +8,8 @@
 #include <fb/string_view.hpp>
 #include <fb/file_descriptor.hpp>
 #include <fb/algorithm.hpp>
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 #include <iostream> // TODO delete
 #include <atomic>
@@ -19,7 +21,7 @@
 
 //TODO: Change back! just for testing its smaller!
 //constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
-constexpr fb::SizeT MAXFILESIZE = 0x20000000; // 512 MiB
+constexpr fb::SizeT MAXFILESIZE = 0x2000000;
 
 // This is the class that represents an array saved on disk
 // ASSUMES that there won't be more than 128 Gb of data
@@ -31,29 +33,34 @@ constexpr fb::SizeT MAXFILESIZE = 0x20000000; // 512 MiB
 template <typename T>
 class DiskVec {
 public:
-    DiskVec(fb::StringView fname, bool init = false)  {
-        fb::FileDesc fd = open(fname.data(),
-                               O_RDWR | O_CREAT,
-                               S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+    DiskVec(fb::StringView fname)
+        : fd(open(fname.data(),
+                  O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH))  {
 
         if (ftruncate(fd, MAXFILESIZE))
             throw fb::Exception("SavedObj: Failed to truncate file.");
 
-        auto ptr = mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
+        auto ptr = mmap(nullptr,
+                        MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
                         MAP_SHARED, fd, 0);
 
         if (ptr == (void *) -1)
             throw fb::Exception("SavedObj: Failed to mmap.");
 
-        if (init)
-            cursor = new (ptr) std::atomic<fb::SizeT>(0);
-        else
-            cursor = static_cast<std::atomic<fb::SizeT> *>(ptr);
+        cursor = new (ptr)
+            std::atomic<fb::SizeT>(*static_cast<fb::SizeT *>(ptr));
         filePtr = reinterpret_cast<T *>(cursor + 1);
+
+        log(logfile, "DiskVec initialized. cursor ", cursor, " fileptr ",
+            filePtr, '\n');
     }
 
     ~DiskVec() noexcept {
         munmap(static_cast<void *>(cursor), MAXFILESIZE);
+    }
+
+    int file_descriptor() const {
+        return fd;
     }
 
     [[nodiscard]] constexpr T * data() const noexcept {
@@ -111,5 +118,6 @@ public:
 
 private:
     T *filePtr;
+    fb::FileDesc fd;
     std::atomic<fb::SizeT> *cursor;
 };

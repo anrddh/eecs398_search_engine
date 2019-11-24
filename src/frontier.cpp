@@ -33,13 +33,18 @@ atomic<int> randSeedCounter = 0;
 constexpr SizeT NUM_TRY = 1000;
 constexpr SizeT NUM_SAMPLE = 3;
 
-FrontierBin::FrontierBin( StringView filename, bool init )
+FrontierBin::FrontierBin(StringView filename)
     : localSeed( ++randSeedCounter ),
-      toParse(filename, init) {}
+      toParse(filename) {}
 
 void FrontierBin::addUrl(const FrontierUrl &url) {
     AutoLock lock( toParseM );
     toParse.pushBack( url );
+}
+
+SizeT FrontierBin::size() const
+{
+   return toParse.size();
 }
 
 Vector<SizeT> FrontierBin::getUrl( ) {
@@ -89,7 +94,7 @@ Vector<SizeT> FrontierBin::getUrl( ) {
 Frontier *Frontier::ptr = nullptr;
 char Frontier::frontiers[ sizeof(FrontierBin) * NumFrontierBins ];
 
-void Frontier::init(String prefix, bool init) {
+void Frontier::init(String prefix) {
     delete ptr;
 
     ptr = new Frontier;
@@ -97,12 +102,21 @@ void Frontier::init(String prefix, bool init) {
     FrontierBin *fbptr = reinterpret_cast<FrontierBin *>(frontiers);
     for (SizeT i = 0; i < NumFrontierBins; ++i) {
         auto fname = prefix + fb::toString(i);
-        new (fbptr + i) FrontierBin(fname.data(), init);
+        new (fbptr + i) FrontierBin(fname.data());
     }
 }
 
 Frontier & Frontier::getFrontier() {
     return *ptr;
+}
+
+SizeT Frontier::size() const {
+   SizeT total = 0;
+   for (SizeT i = 0; i < NumFrontierBins; ++i)
+   {
+      total += reinterpret_cast<FrontierBin* >(frontiers + i * sizeof(FrontierBin))->size();
+   }
+   return total;
 }
 
 void Frontier::addUrl(const FrontierUrl &url) {

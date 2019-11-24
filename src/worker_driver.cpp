@@ -42,12 +42,11 @@ void *parsePages( void * )
 
          add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );
 
-         addPage( parser.extractPage( urlPair.first ) ); // TODO I think move ctor will be called? -Jaeyoon
+         addPage( std::move(parser.extractPage( urlPair.first )) );
    		}
 		catch ( ConnectionException e )
    		{
          }
-         std::cout << "Parsed url " << urlPair.second << std::endl;
       }
    std::cout << "True evaluating to false?" << std::endl;
    return nullptr;
@@ -102,6 +101,8 @@ int main( int, char **argv )
 
    std::cout << "Shutting down" << std::endl;
    endLock.unlock( );
+
+   page_store_init_shutdown();
 
    for ( int i = 0;  i < NUM_THREAD;  ++i )
 	  threads[i].join( );

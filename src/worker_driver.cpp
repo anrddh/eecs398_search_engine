@@ -40,7 +40,7 @@ void *parsePages( void * )
 
          fb::Vector< fb::Pair<fb::String, fb::String> > links;
 
-         add_parsed( { urlPair.first, parser.urlAnchorText.covert_to_vec() } );
+         add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );
 
          addPage( parser.extractPage( urlPair.first ) ); // TODO I think move ctor will be called? -Jaeyoon
    		}

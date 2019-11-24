@@ -35,22 +35,20 @@ PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOf
 }
 
 //returns the end offset
-fb::SizeT PageBin::addPage(fb::SizeT UrlOffset,
-                           fb::Pair<fb::String,
-                           fb::Vector<WordDescriptors>> page){
+fb::SizeT PageBin::addPage(Page&& p) {
     //copy the page data in
-    auto idx = Pages.reserve(page.first.size() + 1);
-    page.first.copy(Pages.data() + idx, page.first.size());
-    Pages.data()[idx + page.first.size()] = 0;
+    auto idx = Pages.reserve(p.page_str.size() + 1);
+    p.page_str.copy(Pages.data() + idx, p.page_str.size());
+    Pages.data()[idx + p.page_str.size()] = 0;
 
     //copy the vector in
-    auto idy = Pages.insert(page.second.begin(), page.second.end());
+    auto idy = Pages.insert(p.word_headers.begin(), p.word_headers.end());
 
     //put in the page header Note, we add
     //sizeof(std::atomic<fb::SizeT>) to the in-file offsets, due to
     //the cursor at the beginning of the file
     PageHeader header = { idx + sizeof(std::atomic<fb::SizeT>),
-        idy + sizeof(std::atomic<fb::SizeT>), UrlOffset };
+        idy + sizeof(std::atomic<fb::SizeT>), p.UrlOffset };
     memcpy(Pages.data() + PageHeadersOffset + PageCount * sizeof(PageHeader),
            &header, sizeof(PageHeader));
 
@@ -58,7 +56,7 @@ fb::SizeT PageBin::addPage(fb::SizeT UrlOffset,
     ++PageCount;
     memcpy(Pages.data() + PageCountOffset, &PageCount, sizeof(PageCount));
 
-    return idy + page.second.size();
+    return idy + p.word_headers.size();
 }
 
 void initializeFileName(fb::String fname){
@@ -90,7 +88,7 @@ void * runBin(void *){
         Page P = std::move(PagesToAdd.front());
         PagesToAdd.pop();
         QueueMtx.unlock();
-        Bin.addPage(P.first, P.second);
+        Bin.addPage(std::move( P ));
     }
 
     if (ftruncate(Bin.file_descriptor(), Bin.size() + 32)) {

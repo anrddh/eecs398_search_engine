@@ -24,7 +24,7 @@ struct Page {
    fb::SizeT UrlOffset;
    fb::String page_str;
    fb::Vector<WordDescriptors> word_headers;
-}
+};
 
 
 extern std::atomic<fb::SizeT> NumThreads;
@@ -41,7 +41,7 @@ public:
 
     PageBin(fb::StringView filename, bool init);
 
-    fb::SizeT addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page);
+    fb::SizeT addPage(Page&& p);
 
     fb::Pair<fb::String, fb::Vector<WordDescriptors>> getPage(fb::SizeT offset);
 

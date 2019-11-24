@@ -248,7 +248,7 @@ class ConnectionWrapper
             socketFD = fb::FileDesc( socket( address->ai_family,
                address->ai_socktype, address->ai_protocol ) );
             int set = 1;
-            setsockopt(socketFD, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+            setsockopt(socketFD, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {
@@ -380,7 +380,7 @@ class SSLWrapper : public ConnectionWrapper
               ts.tv_nsec = 0;
 
               int sig;
-              while ((sig = sigwait(&sig_block, &ts)) == -1) {
+              while ((sig = sigtimedwait(&sig_block, 0, &ts)) == -1) {
                   if (errno != EINTR)
                       break;
               }
@@ -437,7 +437,7 @@ class SSLWrapper : public ConnectionWrapper
               ts.tv_nsec = 0;
 
               int sig;
-              while ((sig = sigwait(&sig_block, &ts)) == -1) {
+              while ((sig = sigtimedwait(&sig_block, 0, &ts)) == -1) {
                   if (errno != EINTR)
                       break;
               }

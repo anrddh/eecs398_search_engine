@@ -167,11 +167,11 @@ private:
       fb::AutoLock<fb::Mutex> l(info_hash.second);
 
       // This we default initialize
-      fb::Pair<fb::StringView&, fb::SizeT&> url_info_pair =
+      fb::Pair<fb::StringView*, fb::SizeT*> url_info_pair =
          info_hash.first.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
                link );
 
-      bool is_new_url = (url_info_pair.second == 0);
+      bool is_new_url = (*url_info_pair.second == 0);
 
       if ( is_new_url )
       {
@@ -186,23 +186,23 @@ private:
          // However in this case, the equality operator and the hash does not
          // change since they both represent the same string
          fb::SizeT url_offset = UrlStore::getStore().addUrl( link );
-         url_info_pair.first = UrlStore::getStore().getUrl( url_offset );
-         url_info_pair.second = url_info.reserve(1);
-         url_info[url_info_pair.second].state = 'u';
-         url_info[url_info_pair.second].UrlOffset = url_offset;
+         *url_info_pair.first = UrlStore::getStore().getUrl( url_offset );
+         *url_info_pair.second = url_info.reserve(1);
+         url_info[ *url_info_pair.second].state = 'u';
+         url_info[ *url_info_pair.second].UrlOffset = url_offset;
 
          // TODO this is just for debugging
          // delete below
-         assert( info_hash.first[ link ] == url_info_pair.second );
+         assert( info_hash.first[ link ] == *url_info_pair.second );
       }
 
-      url_info[url_info_pair.second].AnchorTextOffsets =
+      url_info[ *url_info_pair.second ].AnchorTextOffsets =
          AnchorStore::getStore().addStr( anchor_text,
-               url_info[ url_info_pair.second ].AnchorTextOffsets );
+               url_info[ *url_info_pair.second ].AnchorTextOffsets );
 
       if ( is_new_url )
       {
-         return url_info[ url_info_pair.second ].UrlOffset;
+         return url_info[ *url_info_pair.second ].UrlOffset;
       }
       else
       {

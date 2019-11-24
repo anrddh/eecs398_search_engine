@@ -468,7 +468,7 @@ HTTPDownloader( )
       {
       fb::String getMessage =
             "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n" +
-            "User-Agent: LinuxGetSsl/2.0 (Linux)\r\n" +
+            "User-Agent: donwload_html/2.0 (Linux) aniruddh@umich.edu\r\n" +
             "Accept: */*\r\n" +
             "Accept-Encoding: identity\r\n" +
             "Connection: close\r\n\r\n";

@@ -20,9 +20,10 @@
 
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;
-std::atomic<fb::SizeT> FileIndex(0);
+//std::atomic<fb::SizeT> FileIndex(0);
 std::atomic<fb::SizeT> PagesCounter(0);
 std::atomic<fb::SizeT> NumThreads(0);
+DiskVec<char> PageStoreCounter("/tmp/crawler/page_store_counter.bin"); //note: this is global so be aware of initialization order
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
 
@@ -77,7 +78,8 @@ void addPage(Page page){
 
 void * runBin(void *){
     NumThreads.fetch_add(1);
-    fb::SizeT Index = FileIndex.fetch_add(1);
+    fb::SizeT Index = PageStoreCounter.reserve(1);
+
     PageBin Bin(Prefix + fb::toString(Index));
     fb::SizeT i = 0;
     for( ; i < numPages; ++i){

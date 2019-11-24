@@ -51,16 +51,24 @@ public:
                   = 0)
         noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
 
-    // move assignment operator
-    constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
-        owner = rhs.release();
-        deleter = rhs.getDeleter();
-        return *this;
-    }
+   // move assignment operator
+   constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
+      if(owner)
+         {
+         deleter(owner);
+         }
+      owner = rhs.release();
+      deleter = rhs.getDeleter();
+      return *this;
+   }
 
    template<typename OtherType>
    EnableIfT<std::is_base_of_v<T, OtherType>, UniquePtr&> 
    operator=(UniquePtr<OtherType>&& rhs) noexcept {
+      if(owner)
+         {
+         deleter(owner);
+         }
       owner = rhs.release();
       deleter = rhs.getDeleter();
       return *this;

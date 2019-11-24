@@ -48,7 +48,7 @@ public:
       size_t* current_des_offset = start_of_file + 3;
       //size_t* current_doc_id = start_of_file + 4;
       size_t* end_page_headers = start_of_file + *start_of_file;
-      uint64_t doc_num = 0;
+      uint32_t doc_num = 0;
       while(current != end_page_headers){
          build_single_doc(start_of_file + *current_doc, start_of_file + *current_des, doc_num);
          current_doc_offset += 3;
@@ -79,7 +79,7 @@ private:
       return word_begin;
    }
 
-   void build_single_doc(char* doc_start, uint8_t* des_start, uint64_t docId){
+   void build_single_doc(char* doc_start, uint8_t* des_start, uint32_t docId){
       fb::UnorderedSet<fb::String word> unique_words;
       fb::String word;
       uint8_t word_info;

@@ -1,6 +1,7 @@
 // Created by Jaeyoon Kim 11/7/19
 #pragma once
 
+#include <cassert>
 #include <disk/url_store.hpp>
 #include <disk/offset_lookup.hpp>
 #include <disk/UrlInfo.hpp>
@@ -70,14 +71,6 @@ public:
       // This we default initialize
       fb::SizeT& url_info_offset = info_hash.first[ url ];
 
-      // This means that we have never seen before
-      if ( url_info_offset == 0)
-      {
-         std::cerr << "Error: HandleParsedPage has never seen url offset of "
-            << pp.url_offset << std::endl;
-         info_hash.second.unlock();
-      }
-
       // url info object associated with this url
       UrlInfo& info = url_info[ url_info_offset ];
 
@@ -123,6 +116,70 @@ public:
       info_hash.second.unlock();
 
       return adj_list;
+    }
+
+    void assert_invariance() {
+       for (fb::SizeT i = 0; i < NumBins; ++i) {
+          info_hashes[i].second.lock();
+       }
+
+       for (fb::SizeT i = 0; i < url_info.size(); ++i) {
+            fb::StringView url =
+               UrlStore::getStore().getUrl( url_info[ i ].UrlOffset );
+
+            fb::SizeT hash = hasher(url);
+            auto it = info_hashes[ hash % NumBins ].first.find( url );
+            assert( it != info_hashes[ hash % NumBins ].first.end() );
+            if (*it != i) {
+               std::cout << "i = " << i << " has url " << 
+                  UrlStore::getStore().getUrl( url_info[ i ].UrlOffset ) << std::endl;
+               std::cout << "*it = " << i << " has url " << 
+                  UrlStore::getStore().getUrl( url_info[ *it ].UrlOffset );
+               assert(false);
+            }
+
+            fb::Vector<fb::SizeT> links = 
+               AdjStore::getStore().getList(
+                     url_info[i].AdjListOffsets.first, 
+                     url_info[i].AdjListOffsets.second);
+
+            for ( fb::SizeT link_offset : links ) {
+               fb::StringView link_url =
+                  UrlStore::getStore().getUrl( link_offset );
+               fb::SizeT link_hash = hasher( link_url );
+               auto link_it = info_hashes[ link_hash % NumBins ].first.find( link_url );
+               assert( link_it != info_hashes[ link_hash % NumBins ].first.end() );
+               assert( url_info[ *link_it ].UrlOffset == link_offset );
+            }
+       }
+
+       for (fb::SizeT i = 0; i < NumBins; ++i) {
+          info_hashes[i].second.unlock();
+       }
+    }
+
+    void print_info( fb::StringView url ) {
+       fb::SizeT hash = hasher( url );
+
+       auto it = info_hashes[ hash % NumBins ].first.find( url );
+       if (it == info_hashes[ hash % NumBins ].first.end()) {
+          std::cout << "This page does not exist!" << std::endl;
+          return;
+       }
+       fb::SizeT url_info_offset = *it;
+
+       std::cout << "Info for page " << url << std::endl;
+
+      fb::Vector<fb::SizeT> links = 
+         AdjStore::getStore().getList(
+               url_info[ url_info_offset ].AdjListOffsets.first, 
+               url_info[ url_info_offset ].AdjListOffsets.second);
+
+      for ( fb::SizeT link_offset : links ) {
+         fb::StringView link_url =
+            UrlStore::getStore().getUrl( link_offset );
+         std::cout << "\tHas link " << link_url << std::endl;
+      }
     }
 
 private:
@@ -186,7 +243,9 @@ private:
          // However in this case, the equality operator and the hash does not
          // change since they both represent the same string
          fb::SizeT url_offset = UrlStore::getStore().addUrl( link );
+         assert( url_offset && "addUrl returned 0");
          *url_info_pair.first = UrlStore::getStore().getUrl( url_offset );
+         assert( *url_info_pair.first == link );
          *url_info_pair.second = url_info.reserve(1);
          url_info[ *url_info_pair.second].state = 'u';
          url_info[ *url_info_pair.second].UrlOffset = url_offset;

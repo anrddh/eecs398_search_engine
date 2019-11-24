@@ -44,7 +44,7 @@
 using namespace fb;
 
 void send_char(int sock, char c) {
-   if (send(sock , &c , sizeof(c) , 0 ) == -1) {
+   if (send(sock , &c , sizeof(c) , MSG_NOSIGNAL ) == -1) {
       throw SocketException("TCP Utility: send_char failed");
    }
 }
@@ -60,7 +60,7 @@ char recv_char(int sock) {
 
 void send_int(int sock, uint32_t num) {
    num = htonl(num);
-   if (send(sock , &num , sizeof(uint32_t) , 0 ) == -1) {
+   if (send(sock , &num , sizeof(uint32_t) , MSG_NOSIGNAL ) == -1) {
       throw SocketException("TCP Utility: send_int failed");
    }
 }
@@ -76,7 +76,7 @@ uint32_t recv_int(int sock) {
 
 void send_uint64_t(int sock, uint64_t num) {
    num = htobe64(num);
-   if (send(sock , &num , sizeof(uint64_t) , 0 ) == -1) {
+   if (send(sock , &num , sizeof(uint64_t) , MSG_NOSIGNAL ) == -1) {
       throw SocketException("TCP Utility: send_uint64_t failed");
    }
 }
@@ -95,7 +95,7 @@ void send_str(int sock, const fb::StringView str) {
    send_int(sock, size);
 
    // Should send null character as well
-   if (send(sock , str.data() , size + 1 , 0 ) == -1) {
+   if (send(sock , str.data() , size + 1 , MSG_NOSIGNAL ) == -1) {
       throw SocketException("TCP Utility: send_str failed");
    }
 }

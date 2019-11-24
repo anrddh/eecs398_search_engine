@@ -10,6 +10,9 @@
 #include <fb/cv.hpp>
 #include <fb/mutex.hpp>
 
+#include <disk/logfile.hpp>
+#include <debug.hpp>
+
 #include <iostream>
 
 #include <getopt.h>
@@ -166,7 +169,7 @@ void * parsePages( void * )
 
 	  if ( urlPair.second.empty( ) )
          {
-         std::cout << "Got empty link" << std::endl;
+             log(logfile, "Got empty link\n");
          endCV.signal();
          return nullptr;
          }
@@ -189,9 +192,10 @@ void * parsePages( void * )
          addPage( parser.extractPage( urlPair.first ) ); // TODO I think move ctor will be called? -Jaeyoon
    		}
 		catch ( ConnectionException e )
-            {
-            }
+   		{
+         }
+      log(logfile, "Parsed url", urlPair.second, '\n');
       }
-   std::cout << "True evaluating to false?" << std::endl;
+   log(logfile, "True evaluating to false?\n");
    return nullptr;
    }

@@ -411,14 +411,18 @@ private:
 
 	void handleHTML( fb::SizeT start, fb::SizeT end ) const
 		{
-		fb::StringView htmlTag( content.data( ) + start, end - start );
+		fb::String htmlLower = content.substr( start, end - start );
+		// there are so many insane people online. lower case everything
+		// to keep myself sane
+		for ( int i = 0;  i < htmlLower.size( );  ++i )
+			htmlLower[ i ] = tolower( htmlLower[ i ] );
+		fb::StringView htmlTag( htmlLower.data( ), htmlLower.size( ) );
+		std::cout << htmlTag << std::endl;
 		fb::SizeT index = htmlTag.find( "lang"_sv );
 		if ( index != fb::StringView::npos )
 			{
-			fb::SizeT new_index = htmlTag.find( "en"_sv, index );
-			if ( new_index == fb::StringView::npos )
-				new_index = htmlTag.find( "EN"_sv, index );
-			if ( new_index == fb::StringView::npos )
+			index = htmlTag.find( "en"_sv );
+			if ( index == fb::StringView::npos )
 				throw ParserException( "language not english" );
 			}
 		}

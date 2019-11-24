@@ -66,7 +66,7 @@ MUniquePtr<char> getReadline() {
     fb::String line;
     fb::getline(std::cin, line);
 
-    auto ptr = MUniquePtr<char>(static_cast<char *>(malloc(line.size())),
+    auto ptr = MUniquePtr<char>(static_cast<char *>(malloc(line.size() + 1)),
                                 FreeDeleter<char>());
     strcpy(ptr.get(), line.data());
     return ptr;
@@ -122,6 +122,15 @@ int main(int argc, char **argv) try {
             addSeed(line);
         } else if (firstWord == "status"_sv) {
            cout << "Frontier size: " << frontier.size() << endl;
+        } else if (firstWord == "assert"_sv) {
+           UrlInfoTable::getTable().assert_invariance();
+        } else if (firstWord == "url-info"_sv) {
+            line.removePrefix(firstSpace + 1);
+
+            if (isspace(line.back()))
+                line.removeSuffix(1);
+
+           UrlInfoTable::getTable().print_info( line );
         } else if (firstWord == "shutdown"_sv) {
            terminate_workers();
            //socket_handler.join();

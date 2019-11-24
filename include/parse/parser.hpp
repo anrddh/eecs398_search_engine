@@ -9,6 +9,9 @@
 #include <disk/page_store.hpp>
 #include <http/download_html.hpp>
 
+#include <disk/logfile.hpp>
+#include <debug.hpp>
+
 // #include "../../index/index_builder.hpp"
 //flags
 constexpr uint8_t INDEX_WORD_TITLE = 0b0100;
@@ -108,8 +111,8 @@ public:
 		{
 		for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
 			{
-			std::cout << "URL is: " << i.key() << std::endl;
-			std::cout << "Anchor text: " << *i << std::endl;
+                log(logfile, "URL is: ", i.key(), '\n',
+                    "Anchor text: ", *i, '\n');
 			}
 		}
 
@@ -408,15 +411,18 @@ private:
 
 	void handleHTML( fb::SizeT start, fb::SizeT end ) const
 		{
-		fb::StringView htmlTag( content.data( ) + start, end - start );
-		// std::cout << htmlTag << std::endl;
+		fb::String htmlLower = content.substr( start, end - start );
+		// there are so many insane people online. lower case everything
+		// to keep myself sane
+		for ( int i = 0;  i < htmlLower.size( );  ++i )
+			htmlLower[ i ] = tolower( htmlLower[ i ] );
+		fb::StringView htmlTag( htmlLower.data( ), htmlLower.size( ) );
+		std::cout << htmlTag << std::endl;
 		fb::SizeT index = htmlTag.find( "lang"_sv );
 		if ( index != fb::StringView::npos )
 			{
-			fb::SizeT new_index = htmlTag.find( "en"_sv, index );
-			if ( new_index == fb::StringView::npos )
-				new_index = htmlTag.find( "EN"_sv, index );
-			if ( new_index == fb::StringView::npos )
+			index = htmlTag.find( "en"_sv );
+			if ( index == fb::StringView::npos )
 				throw ParserException( "language not english" );
 			}
 		}

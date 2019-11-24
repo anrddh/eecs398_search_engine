@@ -8,6 +8,8 @@
 #include <fb/string_view.hpp>
 #include <fb/file_descriptor.hpp>
 #include <fb/algorithm.hpp>
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 #include <iostream> // TODO delete
 #include <atomic>
@@ -31,30 +33,26 @@ constexpr fb::SizeT MAXFILESIZE = 0x2000000;
 template <typename T>
 class DiskVec {
 public:
-    DiskVec(fb::StringView fname, bool init = false) : fd(open(fname.data(),
-                           O_RDWR | O_CREAT,
-                           S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH))  {
-        // fb::FileDesc fd = open(fname.data(),
-        //                        O_RDWR | O_CREAT,
-        //                        S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
-
-
+    DiskVec(fb::StringView fname)
+        : fd(open(fname.data(),
+                  O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH))  {
 
         if (ftruncate(fd, MAXFILESIZE))
             throw fb::Exception("SavedObj: Failed to truncate file.");
 
-        auto ptr = mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
+        auto ptr = mmap(nullptr,
+                        MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
                         MAP_SHARED, fd, 0);
 
         if (ptr == (void *) -1)
             throw fb::Exception("SavedObj: Failed to mmap.");
 
-        if (init)
-            cursor = new (ptr) std::atomic<fb::SizeT>(0);
-        else
-            cursor = static_cast<std::atomic<fb::SizeT> *>(ptr);
+        cursor = new (ptr)
+            std::atomic<fb::SizeT>(*static_cast<fb::SizeT *>(ptr));
         filePtr = reinterpret_cast<T *>(cursor + 1);
-        std::cout << "DiskVec initialized. cursor " << cursor << " fileptr " << filePtr << std::endl;
+
+        log(logfile, "DiskVec initialized. cursor ", cursor, " fileptr ",
+            filePtr, '\n');
     }
 
     ~DiskVec() noexcept {

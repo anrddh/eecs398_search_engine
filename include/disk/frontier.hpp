@@ -19,7 +19,7 @@ struct FrontierUrl {
 
 class FrontierBin {
 public:
-    FrontierBin(fb::StringView filename, bool init);
+    FrontierBin(fb::StringView filename);
 
     void addUrl(const FrontierUrl &url);
 
@@ -36,7 +36,7 @@ private:
 
 class Frontier {
 public:
-    static void init(fb::String prefix, bool init);
+    static void init(fb::String prefix);
 
     static Frontier & getFrontier();
 

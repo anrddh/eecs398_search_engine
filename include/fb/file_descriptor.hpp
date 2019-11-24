@@ -1,12 +1,13 @@
 #pragma once
 
-#include "utility.hpp"
+#include <fb/utility.hpp>
+#include <debug.hpp>
+#include <disk/logfile.hpp>
 
 #include <exception>
 
 #include <unistd.h>
 
-#include <iostream> // TODO delete
 
 namespace fb {
 
@@ -53,10 +54,9 @@ namespace fb {
         }
 
         ~FileDesc() {
-           if ( fd != -1) {
-            std::cout << "closing " << fd << std::endl;
-            close(fd);
-           }
+            if ( fd != -1) {
+                close(fd);
+            }
         }
 
         operator int() const noexcept {

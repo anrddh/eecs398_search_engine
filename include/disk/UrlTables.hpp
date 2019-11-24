@@ -2,36 +2,40 @@
 #pragma once
 
 #include <cassert>
-#include "url_store.hpp"
-#include "offset_lookup.hpp"
-#include "UrlInfo.hpp"
-#include "adj_store.hpp"
-#include "anchor_store.hpp"
+#include <disk/url_store.hpp>
+#include <disk/offset_lookup.hpp>
+#include <disk/UrlInfo.hpp>
+#include <disk/adj_store.hpp>
+#include <disk/anchor_store.hpp>
 
-#include "tcp/url_tcp.hpp" // for ParsedPage
+#include <disk/logfile.hpp>
+#include <debug>
 
-#include "fb/mutex.hpp"
-#include "fb/utility.hpp" // for pair
-#include "fb/string.hpp"
-#include "fb/string_view.hpp"
-#include "fb/stddef.hpp"
-#include "fb/unordered_map.hpp"
-#include "fb/unordered_set.hpp"
+#include <tcp/url_tcp.hpp> // for ParsedPage
 
-// TODO don't hard code this
-const fb::String UrlInfoTableName = "/tmp/url_info_table.txt";
+#include <fb/mutex.hpp>
+#include <fb/utility.hpp> // for pair
+#include <fb/string.hpp>
+#include <fb/string_view.hpp>
+#include <fb/stddef.hpp>
+#include <fb/unordered_map.hpp>
+#include <fb/unordered_set.hpp>
 
 // Same as above
 // We need to hard code the file we save to
 class UrlInfoTable {
 public:
+    static void init(fb::StringView filename) {
+        delete ptr;
+        ptr = new UrlInfoTable(filename);
+    }
+
    // Meyer's method for singletons
    // Note that c++11 standard guarantees
    // that the constructor will finish the constructor
    // before the object is ever returned
     static UrlInfoTable & getTable() {
-       static UrlInfoTable unique_obj;
-       return unique_obj;
+        return *ptr;
     }
 
     // Adds a new url
@@ -57,10 +61,6 @@ public:
        // Then add the url to the frontier (check robots.txt first)
       fb::StringView url =
                UrlStore::getStore().getUrl( pp.url_offset );
-      // std::cout << "Handling parsed page " << url << "\n";
-      // for (const fb::Pair<fb::String, fb::String>& link : pp.links) {
-      //    std::cout << "\thas " << link.first << "\n";
-      // }
 
       fb::SizeT hash = hasher( url );
       fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
@@ -188,7 +188,7 @@ private:
    // and load it. Then it will reconstruct the hash table that
    // maps url_offset to url_info_offset
    // Note that the lock will not be grabbed when the constructor is running
-   UrlInfoTable() : url_info(UrlInfoTableName)
+    UrlInfoTable(fb::StringView fname) : url_info(fname)
    {
       for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size();
             ++url_info_offset )
@@ -200,7 +200,7 @@ private:
 
          fb::StringView url = UrlStore::getStore().getUrl(
                url_info[ url_info_offset ].UrlOffset );
-         std::cout << "in url info table ctor add url " << url << std::endl;
+         log(logfile, "in url info table ctor add url ", url, '\n');
          fb::SizeT hash = hasher( url );
 
          info_hashes[hash % NumBins].first[ url ] = url_info_offset;
@@ -270,6 +270,9 @@ private:
     }
 
    constexpr static fb::SizeT NumBins = 256;
+
+    static UrlInfoTable *ptr;
+
    //The unorderedmaps link the hashes of urls to the associated url infos
    // unordered map from stringView (that points to disk vec of urls
    fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hashes[NumBins];

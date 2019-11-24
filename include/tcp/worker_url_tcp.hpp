@@ -22,6 +22,7 @@ void initiate_shut_down();
 // (i.e. no more urls to parse)
 bool should_shutdown();
 
+void print_tcp_status();
 
 // If there are no more urls to parse
 // the empty url will be returned

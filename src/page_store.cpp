@@ -26,8 +26,8 @@ std::atomic<fb::SizeT> NumThreads(0);
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
 
-PageBin::PageBin(fb::StringView filename, bool init) : PageCount(0), PageCountOffset(0),
-                PageHeadersOffset(0), PagesBeginOffset(0), Pages(filename, init) {
+PageBin::PageBin(fb::StringView filename) : PageCount(0), PageCountOffset(0),
+                PageHeadersOffset(0), PagesBeginOffset(0), Pages(filename) {
     PageCountOffset = Pages.reserve(sizeof(fb::SizeT));
     PageHeadersOffset = Pages.reserve(numPages * sizeof(PageHeader));
     PagesBeginOffset = Pages.size();
@@ -78,7 +78,7 @@ void addPage(Page page){
 void * runBin(void *){
     NumThreads.fetch_add(1);
     fb::SizeT Index = FileIndex.fetch_add(1);
-    PageBin Bin(Prefix + fb::toString(Index), false);
+    PageBin Bin(Prefix + fb::toString(Index));
     fb::SizeT i = 0;
     for( ; i < numPages; ++i){
         QueueMtx.lock();

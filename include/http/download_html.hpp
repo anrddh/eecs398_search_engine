@@ -8,6 +8,9 @@
 #include <fb/file_descriptor.hpp>
 #include <fb/mutex.hpp>
 
+#include <disk/logfile.hpp>
+#include <debug.hpp>
+
 #include <iostream>
 
 #include <assert.h>
@@ -85,13 +88,11 @@ class ParsedUrl
          };
 
       // print function for debugging
-      void print( ) const
-         {
-         std::cout << "Complete Url = " << CompleteUrl << std::endl;
-         std::cout << "Service = " << Service
-               << ", Host = " << Host << ", Port = " << Port
+      void print( ) const {
+          log("Complete Url = ", CompleteUrl, '\n', "Service = ", Service,
+              ", Host = ", Host, ", Port = ", Port,
                << ", Path = " << Path << std::endl;
-         }
+      }
    };
 
 // Default port for https

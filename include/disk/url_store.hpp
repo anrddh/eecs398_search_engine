@@ -22,9 +22,9 @@
 
 class UrlStore {
 public:
-    static void init(fb::StringView filename, bool init) {
+    static void init(fb::StringView filename) {
         delete ptr;
-        ptr = new UrlStore(filename, init);
+        ptr = new UrlStore(filename);
         ptr->addUrl("Dummy");
     }
 
@@ -44,7 +44,7 @@ public:
     }
 
 private:
-    UrlStore(fb::StringView filename, bool init) : urls(filename, init) {}
+    UrlStore(fb::StringView filename) : urls(filename) {}
 
     static UrlStore *ptr;
     DiskVec<char> urls;

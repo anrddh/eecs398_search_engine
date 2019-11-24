@@ -40,7 +40,7 @@ class PageBin {
 public:
     struct Error : fb::Exception {};
 
-    PageBin(fb::StringView filename, bool init);
+    PageBin(fb::StringView filename);
 
     fb::SizeT addPage(Page&& p);
 

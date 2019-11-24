@@ -20,7 +20,7 @@ struct ChunkImpl {
     T ptr;
 };
 
-using Chunk = ChunkImpl<56, uint64_t>;
+using Chunk = ChunkImpl<24, uint64_t>;
 
 // Singleton
 class AnchorStore {
@@ -65,6 +65,20 @@ public:
 
         anchors[endOffset].ptr = 0;
         return offsets;
+    }
+
+    // Debug message
+    void print(fb::Pair<fb::SizeT, fb::SizeT> offsets) {
+        auto &[beginOffset, endOffset] = offsets;
+        if ( beginOffset == 0) {
+           return;
+        }
+
+        fb::SizeT i = beginOffset;
+        while ( i != endOffset ) {
+           std::cout << &anchors[i].arr << std::endl;
+           i =  anchors[i].ptr;
+        }
     }
 
     //Do we need this? not for now at least probably TODO

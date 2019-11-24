@@ -47,6 +47,7 @@ void *parsePages( void * )
 		catch ( ConnectionException e )
    		{
          }
+         std::cout << "Parsed url " << urlPair.second << std::endl;
       }
    std::cout << "True evaluating to false?" << std::endl;
    return nullptr;

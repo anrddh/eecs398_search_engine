@@ -119,6 +119,7 @@ void* talk_to_master_helper(int sock) {
       }
       else
       {
+         std::cout << "parsed has size " << urls_parsed.size() << std::endl;
          Vector< ParsedPage > local; // first val url, second val parsed page
          local.swap(urls_parsed);
          parsed_m.unlock();
@@ -148,6 +149,7 @@ void* talk_to_master_helper(int sock) {
       // If we are short on urls to parse,
       // request for more
       to_parse_m.lock();
+      std::cout << "to parse has size " << urls_to_parse.size() << std::endl;
       if (urls_to_parse.size() < MIN_BUFFER_SIZE)
       {
          to_parse_m.unlock();

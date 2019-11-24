@@ -26,7 +26,6 @@ namespace fb {
         FileDesc() = default;
 
         FileDesc(int fd_in) : fd(fd_in) {
-            std::cout << "FileDesc got" << fd_in << std::endl;
             if (fd_in <= -1)
                 throw ConstructionError("Invalid file descriptor.");
         }

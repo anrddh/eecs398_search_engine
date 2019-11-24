@@ -12,6 +12,7 @@ int main() {
 	ifstream f;
 	f.open(filename);
 	//masterIndexData = (MasterIndexData *) mmap(nullptr, sizeof(MasterIndexData), PROT_READ | PROT_WRITE, MAP_PRIVATE, file, 0);
+	// I don't know how to mmap this :(
 	char* beginning_of_file;
 	std::vector<std::vector<uint64_t>> all; 
 	std::vector<std::string> words; 

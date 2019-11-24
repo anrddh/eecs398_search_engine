@@ -70,11 +70,12 @@ public:
 
       // This we default initialize
       fb::SizeT& url_info_offset = info_hash.first[ url ];
+      assert(url_info_offset);
 
       // url info object associated with this url
       UrlInfo& info = url_info[ url_info_offset ];
 
-      assert( info.UrlOffset == 0 || info.UrlOffset == pp.url_offset );
+      assert( info.UrlOffset == pp.url_offset );
       info.UrlOffset = pp.url_offset;
 
       // We need to call copy on the atomic to get a correct snapshot
@@ -123,7 +124,8 @@ public:
           info_hashes[i].second.lock();
        }
 
-       for (fb::SizeT i = 0; i < url_info.size(); ++i) {
+       // First one is a dummy
+       for (fb::SizeT i = 1; i < url_info.size(); ++i) {
             fb::StringView url =
                UrlStore::getStore().getUrl( url_info[ i ].UrlOffset );
 
@@ -133,9 +135,9 @@ public:
             if (*it != i) {
                 std::cout << "i = " << i << " has url " <<
                 UrlStore::getStore().getUrl( url_info[ i ].UrlOffset ) << std::endl;
-                std::cout << "*it = " << i << " has url " <<
-                UrlStore::getStore().getUrl( url_info[ *it ].UrlOffset );
-               assert(false);
+                std::cout << "*it = " << *it << " has url " <<
+                UrlStore::getStore().getUrl( url_info[ *it ].UrlOffset ) << std::endl;
+                assert(false);
             }
 
             fb::Vector<fb::SizeT> links =
@@ -190,6 +192,12 @@ private:
    // Note that the lock will not be grabbed when the constructor is running
     UrlInfoTable(fb::StringView fname) : url_info(fname)
    {
+      // Place dummy url_info
+      if (url_info.size() == 0) {
+         fb::SizeT dummy_url_offset = url_info.reserve(1);
+         assert(dummy_url_offset == 0);
+      }
+
       for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size();
             ++url_info_offset )
       {

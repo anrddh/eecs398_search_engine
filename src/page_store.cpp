@@ -23,7 +23,11 @@ fb::Mutex QueueMtx;
 fb::CV QueueNECV;
 //std::atomic<fb::SizeT> FileIndex(0);
 std::atomic<fb::SizeT> PagesCounter(0);
+
+fb::Mutex numThreadsMtx;
+fb::CV numThreadsCV;
 std::atomic<fb::SizeT> NumThreads(0);
+
 DiskVec<char> PageStoreCounter("/tmp/crawler/page_store_counter.bin"); //note: this is global so be aware of initialization order
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
@@ -32,6 +36,11 @@ std::atomic<bool> need_to_shutdown = false;
 void page_store_init_shutdown() {
    need_to_shutdown = true;
    QueueNECV.broadcast();
+   numThreadsMtx.lock();
+   while (NumThreads != 0) {
+      numThreadsCV.wait(numThreadsMtx);
+   }
+   numThreadsMtx.unlock();
 }
 
 PageBin::PageBin(fb::StringView filename) : PageCount(0), PageCountOffset(0),
@@ -77,6 +86,7 @@ void addPage(Page&& page){
    ++PagesCounter;
    if(PagesCounter % numPages == 1){
        pthread_t p;
+       NumThreads.fetch_add(1);
        pthread_create(&p, nullptr, runBin, NULL);
        pthread_detach(p);
    }
@@ -84,7 +94,6 @@ void addPage(Page&& page){
 }
 
 void * runBin(void *){
-    NumThreads.fetch_add(1);
     fb::SizeT Index = PageStoreCounter.reserve(1);
 
     PageBin Bin(Prefix + fb::toString(Index));
@@ -110,6 +119,8 @@ void * runBin(void *){
         throw fb::Exception(err);
     }
 
-    NumThreads.fetch_sub(1);
+    if (--NumThreads == 0) {
+      numThreadsCV.signal();
+    }
     return nullptr;
 }

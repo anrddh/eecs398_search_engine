@@ -6,6 +6,7 @@
 #include <fb/unordered_map.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/stddef.hpp>
+#include <disk/page_store.hpp>
 #include <http/download_html.hpp>
 
 // #include "../../index/index_builder.hpp"
@@ -52,9 +53,19 @@ public:
 			flagCounter[i] = 0;
 	}
 
-	String getParsedResult( )
+   // This function will invalidate the parser object
+   // Written by Jaeyoon Kim
+   Page extractPage( SizeT UrlOffset )
+      {
+      Page p;
+      p.UrlOffset = UrlOffset;
+      p.page_str = std::move( parsedResult );
+      p.word_headers = std::move( wordFlags );
+      return p; // TODO check this does elide ctor
+      }
+	String&& getParsedResult( )
 		{
-		return parsedResult;
+		return std::move(parsedResult);
 		}
 
 	void parse( )

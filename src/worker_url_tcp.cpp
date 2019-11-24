@@ -73,7 +73,7 @@ Pair<SizeT, String> get_url_to_parse() {
    return url_pair;
 }
 
-void add_parsed( ParsedPage pp ) {
+void add_parsed( ParsedPage&& pp ) {
    parsed_m.lock();
    urls_parsed.pushBack(std::move(pp));
    parsed_m.unlock();

@@ -137,10 +137,10 @@ public:
     //This function is for brave souls (or naive souls) only. It gives you the
     //power to change a key inside the hash table. This is likely foolish, and
     //you should make sure you have a very good reason for doing so
-    fb::Pair<K&, V&> functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
+    fb::Pair<K*, V*> functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
         (*this)[key];
         auto it = find(key);
-        return {it.bravery(), *it};
+        return {&it.bravery(), &*it };
     }
 
     // returns a reference to the value in the bucket with the key, if it
@@ -332,6 +332,19 @@ public:
     //Returns the predicate function
     Pred key_eq() {
         return pred;
+    }
+
+    // Moves this unordered map to vector
+    // invalidates this object
+    Vector<Pair<K, V>> convert_to_vector() {
+       Vector<Pair<K, V>> vec;
+       for (SizeT i = 0; i < buckets.size(); ++i) {
+          if ( buckets[i].status == Status::Filled ) {
+            vec.emplaceBack( std::move( buckets[i].key ), std::move( buckets[i].val ) );
+          }
+       }
+
+       return vec;
     }
 private:
     SizeT num_elements = 0;

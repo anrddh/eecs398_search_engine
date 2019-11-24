@@ -51,8 +51,8 @@ public:
             std::atomic<fb::SizeT>(*static_cast<fb::SizeT *>(ptr));
         filePtr = reinterpret_cast<T *>(cursor + 1);
 
-        log(logfile, "DiskVec initialized. cursor ", cursor, " fileptr ",
-            filePtr, '\n');
+        // log(logfile, "DiskVec initialized. cursor ", cursor, " fileptr ",
+        //     filePtr, '\n');
     }
 
     ~DiskVec() noexcept {

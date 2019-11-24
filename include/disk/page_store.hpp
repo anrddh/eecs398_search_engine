@@ -14,21 +14,22 @@
 #include <pthread.h>
 
 constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
+extern std::atomic<fb::SizeT> NumThreads;
+extern DiskVec<char> PageStoreCounter;
 
 //TODO: Change this structure to whatever jinsoo provides
 //should in theory be just a byte, make this a lot easier if it is
 //I'm begging you, let it be a byte, i dont want to do the math if it isnt
 using WordDescriptors = uint8_t;
 
-// Written by Jaeyoon 
+// Written by Jaeyoon
 struct Page {
    fb::SizeT UrlOffset;
    fb::String page_str;
    fb::Vector<WordDescriptors> word_headers;
 };
 
-
-extern std::atomic<fb::SizeT> NumThreads;
+void page_store_init_shutdown();
 
 struct PageHeader {
     fb::SizeT beginOffset;
@@ -64,6 +65,6 @@ private:
 
 void initializeFileName(fb::String fname);
 
-void addPage(Page page);
+void addPage(Page&& page);
 
 void * runBin(void *);

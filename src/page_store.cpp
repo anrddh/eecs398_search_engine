@@ -18,11 +18,17 @@
 // TODO: small for testing, raise for real deal. this is the number of
 // pages per file
 
+std::atomic<bool> need_to_shutdown = false;
+void page_store_init_shutdown() {
+   need_to_shutdown = true;
+}
+
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;
-std::atomic<fb::SizeT> FileIndex(0);
+//std::atomic<fb::SizeT> FileIndex(0);
 std::atomic<fb::SizeT> PagesCounter(0);
 std::atomic<fb::SizeT> NumThreads(0);
+DiskVec<char> PageStoreCounter("/tmp/crawler/page_store_counter.bin"); //note: this is global so be aware of initialization order
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
 
@@ -62,7 +68,7 @@ void initializeFileName(fb::String fname){
     Prefix = std::move(fname);
 }
 
-void addPage(Page page){
+void addPage(Page&& page){
    QueueMtx.lock();
    PagesToAdd.push(std::move(page));
    QueueMtx.unlock();
@@ -77,13 +83,19 @@ void addPage(Page page){
 
 void * runBin(void *){
     NumThreads.fetch_add(1);
-    fb::SizeT Index = FileIndex.fetch_add(1);
+    fb::SizeT Index = PageStoreCounter.reserve(1);
+
     PageBin Bin(Prefix + fb::toString(Index));
     fb::SizeT i = 0;
     for( ; i < numPages; ++i){
         QueueMtx.lock();
-        while (PagesToAdd.empty())
-            QueueNECV.wait(QueueMtx);
+        while (PagesToAdd.empty()) {
+           if (need_to_shutdown) {
+              QueueMtx.unlock();
+              return nullptr;
+           }
+           QueueNECV.wait(QueueMtx);
+        }
         Page P = std::move(PagesToAdd.front());
         PagesToAdd.pop();
         QueueMtx.unlock();

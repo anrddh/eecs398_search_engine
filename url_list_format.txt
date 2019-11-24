@@ -1,0 +1,13 @@
+When a Url is discovered, it is stored on disk by the UrlStore class.
+This file gives the specification for how this data is stored.
+
+1 of the following:
+- (sizeof(std::atomic<fb::SizeT>)) Bytes: Cursor
+    *These bytes are reserved by the atomic cursor which is used to write to the file.
+    *This should be 8 bytes, but may depend on implementation of std::atomic.
+For each Url U, 1 of the following
+- (Length of U) + 1 byes: Url
+    *U written as a null-terminated C-string.
+    *Additional notes: U's corresponding UrlInfo structure contains a SizeT which
+     gives the offset of U within this file. Throughout the duration of our programs,
+     U can now be uniquely identified by this offset.

@@ -1,0 +1,17 @@
+When the parser parses a page, it will find all of the outgoing links from that page.
+These outgoing links comprise the adjacency list of that page. All adjacency lists are
+stored on disk by the AdjStore class.
+This file gives the specification for how this data is stored.
+We presume that the ranker will use this data to compute static page rankings.
+
+1 of the following:
+- (sizeof(std::atomic<fb::SizeT>)) Bytes: Cursor
+    *These bytes are reserved by the atomic cursor which is used to write to the file.
+    *This should be 8 bytes, but may depend on implementation of std::atomic.
+For each page P, 1 of the following:
+- 8 bytes times the size of the adjacency list of P: adjacency list
+    *Every 8 bytes is a UrlOffset (UrlID) which denotes the location of an outgoing link on P.
+    *Additional notes: P's corresponding UrlInfo structure contains two SizeTs which
+     are relevant to the adjacency list. The first gives the offset in the adjacency list file
+     to the beginning of P's adjacency list. The second gives the offset "one past the end"
+     of P's adjacency list, as in the behavior of C-style ranges.

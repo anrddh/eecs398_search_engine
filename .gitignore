@@ -1,3 +1,5 @@
 bazel-*
 **/build/
 .vscode/
+master
+build

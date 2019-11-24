@@ -46,13 +46,15 @@ public:
       // the page headers end where the first page starts
       size_t* current_doc_offset = start_of_file + 2;
       size_t* current_des_offset = start_of_file + 3;
-      size_t* current_doc_id = start_of_file + 4;
+      //size_t* current_doc_id = start_of_file + 4;
       size_t* end_page_headers = start_of_file + *start_of_file;
+      uint64_t doc_num = 0;
       while(current != end_page_headers){
-         build_single_doc(start_of_file + *current_doc, start_of_file + *current_des, *current_doc_id);
+         build_single_doc(start_of_file + *current_doc, start_of_file + *current_des, doc_num);
          current_doc_offset += 3;
          current_des_offset += 3;
-         current_doc_id += 3;
+         //current_doc_id += 3;
+         ++doc_num;
       }
       flushToDisk();
    }

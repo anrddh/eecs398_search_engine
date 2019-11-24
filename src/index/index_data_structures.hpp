@@ -21,6 +21,8 @@ struct AbsoluteWordInfo {
 struct DocIdInfo {
   // position of last word in document + 1
   unsigned int position;
+  // this number should be N where N is how many documents
+  // we've seen thus far
   uint64_t docId;
 };
 

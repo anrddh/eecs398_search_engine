@@ -5,28 +5,6 @@
 #include <iostream>
 using namespace fb;
 
-// file structure:
-// 1) 1 byte endianess
-// 2) 4 bytes (size of the whole table)
-// 3) EOD posting list
-// 4) 4 bytes per offset into the file
-// 5) posting lists
-    
-// posting list structure:
-// 1) word (null terminated) 
-// 2) 4 bytes (num documents in this posting list)
-// 3) 4 bytes (num occurences = length of posting list)
-// 4) skip table
-// 5) posts
-// 6) sentinel
-
-// EOD post structure
-// 1) 1 byte null character
-// 2) 4 byte
-// 3) 4 byte
-// 4) 4 bytes offset to previous
-// 5) 8 bytes document ID
-
 
 // TO DO: Fill this in
 constexpr int SKIP_TABLE_BYTES = 0;

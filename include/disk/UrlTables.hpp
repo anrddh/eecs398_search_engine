@@ -9,7 +9,7 @@
 #include <disk/anchor_store.hpp>
 
 #include <disk/logfile.hpp>
-#include <debug>
+#include <debug.hpp>
 
 #include <tcp/url_tcp.hpp> // for ParsedPage
 

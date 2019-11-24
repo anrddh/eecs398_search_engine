@@ -21,7 +21,7 @@
 
 //TODO: Change back! just for testing its smaller!
 //constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
-constexpr fb::SizeT MAXFILESIZE = 0x2000000;
+constexpr fb::SizeT MAXFILESIZE = 0x200000000; //8 GiB maybe
 
 // This is the class that represents an array saved on disk
 // ASSUMES that there won't be more than 128 Gb of data

@@ -6,7 +6,70 @@
 #include <fb/unordered_map.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/stddef.hpp>
-#include <http/download_html.hpp>
+// #include <http/download_html.hpp>
+
+class ParsedUrl
+   {
+   public:
+      static const fb::String defaultPort;
+      const fb::String CompleteUrl;
+      fb::String Service, Host, Port, Path;
+
+      ParsedUrl( const fb::String &url )
+        : CompleteUrl( url )
+         {
+         fb::SizeT start = 0;
+         fb::StringView CompleteUrlView( CompleteUrl );
+         fb::SizeT end = CompleteUrlView.find( "://", 0, 3 );
+         if ( end != fb::String::npos )
+            {
+            Service = CompleteUrl.substr( start, end - start );
+            start = end + 3;
+            }
+         else
+            Service  = "https";
+
+         end = CompleteUrlView.find( "/", start, 1 );
+         fb::SizeT HostEnd = CompleteUrlView.find( ":", start, 1 );
+         if ( HostEnd < end && end != fb::String::npos )
+            {
+            Host = CompleteUrl.substr( start, HostEnd - start );
+            Port = CompleteUrl.substr( HostEnd + 1, end - HostEnd - 1 );
+            }
+         else
+            {
+            if ( end == fb::String::npos )
+               Host = CompleteUrl.substr( start );
+            else
+               Host = CompleteUrl.substr( start, end - start );
+
+            if ( Service == "http" )
+               Port = "80";
+            else if ( Service == "https" )
+               Port = "443";
+            else
+               Port = "443";
+            }
+
+         if ( end != fb::String::npos )
+            Path = CompleteUrl.substr( end + 1 );
+         else
+            Path = "";
+         }
+
+      ~ParsedUrl( )
+         {
+         };
+
+      // print function for debugging
+      void print( ) const
+         {
+         std::cout << "Complete Url = " << CompleteUrl << std::endl;
+         std::cout << "Service = " << Service
+               << ", Host = " << Host << ", Port = " << Port
+               << ", Path = " << Path << std::endl;
+         }
+   };
 
 // #include "../../index/index_builder.hpp"
 //flags
@@ -397,16 +460,19 @@ private:
 
 	void handleHTML( fb::SizeT start, fb::SizeT end ) const
 		{
-		fb::StringView htmlTag( content.data( ) + start, end - start );
+		fb::String htmlLower = content.substr( start, end - start );
+		// there are so many insane people online. lower case everything
+		// to keep myself sane
+		for ( int i = 0;  i < htmlLower.size( );  ++i )
+			htmlLower[ i ] = tolower( htmlLower[ i ] );
+		fb::StringView htmlTag( htmlLower.data( ), htmlLower.size( ) );
 		std::cout << htmlTag << std::endl;
 		fb::SizeT index = htmlTag.find( "lang"_sv );
 		if ( index != fb::StringView::npos )
 			{
-			fb::SizeT new_index = htmlTag.find( "en"_sv, index );
-			if ( new_index == fb::StringView::npos )
-				new_index = htmlTag.find( "EN"_sv, index );
-				if ( new_index == fb::StringView::npos )
-					throw ParserException( "language not english" );
+			index = htmlTag.find( "en"_sv );
+			if ( index == fb::StringView::npos )
+				throw ParserException( "language not english" );
 			}
 		}
 

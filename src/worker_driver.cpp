@@ -199,37 +199,3 @@ void * parsePages( void * )
    log(logfile, "True evaluating to false?\n");
    return nullptr;
    }
-<<<<<<< HEAD
-
-int main( int, char **argv )
-   {
-   std::cout << argv[1] << std::endl;
-   std::cout << atoi(argv[2]) << std::endl;
-   set_master_ip( argv[1], atoi(argv[2]) );
-   fb::Thread argsThreads( commandLineArgs, nullptr );
-
-   SSLWrapper::SSLInit( );
-   initializeFileName( "/tmp/page_store" );
-
-   fb::Vector<fb::Thread> threads;
-   for ( int i = 0;  i < NUM_THREAD;  ++i )
-	  threads.emplaceBack( parsePages, nullptr );
-
-   endLock.lock( );
-
-   while ( !should_shutdown( ) )
-	  endCV.wait( endLock );
-
-   std::cout << "Shutting down" << std::endl;
-   endLock.unlock( );
-
-   page_store_init_shutdown();
-
-   for ( int i = 0;  i < NUM_THREAD;  ++i )
-	  threads[i].join( );
-
-   argsThreads.join( );
-
-   }
-=======
->>>>>>> b7e5eaf87b3c0e8502172090d6e73c8dea09cc2a

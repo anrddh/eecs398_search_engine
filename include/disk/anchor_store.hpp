@@ -76,7 +76,7 @@ public:
 
         fb::SizeT i = beginOffset;
         while ( i != endOffset ) {
-           std::cout << &anchors[i].arr << std::endl;
+            //std::cout << &anchors[i].arr << std::endl;
            i =  anchors[i].ptr;
         }
     }

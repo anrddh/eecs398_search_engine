@@ -417,7 +417,7 @@ private:
 		for ( fb::SizeT i = 0;  i < htmlLower.size( );  ++i )
 			htmlLower[ i ] = tolower( htmlLower[ i ] );
 		fb::StringView htmlTag( htmlLower.data( ), htmlLower.size( ) );
-		std::cout << htmlTag << std::endl;
+		//std::cout << htmlTag << std::endl;
 		fb::SizeT index = htmlTag.find( "lang"_sv );
 		if ( index != fb::StringView::npos )
 			{

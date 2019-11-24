@@ -33,15 +33,15 @@ constexpr fb::SizeT MAXFILESIZE = 0x2000000;
 template <typename T>
 class DiskVec {
 public:
-    DiskVec(fb::StringView fname)
-        : fd(open(fname.data(),
+    DiskVec(fb::StringView fname, fb::SizeT file_size_ = MAXFILESIZE)
+        : file_size(file_size_), fd(open(fname.data(),
                   O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH))  {
 
-        if (ftruncate(fd, MAXFILESIZE))
+        if (ftruncate(fd, file_size))
             throw fb::Exception("SavedObj: Failed to truncate file.");
 
         auto ptr = mmap(nullptr,
-                        MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
+                        file_size_, PROT_WRITE | PROT_READ | PROT_EXEC,
                         MAP_SHARED, fd, 0);
 
         if (ptr == (void *) -1)
@@ -56,7 +56,7 @@ public:
     }
 
     ~DiskVec() noexcept {
-        munmap(static_cast<void *>(cursor), MAXFILESIZE);
+        munmap(static_cast<void *>(cursor), file_size);
     }
 
     int file_descriptor() const {
@@ -117,6 +117,7 @@ public:
     }
 
 private:
+    fb::SizeT file_size;
     T *filePtr;
     fb::FileDesc fd;
     std::atomic<fb::SizeT> *cursor;

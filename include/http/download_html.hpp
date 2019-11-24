@@ -686,7 +686,7 @@ HTTPDownloader( )
 };
 
 inline void recordFailedLink( fb::String msg ) {
-   std::cerr << "Failed at " << msg << std::endl;
-   std::cerr << syscall(SYS_gettid) << std::endl;
+   //std::cerr << "Failed at " << msg << std::endl;
+   //std::cerr << syscall(SYS_gettid) << std::endl;
    throw ConnectionException(std::move(msg));
 }

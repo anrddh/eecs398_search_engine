@@ -102,8 +102,8 @@ public:
 			}
 		catch ( const ParserException & e )
 			{
-			std::cerr << "Caught exception in " << parsedUrl.CompleteUrl << std::endl;
-			std::cerr << e.msg << std::endl;
+			// std::cerr << "Caught exception in " << parsedUrl.CompleteUrl << std::endl;
+			// std::cerr << e.msg << std::endl;
 			}
 		}
 

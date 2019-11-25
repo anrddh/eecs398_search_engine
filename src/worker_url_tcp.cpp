@@ -99,20 +99,6 @@ fb::FileDesc open_socket_to_master() {
 
 void* talk_to_master_helper(int sock) {
    while (true) {
-      // Send the parsed info
-      parsed_m.lock();
-      if (urls_parsed.empty())
-      {
-         parsed_m.unlock();
-      }
-      else
-      {
-         Vector< ParsedPage > local; // first val url, second val parsed page
-         local.swap(urls_parsed);
-         parsed_m.unlock();
-         send_parsed_pages( sock, local );
-      }
-
       // Check if we should terminate
       // and terminate accordingly
       if (shutting_down)
@@ -133,10 +119,25 @@ void* talk_to_master_helper(int sock) {
          throw SocketException("Invalid terminate state");
       }
 
+      // Send the parsed info
+      if (urls_parsed.empty())
+      {
+         parsed_m.unlock();
+      }
+      else
+      {
+         Vector< ParsedPage > local; // first val url, second val parsed page
+         local.swap(urls_parsed);
+         parsed_m.unlock();
+         send_parsed_pages( sock, local );
+      }
+
+
+
       // If we are short on urls to parse,
       // request for more
       to_parse_m.lock();
-      if (urls_to_parse.size() < MIN_BUFFER_SIZE)
+      while (urls_to_parse.size() < MIN_BUFFER_SIZE) 
       {
          to_parse_m.unlock();
          Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
@@ -147,12 +148,18 @@ void* talk_to_master_helper(int sock) {
          }
 
          to_parse_cv.broadcast();
-         to_parse_m.unlock();
       }
-      else
-      {
-         to_parse_m.unlock();
-      }
+      to_parse_m.unlock();
+
+      // This thread doesn't need to be running at full speed. 
+      // It only needs to be occasionally to check if we need to send
+      // master any parsed pages or recv some extra pages and if needed
+      // do some work.
+      // We shouldn't constantly be checking if there is work to do
+      // 
+      // pthread_yield is guarenteed to work on a linux system
+      // but for other systems, this might fail
+      //pthread_yield();
    }
 }
 

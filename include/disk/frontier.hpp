@@ -28,6 +28,7 @@ public:
     fb::SizeT size() const;
 
 private:
+    void cull();
     fb::Mutex localSeedM;
     fb::Mutex toParseM;
     unsigned int localSeed;

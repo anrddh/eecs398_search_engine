@@ -134,7 +134,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
         std::cerr << "Creating crawler\n";
         auto rval = mkdir(DefaultRootDir, S_IRWXU | S_IRWXG | S_IRWXO);
         if (rval && errno != EEXIST) {
-            std::cerr << "Error when creating /tmp/crawler: " << strerror(errno)
+            std::cerr << "Error when creating " << DefaultRootDir << ": " << strerror(errno)
                       << '\n';
             throw ArgError();
         }

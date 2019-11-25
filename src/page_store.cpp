@@ -15,9 +15,7 @@
 #include <string.h>
 #include <errno.h>
 
-// TODO: small for testing, raise for real deal. this is the number of
-// pages per file
-
+PageStoreCounter *PageStoreCounter::ptr = nullptr;
 
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;
@@ -28,7 +26,6 @@ fb::Mutex numThreadsMtx;
 fb::CV numThreadsCV;
 std::atomic<fb::SizeT> NumThreads(0);
 
-DiskVec<char> PageStoreCounter("/tmp/crawler/page_store_counter.bin"); //note: this is global so be aware of initialization order
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
 std::atomic<bool> need_to_shutdown = false;
@@ -94,7 +91,7 @@ void addPage(Page&& page){
 }
 
 void * runBin(void *){
-    fb::SizeT Index = PageStoreCounter.reserve(1);
+    fb::SizeT Index = PageStoreCounter::getCounter().index();
 
     PageBin Bin(Prefix + fb::toString(Index));
     fb::SizeT i = 0;

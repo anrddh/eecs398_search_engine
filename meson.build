@@ -2,8 +2,8 @@ project('fantastic_bugs', 'cpp',
         version : '0.0.1',
         meson_version : '>= 0.50.0',
         default_options : [ 'warning_level=3',
-                            'buildtype=release',
-                            'debug=false',
+                            'buildtype=debug',
+                            'debug=true',
                             'cpp_std=c++17' ])
 
 if build_machine.system() == 'darwin'

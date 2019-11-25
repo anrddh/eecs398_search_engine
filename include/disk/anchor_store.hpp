@@ -46,12 +46,6 @@ public:
     // url.
     fb::Pair<fb::SizeT, fb::SizeT> addStr(fb::StringView anchorText,
                                           fb::Pair<fb::SizeT,fb::SizeT> offsets) {
-        // Special case: if the anchor text is empty we dont change
-        // anything
-        log(logfile,
-            "Got anchor text: `", anchorText, "'",
-            " with size ", anchorText.size(), '\n');
-
         if (anchorText.size() == 1)
             return offsets;
 
@@ -90,25 +84,6 @@ public:
         }
 
         return offsets;
-    }
-
-    // Debug message
-    void print(fb::Pair<fb::SizeT, fb::SizeT> offsets) {
-        return;
-
-        auto &[beginOffset, _] = offsets;
-        if (!beginOffset)
-           return;
-
-        log(logfile, "Printing anchor text:", '\n');
-        for (fb::SizeT i = beginOffset; i; i =  anchors[i].ptr)
-            log(logfile,
-                fb::StringView(anchors[i].arr,
-                               fb::min(static_cast<long int>(Chunk::TextSize),
-                                       fb::find(anchors[i].arr,
-                                                anchors[i].arr + Chunk::TextSize,
-                                                0) - anchors[i].arr)),
-                '\n');
     }
 
     //Do we need this? not for now at least probably TODO

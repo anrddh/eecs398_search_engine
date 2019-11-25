@@ -154,11 +154,11 @@ public:
                      fb::SizeT link_hash = hasher( link_url );
                      auto link_it = info_hashes[ link_hash % NumBins ].first.find( link_url );
                      if ( link_it == info_hashes[ link_hash % NumBins ].first.end() ) {
-                        std::cout << "Link for " << url << " does not urlstore" << std::endl; 
-                        
+                        std::cout << "Link for " << url << " does not urlstore" << std::endl;
+
                      }
                      if ( url_info[ *link_it ].UrlOffset != link_offset ) {
-                        std::cout << "Link for url " << url << " has incorrect offset. in url_info: " << 
+                        std::cout << "Link for url " << url << " has incorrect offset. in url_info: " <<
                            url_info[ *link_it ].UrlOffset << " in adj_list " << link_offset << std::endl;
                      }
 						}
@@ -181,9 +181,9 @@ public:
 
 			 //std::cout << "Info for page " << url << std::endl;
 
-			for ( fb::SizeT link_offset : AdjStore::getStore().getList( 
+			for ( fb::SizeT link_offset : AdjStore::getStore().getList(
             url_info[ url_info_offset ].AdjListOffsets.first,
-            url_info[ url_info_offset ].AdjListOffsets.second ) ) 
+            url_info[ url_info_offset ].AdjListOffsets.second ) )
             {
             fb::StringView link_url =
                UrlStore::getStore().getUrl( link_offset );
@@ -215,7 +215,6 @@ private:
 
 				 fb::StringView url = UrlStore::getStore().getUrl(
 							 url_info[ url_info_offset ].UrlOffset );
-				 log(logfile, "in url info table ctor add url ", url, '\n');
 				 fb::SizeT hash = hasher( url );
 
 				 info_hashes[hash % NumBins].first[ url ] = url_info_offset;
@@ -270,12 +269,9 @@ private:
 				 assert( info_hash.first[ link ] == *url_info_pair.second );
 			}
 
-			//log(logfile, "Processing link: ", link, '\n');
 			url_info[ *url_info_pair.second ].AnchorTextOffsets =
 				 AnchorStore::getStore().addStr( anchor_text,
 							 url_info[ *url_info_pair.second ].AnchorTextOffsets );
-			//AnchorStore::getStore().print(url_info[ *url_info_pair.second ].AnchorTextOffsets);
-			//log(logfile, '\n', '\n', '\n');
 
 			if ( is_new_url )
 			{

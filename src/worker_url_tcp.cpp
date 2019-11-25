@@ -105,6 +105,7 @@ void* talk_to_master_helper(int sock) {
       }
 
       // Send the parsed info
+      to_parse_m.lock();
       if (urls_parsed.empty())
       {
          parsed_m.unlock();
@@ -141,8 +142,8 @@ void* talk_to_master_helper(int sock) {
       // We shouldn't constantly be checking if there is work to do
       // 
       // pthread_yield is guarenteed to work on a linux system
-      // but for other systems, this might fail
-      //pthread_yield();
+      // but for other systems, this m
+      pthread_yield();
    }
 }
 

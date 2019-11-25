@@ -39,10 +39,9 @@ Mutex parsed_m;
 Vector< ParsedPage > urls_parsed; // first val url, second val parsed page
 
 void print_tcp_status() {
-   to_parse_m.lock();
-   std::cout << "Num urls to parse " << urls_to_parse.size() << " " 
-      << " num urls parsed " << urls_parsed.size() << std::endl;
-   to_parse_m.unlock();
+   AutoLock<Mutex> l(parsed_m);
+   std::cout << "Num urls to parse " << urls_to_parse.size() << " "
+             << " num urls parsed " << urls_parsed.size() << std::endl;
 }
 
 // helper function
@@ -105,7 +104,7 @@ void* talk_to_master_helper(int sock) {
       }
 
       // Send the parsed info
-      to_parse_m.lock();
+      parsed_m.lock();
       if (urls_parsed.empty())
       {
          parsed_m.unlock();
@@ -121,7 +120,7 @@ void* talk_to_master_helper(int sock) {
       // If we are short on urls to parse,
       // request for more
       to_parse_m.lock();
-      while (urls_to_parse.size() < MIN_BUFFER_SIZE) 
+      while (urls_to_parse.size() < MIN_BUFFER_SIZE)
       {
          to_parse_m.unlock();
          Vector< Pair<SizeT, String> > urls = checkout_urls(sock);
@@ -135,12 +134,12 @@ void* talk_to_master_helper(int sock) {
       }
       to_parse_m.unlock();
 
-      // This thread doesn't need to be running at full speed. 
+      // This thread doesn't need to be running at full speed.
       // It only needs to be occasionally to check if we need to send
       // master any parsed pages or recv some extra pages and if needed
       // do some work.
       // We shouldn't constantly be checking if there is work to do
-      // 
+      //
       // pthread_yield is guarenteed to work on a linux system
       // but for other systems, this m
       pthread_yield();

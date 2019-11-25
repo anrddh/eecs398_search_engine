@@ -101,9 +101,11 @@ public:
 
       fb::Vector<fb::SizeT> adj_list;
 
-      for (const fb::Pair<fb::String, fb::String>& link : pp.links) {
+      for (fb::Pair<fb::String, fb::String>& link : pp.links) {
          // TODO we need to check with robots.txt if we should add should parse this link
          // We will only add to the adj_list if it is allowed by robots.txt
+
+         link.second += ' '; // Ask Ani about why this is a thing
          fb::SizeT url_offset = add_link(link.first, link.second);
          if ( url_offset != 0 )
          {
@@ -177,11 +179,11 @@ public:
                url_info[ url_info_offset ].AdjListOffsets.first,
                url_info[ url_info_offset ].AdjListOffsets.second);
 
-      for ( fb::SizeT link_offset : links ) {
-         fb::StringView link_url =
-            UrlStore::getStore().getUrl( link_offset );
-         //std::cout << "\tHas link " << link_url << std::endl;
-      }
+      //      for ( fb::SizeT link_offset : links ) {
+      //         fb::StringView link_url =
+      //            UrlStore::getStore().getUrl( link_offset );
+      //         //std::cout << "\tHas link " << link_url << std::endl;
+      //}
     }
 
 private:
@@ -263,9 +265,12 @@ private:
          assert( info_hash.first[ link ] == *url_info_pair.second );
       }
 
+      log(logfile, "Processing link: ", link, '\n');
       url_info[ *url_info_pair.second ].AnchorTextOffsets =
          AnchorStore::getStore().addStr( anchor_text,
                url_info[ *url_info_pair.second ].AnchorTextOffsets );
+      AnchorStore::getStore().print(url_info[ *url_info_pair.second ].AnchorTextOffsets);
+      log(logfile, '\n', '\n', '\n');
 
       if ( is_new_url )
       {

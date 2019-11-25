@@ -265,12 +265,12 @@ private:
          assert( info_hash.first[ link ] == *url_info_pair.second );
       }
 
-      log(logfile, "Processing link: ", link, '\n');
+      //log(logfile, "Processing link: ", link, '\n');
       url_info[ *url_info_pair.second ].AnchorTextOffsets =
          AnchorStore::getStore().addStr( anchor_text,
                url_info[ *url_info_pair.second ].AnchorTextOffsets );
-      AnchorStore::getStore().print(url_info[ *url_info_pair.second ].AnchorTextOffsets);
-      log(logfile, '\n', '\n', '\n');
+      //AnchorStore::getStore().print(url_info[ *url_info_pair.second ].AnchorTextOffsets);
+      //log(logfile, '\n', '\n', '\n');
 
       if ( is_new_url )
       {

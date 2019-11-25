@@ -41,6 +41,7 @@ class Parser
 {
 public:
 	fb::UnorderedMap<String, String> urlAnchorText;
+	fb::UnorderedMap<String, fb::UnorderedSet<fb::String> > urlAnchorTextUnique;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
 
@@ -451,6 +452,43 @@ private:
 		return str.substr( start, end - start + 1 );
 		}
 
+	void addUrlAnchorTest( const fb::String &url, fb::String &normalizedText )
+		{
+		if ( url.empty( ) )
+			return;
+
+		if( url[ 0 ] == '/' )
+			{
+			if( url[ 1 ] == '/' )
+				url = parsedUrl.Service +  ":" + url;
+			else
+				url = parsedUrl.Service + "://" + parsedUrl.Host + url;
+			}
+		else if ( url[ 0 ] == '.' )
+			url = parsedUrl.Service + "://" + parsedUrl.Host + "/" + url;
+
+		if ( !normalizedText.empty( ) )
+			{
+			normalizedText = trimSpace( normalizedText );
+
+			if ( !urlAnchorTextUnique[ url ].insert( normalizedText ) )
+				return;
+
+			if ( urlAnchorText[ url ].empty() )
+				urlAnchorText[ url ] += normalizedText;
+			else if ( urlAnchorText[ url ].back( ) != ' ' )
+				urlAnchorText[ url ] += " " + normalizedText;
+			else
+				urlAnchorText[ url ] += normalizedText;
+			}
+		}
+
+	bool isActualUrl( const fb::String &url )
+		{
+		return url.startsWith( "http://" ) || url.startsWith( "https://" ) 
+			|| url.startsWith( '.' ) || url.startsWith( '/' );
+		}
+
 	// Given the start and end indices open anchor tag
 	// figure out the link in the tag
 	// and get the anchor text, and add those to urlAnchorText
@@ -468,7 +506,7 @@ private:
 
 		index = seekSubstrIgnoreCase( index, "</a" );
 
-		if ( url.startsWith( "http://" ) || url.startsWith( "https://" ) || url.startsWith( '.' ) || url.startsWith( '/' ) )
+		if ( isActualUrl( url ) )
 			{
 			// add anchor text to parsed result
 			addToResult( ' ' );
@@ -479,33 +517,7 @@ private:
 			addToResult( ' ' );
 
 			String normalizedText = parsedResult.substr( parsedIndex );
-
-			if ( url.size( ) )
-				{
-				if( url[ 0 ] != '#' )
-					{
-					if( url[ 0 ] == '/' )
-					{
-						if( url[ 1 ] == '/' )
-							url = parsedUrl.Service +  ":" + url;
-						else
-							url = parsedUrl.Service + "://" + parsedUrl.Host + url;
-					}
-					else if ( url[ 0 ] == '.' )
-						url = parsedUrl.Service + "://" + parsedUrl.Host + "/" + url;
-
-					if ( !normalizedText.empty( ) )
-						{
-						normalizedText = trimSpace( normalizedText );
-						if ( urlAnchorText[ url ].empty() )
-							urlAnchorText[ url ] += normalizedText;
-						else if ( urlAnchorText[ url ].back( ) != ' ' )
-							urlAnchorText[ url ] += " " + normalizedText;
-						else
-							urlAnchorText[ url ] += normalizedText;
-						}
-					}
-				}
+			addUrlAnchorTest( url, normalizedText );
 			}
 
 		index = seekSubstr( index, ">" );

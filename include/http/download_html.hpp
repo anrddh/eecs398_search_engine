@@ -249,6 +249,17 @@ class ConnectionWrapper
                address->ai_socktype, address->ai_protocol ) );
             int set = 1;
             setsockopt(socketFD, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
+            struct timeval timeout;
+             timeout.tv_sec = 5;
+             timeout.tv_usec = 0;
+
+             if (setsockopt (socketFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                         sizeof(timeout)) < 0)
+                std::cerr << "failed at setsockopt recv" << std::endl;
+
+             if (setsockopt (socketFD, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+                         sizeof(timeout)) < 0)
+                std::cerr << "failed at setsockopt send" << std::endl;
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {

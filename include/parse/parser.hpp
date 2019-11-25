@@ -448,7 +448,7 @@ private:
 		while( str[ end ] == ' ' )
 			--end;
 
-		return str.substr( start, end - start );
+		return str.substr( start, end - start + 1 );
 		}
 
 	// Given the start and end indices open anchor tag

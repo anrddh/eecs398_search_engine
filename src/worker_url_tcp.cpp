@@ -39,7 +39,8 @@ Mutex parsed_m;
 Vector< ParsedPage > urls_parsed; // first val url, second val parsed page
 
 void print_tcp_status() {
-   AutoLock<Mutex> l(parsed_m);
+   AutoLock<Mutex> l1(parsed_m);
+   AutoLock<Mutex> l2(to_parse_m);
    std::cout << "Num urls to parse " << urls_to_parse.size() << " "
              << " num urls parsed " << urls_parsed.size() << std::endl;
 }
@@ -59,23 +60,19 @@ void initiate_shut_down() {
 // url to parse and its unique id (offset)
 // from master
 Pair<SizeT, String> get_url_to_parse() {
-   to_parse_m.lock();
+   AutoLock l(to_parse_m);
    while ( urls_to_parse.empty() ) {
-      if (shutting_down) {
+      if (shutting_down)
          break;
-      }
 
       to_parse_cv.wait(to_parse_m);
    }
 
-   if (shutting_down) {
-      to_parse_m.unlock();
+   if (shutting_down)
       return {0, ""};
-   }
 
    Pair<SizeT, String> url_pair = std::move(urls_to_parse.front());
    urls_to_parse.pop();
-   to_parse_m.unlock();
    return url_pair;
 }
 

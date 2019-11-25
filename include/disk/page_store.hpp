@@ -29,7 +29,7 @@ struct Page {
    fb::Vector<WordDescriptors> word_headers;
 };
 
-void page_store_init_shutdown();
+void page_store_shutdown();
 
 struct PageHeader {
     fb::SizeT beginOffset;

@@ -58,11 +58,15 @@ int main(int argc, char **argv) try {
         }
     } while (std::cin >> userInput);
 
+   std::cout << "before initiate shutdown." << std::endl;
    initiate_shut_down();
-   page_store_init_shutdown();
+   std::cout << "after initiate shutdown." << std::endl;
+   page_store_shutdown();
    std::cout << "Shutting down." << std::endl;
-   for (auto &thread : threads)
+   for (auto &thread : threads) {
        thread.join();
+       std::cout << "joined" << std::endl;
+   }
 } catch (const ArgError &) {
     std::cerr << "Usage: " << argv[0]
               << " [-p port] [-o hostname] [-a pagestore] [-l logs] [-f frontier] [-t threads]\n\n"

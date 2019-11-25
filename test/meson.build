@@ -28,6 +28,9 @@ test_worker = executable('test-worker',
                         include_directories : inc,
                         dependencies: [threads_dep])
 
+test_no_delete = executable('test_no_delete',
+                            ['test_no_delete.cpp'],
+                            include_directories: inc)
 
 #test('Robots 1', test_robots_1, suite: 'robots')
 #test('Robots 2 (HTTP)', test_robots_2_http, suite: 'robots')

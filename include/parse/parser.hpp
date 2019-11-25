@@ -452,7 +452,7 @@ private:
 		return str.substr( start, end - start + 1 );
 		}
 
-	void addUrlAnchorTest( const fb::String &url, fb::String &normalizedText )
+	void addUrlAnchorTest( fb::String &url, fb::String &normalizedText )
 		{
 		if ( url.empty( ) )
 			return;

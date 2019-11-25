@@ -15,7 +15,29 @@
 
 constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
 extern std::atomic<fb::SizeT> NumThreads;
-extern DiskVec<char> PageStoreCounter;
+
+//singleton class for pagestore
+class PageStoreCounter{
+public:
+    static void init(fb::StringView filename) {
+        delete ptr;
+        ptr = new PageStoreCounter(filename);
+    }
+
+    static PageStoreCounter & getCounter() {
+        return *ptr;
+    }
+
+    fb::SizeT index() {
+        return PageStoreCounterFile.reserve(1);
+    }
+
+private:
+    PageStoreCounter(fb::StringView filename) : PageStoreCounterFile(filename) {}
+
+    static PageStoreCounter *ptr;
+    DiskVec<char> PageStoreCounterFile;
+};
 
 //TODO: Change this structure to whatever jinsoo provides
 //should in theory be just a byte, make this a lot easier if it is

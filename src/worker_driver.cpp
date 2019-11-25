@@ -157,6 +157,8 @@ fb::SizeT parseArguments( int argc, char **argv ) {
         initializeFileName(pagebin);
     }
 
+    PageStoreCounter::init("/tmp/crawler/page_store_counter.bin");
+
     set_master_ip({
             hostname.empty() ? DefaultHostname : hostname.data(),
             port.empty() ? DefaultPort : port.data()

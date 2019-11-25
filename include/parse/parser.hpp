@@ -433,6 +433,23 @@ private:
 		return index;
 		}
 
+	fb::String trimSpace( const fb::String & str )
+		{
+		fb::SizeT start = 0;
+		while(  start < str.size( ) && str[ start ] == ' ' )
+			++start;
+
+		// if the string is just all space
+		if ( start == str.size( ) )
+			return  "";
+
+		//  string is not all space, so end should never reach 0
+		fb::SizeT end = str.size( ) - 1;
+		while( str[ end ] == ' ' )
+			--end;
+
+		return str.substr( start, end - start );
+		}
 
 	// Given the start and end indices open anchor tag
 	// figure out the link in the tag
@@ -461,7 +478,7 @@ private:
 				addToResult( i );
 			addToResult( ' ' );
 
-			String normalizedTest = parsedResult.substr( parsedIndex );
+			String normalizedText = parsedResult.substr( parsedIndex );
 
 			if ( url.size( ) )
 				{
@@ -477,7 +494,16 @@ private:
 					else if ( url[ 0 ] == '.' )
 						url = parsedUrl.Service + "://" + parsedUrl.Host + "/" + url;
 
-					urlAnchorText[ url ] += " " + normalizedTest;
+					if ( !normalizedText.empty( ) )
+						{
+						normalizedText = trimSpace( normalizedText );
+						if ( urlAnchorText[ url ].empty() )
+							urlAnchorText[ url ] += normalizedText;
+						else if ( urlAnchorText[ url ].back( ) != ' ' )
+							urlAnchorText[ url ] += " " + normalizedText;
+						else
+							urlAnchorText[ url ] += normalizedText;
+						}
 					}
 				}
 			}

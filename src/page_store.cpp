@@ -30,7 +30,7 @@ fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
 std::atomic<bool> need_to_shutdown = false;
 
-void page_store_init_shutdown() {
+void page_store_shutdown() {
    need_to_shutdown = true;
    QueueNECV.broadcast();
    numThreadsMtx.lock();
@@ -100,7 +100,7 @@ void * runBin(void *){
         while (PagesToAdd.empty()) {
            if (need_to_shutdown) {
               QueueMtx.unlock();
-              return nullptr;
+              goto exit_point;
            }
            QueueNECV.wait(QueueMtx);
         }
@@ -109,6 +109,8 @@ void * runBin(void *){
         QueueMtx.unlock();
         Bin.addPage(std::move( P ));
     }
+
+exit_point:
 
     if (ftruncate(Bin.file_descriptor(), Bin.size() + 32)) {
         fb::String err = fb::String("Failed to truncate file: ") +

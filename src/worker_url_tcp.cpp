@@ -51,13 +51,9 @@ Vector< Pair<SizeT, String> > checkout_urls(int sock);
 
 std::atomic<bool> shutting_down = false;
 
-bool should_shutdown() {
-   AutoLock<Mutex> l(to_parse_m);
-   return shutting_down && urls_to_parse.empty();
-}
-
 void initiate_shut_down() {
    shutting_down = true;
+   to_parse_cv.broadcast();
 }
 
 // get_url_to_parse will return an
@@ -67,11 +63,15 @@ Pair<SizeT, String> get_url_to_parse() {
    to_parse_m.lock();
    while ( urls_to_parse.empty() ) {
       if (shutting_down) {
-         to_parse_m.unlock();
-         return {0, ""};
+         break;
       }
 
       to_parse_cv.wait(to_parse_m);
+   }
+
+   if (shutting_down) {
+      to_parse_m.unlock();
+      return {0, ""};
    }
 
    Pair<SizeT, String> url_pair = std::move(urls_to_parse.front());
@@ -81,10 +81,8 @@ Pair<SizeT, String> get_url_to_parse() {
 }
 
 void add_parsed( ParsedPage&& pp ) {
-   parsed_m.lock();
-   urls_parsed.pushBack(std::move(pp));
-   parsed_m.unlock();
-   return;
+   AutoLock<Mutex> l(parsed_m);
+   urls_parsed.pushBack( std::move(pp) );
 }
 
 fb::FileDesc open_socket_to_master() {
@@ -106,20 +104,8 @@ void* talk_to_master_helper(int sock) {
          return nullptr;
       }
 
-      send_char(sock, 'T');
-      char terminate_state = recv_char(sock);
-
-      if ( terminate_state == 'T' )
-      {
-         shutting_down = true;
-         return nullptr;
-      }
-      else if ( terminate_state != 'N' )
-      {
-         throw SocketException("Invalid terminate state");
-      }
-
       // Send the parsed info
+      to_parse_m.lock();
       if (urls_parsed.empty())
       {
          parsed_m.unlock();
@@ -131,8 +117,6 @@ void* talk_to_master_helper(int sock) {
          parsed_m.unlock();
          send_parsed_pages( sock, local );
       }
-
-
 
       // If we are short on urls to parse,
       // request for more
@@ -158,8 +142,8 @@ void* talk_to_master_helper(int sock) {
       // We shouldn't constantly be checking if there is work to do
       // 
       // pthread_yield is guarenteed to work on a linux system
-      // but for other systems, this might fail
-      //pthread_yield();
+      // but for other systems, this m
+      pthread_yield();
    }
 }
 

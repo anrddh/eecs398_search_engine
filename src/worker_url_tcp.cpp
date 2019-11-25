@@ -139,7 +139,7 @@ void* talk_to_master_helper(int sock) {
       //
       // pthread_yield is guarenteed to work on a linux system
       // but for other systems, this m
-      pthread_yield();
+      //pthread_yield();
    }
 }
 

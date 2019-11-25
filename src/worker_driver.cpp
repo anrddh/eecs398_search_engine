@@ -41,10 +41,13 @@ int main(int argc, char **argv) try {
 
     fb::String userInput;
     do {
-       print_tcp_status();
-        std::cout << "Shut down? (type 'YES')\n";
-        std::cin >> userInput;
-        if ( userInput == "YES" ) {
+          if (userInput == "status") 
+          {
+            print_tcp_status();
+            std::cout << "Num pages parsed in this process " << get_num_parsed() << std::endl;
+            continue;
+          }
+        if ( userInput == "shutdown" ) {
             std::cout << "Are you sure? (type 'YES')\n";
             std::cin >>  userInput;
             if ( userInput == "YES" ) {

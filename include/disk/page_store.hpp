@@ -16,6 +16,9 @@
 constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
 extern std::atomic<fb::SizeT> NumThreads;
 
+// Number of pages parsed in this process
+fb::SizeT get_num_parsed();
+
 //singleton class for pagestore
 class PageStoreCounter{
 public:

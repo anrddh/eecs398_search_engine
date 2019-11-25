@@ -26,6 +26,13 @@ fb::Mutex numThreadsMtx;
 fb::CV numThreadsCV;
 std::atomic<fb::SizeT> NumThreads(0);
 
+// Number of pages parsed in this process
+std::atomic<fb::SizeT> NumParsed(0);
+fb::SizeT get_num_parsed() 
+{
+   return NumParsed;
+}
+
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
 std::atomic<bool> need_to_shutdown = false;
@@ -69,6 +76,7 @@ fb::SizeT PageBin::addPage(Page&& p) {
     ++PageCount;
     memcpy(Pages.data() + PageCountOffset, &PageCount, sizeof(PageCount));
 
+    ++NumParsed;
     return idy + p.word_headers.size();
 }
 

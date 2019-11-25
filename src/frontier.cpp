@@ -30,7 +30,7 @@ atomic<int> insertCounter = 0;
 atomic<int> getCounter = 0;
 atomic<int> randSeedCounter = 0;
 
-constexpr SizeT NUM_TRY = 500;
+constexpr SizeT NUM_TRY = 1000;
 constexpr SizeT NUM_SAMPLE = 3;
 
 FrontierBin::FrontierBin(StringView filename)

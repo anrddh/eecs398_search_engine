@@ -27,7 +27,7 @@ Vector<ParsedPage> recv_parsed_pages(int sock) {
       for (int j = 0; j < num_links; ++j ) {
          String link = recv_str( sock );
          String anchor_text = recv_str( sock );
-         pp.links.pushBack( fb::make_pair(std::move(link), std::move(anchor_text)) );
+         pp.links.emplaceBack( std::move(link), std::move(anchor_text) );
       }
       recv_pages.pushBack( std::move(pp) );
    }

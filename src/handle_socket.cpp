@@ -99,16 +99,9 @@ void* handle_socket_helper(void* sock_ptr) {
             handle_request(sock);
          } else if (message_type == 'S') {
             handle_send(sock);
+            return nullptr;
          } else if (message_type == 'T')  {
-            term_mtx.lock();
-            if (do_terminate) {
-               term_mtx.unlock();
-               send_char(sock, 'T');
-               return nullptr;
-            } else {
-               term_mtx.unlock();
-               send_char(sock, 'N');
-            }
+            return nullptr;
          }
          else {
             throw SocketException( " got wrong message type" );

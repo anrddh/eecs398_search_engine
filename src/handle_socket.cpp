@@ -14,7 +14,6 @@
 
 using namespace fb;
 
-
 Mutex term_mtx;
 CV term_cv;
 int num_threads = 0;

@@ -110,6 +110,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
             break;
         case 'o':
             hostname = optarg;
+            std::cerr << hostname << '\n';
             break;
         case 'a':
             pagebin = optarg;
@@ -127,6 +128,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
     }
 
     if (pagebin.empty() || logs.empty()) {
+        std::cerr << "Creating crawler\n";
         auto rval = mkdir("/tmp/crawler", S_IRWXU | S_IRWXG | S_IRWXO);
         if (rval && errno != EEXIST) {
             std::cerr << "Error when creating /tmp/crawler: " << strerror(errno)

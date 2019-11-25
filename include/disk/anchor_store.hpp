@@ -94,6 +94,8 @@ public:
 
     // Debug message
     void print(fb::Pair<fb::SizeT, fb::SizeT> offsets) {
+        return;
+
         auto &[beginOffset, _] = offsets;
         if (!beginOffset)
            return;

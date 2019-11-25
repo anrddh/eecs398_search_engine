@@ -41,7 +41,6 @@ class Parser
 {
 public:
 	fb::UnorderedMap<String, String> urlAnchorText;
-	fb::UnorderedMap<String, fb::UnorderedSet<fb::String> > urlAnchorTextUnique;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
 
@@ -470,9 +469,6 @@ private:
 		if ( !normalizedText.empty( ) )
 			{
 			normalizedText = trimSpace( normalizedText );
-
-			if ( !urlAnchorTextUnique[ url ].insert( normalizedText ) )
-				return;
 
 			if ( urlAnchorText[ url ].empty() )
 				urlAnchorText[ url ] += normalizedText;

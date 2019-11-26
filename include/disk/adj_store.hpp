@@ -16,8 +16,8 @@ public:
         fb::SizeT end_;
         DiskVec<fb::SizeT> &vec_;
 
-        AdjStore(fb::SizeT begin, fb::SizeT end, 
-                 DiskVec<fb::SizeT> &vec)
+        List(fb::SizeT begin, fb::SizeT end, 
+             DiskVec<fb::SizeT> &vec)
             : begin_(begin), end_(end), vec(vec_) {}
 
         fb::SizeT * begin() {

@@ -211,13 +211,13 @@ private:
 			for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size();
 						++url_info_offset )
 			{
-				 if ( url_info[ url_info_offset ].UrlOffset == 0 )
+            fb::SizeT url_offset = url_info[ url_info_offset ].UrlOffset;
+				 if ( url_offset == 0 )
 				 {
 						continue;
 				 }
 
-				 fb::StringView url = UrlStore::getStore().getUrl(
-							 url_info[ url_info_offset ].UrlOffset );
+				 fb::StringView url = UrlStore::getStore().getUrl( url_offset );
 				 log(logfile, "in url info table ctor add url ", url, '\n');
 				 fb::SizeT hash = hasher( url );
 

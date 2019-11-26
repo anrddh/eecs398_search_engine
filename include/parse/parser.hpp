@@ -208,7 +208,8 @@ private:
 
 	// check if content[start : start + rhs.size()] == rhs with case ignored
 	// throw exception if try to access out of range
-	bool contentEqualIgnoreCase( const fb::SizeT start, const fb::String & rhs ) const
+	bool contentEqualIgnoreCase(const fb::SizeT start,
+                                fb::StringView rhs ) const
 		{
 		if ( start + rhs.size( ) > content.size( ) )
 			throw ParserException( contentEqualErrorMsg( ) );

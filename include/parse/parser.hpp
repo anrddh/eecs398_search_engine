@@ -263,11 +263,11 @@ private:
 
 	// change tagStack appropriately
 	// opening tag or closing tag
-	void setTag( fb::StringView tagName )
+	void setTag( fb::String tagName )
 		{
         if ( tagName.front() == '/' )
 			{
-                tagName.removePrefix(1);
+                tagName = tagName.substr(1);
 			if ( !tagStack.empty() && tagStack.back( ) == tagName )
 				{
 				tagStack.popBack( );
@@ -276,8 +276,8 @@ private:
 			}
 		else
 			{
-			tagStack.pushBack( tagName );
-			setFlagCounter( tagName, 1 );
+			setFlagCounter(tagName, 1);
+			tagStack.pushBack(std::move(tagName));
 			}
 		}
 
@@ -293,14 +293,15 @@ private:
 
 	// look for occurence of str in content
 	// and return the index of end of the occurence
-	fb::SizeT seekSubstrIgnoreCase( fb::SizeT index, const fb::String& str ) const
+	fb::SizeT seekSubstrIgnoreCase(fb::SizeT index,
+                                   fb::StringView str) const
 		{
 		while ( !contentEqualIgnoreCase( index, str ) )
 			++index;
 		return index + str.size( ) - 1;
 		}
 
-	fb::SizeT seekUnescaped( fb::SizeT index, const fb::String& str ) const
+	fb::SizeT seekUnescaped( fb::SizeT index, fb::StringView str ) const
 		{
 		while ( !contentEqual( index, str ) )
 			{
@@ -321,10 +322,10 @@ private:
 			return index;
 
 		if ( content[ index ] == '\'' )
-			return seekUnescaped( index, "\'" );
+			return seekUnescaped( index, "\'"_sv );
 
 		if ( content[ index ] == '\"' )
-			return seekUnescaped( index, "\"" );
+			return seekUnescaped( index, "\""_sv );
 
 		throw ParserException("Index given is not an index of quotation mark");
 		}
@@ -337,8 +338,8 @@ private:
 
 		i = skipSpacesForward( i );
 
-		if ( contentEqual( i, "!-" ) )
-			return seekSubstr( i , "-->" );
+		if ( contentEqual( i, "!-"_sv ) )
+			return seekSubstr( i , "-->"_sv );
 
 		fb::String tagName;
 		for ( ;  content[ i ] != ' '
@@ -366,7 +367,7 @@ private:
 			else if ( tagName == "html" )
 				handleHTML( start_index, last_index );
 			else
-				setTag( tagName );
+				setTag( std::move(tagName) );
 			}
 
 		return i;
@@ -394,8 +395,8 @@ private:
 
 	fb::SizeT handleStyle( fb::SizeT index ) const
 		{
-		index = seekSubstrIgnoreCase( index, "</style" );
-		index = seekSubstr( index, ">" );
+		index = seekSubstrIgnoreCase( index, "</style"_sv );
+		index = seekSubstr( index, ">"_sv );
 		return index;
 		}
 
@@ -460,14 +461,14 @@ private:
 		fb::SizeT index = tagEndIndex;
 		//fb::String aTag = content.substr( tagStartIndex, tagEndIndex - tagStartIndex );
 
-        index = seekSubstr( index, "<" );
+        index = seekSubstr( index, "<"_sv );
 
         fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
         fb::String url(urlView.data(), urlView.size());
         fb::StringView anchorText = content.substr(tagEndIndex,
                                                   index - tagEndIndex );
 
-		index = seekSubstrIgnoreCase( index, "</a" );
+		index = seekSubstrIgnoreCase( index, "</a"_sv );
 
 		if ( isActualUrl( url ) )
 			{
@@ -483,7 +484,7 @@ private:
                              parsedResult.substr(parsedIndex));
 			}
 
-		index = seekSubstr( index, ">" );
+		index = seekSubstr( index, ">"_sv );
 
 		return index;
 		}
@@ -496,12 +497,12 @@ private:
 			{
 			if ( contentEqual( index, "<![CDATA" ) )
 			{
-				index = seekSubstr( index, "]]>" );
+				index = seekSubstr( index, "]]>"_sv );
 				break;
 			}
 			++index;
 			}
-		index = seekSubstr( index, "*/" );
+		index = seekSubstr( index, "*/"_sv );
 		return index + 1;
 		}
 
@@ -512,7 +513,7 @@ private:
 			{
 			// this is literally the only hope in html & javascript
 			if ( contentEqual( index, "<![CDATA") )
-				index = seekSubstr( index, "]]>" );
+				index = seekSubstr( index, "]]>"_sv );
 
 			if ( contentEqual( index, "\n" ) )
 				{
@@ -572,7 +573,7 @@ private:
 		}
 
 	// stack to contain the tags
-	fb::Vector<fb::StringView> tagStack;
+	fb::Vector<fb::String> tagStack;
 
 	// content of the html page to parse
     fb::StringView content;

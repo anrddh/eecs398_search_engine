@@ -125,10 +125,27 @@ public:
         return Iterator( &buckets, index );
     }
 
+    Iterator insert(K& key, V& val) {
+        if(num_elements > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+
+        SizeT index = findPlaceToInsert( key );
+        if ( buckets[index].status == Status::Empty )
+        {
+            buckets[ index ].key = key;
+            buckets[ index ].val = val;
+            buckets[ index ].status = Status::Filled;
+            num_elements++;
+        }
+
+        return Iterator( &buckets, index );
+     }
+
     //This function is for brave souls (or naive souls) only. It gives you the
     //power to change a key inside the hash table. This is likely foolish, and
     //you should make sure you have a very good reason for doing so
-    Bucket &functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
+    Bucket &functionThatIsOnlyForJIaeyoonInThatOneSpecialCase(K& key){
         SizeT index = findPlaceToInsert( key );
         if( buckets[ index ].status == Status::Empty )
             {

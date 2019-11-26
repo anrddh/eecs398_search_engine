@@ -215,7 +215,8 @@ FileDesc parseArguments(int argc, char **argv) try {
         urlinfo.empty() || logs.empty()) {
         auto rval = mkdir(DefaultRootDir, S_IRWXU | S_IRWXG | S_IRWXO);
         if (rval && errno != EEXIST) {
-            std::cerr << "Error when creating /tmp/crawler: " << strerror(errno);
+		//exit(errno);
+            std::cerr << "Error when creating " << DefaultRootDir << ": " << strerror(errno) << "\n\n\n";
             throw ArgError();
         }
     }

@@ -11,6 +11,24 @@
 
 class AdjStore {
 public:
+    struct List {
+        fb::SizeT begin_;
+        fb::SizeT end_;
+        const DiskVec<fb::SizeT> &vec_;
+
+        List(fb::SizeT begin, fb::SizeT end, 
+             const DiskVec<fb::SizeT> &vec)
+            : begin_(begin), end_(end), vec_(vec) {}
+
+        fb::SizeT * begin() {
+            return vec_.data() + begin_;
+        }
+
+        fb::SizeT * end() {
+            return vec_.data() + end_;
+        }
+    };
+
     static void init(fb::StringView filename) {
         delete ptr;
         ptr = new AdjStore(filename);
@@ -26,12 +44,12 @@ public:
         return {idx, idx + in_list.size()};
     }
 
-    fb::Vector<fb::SizeT> getList(fb::SizeT begin, fb::SizeT end) const noexcept {
-        fb::Vector<fb::SizeT> list;
-        for (fb::SizeT idx = begin; idx < end; ++idx){
-            list.pushBack(lists[idx]);
-        }
-        return list;
+    List getList(fb::SizeT begin, fb::SizeT end) const noexcept {
+        return List(begin, end, lists);
+    }
+
+    [[nodiscard]] fb::SizeT operator[](fb::SizeT idx) const noexcept {
+        return lists[idx];
     }
 
 private:

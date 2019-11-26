@@ -420,9 +420,10 @@ private:
 			auto normalizedView = trimSpace( 
 					fb::StringView( normalizedText.data( ), normalizedText.size( ) ) );
 
-			if ( !urlAnchorText[ url ].empty() && urlAnchorText[ url ].back( ) != ' ' )
-				urlAnchorText[ url ] += " ";
-			urlAnchorText[ url ] += normalizedView;
+			fb::String & anchorText = urlAnchorText[ url ];
+			if ( !anchorText.empty() && anchorText.back( ) != ' ' )
+				anchorText += " ";
+			anchorText += normalizedView;
 			}
 		}
 

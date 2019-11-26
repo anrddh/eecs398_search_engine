@@ -366,6 +366,26 @@ private:
             }
         }
     }
+
+    Bucket &findPlaceToInsert(const K& key) {
+        if(num_elements+num_ghosts > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+        SizeT desired_bucket = hash(key) % buckets.size();
+        //if the bucket is not empty
+        if(buckets[desired_bucket].status != Status::Empty){
+            //search until an empty bucket
+            while(buckets[desired_bucket].status != Status::Empty){
+                //if a bucket has the key, return
+                if(buckets[desired_bucket].status == Status::Filled && pred(buckets[desired_bucket].key, key)){
+                    return Iterator(&buckets, desired_bucket);
+                }
+                desired_bucket = (desired_bucket+1) % buckets.size();
+            }
+        }
+        //bucket is empty, or key not found so return end
+        return end();
+    }
 };
 
 } //fb

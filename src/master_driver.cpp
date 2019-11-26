@@ -205,7 +205,7 @@ FileDesc parseArguments(int argc, char **argv) try {
 
     AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
     return info.getBoundSocket();
-} catch( const AddrInfo::AddrError & ) {
+} catch( const SocketException& ) {
    throw ArgError();
 } catch ( const FileDesc::ConstructionError &e ) {
    cerr << e.what() << '\n';

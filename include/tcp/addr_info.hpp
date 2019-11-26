@@ -21,8 +21,6 @@ private:
 public:
     fb::UniquePtr<addrinfo, Deleter> res;
 
-    struct AddrError : std::exception {};
-
     AddrInfo() {}
 
     AddrInfo( const char * hostname, const char *port ) {
@@ -36,7 +34,7 @@ public:
         int rval = getaddrinfo(hostname, port, &hints, &ptr);
         if (rval) {
             std::cerr << gai_strerror(rval) << '\n';
-           throw AddrError();
+            throw SocketException("AddrInfor: Could not connect");
         }
 
         res = fb::UniquePtr<addrinfo, Deleter>(ptr, Deleter());
@@ -52,7 +50,7 @@ public:
         if (bind(sock, res->ai_addr, res->ai_addrlen)) {
             std::cerr << "Could not bind: ";
             perror("");
-            throw AddrError();
+            throw SocketException("AddrInfor: Could not connect");
         }
 
         return sock;
@@ -64,7 +62,7 @@ public:
         if (connect(sock, res->ai_addr, res->ai_addrlen)) {
             std::cerr << "Could not connect: ";
             perror("");
-            throw AddrError();
+            throw SocketException("AddrInfor: Could not connect");
         }
 
         return sock;

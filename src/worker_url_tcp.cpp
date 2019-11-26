@@ -148,6 +148,7 @@ void get_more_urls_from_master() {
          to_parse_cv.broadcast();
       }
       to_parse_m.unlock();
+      send_char(sock, 'T'); // notify master of shutdown
    } 
    catch (SocketException& se) 
    {

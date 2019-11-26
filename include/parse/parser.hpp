@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include <fb/string.hpp>
-#include <fb/unordered_map.hpp>
+#include <fb/no_delete_unordered_map.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/stddef.hpp>
 #include <disk/page_store.hpp>
@@ -34,7 +34,7 @@ struct ParserException
 class Parser
 {
 public:
-	fb::UnorderedMap<fb::String, fb::String> urlAnchorText;
+	fb::NoDeleteUnorderedMap<fb::String, fb::String> urlAnchorText;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
 
@@ -401,7 +401,7 @@ private:
 		return index;
 		}
 
-	fb::String trimSpace( const fb::String & str )
+	fb::StringView trimSpace( const fb::StringView str )
 		{
 		fb::SizeT start = 0;
 		while(  start < str.size( ) && str[ start ] == ' ' )
@@ -436,7 +436,7 @@ private:
 
 		if ( !normalizedText.empty( ) )
 			{
-			normalizedText = trimSpace( normalizedText );
+			normalizedText = trimSpace( fb::StringView( normalizedText ) );
 
 			if ( urlAnchorText[ url ].empty() )
 				urlAnchorText[ url ] += normalizedText;
@@ -593,7 +593,7 @@ private:
     };
 
     static InitParser p;
-	static fb::UnorderedMap<fb::String, fb::String> characterConversionMap;
+	static fb::NoDeleteUnorderedMap<fb::String, fb::String> characterConversionMap;
 	static fb::UnorderedSet<fb::StringView> boldTags;
 
     static void init() {

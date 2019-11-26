@@ -164,7 +164,7 @@ public:
                  auto &adjStore = AdjStore::getStore();
                  auto adjList =
                      adjStore.getList(url_info[i].AdjListOffsets.first,
-                                      url_info[i].AdjListOffsets.second)
+                                      url_info[i].AdjListOffsets.second);
 
                  for ( fb::SizeT link_info_offset : adjList) {
                      fb::StringView link_url =

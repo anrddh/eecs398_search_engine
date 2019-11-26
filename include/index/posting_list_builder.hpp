@@ -55,18 +55,12 @@ public:
 
    void endList() 
       {
-      AbsoluteWordInfo post;
-      post.position = 0;
-      post.type_flags = 0;
-      writePost(post);
+      currentPostPosition = fb::add_word_sentinel(currentPostPosition);
       }
 
    void endEODList() 
       {
-      DocIdInfo post;
-      post.position = 0;
-      post.docId = 0;
-      writePost(post);
+      currentPostPosition = fb::add_document_sentinel(currentPostPosition);
       }
 
    template<typename PostType>

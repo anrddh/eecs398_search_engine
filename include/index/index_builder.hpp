@@ -27,22 +27,8 @@ template<int NUM_SKIP_TABLE_BITS>
 class IndexBuilder {
 public:
    // root must contain a trailing '/'
-   IndexBuilder(fb::String path) : root(path) 
-      { 
-      int file;
-      if((file = open((path + "master").data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH)) < 0)
-         {
-         // abort or something maybe with error message
-         exit(1);
-         }
-      ftruncate(file, sizeof(masterIndexData));
-      masterIndexData = (MasterIndexData *) mmap(nullptr, sizeof(masterIndexData), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0);
+   IndexBuilder(fb::String path) : root(path), tokenCount(1) { }
 
-      close(file);
-      
-      tokenCount = 1;
-      }
-   
    void build_chunk(uint64_t* start_of_file, int chunk) {
       // move past first 16 bytes
       // the page headers end where the first page starts
@@ -70,7 +56,6 @@ private:
          word = word + *word_begin;
          ++word_begin;
       }
-      ++tokenCount;
       // check to see if we are at the end of a document
       if(*word_begin == '\0'){
          return word_begin;
@@ -92,14 +77,15 @@ private:
          unique_words.insert(word);
          word_info = *current_des;
          AbsoluteWordInfo absWord = {tokenCount, word_info};
+         ++tokenCount;
          wordPositions[word].pushBack(absWord);
       }
       for(fb::String thing : unique_words){
          ++wordDocCounts[thing];
       }
       // increment for EOD
-      ++tokenCount;
       DocIdInfo doc_info = {tokenCount, docId};
+      ++tokenCount;
       documents.pushBack(doc_info);
    }
    

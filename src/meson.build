@@ -8,3 +8,4 @@ worker_source_files += files('worker_url_tcp.cpp', 'url_tcp.cpp',
                              'page_store.cpp', 'download_html.cpp',
                              'debug.cpp', 'logfile.cpp')
 build_index_driver = files('build_index.cpp')
+build_index_test_driver = files('index/index_test.cpp')

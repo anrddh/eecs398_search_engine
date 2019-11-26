@@ -1,4 +1,4 @@
-#include "indexEntry.hpp"
+#include "fb/indexEntry.hpp"
 #include <string>
 #include <vector>
 #include <cstddef>
@@ -7,26 +7,21 @@ using namespace fb;
 
 
 // TO DO: Fill this in
-constexpr int SKIP_TABLE_BYTES = 0;
+constexpr int SKIP_TABLE_BYTES = (1 << 4) * 2 * sizeof(unsigned int);
 
 // read a single posting list and add all the nums to vector
 void read_posting_list(char* current, std::vector<uint64_t> &posting_list){
-	uint64_t num = 0;
-	uint8_t header = 0;
-	while(true){
-		current = read_word_post(current, num, header);
-		if(num == 0){
-			break;
-		}else{
-			posting_list.push_back(num);
-		}
+	while(!fb::is_word_sentinel(current)){
+      uint64_t num = 0;
+		current = read_word_post(current, num);
+      posting_list.push_back(num);
 	}
 }
 
 // read EOD posting list and add values to vector
-void read_EOD_posting_list(char* current, std::vector<std::pair<uint32_t,uint64_t>> &EOD_posting_list){
+char * read_EOD_posting_list(char* current, std::vector<std::pair<uint32_t,uint32_t>> &EOD_posting_list){
 	size_t delta = 0;
-	uint64_t url_id = 0;
+	uint32_t url_id = 0;
 	while(true){
 		current = read_document_post(current, delta, url_id);
 		if(delta == 0){
@@ -35,64 +30,53 @@ void read_EOD_posting_list(char* current, std::vector<std::pair<uint32_t,uint64_
 			EOD_posting_list.push_back(std::pair<size_t,uint64_t>(delta, url_id));
 		}
 	}
+
+   return current;
 }
 
 // given pointer to start of file, creates a vector of vectors
 // where each vector is a posting list containing offsets
-void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &all, std::vector<std::string> &words, std::vector<std::pair<size_t,uint64_t>> &EOD_posting_list){
-	std::vector<uint64_t> posting_list;
-	char* start = current;
-	//cast to a 4 byte type
-	current = (unsigned int*)(current);
-	//skip forward 4 bytes (past the value 1)
-	current += 1;
-	//read in 4 bytes
-	unsigned int table_size = *current;
-	++current;
-	//read in all the posting list offsets and store in a vector
+void trans_file_to_offsets(char* start, std::vector<std::vector<uint64_t>> &all, std::vector<std::string> &words, std::vector<std::pair<uint32_t,uint32_t>> &EOD_posting_list)
+   {
+   char* current = start;
+   current += (2 * sizeof(unsigned int));
+   
+	unsigned int table_size = *((unsigned int *) current);
+   current += sizeof(unsigned int);
+
 	std::vector<unsigned int> posting_list_offsets;
 	for(unsigned int i = 0; i < table_size; ++i){
-		posting_list_offsets.push_back(*current);
-		current += 1;
+		posting_list_offsets.push_back(*((unsigned int *) current));
+		current += sizeof(unsigned int);
 	}
-	//read in EOD posting list
-	read_EOD_posting_list(current, EOD_posting_list);
 
-	//places all the offsets in all the posting lists in vector
-	for(unsigned int i = 0; i < table_size; ++i){
-		//cast to 1 byte type
-		current = (char*)(current);
-		current = start + posting_list_offsets[i];
-		std::string word = "";
-		while(true){
-			if(*current == '\0'){
-				++current;
-				break;
-			}
-			word = word + *current;
-		}
-		words.push_back(word);
-		current = (unsigned int*)(current);
-		//move past metadata
-		current += 2;
-		//move past skip table
-		current += SKIP_TABLE_BYTES;
-		//cast to a 1 byte type
-		current = (char*)(current);
-		read_posting_list(current, posting_list);
-		all.push_back(posting_list);
-	}
-}
+   current = read_EOD_posting_list(current, EOD_posting_list);
+	for(unsigned int i = 0; i < table_size; ++i)
+      {
+      if(posting_list_offsets[i])
+         {
+         current = start + posting_list_offsets[i];
+         words.emplace_back(current);
+         while(*(current++) != '\0')
+            ;
+         current += (2 * sizeof(unsigned int));
+         current += SKIP_TABLE_BYTES;
+         std::vector<uint64_t> posting_list;
+         read_posting_list(current, posting_list);
+         all.push_back(posting_list);
+         }
+	   }
+   }
 
 //given words and all the offsets, reconstruct original vector
 void reconstruct(std::vector<std::vector<uint64_t>> &all, std::vector<std::string> &words, std::vector<std::string> &original){
 	//index i keeps track of word
-	for(int i = 0; i < words.size(); ++i){
+	for(size_t i = 0; i < words.size(); ++i){
 		std::string current_word = words[i];
 		int current_index = all[i][0];
 		//index j keeps track of post in a posting list for a word
 		original[current_index] = current_word;
-		for(int j = 1; j < all[i].size(); ++j){
+		for(size_t j = 1; j < all[i].size(); ++j){
 			current_index = current_index + all[i][j];
 			original[current_index] = current_word;
 		}	

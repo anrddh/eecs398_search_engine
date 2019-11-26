@@ -3,10 +3,11 @@ After documents are stored to disk by the PageStore class, the IndexChunkBuilder
 The whole file:
 
 1) 4 bytes: the first 4 bytes in the file will have the value 1, to determine endianess.
-2) 4 bytes: the length of the dictionary
-3) The dictionary: which is of size 4 bytes * length of dictionary
-4) EOD posting list (null terminated)
-5) Posting lists
+2) 4 bytes: number of tokens
+3) 4 bytes: the length of the dictionary
+4) The dictionary: which is of size 4 bytes * length of dictionary
+5) EOD posting list (null terminated)
+6) Posting lists
 
 The EOD posting list:
 1) 1 byte (null character)

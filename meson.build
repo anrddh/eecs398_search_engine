@@ -48,3 +48,8 @@ executable('worker',
 executable('build_index',
             build_index_driver,
             include_directories: inc)
+
+executable('build_index_test',
+            build_index_test_driver,
+            include_directories: inc
+)

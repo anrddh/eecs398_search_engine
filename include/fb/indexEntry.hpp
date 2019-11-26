@@ -36,6 +36,11 @@ inline char* add_word_post( char* curr, size_t num)
       return fbImpl::write_num<fbImpl::fourBytePost>( curr, num );
    }
 
+inline char* add_word_sentinel( char* curr )
+   {
+   return add_word_post(curr, 0);
+   }
+
 /* Given a pointer, will copy the stored value to uint64_t &num
  * RETURNs pointer to next value to read
  * example code
@@ -51,15 +56,22 @@ inline char* read_word_post( char* curr, uint64_t &num)
    {
       switch ( ( ( fbImpl::oneBytePost * ) curr )->size ) 
          {
-         case 1:
+         case 0:
             return fbImpl::read_number<fbImpl::oneBytePost>( curr, num );
-         case 2:
+         case 1:
             return fbImpl::read_number<fbImpl::twoBytePost>( curr, num );
-         case 3:
+         case 2:
             return fbImpl::read_number<fbImpl::fourBytePost>( curr, num );
          default:
             assert( false );
          } 
+   }
+
+inline bool is_word_sentinel( char* curr )
+   {
+   uint64_t num;
+   read_word_post(curr, num);
+   return num == 0;
    }
 
 // Adds document post. Returns the pointer to next address we should add to
@@ -70,6 +82,11 @@ inline char* add_document_post( char* curr, size_t delta, uint32_t url_loc) {
    return curr + sizeof(url_loc);
 }
 
+inline char* add_document_sentinel( char* curr )
+   {
+   return add_document_post(curr, 0, 0);
+   }
+
 // Reads document post. Returns the pointer to next address we should read from
 inline char* read_document_post( char* curr, size_t& delta, uint32_t& url_loc ) {
    delta = (* (uint32_t *) curr);
@@ -77,5 +94,13 @@ inline char* read_document_post( char* curr, size_t& delta, uint32_t& url_loc ) 
    url_loc = (* (uint32_t *) curr);
    return curr + sizeof(url_loc);
 }
+
+inline bool is_document_sentinel( char * curr )
+   {
+   size_t delta;
+   uint32_t url_loc;
+   read_document_post(curr, delta, url_loc);
+   return delta == 0;
+   }
 
 }; // Namespace fb

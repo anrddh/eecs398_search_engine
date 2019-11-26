@@ -251,36 +251,33 @@ private:
 		return result;
 		}
 
-	void setFlagCounter( const fb::String &tagType, int change )
+	void setFlagCounter( fb::StringView tagType, int change )
 		{
-		if ( tagType == "title" )
+		if ( tagType == "title"_sv )
 			flagCounter[0] += change;
 		else if ( boldTags.find( tagType ) != boldTags.end( ) )
-		{
 			flagCounter[1] += change;
-		}
-		else if ( tagType.size( ) == 2 && tagType[0] == 'h' )
+		else if ( tagType.size( ) == 2 && tagType.front() == 'h' )
 			flagCounter[2] += change;
 		}
 
 	// change tagStack appropriately
 	// opening tag or closing tag
-	void setTag( const fb::String tagName )
+	void setTag( fb::StringView tagName )
 		{
-		if ( tagName[ 0 ] == '/' )
+        if ( tagName.front() == '/' )
 			{
-                fb::String tagType = tagName.substr( 1 );
-			if ( !tagStack.empty() && tagStack.back( ) == tagType )
+                tagName.removePrefix(1);
+			if ( !tagStack.empty() && tagStack.back( ) == tagName )
 				{
 				tagStack.popBack( );
-				setFlagCounter( tagType, -1 );
+				setFlagCounter( tagName, -1 );
 				}
 			}
 		else
 			{
-            fb::String tagType = tagName;
-			tagStack.pushBack( tagType );
-			setFlagCounter( tagType, 1 );
+			tagStack.pushBack( tagName );
+			setFlagCounter( tagName, 1 );
 			}
 		}
 
@@ -575,7 +572,7 @@ private:
 		}
 
 	// stack to contain the tags
-	fb::Vector<fb::String> tagStack;
+	fb::Vector<fb::StringView> tagStack;
 
 	// content of the html page to parse
     fb::StringView content;
@@ -595,7 +592,7 @@ private:
 
     static InitParser p;
 	static fb::UnorderedMap<fb::String, fb::String> characterConversionMap;
-	static fb::UnorderedSet<fb::String> boldTags;
+	static fb::UnorderedSet<fb::StringView> boldTags;
 
     static void init() {
 		initializeConversionMap( );
@@ -747,11 +744,11 @@ private:
 	}
 
 	static void initializeBoldTags() {
-		boldTags.insert( "b" ); // bold
-		boldTags.insert( "strong" ); // bold
-		boldTags.insert( "u" ); // underline
-		boldTags.insert( "mark" ); // highlight
-		boldTags.insert( "i" ); // italic
-		boldTags.insert( "em" ); // italic
+		boldTags.insert( "b"_sv ); // bold
+		boldTags.insert( "strong"_sv ); // bold
+		boldTags.insert( "u"_sv ); // underline
+		boldTags.insert( "mark"_sv ); // highlight
+		boldTags.insert( "i"_sv ); // italic
+		boldTags.insert( "em"_sv ); // italic
     }
 };

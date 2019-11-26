@@ -417,15 +417,12 @@ private:
 
 		if ( !normalizedText.empty( ) )
 			{
-			auto normalizedView = trimSpace(
-					fb::StringView( normalizedText.data( ), normalizedText.size( ) ) );
+			auto normalizedView = trimSpace(normalizedText);
 
-            auto it = urlAnchorText.find(url);
-            if (it == urlAnchorText.end()) {
-                it = urlAnchorText.insert(url, "");
-                *it += normalizedView;
-            } else if ( !it->empty() && it->back( ) != ' ' )
-                 *it += ' ';
+			fb::String & anchorText = urlAnchorText[ url ];
+			if ( !anchorText.empty() && anchorText.back( ) != ' ' )
+				anchorText += " ";
+			anchorText += normalizedView;
 			}
 		}
 

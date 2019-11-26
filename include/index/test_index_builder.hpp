@@ -43,19 +43,21 @@ void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &al
 	std::vector<uint64_t> posting_list;
 	char* start = current;
 	//cast to a 4 byte type
-	(unsigned int*)(current);
+	current = (unsigned int*)(current);
+	//skip forward 4 bytes (past the value 1)
+	current += 1;
 	//read in 4 bytes
 	unsigned int table_size = *current;
-	//skip forward 4 bytes
-	current += 1;
-	//move past skip table
-	current += SKIP_TABLE_BYTES/sizeof(unsigned int);
+	++current;
 	//read in all the posting list offsets and store in a vector
 	std::vector<unsigned int> posting_list_offsets;
 	for(unsigned int i = 0; i < table_size; ++i){
 		posting_list_offsets.push_back(*current);
 		current += 1;
 	}
+	//read in EOD posting list
+	read_EOD_posting_list(current, EOD_posting_list);
+
 	//places all the offsets in all the posting lists in vector
 	for(unsigned int i = 0; i < table_size; ++i){
 		//cast to 1 byte type
@@ -72,7 +74,9 @@ void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &al
 		words.push_back(word);
 		current = (unsigned int*)(current);
 		//move past metadata
-		current += 3;
+		current += 2;
+		//move past skip table
+		current += SKIP_TABLE_BYTES;
 		//cast to a 1 byte type
 		current = (char*)(current);
 		read_posting_list(current, posting_list);

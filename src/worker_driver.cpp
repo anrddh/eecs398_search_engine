@@ -132,7 +132,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
 
     if (pagebin.empty() || logs.empty()) {
         std::cerr << "Creating crawler\n";
-        auto rval = mkdir("/tmp/crawler", S_IRWXU | S_IRWXG | S_IRWXO);
+        auto rval = mkdir(DefaultRootDir, S_IRWXU | S_IRWXG | S_IRWXO);
         if (rval && errno != EEXIST) {
             std::cerr << "Error when creating /tmp/crawler: " << strerror(errno)
                       << '\n';
@@ -162,7 +162,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
         initializeFileName(pagebin);
     }
 
-    PageStoreCounter::init("/tmp/crawler/page_store_counter.bin");
+    PageStoreCounter::init(DefaultPageStoreCounterFile);
 
     set_master_ip({
             hostname.empty() ? DefaultHostname : hostname.data(),

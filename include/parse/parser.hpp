@@ -436,15 +436,15 @@ private:
 
 		if ( !normalizedText.empty( ) )
 			{
-			normalizedText = trimSpace( 
+			auto normalizedView = trimSpace( 
 					fb::StringView( normalizedText.data( ), normalizedText.size( ) ) );
 
 			if ( urlAnchorText[ url ].empty() )
-				urlAnchorText[ url ] += normalizedText;
+				urlAnchorText[ url ] += normalizedView;
 			else if ( urlAnchorText[ url ].back( ) != ' ' )
-				urlAnchorText[ url ] += " " + normalizedText;
+				urlAnchorText[ url ] += " " + normalizedView;
 			else
-				urlAnchorText[ url ] += normalizedText;
+				urlAnchorText[ url ] += normalizedView;
 			}
 		}
 

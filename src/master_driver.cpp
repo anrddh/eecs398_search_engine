@@ -121,7 +121,8 @@ int main(int argc, char **argv) try {
 
             addSeed(line);
         } else if (firstWord == "status"_sv) {
-           cout << "Frontier size: " << frontier.size() << endl;
+           cout << "Frontier size: " << frontier.size() << '\n'
+                << "Num connections: " << num_threads_alive() << endl;
         } else if (firstWord == "assert"_sv) {
            UrlInfoTable::getTable().assert_invariance();
         } else if (firstWord == "url-info"_sv) {
@@ -143,20 +144,9 @@ int main(int argc, char **argv) try {
     socket_handler.join();
 } catch (const ArgError &) {
     cerr << "Usage: " << argv[0]
-         << " [-p port] [-u urls] [-a anchors] [-d adj] [-f frontier] "
-         << "[-d adj] [-f frontier] [-i urlinfo] [-l log]\n\n"
+         << " [-p port]\n\n"
          << "The `port' parameter accepts an integer in the range "
-         << "[1024, 65536). Default value: `" << DefaultPort << "'\n"
-         << "The `urls' parameter accepts a valid filename. Default value: `"
-         << DefaultUrlStoreFile << "'\n"
-         << "The `anchors' parameter accepts a valid filename. Default value: `"
-         << DefaultAnchorStoreFile << "'\n"
-         << "The `adj' parameter accepts a valid filename. Default value: `"
-         << DefaultAdjStoreFile << "'\n"
-         << "The `frontier' parameter accepts a valid filename prefix. Default value: `"
-         << DefaultFrontierBinsPrefix << "'\n"
-         << "The `log' parameter accepts a valid filename. Default value: `"
-         << DefaultLogFile << "'\n";
+         << "[1024, 65536). Default value: `" << DefaultPort << "'\n";
 
     return 1;
 }
@@ -164,12 +154,6 @@ int main(int argc, char **argv) try {
 FileDesc parseArguments(int argc, char **argv) try {
     option long_opts[] = {
         {"port",     required_argument, nullptr, 'p'},
-        {"urls",     required_argument, nullptr, 'u'},
-        {"anchors",  required_argument, nullptr, 'a'},
-        {"adj",      required_argument, nullptr, 'd'},
-        {"frontier", required_argument, nullptr, 'f'},
-        {"urlinfo",  required_argument, nullptr, 'i'},
-        {"log",      required_argument, nullptr, 'l'},
         {"help",     no_argument,       nullptr, 'h'},
         {nullptr, 0, nullptr, 0}
     };
@@ -178,32 +162,14 @@ FileDesc parseArguments(int argc, char **argv) try {
     int option_idx;
     auto choice = 0;
 
-    fb::String port, urls, anchors, adj, frontier, urlinfo, logs;
+    fb::String port;
 
     while ((choice =
-            getopt_long(argc, argv, "p:u:a:d:f:i:l:h", long_opts, &option_idx))
+            getopt_long(argc, argv, "p:h", long_opts, &option_idx))
            != -1) {
         switch (choice) {
         case 'p':
             port = optarg;
-            break;
-        case 'u':
-            urls = optarg;
-            break;
-        case 'a':
-            anchors = optarg;
-            break;
-        case 'd':
-            adj = optarg;
-            break;
-        case 'f':
-            frontier = optarg;
-            break;
-        case 'i':
-            urlinfo = optarg;
-            break;
-        case 'l':
-            logs = optarg;
             break;
         case 'h':
         default:
@@ -211,65 +177,31 @@ FileDesc parseArguments(int argc, char **argv) try {
         }
     }
 
-    if (urls.empty() || frontier.empty() || anchors.empty() || adj.empty() ||
-        urlinfo.empty() || logs.empty()) {
-        auto rval = mkdir(DefaultRootDir, S_IRWXU | S_IRWXG | S_IRWXO);
-        if (rval && errno != EEXIST) {
-		//exit(errno);
-            std::cerr << "Error when creating " << DefaultRootDir << ": " << strerror(errno) << "\n\n\n";
-            throw ArgError();
-        }
-    }
+    auto rootDir = getRootDir();
+    std::cout << "Writing to " << rootDir << '\n';
 
-    if (logs.empty()) {
-        std::cout << "Using default logfile: " << DefaultLogFile << '\n';
-        logfile.open(DefaultLogFile);
-    } else {
-        logfile.open(logs.data());
-    }
-
+    auto logfileloc = rootDir + MasterLogFile;
+    logfile.open(logfileloc.data());
     if (!logfile.is_open()) {
-        std::cerr << "Could not open logfile." << std::endl;
+        std::cerr << "Could not open logfile `" << logfileloc
+                  << "'." << std::endl;
         throw ArgError();
     }
 
-    if (urls.empty()) {
-        std::cout << "Using default url store file: " << DefaultUrlStoreFile << '\n';
-        UrlStore::init(DefaultUrlStoreFile);
-    } else {
-        UrlStore::init(urls);
-    }
+    auto urlstoreloc = rootDir + UrlStoreFile;
+    UrlStore::init(urlstoreloc);
 
-    std::cout << std::endl;
+    auto frontierloc = rootDir + FrontierBinsPrefix;
+    Frontier::init(frontierloc);
 
-    if (frontier.empty()) {
-        std::cout << "Using default frontier prefix: " << DefaultFrontierBinsPrefix << '\n';
-        Frontier::init(fb::String(DefaultFrontierBinsPrefix, strlen(DefaultFrontierBinsPrefix)));
-    } else {
-        Frontier::init(fb::String(DefaultFrontierBinsPrefix, strlen(DefaultFrontierBinsPrefix)));
-        Frontier::init(fb::String(frontier.data(), frontier.size()));
-    }
+    auto anchorsloc = rootDir + AnchorStoreFile;
+    AnchorStore::init(anchorsloc);
 
-    if (anchors.empty()) {
-        std::cout << "Using default anchor store file: " << DefaultAnchorStoreFile << '\n';
-        AnchorStore::init(DefaultAnchorStoreFile);
-    } else {
-        AnchorStore::init(anchors);
-    }
+    auto adjloc = rootDir + AdjStoreFile;
+    AdjStore::init(adjloc);
 
-    if (adj.empty()) {
-        std::cout << "Using default adjacency store file: " << DefaultAdjStoreFile << '\n';
-        AdjStore::init(DefaultAdjStoreFile);
-    } else {
-        AdjStore::init(adj);
-    }
-
-    if (urlinfo.empty()) {
-        std::cout << "Using default url info store file: " << DefaultUrlInfoTableFile << '\n';
-        UrlInfoTable::init(DefaultUrlInfoTableFile);
-    } else {
-        UrlInfoTable::init(urlinfo);
-    }
+    auto urlinfo = rootDir + UrlInfoTableFile;
+    UrlInfoTable::init(urlinfo);
 
     AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
     return info.getBoundSocket();
@@ -289,14 +221,9 @@ void addSeed(StringView fname) {
     String url;
     while (fb::getline(file, url)) {
         fb::SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
-        if ( url_offset == 0) {
-            logfile << "url " << url << " was already in UrlInfoTable" << std::endl;
+        if ( url_offset == 0)
             continue;
-        }
 
-        logfile << "Got url " << url << " stored it as " << UrlStore::getStore().getUrl( url_offset ) << std::endl;
-        //fb::SizeT rank = RankUrl( UrlStore::getStore().getUrl( url_offset ) );
         frontier.addUrl({ url_offset, 0 });
-        logfile << url << "\t\t\t\toffset: " << url_offset << '\n';
     }
 }

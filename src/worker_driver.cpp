@@ -41,7 +41,7 @@ int main(int argc, char **argv) try {
 
     fb::String userInput;
     do {
-          if (userInput == "status") 
+        if (userInput == "status")
           {
             print_tcp_status();
             std::cout << "Num pages parsed in this process " << get_num_parsed() << std::endl;
@@ -72,15 +72,11 @@ int main(int argc, char **argv) try {
    }
 } catch (const ArgError &) {
     std::cerr << "Usage: " << argv[0]
-              << " [-p port] [-o hostname] [-a pagestore] [-l logs] [-f frontier] [-t threads]\n\n"
+              << " [-p port] [-o hostname] [-t threads]\n\n"
               << "The `port' parameter accepts an integer in the range "
               << "[1024, 65536). Default value: `" << DefaultPort << "'\n"
               << "The `hostname' parameter accepts a valid filename. Default value: `"
               << DefaultHostname << "'\n"
-              << "The `pagestore' parameter accepts a valid filename. Default value: `"
-              << DefaultPageStoreFile << "'\n"
-              << "The `logs' parameter accepts a valid filename. Default value: `"
-              << DefaultLogFile << "'\n"
               << "The `threads' parameter accepts a valid non-negative integer. Default value: `"
               << NumThreadsToSpawn << "'\n";
 
@@ -91,9 +87,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
     option long_opts[] = {
         {"hostname",  required_argument, nullptr, 'o'},
         {"port",      required_argument, nullptr, 'p'},
-        {"pagestore", required_argument, nullptr, 'a'},
         {"help",      no_argument,       nullptr, 'h'},
-        {"logs",      no_argument,       nullptr, 'l'},
         {"threads",   no_argument,       nullptr, 't'},
         {nullptr, 0, nullptr, 0}
     };
@@ -102,10 +96,10 @@ fb::SizeT parseArguments( int argc, char **argv ) {
     int option_idx;
     auto choice = 0;
 
-    fb::String hostname, port, pagebin, logs, threads;
+    fb::String hostname, port, threads;
 
     while ((choice =
-            getopt_long(argc, argv, "o:p:a:hl:t:", long_opts, &option_idx))
+            getopt_long(argc, argv, "o:p:ht:", long_opts, &option_idx))
            != -1) {
         switch (choice) {
         case 'p':
@@ -114,12 +108,6 @@ fb::SizeT parseArguments( int argc, char **argv ) {
         case 'o':
             hostname = optarg;
             std::cerr << hostname << '\n';
-            break;
-        case 'a':
-            pagebin = optarg;
-            break;
-        case 'l':
-            logs = optarg;
             break;
         case 't':
             threads = optarg;
@@ -130,39 +118,22 @@ fb::SizeT parseArguments( int argc, char **argv ) {
         }
     }
 
-    if (pagebin.empty() || logs.empty()) {
-        std::cerr << "Creating crawler\n";
-        auto rval = mkdir(DefaultRootDir, S_IRWXU | S_IRWXG | S_IRWXO);
-        if (rval && errno != EEXIST) {
-            std::cerr << "Error when creating " << DefaultRootDir << ": " << strerror(errno)
-                      << '\n';
-            throw ArgError();
-        }
-    }
+    auto rootDir = getRootDir();
+    std::cout << "Writing to " << rootDir << '\n';
 
-    if (logs.empty()) {
-        std::cout << "Using default logfile: " << DefaultWorkerLogFile << '\n';
-        logfile.open(DefaultWorkerLogFile);
-    } else {
-        logfile.open(logs.data());
-    }
-
+    auto logfileloc = rootDir + WorkerLogFile;
+    logfile.open(logfileloc.data());
     if (!logfile.is_open()) {
-        std::cerr << "Could not open logfile." << std::endl;
+        std::cerr << "Could not open logfile `" << logfileloc
+                  << "'." << std::endl;
         throw ArgError();
     }
 
-    if (pagebin.empty()) {
-        std::cout << "Using default pagebin file: " << DefaultPageStoreFile << '\n';
-        initializeFileName({
-                DefaultPageStoreFile,
-                strlen(DefaultPageStoreFile)
-            });
-    } else {
-        initializeFileName(pagebin);
-    }
+    auto pagebinloc = rootDir + PageStoreFile;
+    initializeFileName(std::move(pagebinloc));
 
-    PageStoreCounter::init(DefaultPageStoreCounterFile);
+    auto pagestoreloc = rootDir + PageStoreCounterFile;
+    PageStoreCounter::init(pagestoreloc);
 
     set_master_ip({
             hostname.empty() ? DefaultHostname : hostname.data(),
@@ -174,41 +145,30 @@ fb::SizeT parseArguments( int argc, char **argv ) {
         static_cast<fb::SizeT>(stoll(threads));
 }
 
-void * parsePages( void * )
-   {
-   while( true )
-      {
+void * parsePages( void * ) {
+   while(true) {
       auto urlPair = get_url_to_parse( );
 
-	  if ( urlPair.second.empty( ) )
-         {
-             log(logfile, "Got empty link\n");
+	  if (urlPair.second.empty()) {
          endCV.signal();
          return nullptr;
-         }
+      }
 
-	  try
-         {
+	  try {
          auto downloader = HTTPDownloader( );
          fb::String result = downloader.PrintHtml( urlPair.second );
 
          ParsedUrl url( downloader.finalUrl );
 
          fb::Parser parser( result, url );
-
          parser.parse( );
 
-         fb::Vector< fb::Pair<fb::String, fb::String> > links;
-
          add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );
-
          addPage( std::move(parser.extractPage( urlPair.first )) );
-   		}
-		catch ( ConnectionException e )
-   		{
-         }
-      log(logfile, "Parsed url", urlPair.second, '\n');
+      } catch ( ConnectionException e ) {
       }
+   }
+
    log(logfile, "True evaluating to false?\n");
    return nullptr;
-   }
+}

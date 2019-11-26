@@ -23,29 +23,23 @@ class ThreadLifeTracker {
 public:
    ThreadLifeTracker()
    {
-      term_mtx.lock();
+      fb::AutoLock l(term_mtx);
       ++num_threads;
-      term_mtx.unlock();
    }
 
    ~ThreadLifeTracker()
    {
-      term_mtx.lock();
+      fb::AutoLock l(term_mtx);
       if (--num_threads == 0)
-      {
          term_cv.signal();
-      }
-      term_mtx.unlock();
    }
 };
 
 void terminate_workers() {
-   term_mtx.lock();
+   fb::AutoLock l(term_mtx);
    do_terminate = true;
-   while (num_threads != 0) {
+   while (num_threads != 0)
       term_cv.wait(term_mtx);
-   }
-   term_mtx.unlock();
 }
 
 void* handle_socket_helper(void* sock_ptr);
@@ -56,7 +50,6 @@ void handle_send(int sock);
 void* handle_socket(void* sock_ptr) {
    int server_fd = * (int *) sock_ptr;
    int sock;
-
 
    while (true) {
       if (listen(server_fd, 3) < 0)
@@ -72,13 +65,11 @@ void* handle_socket(void* sock_ptr) {
       }
       term_mtx.unlock();
 
-
       if ((sock = accept(server_fd, nullptr, nullptr)) < 0)
       {
           perror("accept");
           exit(EXIT_FAILURE);
       }
-
 
       term_mtx.lock();
       if (do_terminate) {
@@ -99,9 +90,8 @@ void* handle_socket_helper(void* sock_ptr) {
    delete (int *) sock_ptr;
 
    try {
-   if ( recv_int(sock) != VERFICATION_CODE ) {
-      throw SocketException("Incorrect verfication code");
-   }
+      if (recv_int(sock) != VERFICATION_CODE)
+         throw SocketException("Incorrect verfication code");
 
       while (true)  {
          char message_type = recv_char(sock);
@@ -161,4 +151,9 @@ void handle_request(int sock) {
          Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
       }
    }
+}
+
+int num_threads_alive() {
+    fb::AutoLock l(term_mtx);
+    return num_threads;
 }

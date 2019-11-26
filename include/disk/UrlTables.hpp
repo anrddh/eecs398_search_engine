@@ -152,8 +152,14 @@ public:
                   UrlStore::getStore().getUrl( link_offset );
                fb::SizeT link_hash = hasher( link_url );
                auto link_it = info_hashes[ link_hash % NumBins ].first.find( link_url );
-               assert( link_it != info_hashes[ link_hash % NumBins ].first.end() );
-               assert( url_info[ *link_it ].UrlOffset == link_offset );
+               if ( link_it == info_hashes[ link_hash % NumBins ].first.end() ) {
+                  std::cout << "Link for " << url << " does not urlstore" << std::endl; 
+                  
+               }
+               if ( url_info[ *link_it ].UrlOffset != link_offset ) {
+                  std::cout << "Link for url " << url << " has incorrect offset. in url_info: " << 
+                     url_info[ *link_it ].UrlOffset << " in adj_list " << link_offset << std::endl;
+               }
             }
        }
 

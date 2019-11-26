@@ -18,7 +18,7 @@ public:
 
         List(fb::SizeT begin, fb::SizeT end, 
              DiskVec<fb::SizeT> &vec)
-            : begin_(begin), end_(end), vec(vec_) {}
+            : begin_(begin), end_(end), vec_(vec) {}
 
         fb::SizeT * begin() {
             return vec_.data() + begin_;

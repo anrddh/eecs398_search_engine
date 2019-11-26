@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include <fb/string.hpp>
-#include <fb/unordered_map.hpp>
+#include <fb/no_delete_unordered_map.hpp>
 #include <fb/unordered_set.hpp>
 #include <fb/stddef.hpp>
 #include <disk/page_store.hpp>
@@ -12,6 +12,8 @@
 #include <disk/logfile.hpp>
 #include <debug.hpp>
 
+#include <ctype.h>
+
 // #include "../../index/index_builder.hpp"
 //flags
 constexpr uint8_t INDEX_WORD_TITLE = 0b0100;
@@ -19,37 +21,26 @@ constexpr uint8_t INDEX_WORD_BOLD = 0b1000;
 constexpr uint8_t INDEX_WORD_HEADER = 0b0010;
 constexpr uint8_t INDEX_WORD_ANCHOR = 0b0001;
 
-namespace fb
-{
 // Simple exception class for reporting String errors
 struct ParserException
 {
-	ParserException(const String msg_) : msg(msg_)
+	ParserException(const fb::String msg_) : msg(msg_)
 		{
 		}
 
-	const String msg;
+	const fb::String msg;
 };
-
-bool isSpace( char c )
-	{
-	return ( c == ' ' ) || ( c == '\t' ) || ( c == '\n' )
-			|| ( c == '\v' ) || ( c == '\f' ) || ( c == '\r' );
-	}
 
 class Parser
 {
 public:
-	fb::UnorderedMap<String, String> urlAnchorText;
+	fb::NoDeleteUnorderedMap<fb::String, fb::String> urlAnchorText;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
 
-	Parser( const String &content_in, const ParsedUrl parsedUrl_in )
-	:  parsedUrl( parsedUrl_in ), content( content_in ), inSpecialCharacter( false )
+	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in )
+        : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false)
 	{
-		initializeConversionMap( );
-		initializeBoldTags( );
-
 		tagStack.pushBack( "DEFAULT" );
 
 		for ( int i = 0; i < 4; ++i )
@@ -58,18 +49,18 @@ public:
 
    // This function will invalidate the parser object
    // Written by Jaeyoon Kim
-   Page extractPage( SizeT UrlOffset )
+   Page extractPage( fb::SizeT UrlOffset )
       {
       Page p;
       p.UrlOffset = UrlOffset;
       p.page_str = std::move( parsedResult );
       p.word_headers = std::move( wordFlags );
-      return p; // TODO check this does elide ctor
+      return p;
       }
-	String&& getParsedResult( )
-		{
+
+    fb::String getParsedResult( ) {
 		return std::move(parsedResult);
-		}
+    }
 
 	void parse( )
 		{
@@ -117,19 +108,7 @@ public:
 		}
 
 private:
-	String getSpecialCharacter( )
-		{
-		try
-			{
-			return characterConversionMap.at( specialCharacterString );
-			}
-		catch ( ... )
-			{
-			return "";
-			}
-		}
-
-	void addWord( const String &str )
+    void addWord( const fb::String &str )
 		{
 		for ( const auto i : str )
 			addWord( i );
@@ -137,7 +116,7 @@ private:
 
 	void addWord( const char c )
 		{
-		if ( isSpace( c ) || ispunct( c ) || !isalnum( c ) )
+		if ( isspace( c ) || ispunct( c ) || !isalnum( c ) )
 			{
 			if ( parsedResult.back( ) != ' ' )
 				{
@@ -158,85 +137,65 @@ private:
 			if ( c == ';' )
 				{
 				inSpecialCharacter = false;
-				addWord( getSpecialCharacter( ) );
-				specialCharacterString = "";
 				}
-			else
-				specialCharacterString += c;
 			}
 		else
 			addWord( c );
 		}
 
-	// exclusive end
-	fb::SizeT find( const fb::SizeT start, const fb::SizeT end, const String &rhs )
-		{
-		for( fb::SizeT i = start;  i + rhs.size( ) <= end;  ++i )
-			if ( contentEqual( i, rhs ) )
-				return i;
+    fb::StringView extractURL(const fb::SizeT start,
+                              const fb::SizeT end ) {
+    	fb::StringView tagView = content.substr( start, end - start );
 
-		return end;
-		}
-
-	String extractURL( const fb::SizeT start, const fb::SizeT end )
-		{
-		fb::SizeT found = find( start, end, "href" );
-		if ( found == end )
-			found = find( start, end, "HREF" );
+		fb::SizeT found = tagView.find( "href"_sv );
+		if ( found == fb::StringView::npos )
+			found = tagView.find( "HREF"_sv );
 		// There might be space between href and =
-		found = find( found, end, "\"" );
-		if ( found == end )
-			return "";
+		found = tagView.find( "\""_sv, found );
+		if ( found == fb::StringView::npos )
+			return {};
 		// found + 1 to find the next closing quote
 		// if no closing quote is found, skip.
-		fb::SizeT endURL = find( found + 1, end, "\"" );
-		if ( endURL == end )
-			return "";
+		fb::SizeT endURL = tagView.find( "\""_sv, found + 1 );
+		if ( endURL == fb::StringView::npos )
+			return {};
 
-		String url = content.substr( found + 1, endURL - found - 1 );
+		fb::StringView url = tagView.substr( found + 1, endURL - found - 1 );
 		// just in case a closing quote is not really closing the url, one heuristic is
 		// that there would be a space somewhere.
 		// For example, we might have
 		// href="https://www.nytimes.com/es/ href =    "https://www.nytimes.com/es/
 		// it mighbe be possible to just add the substring until the space, but we will see.
-		for ( fb::SizeT i = 0;  i < url.size( );  ++i )
-			if ( url[ i ] == ' ' )
-				return "";
+        return url.find(' ') != fb::StringView::npos ? ""_sv : url;
+    }
 
-		return url;
-		}
-
-	String contentEqualErrorMsg( ) const
-		{
-		String errorMsg = "Comparison out of range.\n";
-		// errorMsg.append( "Start Index: " + std::to_string( start ) + "\n" );
-		// errorMsg.append( "Content Length: " + std::to_string( content.size( ) ) + "\n" );
-		// errorMsg.append( "RHS: " + rhs + "\n" );
-		// errorMsg.append( "Content string: " + content.substr( start ) + "\n" );
+    fb::String contentEqualErrorMsg( ) const {
+        fb::String errorMsg = "Comparison out of range.\n";
 		return errorMsg;
-		}
+    }
+
 	// check if content[start : start + rhs.size()] == rhs
 	// throw exception if try to access out of range
-	bool contentEqual( const fb::SizeT start, const String &rhs ) const
-		{
-		if ( start + rhs.size( ) > content.size( ) )
-			throw ParserException( contentEqualErrorMsg( ) );
+	bool contentEqual(const fb::SizeT start,
+                      fb::StringView rhs ) const {
+        if ( start + rhs.size( ) > content.size( ) )
+            throw ParserException( contentEqualErrorMsg( ) );
+        for ( size_t i = 0;  i < rhs.size( );  ++i )
+            if ( content[ start + i ] != rhs[ i ] )
+                return false;
 
-		for ( size_t i = 0;  i < rhs.size( );  ++i )
-			if ( content[ start + i ] != rhs[ i ] )
-				return false;
-
-		return true;
-		}
+        return true;
+    }
 
 	// check if content[start : start + rhs.size()] == rhs with case ignored
 	// throw exception if try to access out of range
-	bool contentEqualIgnoreCase( const fb::SizeT start, const String & rhs ) const
+	bool contentEqualIgnoreCase(const fb::SizeT start,
+                                fb::StringView rhs ) const
 		{
 		if ( start + rhs.size( ) > content.size( ) )
 			throw ParserException( contentEqualErrorMsg( ) );
 
-		for ( size_t i = 0;  i < rhs.size( );  ++i )
+		for ( fb::SizeT i = 0;  i < rhs.size( );  ++i )
 			if ( tolower( content[ start + i ] ) != tolower( rhs[ i ] ) )
 				return false;
 
@@ -259,18 +218,6 @@ private:
 		return index;
 		}
 
-	fb::UnorderedSet<fb::String> boldTags;
-
-	void initializeBoldTags()
-		{
-		boldTags.insert( "b" ); // bold
-		boldTags.insert( "strong" ); // bold
-		boldTags.insert( "u" ); // underline
-		boldTags.insert( "mark" ); // highlight
-		boldTags.insert( "i" ); // italic
-		boldTags.insert( "em" ); // italic
-		}
-
 	fb::UnorderedSet<fb::String> italicTags;
 	int flagCounter[4];
 
@@ -286,42 +233,40 @@ private:
 		return result;
 		}
 
-	void setFlagCounter( const String &tagType, int change )
+	void setFlagCounter( fb::StringView tagType, int change )
 		{
-		if ( tagType == "title" )
+		if ( tagType == "title"_sv )
 			flagCounter[0] += change;
 		else if ( boldTags.find( tagType ) != boldTags.end( ) )
-		{
 			flagCounter[1] += change;
-		}
-		else if ( tagType.size( ) == 2 && tagType[0] == 'h' )
+		else if ( tagType.size( ) == 2 && tagType.front() == 'h' )
 			flagCounter[2] += change;
 		}
 
 	// change tagStack appropriately
 	// opening tag or closing tag
-	void setTag( const String tagName )
+	void setTag( fb::String tagName )
 		{
-		if ( tagName[ 0 ] == '/' )
+        if ( tagName.front() == '/' )
 			{
-			String tagType = tagName.substr( 1 );
-			if ( !tagStack.empty() && tagStack.back( ) == tagType )
+                tagName = tagName.substr(1);
+			if ( !tagStack.empty() && tagStack.back( ) == tagName )
 				{
 				tagStack.popBack( );
-				setFlagCounter( tagType, -1 );
+				setFlagCounter( tagName, -1 );
 				}
 			}
 		else
 			{
-			String tagType = tagName;
-			tagStack.pushBack( tagType );
-			setFlagCounter( tagType, 1 );
+			setFlagCounter(tagName, 1);
+			tagStack.pushBack(std::move(tagName));
 			}
 		}
 
 	// look for occurence of str in content
 	// and return the index of end of the occurence
-	fb::SizeT seekSubstr( fb::SizeT index, const String& str ) const
+	fb::SizeT seekSubstr(fb::SizeT index,
+                         fb::StringView str) const
 		{
 		while ( !contentEqual( index, str ) )
 			++index;
@@ -330,14 +275,15 @@ private:
 
 	// look for occurence of str in content
 	// and return the index of end of the occurence
-	fb::SizeT seekSubstrIgnoreCase( fb::SizeT index, const String& str ) const
+	fb::SizeT seekSubstrIgnoreCase(fb::SizeT index,
+                                   fb::StringView str) const
 		{
 		while ( !contentEqualIgnoreCase( index, str ) )
 			++index;
 		return index + str.size( ) - 1;
 		}
 
-	fb::SizeT seekUnescaped( fb::SizeT index, const String& str ) const
+	fb::SizeT seekUnescaped( fb::SizeT index, fb::StringView str ) const
 		{
 		while ( !contentEqual( index, str ) )
 			{
@@ -358,10 +304,10 @@ private:
 			return index;
 
 		if ( content[ index ] == '\'' )
-			return seekUnescaped( index, "\'" );
+			return seekUnescaped( index, "\'"_sv );
 
 		if ( content[ index ] == '\"' )
-			return seekUnescaped( index, "\"" );
+			return seekUnescaped( index, "\""_sv );
 
 		throw ParserException("Index given is not an index of quotation mark");
 		}
@@ -374,10 +320,10 @@ private:
 
 		i = skipSpacesForward( i );
 
-		if ( contentEqual( i, "!-" ) )
-			return seekSubstr( i , "-->" );
+		if ( contentEqual( i, "!-"_sv ) )
+			return seekSubstr( i , "-->"_sv );
 
-		String tagName;
+		fb::String tagName;
 		for ( ;  content[ i ] != ' '
 				&& content[ i ] != '>' && i < content.size( );  ++i )
 			tagName += tolower( content[ i ] );
@@ -403,7 +349,7 @@ private:
 			else if ( tagName == "html" )
 				handleHTML( start_index, last_index );
 			else
-				setTag( tagName );
+				setTag( std::move(tagName) );
 			}
 
 		return i;
@@ -411,29 +357,32 @@ private:
 
 	void handleHTML( fb::SizeT start, fb::SizeT end ) const
 		{
-		fb::String htmlLower = content.substr( start, end - start );
+        auto htmlView = content.substr( start, end - start );
+		fb::String htmlLower;
+        htmlLower.resize(htmlView.size());
+        //(htmlView.data(), htmlView.size());
 		// there are so many insane people online. lower case everything
 		// to keep myself sane
 		for ( fb::SizeT i = 0;  i < htmlLower.size( );  ++i )
-			htmlLower[ i ] = tolower( htmlLower[ i ] );
-		fb::StringView htmlTag( htmlLower.data( ), htmlLower.size( ) );
-		fb::SizeT index = htmlTag.find( "lang"_sv );
-		if ( index != fb::StringView::npos )
+			htmlLower[ i ] = tolower( htmlView[ i ] );
+		//fb::StringView htmlTag( htmlLower.data( ), htmlLower.size( ) );
+		fb::SizeT index = htmlLower.find( "lang"_sv );
+		if ( index != fb::String::npos )
 			{
-			index = htmlTag.find( "en"_sv );
-			if ( index == fb::StringView::npos )
+			if ( htmlLower.find( "en"_sv, index ) == fb::String::npos
+				&& htmlLower.find( "mul"_sv, index ) == fb::String::npos )
 				throw ParserException( "language not english" );
 			}
 		}
 
 	fb::SizeT handleStyle( fb::SizeT index ) const
 		{
-		index = seekSubstrIgnoreCase( index, "</style" );
-		index = seekSubstr( index, ">" );
+		index = seekSubstrIgnoreCase( index, "</style"_sv );
+		index = seekSubstr( index, ">"_sv );
 		return index;
 		}
 
-	fb::String trimSpace( const fb::String & str )
+	fb::StringView trimSpace( const fb::StringView str )
 		{
 		fb::SizeT start = 0;
 		while(  start < str.size( ) && str[ start ] == ' ' )
@@ -451,7 +400,7 @@ private:
 		return str.substr( start, end - start + 1 );
 		}
 
-	void addUrlAnchorTest( fb::String &url, fb::String &normalizedText )
+	void addUrlAnchorTest( fb::String url, fb::String normalizedText )
 		{
 		if ( url.empty( ) )
 			return;
@@ -468,20 +417,18 @@ private:
 
 		if ( !normalizedText.empty( ) )
 			{
-			normalizedText = trimSpace( normalizedText );
+			auto normalizedView = trimSpace(normalizedText);
 
-			if ( urlAnchorText[ url ].empty() )
-				urlAnchorText[ url ] += normalizedText;
-			else if ( urlAnchorText[ url ].back( ) != ' ' )
-				urlAnchorText[ url ] += " " + normalizedText;
-			else
-				urlAnchorText[ url ] += normalizedText;
+			fb::String & anchorText = urlAnchorText[ url ];
+			if (!anchorText.empty())
+				anchorText += ' ';
+			anchorText += normalizedView;
 			}
 		}
 
-	bool isActualUrl( const fb::String &url )
+	bool isActualUrl( fb::StringView url )
 		{
-		return url.startsWith( "http://" ) || url.startsWith( "https://" ) 
+		return url.startsWith( "http://" ) || url.startsWith( "https://" )
 			|| url.startsWith( '.' ) || url.startsWith( '/' );
 		}
 
@@ -492,31 +439,32 @@ private:
 	fb::SizeT handleAnchor( fb::SizeT tagStartIndex, fb::SizeT tagEndIndex )
 		{
 		fb::SizeT index = tagEndIndex;
+		//fb::String aTag = content.substr( tagStartIndex, tagEndIndex - tagStartIndex );
 
-		String aTag = content.substr( tagStartIndex, tagEndIndex - tagStartIndex );
+        index = seekSubstr( index, "<"_sv );
 
-		index = seekSubstr( index, "<" );
+        fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
+        fb::String url(urlView.data(), urlView.size());
+        fb::StringView anchorText = content.substr(tagEndIndex,
+                                                  index - tagEndIndex );
 
-		String url = extractURL( tagStartIndex, tagEndIndex );
-		String anchorText = content.substr( tagEndIndex, index - tagEndIndex );
-
-		index = seekSubstrIgnoreCase( index, "</a" );
+		index = seekSubstrIgnoreCase( index, "</a"_sv );
 
 		if ( isActualUrl( url ) )
 			{
 			// add anchor text to parsed result
 			addToResult( ' ' );
 
-			SizeT parsedIndex = parsedResult.size( );
-			for ( const auto i : anchorText )
+			fb::SizeT parsedIndex = parsedResult.size( );
+			for ( char i : anchorText )
 				addToResult( i );
 			addToResult( ' ' );
 
-			String normalizedText = parsedResult.substr( parsedIndex );
-			addUrlAnchorTest( url, normalizedText );
+			addUrlAnchorTest(std::move(url),
+                             parsedResult.substr(parsedIndex));
 			}
 
-		index = seekSubstr( index, ">" );
+		index = seekSubstr( index, ">"_sv );
 
 		return index;
 		}
@@ -529,12 +477,12 @@ private:
 			{
 			if ( contentEqual( index, "<![CDATA" ) )
 			{
-				index = seekSubstr( index, "]]>" );
+				index = seekSubstr( index, "]]>"_sv );
 				break;
 			}
 			++index;
 			}
-		index = seekSubstr( index, "*/" );
+		index = seekSubstr( index, "*/"_sv );
 		return index + 1;
 		}
 
@@ -545,7 +493,7 @@ private:
 			{
 			// this is literally the only hope in html & javascript
 			if ( contentEqual( index, "<![CDATA") )
-				index = seekSubstr( index, "]]>" );
+				index = seekSubstr( index, "]]>"_sv );
 
 			if ( contentEqual( index, "\n" ) )
 				{
@@ -604,163 +552,37 @@ private:
 			return index;
 		}
 
-void initializeConversionMap( )
-	{
-	characterConversionMap[ "#192"] = "A";
-	characterConversionMap[ "#193"] = "A";
-	characterConversionMap[ "#194"] = "A";
-	characterConversionMap[ "#195"] = "A";
-	characterConversionMap[ "#196"] = "A";
-	characterConversionMap[ "#197"] = "A";
-
-	characterConversionMap[ "Agrave"] = "A";
-	characterConversionMap[ "Aacute"] = "A";
-	characterConversionMap[ "Acirc"] = "A";
-	characterConversionMap[ "Atilde"] = "A";
-	characterConversionMap[ "Auml"] = "A";
-	characterConversionMap[ "Aring"] = "A";
-
-	characterConversionMap[ "#198"] = "AE";
-	characterConversionMap[ "AElig"] = "AE";
-
-	characterConversionMap[ "#199"] = "C";
-	characterConversionMap[ "Ccedil"] = "C";
-
-	characterConversionMap[ "#200"] = "E";
-	characterConversionMap[ "#201"] = "E";
-	characterConversionMap[ "#202"] = "E";
-	characterConversionMap[ "#203"] = "E";
-
-	characterConversionMap[ "Egrave"] = "E";
-	characterConversionMap[ "Eacute"] = "E";
-	characterConversionMap[ "Ecirc"] = "E";
-	characterConversionMap[ "Euml"] = "E";
-
-	characterConversionMap[ "#204"] = "I";
-	characterConversionMap[ "#205"] = "I";
-	characterConversionMap[ "#206"] = "I";
-	characterConversionMap[ "#207"] = "I";
-
-	characterConversionMap[ "Igrave"] = "I";
-	characterConversionMap[ "Iacute"] = "I";
-	characterConversionMap[ "Icirc"] = "I";
-	characterConversionMap[ "Iuml"] = "I";
-
-	characterConversionMap[ "#209"] = "N";
-	characterConversionMap[ "Ntilde"] = "N";
-
-	characterConversionMap[ "#210"] = "O";
-	characterConversionMap[ "#211"] = "O";
-	characterConversionMap[ "#212"] = "O";
-	characterConversionMap[ "#213"] = "O";
-	characterConversionMap[ "#214"] = "O";
-	characterConversionMap[ "#216"] = "O";
-
-	characterConversionMap[ "Ograve"] = "O";
-	characterConversionMap[ "Oacute"] = "O";
-	characterConversionMap[ "Ocirc"] = "O";
-	characterConversionMap[ "Otilde"] = "O";
-	characterConversionMap[ "Ouml"] = "O";
-	characterConversionMap[ "Oslash"] = "O";
-
-	characterConversionMap[ "#217"] = "U";
-	characterConversionMap[ "#218"] = "U";
-	characterConversionMap[ "#219"] = "U";
-	characterConversionMap[ "#220"] = "U";
-
-	characterConversionMap[ "Ugrave"] = "U";
-	characterConversionMap[ "Uacute"] = "U";
-	characterConversionMap[ "Ucirc"] = "U";
-	characterConversionMap[ "Uuml"] = "U";
-
-	characterConversionMap[ "#221"] = "Y";
-	characterConversionMap[ "Yacute"] = "Y";
-
-	characterConversionMap[ "#224"] = "a";
-	characterConversionMap[ "#225"] = "a";
-	characterConversionMap[ "#226"] = "a";
-	characterConversionMap[ "#227"] = "a";
-	characterConversionMap[ "#228"] = "a";
-	characterConversionMap[ "#229"] = "a";
-
-	characterConversionMap[ "agrave"] = "a";
-	characterConversionMap[ "aacute"] = "a";
-	characterConversionMap[ "acirc"] = "a";
-	characterConversionMap[ "atilde"] = "a";
-	characterConversionMap[ "auml"] = "a";
-	characterConversionMap[ "aring"] = "a";
-
-	characterConversionMap[ "#230"] = "ae";
-	characterConversionMap[ "aelig"] = "ae";
-
-	characterConversionMap[ "#231"] = "c";
-	characterConversionMap[ "ccedil"] = "c";
-
-	characterConversionMap[ "#232"] = "e";
-	characterConversionMap[ "#233"] = "e";
-	characterConversionMap[ "#234"] = "e";
-	characterConversionMap[ "#235"] = "e";
-
-	characterConversionMap[ "egrave"] = "e";
-	characterConversionMap[ "eacute"] = "e";
-	characterConversionMap[ "ecirc"] = "e";
-	characterConversionMap[ "euml"] = "e";
-
-	characterConversionMap[ "#236"] = "i";
-	characterConversionMap[ "#237"] = "i";
-	characterConversionMap[ "#238"] = "i";
-	characterConversionMap[ "#239"] = "i";
-
-	characterConversionMap[ "igrave"] = "i";
-	characterConversionMap[ "iacute"] = "i";
-	characterConversionMap[ "icirc"] = "i";
-	characterConversionMap[ "iuml"] = "i";
-
-	characterConversionMap[ "#241"] = "n";
-	characterConversionMap[ "ntilde"] = "n";
-
-	characterConversionMap[ "#242"] = "o";
-	characterConversionMap[ "#243"] = "o";
-	characterConversionMap[ "#244"] = "o";
-	characterConversionMap[ "#245"] = "o";
-	characterConversionMap[ "#246"] = "o";
-	characterConversionMap[ "#248"] = "o";
-
-	characterConversionMap[ "ograve"] = "o";
-	characterConversionMap[ "oacute"] = "o";
-	characterConversionMap[ "ocirc"] = "o";
-	characterConversionMap[ "otilde"] = "o";
-	characterConversionMap[ "ouml"] = "o";
-	characterConversionMap[ "oslash"] = "o";
-
-	characterConversionMap[ "#249"] = "u";
-	characterConversionMap[ "#250"] = "u";
-	characterConversionMap[ "#251"] = "u";
-	characterConversionMap[ "#252"] = "u";
-
-	characterConversionMap[ "ugrave"] = "u";
-	characterConversionMap[ "uacute"] = "u";
-	characterConversionMap[ "ucirc"] = "u";
-	characterConversionMap[ "uuml"] = "u";
-
-	characterConversionMap[ "#253"] = "y";
-	characterConversionMap[ "yacute"] = "y";
-	characterConversionMap[ "#255"] = "y";
-	characterConversionMap[ "yuml"] = "y";
-	}
-
 	// stack to contain the tags
-	fb::Vector<String> tagStack;
-
-	fb::UnorderedMap<String, String> characterConversionMap;
+	fb::Vector<fb::String> tagStack;
 
 	// content of the html page to parse
-	const String & content;
+    fb::StringView content;
 
-	String parsedResult;
-	String specialCharacterString;
+    fb::String parsedResult;
 
 	bool inSpecialCharacter;
-};
 
-}
+    struct InitParser;
+    friend class InitParser;
+    struct InitParser {
+        InitParser() {
+            Parser::init();
+        }
+    };
+
+    static InitParser p;
+	static fb::UnorderedSet<fb::StringView> boldTags;
+
+    static void init() {
+		initializeBoldTags( );
+    }
+
+	static void initializeBoldTags() {
+		boldTags.insert( "b"_sv ); // bold
+		boldTags.insert( "strong"_sv ); // bold
+		boldTags.insert( "u"_sv ); // underline
+		boldTags.insert( "mark"_sv ); // highlight
+		boldTags.insert( "i"_sv ); // italic
+		boldTags.insert( "em"_sv ); // italic
+    }
+};

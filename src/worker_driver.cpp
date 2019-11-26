@@ -160,7 +160,7 @@ void * parsePages( void * ) {
 
          ParsedUrl url( downloader.finalUrl );
 
-         fb::Parser parser( result, url );
+         Parser parser( result, std::move(url) );
          parser.parse( );
 
          add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );

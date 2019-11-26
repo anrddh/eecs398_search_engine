@@ -49,12 +49,19 @@ public:
       uint64_t* current_doc_offset = start_of_file + 2;
       uint64_t* current_des_offset = start_of_file + 3;
       //size_t* current_doc_id = start_of_file + 4;
+<<<<<<< HEAD:include/index/index_builder.hpp
       unsigned int num_pages = start_of_file[1];
       uint64_t* end_page_headers = start_of_file + 2 + (num_pages * 3);
       uint64_t doc_num = 0;
       uint8_t * start = (uint8_t *) start_of_file;
       while(current_doc_offset != end_page_headers){
          build_single_doc(start + *current_doc_offset, start + *current_des_offset, doc_num);
+=======
+      size_t* end_page_headers = start_of_file + *start_of_file;
+      uint32_t doc_num = 0;
+      while(current != end_page_headers){
+         build_single_doc(start_of_file + *current_doc, start_of_file + *current_des, doc_num);
+>>>>>>> 7ada04f0e95649d6e36adbaa47f48a7d7c51753f:src/index/index_builder.hpp
          current_doc_offset += 3;
          current_des_offset += 3;
          ++doc_num;
@@ -82,8 +89,13 @@ private:
       return word_begin;
    }
 
+<<<<<<< HEAD:include/index/index_builder.hpp
    void build_single_doc(uint8_t* doc_start, uint8_t* des_start, uint64_t docId){
       fb::UnorderedSet<fb::String> unique_words;
+=======
+   void build_single_doc(char* doc_start, uint8_t* des_start, uint32_t docId){
+      fb::UnorderedSet<fb::String word> unique_words;
+>>>>>>> 7ada04f0e95649d6e36adbaa47f48a7d7c51753f:src/index/index_builder.hpp
       fb::String word;
       uint8_t word_info;
       char* current_word = (char *)doc_start;

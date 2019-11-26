@@ -142,12 +142,7 @@ public:
                 assert(false);
             }
 
-            fb::Vector<fb::SizeT> links =
-               AdjStore::getStore().getList(
-                     url_info[i].AdjListOffsets.first,
-                     url_info[i].AdjListOffsets.second);
-
-            for ( fb::SizeT link_offset : links ) {
+            for ( fb::SizeT link_offset : AdjStore::getStore().getList(url_info[i].AdjListOffsets.first,url_info[i].AdjListOffsets.second) ) {
                fb::StringView link_url =
                   UrlStore::getStore().getUrl( link_offset );
                fb::SizeT link_hash = hasher( link_url );

@@ -141,6 +141,10 @@ public:
     //power to change a key inside the hash table. This is likely foolish, and
     //you should make sure you have a very good reason for doing so
     Bucket &functionThatIsOnlyForJIaeyoonInThatOneSpecialCase(K& key){
+        if(num_elements > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+
         SizeT index = findPlaceToInsert( key );
         if( buckets[ index ].status == Status::Empty )
             {

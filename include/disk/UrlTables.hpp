@@ -208,7 +208,7 @@ private:
 			}
 
          double reserve_size = url_info.size() * 2 / NumBins;
-         fb::SizeT next_pow_of_two = 1;
+         fb::SizeT next_pow_of_two = 2;
          while (next_pow_of_two < reserve_size) {
             next_pow_of_two *= 2;
          }
@@ -259,6 +259,8 @@ private:
 
 			bool is_new_url = (url_info_bucket.status == fb::MapStatus::Empty);
 
+         // DO NOT erase this variable - talk to Jayeoon 
+         fb::SizeT info_offset = url_info_bucket.val;
 			if ( is_new_url )
 			{
 				 // This url has never been added before.
@@ -275,26 +277,32 @@ private:
 				 assert( url_offset && "addUrl returned 0");
 				 url_info_bucket.key = UrlStore::getStore().getUrl( url_offset );
 
+             // Be very careful that after any unordered_map operation, the reference
+             // url_info_bucket might be invalidated!
 				 assert( url_info_bucket.key == link );
-				 url_info_bucket.val = url_info.reserve(1);
+             // We need the variable info_offset if we want to do the assert
+             // since operator[] invalidates the reference url_info_bucket
+             info_offset =url_info.reserve(1);
+				 url_info_bucket.val = info_offset;
+             assert(info_offset);
              url_info_bucket.status = fb::MapStatus::Filled;
-				 url_info[ url_info_bucket.val ].state = 'u';
-				 url_info[ url_info_bucket.val ].UrlOffset = url_offset;
+				 url_info[ info_offset ].state = 'u';
+				 url_info[ info_offset ].UrlOffset = url_offset;
 
-				 assert( info_hash.first[ link ] == url_info_bucket.val );
+				 assert( info_hash.first[ link ] == info_offset );
 			}
 
-			url_info[ url_info_bucket.val ].AnchorTextOffsets =
+			url_info[ info_offset ].AnchorTextOffsets =
 				 AnchorStore::getStore().addStr( anchor_text,
-							 url_info[ url_info_bucket.val ].AnchorTextOffsets );
+							 url_info[ info_offset ].AnchorTextOffsets );
 
 			if ( is_new_url )
 			{
-				 return {url_info[ url_info_bucket.val ].UrlOffset, url_info_bucket.val };
+				 return {url_info[ info_offset ].UrlOffset, info_offset };
 			}
 			else
 			{
-				 return {0, url_info_bucket.val };
+				 return {0, info_offset };
 			}
 		}
 

@@ -108,11 +108,6 @@ public:
 		}
 
 private:
-    fb::String getSpecialCharacter( )
-		{
-            auto it = characterConversionMap.find( specialCharacterString );
-            return it == characterConversionMap.end() ? "" : *it;
-		}
     void addWord( const fb::String &str )
 		{
 		for ( const auto i : str )
@@ -142,27 +137,11 @@ private:
 			if ( c == ';' )
 				{
 				inSpecialCharacter = false;
-				addWord( getSpecialCharacter( ) );
-				specialCharacterString = "";
 				}
-			else
-				specialCharacterString += c;
 			}
 		else
 			addWord( c );
 		}
-
-	// // exclusive end
-	// fb::SizeT find(const fb::SizeT start,
- //                   const fb::SizeT end,
- //                   const fb::String &rhs )
-	// 	{
-	// 	for( fb::SizeT i = start;  i + rhs.size( ) <= end;  ++i )
-	// 		if ( contentEqual( i, rhs ) )
-	// 			return i;
-
-	// 	return end;
-	// 	}
 
     fb::StringView extractURL(const fb::SizeT start,
                               const fb::SizeT end ) {
@@ -580,7 +559,6 @@ private:
     fb::StringView content;
 
     fb::String parsedResult;
-    fb::String specialCharacterString;
 
 	bool inSpecialCharacter;
 
@@ -593,157 +571,11 @@ private:
     };
 
     static InitParser p;
-	static fb::NoDeleteUnorderedMap<fb::String, fb::String> characterConversionMap;
 	static fb::UnorderedSet<fb::StringView> boldTags;
 
     static void init() {
-		initializeConversionMap( );
 		initializeBoldTags( );
     }
-
-    static void initializeConversionMap( ) {
-        characterConversionMap[ "#192"] = "A";
-        characterConversionMap[ "#193"] = "A";
-        characterConversionMap[ "#194"] = "A";
-        characterConversionMap[ "#195"] = "A";
-        characterConversionMap[ "#196"] = "A";
-        characterConversionMap[ "#197"] = "A";
-
-        characterConversionMap[ "Agrave"] = "A";
-        characterConversionMap[ "Aacute"] = "A";
-        characterConversionMap[ "Acirc"] = "A";
-        characterConversionMap[ "Atilde"] = "A";
-        characterConversionMap[ "Auml"] = "A";
-        characterConversionMap[ "Aring"] = "A";
-
-        characterConversionMap[ "#198"] = "AE";
-        characterConversionMap[ "AElig"] = "AE";
-
-        characterConversionMap[ "#199"] = "C";
-        characterConversionMap[ "Ccedil"] = "C";
-
-        characterConversionMap[ "#200"] = "E";
-        characterConversionMap[ "#201"] = "E";
-        characterConversionMap[ "#202"] = "E";
-        characterConversionMap[ "#203"] = "E";
-
-        characterConversionMap[ "Egrave"] = "E";
-        characterConversionMap[ "Eacute"] = "E";
-        characterConversionMap[ "Ecirc"] = "E";
-        characterConversionMap[ "Euml"] = "E";
-
-        characterConversionMap[ "#204"] = "I";
-        characterConversionMap[ "#205"] = "I";
-        characterConversionMap[ "#206"] = "I";
-        characterConversionMap[ "#207"] = "I";
-
-        characterConversionMap[ "Igrave"] = "I";
-        characterConversionMap[ "Iacute"] = "I";
-        characterConversionMap[ "Icirc"] = "I";
-        characterConversionMap[ "Iuml"] = "I";
-
-        characterConversionMap[ "#209"] = "N";
-        characterConversionMap[ "Ntilde"] = "N";
-
-        characterConversionMap[ "#210"] = "O";
-        characterConversionMap[ "#211"] = "O";
-        characterConversionMap[ "#212"] = "O";
-        characterConversionMap[ "#213"] = "O";
-        characterConversionMap[ "#214"] = "O";
-        characterConversionMap[ "#216"] = "O";
-
-        characterConversionMap[ "Ograve"] = "O";
-        characterConversionMap[ "Oacute"] = "O";
-        characterConversionMap[ "Ocirc"] = "O";
-        characterConversionMap[ "Otilde"] = "O";
-        characterConversionMap[ "Ouml"] = "O";
-        characterConversionMap[ "Oslash"] = "O";
-
-        characterConversionMap[ "#217"] = "U";
-        characterConversionMap[ "#218"] = "U";
-        characterConversionMap[ "#219"] = "U";
-        characterConversionMap[ "#220"] = "U";
-
-        characterConversionMap[ "Ugrave"] = "U";
-        characterConversionMap[ "Uacute"] = "U";
-        characterConversionMap[ "Ucirc"] = "U";
-        characterConversionMap[ "Uuml"] = "U";
-
-        characterConversionMap[ "#221"] = "Y";
-        characterConversionMap[ "Yacute"] = "Y";
-
-        characterConversionMap[ "#224"] = "a";
-        characterConversionMap[ "#225"] = "a";
-        characterConversionMap[ "#226"] = "a";
-        characterConversionMap[ "#227"] = "a";
-        characterConversionMap[ "#228"] = "a";
-        characterConversionMap[ "#229"] = "a";
-
-        characterConversionMap[ "agrave"] = "a";
-        characterConversionMap[ "aacute"] = "a";
-        characterConversionMap[ "acirc"] = "a";
-        characterConversionMap[ "atilde"] = "a";
-        characterConversionMap[ "auml"] = "a";
-        characterConversionMap[ "aring"] = "a";
-
-        characterConversionMap[ "#230"] = "ae";
-        characterConversionMap[ "aelig"] = "ae";
-
-        characterConversionMap[ "#231"] = "c";
-        characterConversionMap[ "ccedil"] = "c";
-
-        characterConversionMap[ "#232"] = "e";
-        characterConversionMap[ "#233"] = "e";
-        characterConversionMap[ "#234"] = "e";
-        characterConversionMap[ "#235"] = "e";
-
-        characterConversionMap[ "egrave"] = "e";
-        characterConversionMap[ "eacute"] = "e";
-        characterConversionMap[ "ecirc"] = "e";
-        characterConversionMap[ "euml"] = "e";
-
-        characterConversionMap[ "#236"] = "i";
-        characterConversionMap[ "#237"] = "i";
-        characterConversionMap[ "#238"] = "i";
-        characterConversionMap[ "#239"] = "i";
-
-        characterConversionMap[ "igrave"] = "i";
-        characterConversionMap[ "iacute"] = "i";
-        characterConversionMap[ "icirc"] = "i";
-        characterConversionMap[ "iuml"] = "i";
-
-        characterConversionMap[ "#241"] = "n";
-        characterConversionMap[ "ntilde"] = "n";
-
-        characterConversionMap[ "#242"] = "o";
-        characterConversionMap[ "#243"] = "o";
-        characterConversionMap[ "#244"] = "o";
-        characterConversionMap[ "#245"] = "o";
-        characterConversionMap[ "#246"] = "o";
-        characterConversionMap[ "#248"] = "o";
-
-        characterConversionMap[ "ograve"] = "o";
-        characterConversionMap[ "oacute"] = "o";
-        characterConversionMap[ "ocirc"] = "o";
-        characterConversionMap[ "otilde"] = "o";
-        characterConversionMap[ "ouml"] = "o";
-        characterConversionMap[ "oslash"] = "o";
-
-        characterConversionMap[ "#249"] = "u";
-        characterConversionMap[ "#250"] = "u";
-        characterConversionMap[ "#251"] = "u";
-        characterConversionMap[ "#252"] = "u";
-
-        characterConversionMap[ "ugrave"] = "u";
-        characterConversionMap[ "uacute"] = "u";
-        characterConversionMap[ "ucirc"] = "u";
-        characterConversionMap[ "uuml"] = "u";
-
-        characterConversionMap[ "#253"] = "y";
-        characterConversionMap[ "yacute"] = "y";
-        characterConversionMap[ "#255"] = "y";
-        characterConversionMap[ "yuml"] = "y";
-	}
 
 	static void initializeBoldTags() {
 		boldTags.insert( "b"_sv ); // bold

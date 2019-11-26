@@ -120,7 +120,7 @@ public:
         return Iterator( &buckets, index );
     }
 
-    Iterator insert(K& key, V& val) {
+    Iterator insert(K key, V val) {
         if(num_elements > buckets.size() * max_load){
             rehash_and_grow(buckets.size() * 2);
         }
@@ -128,10 +128,10 @@ public:
         SizeT index = findPlaceToInsert( key );
         if ( buckets[index].status == Status::Empty )
         {
-            buckets[ index ].key = key;
-            buckets[ index ].val = val;
+            buckets[ index ].key = std::move(key);
+            buckets[ index ].val = std::move(val);
             buckets[ index ].status = Status::Filled;
-            num_elements++;
+            ++num_elements;
         }
 
         return Iterator( &buckets, index );
@@ -152,7 +152,7 @@ public:
     // returns a reference to the value in the bucket with the key, if it
     // already exists. Otherwise, insert it with a default value, and return
     // a reference to the resulting bucket.
-    V& operator[](const K& key) 
+    V& operator[](const K& key)
         {
         if ( num_elements > buckets.size() * max_load )
             {

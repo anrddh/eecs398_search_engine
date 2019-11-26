@@ -14,10 +14,10 @@ public:
     struct List {
         fb::SizeT begin_;
         fb::SizeT end_;
-        DiskVec<fb::SizeT> &vec_;
+        const DiskVec<fb::SizeT> &vec_;
 
         List(fb::SizeT begin, fb::SizeT end, 
-             DiskVec<fb::SizeT> &vec)
+             const DiskVec<fb::SizeT> &vec)
             : begin_(begin), end_(end), vec_(vec) {}
 
         fb::SizeT * begin() {

@@ -222,7 +222,7 @@ FileDesc parseArguments(int argc, char **argv) try {
 
     if (logs.empty()) {
         std::cout << "Using default logfile: " << DefaultLogFile << '\n';
-        logfile.open(DefaultLogFile.data());
+        logfile.open(DefaultLogFile);
     } else {
         logfile.open(logs.data());
     }
@@ -243,9 +243,9 @@ FileDesc parseArguments(int argc, char **argv) try {
 
     if (frontier.empty()) {
         std::cout << "Using default frontier prefix: " << DefaultFrontierBinsPrefix << '\n';
-        Frontier::init(fb::String(DefaultFrontierBinsPrefix.data(), DefaultFrontierBinsPrefix.size()));
+        Frontier::init(fb::String(DefaultFrontierBinsPrefix, strlen(DefaultFrontierBinsPrefix)));
     } else {
-        Frontier::init(fb::String(DefaultFrontierBinsPrefix.data(), DefaultFrontierBinsPrefix.size()));
+        Frontier::init(fb::String(DefaultFrontierBinsPrefix, strlen(DefaultFrontierBinsPrefix)));
         Frontier::init(fb::String(frontier.data(), frontier.size()));
     }
 

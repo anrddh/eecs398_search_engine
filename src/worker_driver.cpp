@@ -142,7 +142,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
 
     if (logs.empty()) {
         std::cout << "Using default logfile: " << DefaultWorkerLogFile << '\n';
-        logfile.open(DefaultWorkerLogFile.data());
+        logfile.open(DefaultWorkerLogFile);
     } else {
         logfile.open(logs.data());
     }
@@ -155,8 +155,8 @@ fb::SizeT parseArguments( int argc, char **argv ) {
     if (pagebin.empty()) {
         std::cout << "Using default pagebin file: " << DefaultPageStoreFile << '\n';
         initializeFileName({
-                DefaultPageStoreFile.data(),
-                DefaultPageStoreFile.size()
+                DefaultPageStoreFile,
+                strlen(DefaultPageStoreFile)
             });
     } else {
         initializeFileName(pagebin);

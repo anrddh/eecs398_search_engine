@@ -59,7 +59,7 @@ void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &al
 	//places all the offsets in all the posting lists in vector
 	for(unsigned int i = 0; i < table_size; ++i){
 		//cast to 1 byte type
-		(char*)(current);
+		current = (char*)(current);
 		current = start + posting_list_offsets[i];
 		std::string word = "";
 		while(true){
@@ -70,11 +70,11 @@ void trans_file_to_offsets(char* current, std::vector<std::vector<uint64_t>> &al
 			word = word + *current;
 		}
 		words.push_back(word);
-		(unsigned int*)(current);
+		current = (unsigned int*)(current);
 		//move past metadata
 		current += 3;
 		//cast to a 1 byte type
-		(char*)(current);
+		current = (char*)(current);
 		read_posting_list(current, posting_list);
 		all.push_back(posting_list);
 	}

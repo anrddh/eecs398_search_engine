@@ -23,7 +23,7 @@ int main() {
     }
 	struct stat sb;
 	fstat(fd, &sb);
-	char* beginning_of_file = mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+	char* beginning_of_file = (char*) mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
 	if (beginning_of_file == MAP_FAILED) {
 		close(fd);
 		perror("Error mmapping the file");
@@ -32,7 +32,7 @@ int main() {
 	std::vector<std::vector<uint64_t>> all; 
 	std::vector<std::string> words; 
 	std::vector<std::pair<size_t,uint64_t>> EOD_posting_list;
-	trans_file_to_offsets(beginning_of_file, all, words, EOD_posting_list)	
+	trans_file_to_offsets(beginning_of_file, all, words, EOD_posting_list);
 	size_t count = 0;
 	for(size_t i = 0; i < all.size(); ++i){
 		for(size_t j = 0; j < all[i].size(); ++j){

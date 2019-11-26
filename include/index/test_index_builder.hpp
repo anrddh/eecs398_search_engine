@@ -10,7 +10,7 @@ using namespace fb;
 constexpr int SKIP_TABLE_BYTES = (1 << 4) * 2 * sizeof(unsigned int);
 
 // read a single posting list and add all the nums to vector
-void read_posting_list(char* current, std::vector<uint64_t> &posting_list){
+void read_posting_list(char* current, std::vector<uint32_t> &posting_list){
 	while(!fb::is_word_sentinel(current)){
       uint64_t num = 0;
 		current = read_word_post(current, num);
@@ -22,6 +22,10 @@ void read_posting_list(char* current, std::vector<uint64_t> &posting_list){
 char * read_EOD_posting_list(char* current, std::vector<std::pair<uint32_t,uint32_t>> &EOD_posting_list){
 	size_t delta = 0;
 	uint32_t url_id = 0;
+   ++current; 
+   current += (2 * sizeof(unsigned int));
+   current += SKIP_TABLE_BYTES;
+
 	while(true){
 		current = read_document_post(current, delta, url_id);
 		if(delta == 0){
@@ -36,7 +40,7 @@ char * read_EOD_posting_list(char* current, std::vector<std::pair<uint32_t,uint3
 
 // given pointer to start of file, creates a vector of vectors
 // where each vector is a posting list containing offsets
-void trans_file_to_offsets(char* start, std::vector<std::vector<uint64_t>> &all, std::vector<std::string> &words, std::vector<std::pair<uint32_t,uint32_t>> &EOD_posting_list)
+void trans_file_to_offsets(char* start, std::vector<std::vector<uint32_t>> &all, std::vector<std::string> &words, std::vector<std::pair<uint32_t,uint32_t>> &EOD_posting_list)
    {
    char* current = start;
    current += (2 * sizeof(unsigned int));
@@ -61,7 +65,7 @@ void trans_file_to_offsets(char* start, std::vector<std::vector<uint64_t>> &all,
             ;
          current += (2 * sizeof(unsigned int));
          current += SKIP_TABLE_BYTES;
-         std::vector<uint64_t> posting_list;
+         std::vector<uint32_t> posting_list;
          read_posting_list(current, posting_list);
          all.push_back(posting_list);
          }
@@ -69,14 +73,12 @@ void trans_file_to_offsets(char* start, std::vector<std::vector<uint64_t>> &all,
    }
 
 //given words and all the offsets, reconstruct original vector
-void reconstruct(std::vector<std::vector<uint64_t>> &all, std::vector<std::string> &words, std::vector<std::string> &original){
+void reconstruct(std::vector<std::vector<uint32_t>> &all, std::vector<std::string> &words, std::vector<std::string> &original){
 	//index i keeps track of word
 	for(size_t i = 0; i < words.size(); ++i){
 		std::string current_word = words[i];
-		int current_index = all[i][0];
-		//index j keeps track of post in a posting list for a word
-		original[current_index] = current_word;
-		for(size_t j = 1; j < all[i].size(); ++j){
+		int current_index = 0;
+		for(size_t j = 0; j < all[i].size(); ++j){
 			current_index = current_index + all[i][j];
 			original[current_index] = current_word;
 		}	
@@ -86,6 +88,7 @@ void reconstruct(std::vector<std::vector<uint64_t>> &all, std::vector<std::strin
 //basic print function
 void print_recon(std::vector<std::string> &original){
 	for(std::string word : original){
-		std::cout << word << " ";
+		std::cout << word << "\n";
 	}
+   std::cout << std::endl;
 }

@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#define FILEPATH "INDEX/Index0"
+#define FILEPATH "INDEX/Index1"
 
 int main() {
 	int fd = open(FILEPATH, O_RDWR);
@@ -29,8 +29,9 @@ int main() {
 		close(fd);
 		perror("Error mmapping the file");
 		exit(EXIT_FAILURE);
-    }
-	std::vector<std::vector<uint64_t>> all; 
+   }
+
+	std::vector<std::vector<uint32_t>> all; 
 	std::vector<std::string> words; 
 	std::vector<std::pair<uint32_t,uint32_t>> EOD_posting_list;
 	trans_file_to_offsets(beginning_of_file, all, words, EOD_posting_list);	
@@ -40,7 +41,8 @@ int main() {
 			++count;
 		}
 	}
-	std::vector<std::string> original(count, "");
+
+	std::vector<std::string> original(count + EOD_posting_list.size() + 1, "");
 	reconstruct(all, words, original);
 	print_recon(original);
 }

@@ -152,34 +152,36 @@ private:
 			addWord( c );
 		}
 
-	// exclusive end
-	fb::SizeT find(const fb::SizeT start,
-                   const fb::SizeT end,
-                   const fb::String &rhs )
-		{
-		for( fb::SizeT i = start;  i + rhs.size( ) <= end;  ++i )
-			if ( contentEqual( i, rhs ) )
-				return i;
+	// // exclusive end
+	// fb::SizeT find(const fb::SizeT start,
+ //                   const fb::SizeT end,
+ //                   const fb::String &rhs )
+	// 	{
+	// 	for( fb::SizeT i = start;  i + rhs.size( ) <= end;  ++i )
+	// 		if ( contentEqual( i, rhs ) )
+	// 			return i;
 
-		return end;
-		}
+	// 	return end;
+	// 	}
 
     fb::StringView extractURL(const fb::SizeT start,
                               const fb::SizeT end ) {
-		fb::SizeT found = find( start, end, "href" );
-		if ( found == end )
-			found = find( start, end, "HREF" );
+    	fb::StringView tagView = content.substr( start, end - start );
+
+		fb::SizeT found = tagView.find( "href"_sv );
+		if ( found == fb::StringView::npos )
+			found = tagView.find( "HREF"_sv );
 		// There might be space between href and =
-		found = find( found, end, "\"" );
-		if ( found == end )
+		found = tagView.find( "\""_sv, found );
+		if ( found == fb::StringView::npos )
 			return {};
 		// found + 1 to find the next closing quote
 		// if no closing quote is found, skip.
-		fb::SizeT endURL = find( found + 1, end, "\"" );
-		if ( endURL == end )
+		fb::SizeT endURL = tagView.find( "\""_sv, found + 1 );
+		if ( endURL == fb::StringView::npos )
 			return {};
 
-		fb::StringView url = content.substr( found + 1, endURL - found - 1 );
+		fb::StringView url = tagView.substr( found + 1, endURL - found - 1 );
 		// just in case a closing quote is not really closing the url, one heuristic is
 		// that there would be a space somewhere.
 		// For example, we might have

@@ -436,7 +436,8 @@ private:
 
 		if ( !normalizedText.empty( ) )
 			{
-			normalizedText = trimSpace( fb::StringView( normalizedText ) );
+			normalizedText = trimSpace( 
+					fb::StringView( normalizedText.data( ), normalizedText.size( ) ) );
 
 			if ( urlAnchorText[ url ].empty() )
 				urlAnchorText[ url ] += normalizedText;

@@ -3,17 +3,32 @@
 #include <vector>
 #include <iostream>
 #include <cstddef>
-#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+#define FILEPATH "Index0"
 
 int main() {
     //compile test
     //IndexBuilder<27, 10> indexBuilder("/Users/grantreszczyk/workspace/CLASS/EECS398/Search_Engine/tmp");
-	string filename = "";
-	ifstream f;
-	f.open(filename);
-	//masterIndexData = (MasterIndexData *) mmap(nullptr, sizeof(MasterIndexData), PROT_READ | PROT_WRITE, MAP_PRIVATE, file, 0);
-	// I don't know how to mmap this :(
-	char* beginning_of_file;
+	int fd = open(FILEPATH, O_RDONLY);
+	if (fd == -1) {
+		perror("Error opening file for reading");
+		exit(EXIT_FAILURE);
+    }
+	struct stat sb;
+	fstat(file, &sb);
+	char* beginning_of_file = mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0);
+	if (beginning_of_file == MAP_FAILED) {
+		close(fd);
+		perror("Error mmapping the file");
+		exit(EXIT_FAILURE);
+    }
 	std::vector<std::vector<uint64_t>> all; 
 	std::vector<std::string> words; 
 	std::vector<std::pair<size_t,uint64_t>> EOD_posting_list;

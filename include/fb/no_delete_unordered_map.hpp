@@ -12,8 +12,7 @@ namespace fb {
 // A bucket's status tells you whether it's filled, empty, or contains a ghost.
 enum class MapStatus {
     Empty,
-    Filled,
-    Ghost
+    Filled
 };
 
 template<typename K, typename V, typename Hasher = Hash<K>, typename Pred = EqualTo<K>>
@@ -78,10 +77,6 @@ public:
         }
 
     private:
-        K& bravery() {
-            return (*owner)[index].key;
-        }
-
         Vector<Bucket> *owner;
         SizeT index;
     };
@@ -252,17 +247,14 @@ private:
     SizeT findPlaceToInsert( const K& key )
         {
         SizeT desired_bucket = hash(key) % buckets.size();
-        //if the bucket is not empty
-        if(buckets[desired_bucket].status != Status::Empty){
-            //search until an empty bucket
-            while(buckets[desired_bucket].status != Status::Empty){
-                //if a bucket has the key, return
-                if( pred(buckets[desired_bucket].key, key) ){
-                    return desired_bucket;
-                }
-                desired_bucket = (desired_bucket+1) % buckets.size();
-                }
-            }
+         while(buckets[desired_bucket].status == Status::Filled){
+             //if a bucket has the key, return
+             if( pred(buckets[desired_bucket].key, key) )
+               {
+               return desired_bucket;
+               }
+             desired_bucket = (desired_bucket+1) % buckets.size();
+             }
         return  desired_bucket;
         }
 };

@@ -18,8 +18,7 @@
 #include <fb/string.hpp>
 #include <fb/string_view.hpp>
 #include <fb/stddef.hpp>
-#include <fb/unordered_map.hpp>
-#include <fb/unordered_set.hpp>
+#include <fb/no_delete_unordered_map.hpp>
 
 // Same as above
 // We need to hard code the file we save to
@@ -63,7 +62,7 @@ public:
 							 UrlStore::getStore().getUrl( pp.url_offset );
 
 			fb::SizeT hash = hasher( url );
-			fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
+			fb::Pair<fb::NoDeleteUnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
 				 = info_hashes[hash % NumBins];
 
 			info_hash.second.lock();
@@ -237,17 +236,17 @@ private:
       fb::Pair<fb::SizeT, fb::SizeT> add_link(fb::StringView link, fb::StringView anchor_text )
 	 {
 			fb::SizeT hash = hasher( link );
-			fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
+			fb::Pair<fb::NoDeleteUnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
 				 = info_hashes[hash % NumBins];
 
 			fb::AutoLock<fb::Mutex> l(info_hash.second);
 
 			// This we default initialize
-			fb::Pair<fb::StringView*, fb::SizeT*> url_info_pair =
-				 info_hash.first.functionThatIsOnlyForJaeyoonInThatOneSpecialCase(
+         fb::NoDeleteUnorderedMap<fb::StringView, fb::SizeT>::Bucket& url_info_bucket =
+				 info_hash.first.functionThatIsOnlyForJIaeyoonInThatOneSpecialCase(
 							 link );
 
-			bool is_new_url = (*url_info_pair.second == 0);
+			bool is_new_url = (url_info_bucket.status == fb::MapStatus::Empty);
 
 			if ( is_new_url )
 			{
@@ -263,31 +262,31 @@ private:
 				 // change since they both represent the same string
 				 fb::SizeT url_offset = UrlStore::getStore().addUrl( link );
 				 assert( url_offset && "addUrl returned 0");
-				 *url_info_pair.first = UrlStore::getStore().getUrl( url_offset );
-				 assert( *url_info_pair.first == link );
-				 *url_info_pair.second = url_info.reserve(1);
-				 url_info[ *url_info_pair.second].state = 'u';
-				 url_info[ *url_info_pair.second].UrlOffset = url_offset;
+				 url_info_bucket.key = UrlStore::getStore().getUrl( url_offset );
 
-				 // TODO this is just for debugging
-				 // delete below
-				 assert( info_hash.first[ link ] == *url_info_pair.second );
+				 assert( url_info_bucket.key == link );
+				 url_info_bucket.val = url_info.reserve(1);
+             url_info_bucket.status = fb::MapStatus::Filled;
+				 url_info[ url_info_bucket.val ].state = 'u';
+				 url_info[ url_info_bucket.val ].UrlOffset = url_offset;
+
+				 assert( info_hash.first[ link ] == url_info_bucket.val );
 			}
 
 			//log(logfile, "Processing link: ", link, '\n');
-			url_info[ *url_info_pair.second ].AnchorTextOffsets =
+			url_info[ url_info_bucket.val ].AnchorTextOffsets =
 				 AnchorStore::getStore().addStr( anchor_text,
-							 url_info[ *url_info_pair.second ].AnchorTextOffsets );
+							 url_info[ url_info_bucket.val ].AnchorTextOffsets );
 			//AnchorStore::getStore().print(url_info[ *url_info_pair.second ].AnchorTextOffsets);
 			//log(logfile, '\n', '\n', '\n');
 
 			if ( is_new_url )
 			{
-				 return {url_info[ *url_info_pair.second ].UrlOffset, *url_info_pair.second};
+				 return {url_info[ url_info_bucket.val ].UrlOffset, url_info_bucket.val };
 			}
 			else
 			{
-				 return {0, *url_info_pair.second};
+				 return {0, url_info_bucket.val };
 			}
 		}
 
@@ -297,7 +296,7 @@ private:
 
 	 //The unorderedmaps link the hashes of urls to the associated url infos
 	 // unordered map from stringView (that points to disk vec of urls
-	 fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hashes[NumBins];
+	 fb::Pair<fb::NoDeleteUnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex> info_hashes[NumBins];
 
 	 // TODO we need to initialize this thing
 	 // with a file

@@ -169,11 +169,6 @@ public:
 
 			 //std::cout << "Info for page " << url << std::endl;
 
-			// AdjStore::List links =
-			//    AdjStore::getStore().getList(
-			//          url_info[ url_info_offset ].AdjListOffsets.first,
-			//          url_info[ url_info_offset ].AdjListOffsets.second);
-
 			for ( fb::SizeT link_offset : AdjStore::getStore().getList( 
             url_info[ url_info_offset ].AdjListOffsets.first,
             url_info[ url_info_offset ].AdjListOffsets.second ) ) 
@@ -182,12 +177,6 @@ public:
                UrlStore::getStore().getUrl( link_offset );
                  //std::cout << "\tHas link " << link_url << std::endl;
             }
-
-			//      for ( fb::SizeT link_offset : links ) {
-			//         fb::StringView link_url =
-			//            UrlStore::getStore().getUrl( link_offset );
-			//         //std::cout << "\tHas link " << link_url << std::endl;
-			//}
 		}
 
 private:

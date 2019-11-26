@@ -44,13 +44,6 @@ public:
         return {idx, idx + in_list.size()};
     }
 
-   // fb::Vector<fb::SizeT> getList(fb::SizeT begin, fb::SizeT end) const noexcept {
-   //     fb::Vector<fb::SizeT> list;
-     //   for (fb::SizeT idx = begin; idx < end; ++idx){
-        //    list.pushBack(lists[idx]);
-      //  }
-    //    return list;
-  //  }
     List getList(fb::SizeT begin, fb::SizeT end) const noexcept {
         return List(begin, end, lists);
     }

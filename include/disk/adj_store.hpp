@@ -14,10 +14,10 @@ public:
     struct List {
         fb::SizeT begin_;
         fb::SizeT end_;
-        fb::DiskVec<fb::SizeT> &vec_;
+        DiskVec<fb::SizeT> &vec_;
 
         AdjStore(fb::SizeT begin, fb::SizeT end, 
-                 fb::DiskVec<fb::SizeT> &vec)
+                 DiskVec<fb::SizeT> &vec)
             : begin_(begin), end_(end), vec(vec_) {}
 
         fb::SizeT * begin() {

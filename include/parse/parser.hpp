@@ -369,8 +369,8 @@ private:
 		fb::SizeT index = htmlLower.find( "lang"_sv );
 		if ( index != fb::String::npos )
 			{
-			index = htmlLower.find( "en"_sv );
-			if ( index == fb::String::npos )
+			if ( htmlLower.find( "en"_sv, index ) == fb::String::npos
+				&& htmlLower.find( "mul"_sv, index ) == fb::String::npos )
 				throw ParserException( "language not english" );
 			}
 		}

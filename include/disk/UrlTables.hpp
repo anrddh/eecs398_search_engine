@@ -44,7 +44,7 @@ public:
 		// returns false if this url was already seen before
 		fb::SizeT addSeed( fb::StringView url )
 		{
-			 return add_link(url, "");
+			 return add_link(url, "").first;
 		}
 
 		// This code should be only used on pages
@@ -98,19 +98,22 @@ public:
 			info.state = 'm'; // set the page to modifying
 			info_hash.second.unlock();
 
-
 			fb::Vector<fb::SizeT> adj_list;
+         fb::Vector<fb::SizeT> to_add_to_frontier;
 
 			for (fb::Pair<fb::String, fb::String>& link : pp.links) {
 				 // TODO we need to check with robots.txt if we should add should parse this link
 				 // We will only add to the adj_list if it is allowed by robots.txt
 
 				 link.second += ' '; // Ask Ani about why this is a thing
-				 fb::SizeT url_offset = add_link(link.first, link.second);
-				 if ( url_offset != 0 )
+             // first is url_offset (if it was never seen before)
+             // second is url_info_offset
+				 auto offset_pair = add_link(link.first, link.second);
+				 if ( offset_pair.first != 0 )
 				 {
-						adj_list.pushBack( url_offset );
+						to_add_to_frontier.pushBack( offset_pair.first );
 				 }
+             adj_list.pushBack(offset_pair.second);
 			}
 
 			info_hash.second.lock();
@@ -118,7 +121,7 @@ public:
 			info.state = 'p'; // set the page to be parsed
 			info_hash.second.unlock();
 
-			return adj_list;
+			return to_add_to_frontier;
 		}
 
 		void assert_invariance() {
@@ -224,13 +227,14 @@ private:
 
 
 		// Adds the anchor text
-		// If this was the first occurence this url was seen, initialize urls info
-		// and the url string on disk. It then returns the url_offset of the link
-		// otherwise, it returns 0.
+      //
 		// This function grabs locks from info_hashes, so the caller should ensure that
 		// it is not holding any locks from info_hashes
 		// link can't be const ref in order to use functionThatIsOnlyForJaeyoonInThatOneSpecialCase
-	 fb::SizeT add_link(fb::StringView link, fb::StringView anchor_text )
+      //
+      // returns url_offset of link (if this was the first time it was seen) and returns
+      // url_info_offset of the link.
+      fb::Pair<fb::SizeT, fb::SizeT> add_link(fb::StringView link, fb::StringView anchor_text )
 	 {
 			fb::SizeT hash = hasher( link );
 			fb::Pair<fb::UnorderedMap<fb::StringView, fb::SizeT>, fb::Mutex>& info_hash
@@ -279,11 +283,11 @@ private:
 
 			if ( is_new_url )
 			{
-				 return url_info[ *url_info_pair.second ].UrlOffset;
+				 return {url_info[ *url_info_pair.second ].UrlOffset, *url_info_pair.second};
 			}
 			else
 			{
-				 return 0;
+				 return {0, *url_info_pair.second};
 			}
 		}
 

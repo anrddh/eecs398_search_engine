@@ -35,6 +35,12 @@ namespace fb {
         return temp;
     }
 
+    inline String operator+ (const String &lhs, const char rhs) {
+        String temp(lhs);
+        temp.pushBack(rhs);
+        return temp;
+    }
+
     inline String operator+ (const String &lhs, const char *rhs) {
         String temp(lhs);
         temp += rhs;

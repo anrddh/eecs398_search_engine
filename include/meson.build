@@ -3,3 +3,4 @@
 #subdir('http')
 #subdir('parse')
 #subdir('tcp')
+#subdir('index')

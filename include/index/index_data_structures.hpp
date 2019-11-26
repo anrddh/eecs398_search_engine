@@ -1,8 +1,8 @@
 #pragma once
 
-#include "string.hpp"
-#include "vector.hpp"
-#include "unordered_map.hpp"
+#include "fb/string.hpp"
+#include "fb/vector.hpp"
+#include "fb/unordered_map.hpp"
 
 struct MasterIndexData {
     int numIndexes;
@@ -24,10 +24,4 @@ struct DocIdInfo {
   // this number should be N where N is how many documents
   // we've seen thus far
   uint64_t docId;
-};
-
-struct WriteToDiskInput {
-    fb::String filename;
-    fb::UnorderedMap<fb::String, fb::Vector<AbsoluteWordInfo>> map;
-    fb::UnorderedMap<fb::String, unsigned int> wordDocCounts;
 };

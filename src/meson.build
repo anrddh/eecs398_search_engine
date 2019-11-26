@@ -7,3 +7,4 @@ master_source_files += files('adj_store.cpp', 'anchor_store.cpp', 'frontier.cpp'
 worker_source_files += files('worker_url_tcp.cpp', 'url_tcp.cpp',
                              'page_store.cpp', 'download_html.cpp',
                              'debug.cpp', 'logfile.cpp')
+build_index_driver = files('build_index.cpp')

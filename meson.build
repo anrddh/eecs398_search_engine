@@ -44,3 +44,7 @@ executable('worker',
            worker_driver, worker_source_files,
                       include_directories: inc,
                       dependencies: [readline_dep, threads_dep])
+
+executable('build_index',
+            build_index_driver,
+            include_directories: inc)

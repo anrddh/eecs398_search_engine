@@ -22,18 +22,18 @@ namespace fb {
  * mem = add_num(mem, 1623);
  * mem = add_num(mem, 610516583);
  */
-inline char* add_word_post( char* curr, size_t num, uint8_t header = 0 ) 
+inline char* add_word_post( char* curr, size_t num) 
    {
       if ( num <= fbImpl::oneBytePostMaxVal ) 
          {
-         return fbImpl::write_number<fbImpl::oneBytePost>( curr, num );
+         return fbImpl::write_num<fbImpl::oneBytePost>( curr, num );
          }
-      if ( num <= fbImpl::twoByteHeaderMaxVal ) 
+      if ( num <= fbImpl::twoBytePostMaxVal ) 
          {
-         return fbImpl::write_number<fbImpl::twoBytePost>( curr, num );
+         return fbImpl::write_num<fbImpl::twoBytePost>( curr, num );
          }
 
-      return fbImpl::write_number<fbImpl::fourBytePost>( curr, num );
+      return fbImpl::write_num<fbImpl::fourBytePost>( curr, num );
    }
 
 /* Given a pointer, will copy the stored value to uint64_t &num
@@ -47,35 +47,35 @@ inline char* add_word_post( char* curr, size_t num, uint8_t header = 0 )
  * mem = read_number(mem, value);
  * cout << value << endl;
  */
-inline char* read_word_post( char* curr, uint64_t &num, uint8_t &header ) 
+inline char* read_word_post( char* curr, uint64_t &num) 
    {
-      switch ( ( ( fbImpl::PostByte* ) curr )->size ) 
+      switch ( ( ( fbImpl::oneBytePost * ) curr )->size ) 
          {
          case 1:
-            return fbImpl::read_number<fbImpl::twoByteWithHeader>( curr, num );
+            return fbImpl::read_number<fbImpl::oneBytePost>( curr, num );
          case 2:
-            return fbImpl::read_number<fbImpl::fourByteWithHeader>( curr, num );
+            return fbImpl::read_number<fbImpl::twoBytePost>( curr, num );
          case 3:
-            return fbImpl::read_number<fbImpl::eightByteWithHeader>( curr, num );
+            return fbImpl::read_number<fbImpl::fourBytePost>( curr, num );
          default:
             assert( false );
          } 
    }
 
 // Adds document post. Returns the pointer to next address we should add to
-inline char* add_document_post( char* curr, size_t delta, uint64_t url_uid) {
+inline char* add_document_post( char* curr, size_t delta, uint32_t url_loc) {
    (* (uint32_t *) curr) = delta;
    curr += sizeof(delta);
-   (* (uint64_t *) curr) = url_uid;
-   return curr + sizeof(url_uid);
+   (* (uint32_t *) curr) = url_loc;
+   return curr + sizeof(url_loc);
 }
 
 // Reads document post. Returns the pointer to next address we should read from
-inline char* read_document_post( char* curr, size_t& delta, uint64_t& url_uid) {
+inline char* read_document_post( char* curr, size_t& delta, uint32_t& url_loc ) {
    delta = (* (uint32_t *) curr);
    curr += sizeof(delta);
-   url_uid = (* (uint64_t *) curr);
-   return curr + sizeof(url_uid);
+   url_loc = (* (uint32_t *) curr);
+   return curr + sizeof(url_loc);
 }
 
 }; // Namespace fb

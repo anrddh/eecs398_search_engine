@@ -103,7 +103,7 @@ public:
 
     //Returns an iterator to the first element in the set
     Iterator begin() {
-        int count = 0;
+        fb::SizeT count = 0;
         while (count < buckets.size() && buckets[count].status != Status::Filled) count++;
         return Iterator(&buckets, count);
     }

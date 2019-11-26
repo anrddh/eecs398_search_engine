@@ -7,67 +7,59 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "string.hpp"
-#include "memory.hpp"
-#include "functional.hpp"
-#include "mutex.hpp"
-#include "thread.hpp"
+#include "fb/string.hpp"
+#include "fb/memory.hpp"
+#include "fb/functional.hpp"
+#include "fb/mutex.hpp"
+#include "fb/thread.hpp"
+#include "fb/unordered_set.hpp"
 
-#include "index_chunk_builder.hpp"
-#include "index_helpers.hpp"
-#include "index_data_structures.hpp"
+#include "index/index_chunk_builder.hpp"
+#include "index/index_helpers.hpp" 
+#include "index/index_data_structures.hpp"
 
 /*
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
 
-int getHighestBit(int num)
-   {
-   int val = 0;
-   while(num)
-      {
-      ++val;
-      num =>> 1;
-      }
-
-   return val;
-   }
 
 template<int NUM_SKIP_TABLE_BITS>
 class IndexBuilder {
 public:
    // root must contain a trailing '/'
-   IndexBuilder(fb::String path) : root(path) { 
+   IndexBuilder(fb::String path) : root(path) 
+      { 
       int file;
-      if((file = open((path + "master").data(), 
-                        O_RDWR | O_CREAT, 
-                        S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH)) > 0) {
-         masterIndexData = (MasterIndexData *) mmap(nullptr, sizeof(MasterIndexData), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0);
-      } else {
-         // throw error or smthing.
+      if((file = open((path + "master").data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH)) < 0)
+         {
+         // abort or something maybe with error message
+         exit(1);
+         }
+      ftruncate(file, sizeof(masterIndexData));
+      masterIndexData = (MasterIndexData *) mmap(nullptr, sizeof(masterIndexData), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0);
 
-      }
       close(file);
       
       tokenCount = 1;
-   }
+      }
    
-   void build_chunk(size_t* start_of_file) {
+   void build_chunk(uint64_t* start_of_file, int chunk) {
       // move past first 16 bytes
       // the page headers end where the first page starts
-      size_t* current_doc_offset = start_of_file + 2;
-      size_t* current_des_offset = start_of_file + 3;
+      uint64_t* current_doc_offset = start_of_file + 2;
+      uint64_t* current_des_offset = start_of_file + 3;
       //size_t* current_doc_id = start_of_file + 4;
-      size_t* end_page_headers = start_of_file + *start_of_file;
+      unsigned int num_pages = start_of_file[1];
+      uint64_t* end_page_headers = start_of_file + 2 + (num_pages * 3);
       uint64_t doc_num = 0;
-      while(current != end_page_headers){
-         build_single_doc(start_of_file + *current_doc, start_of_file + *current_des, doc_num);
+      uint8_t * start = (uint8_t *) start_of_file;
+      while(current_doc_offset != end_page_headers){
+         build_single_doc(start + *current_doc_offset, start + *current_des_offset, doc_num);
          current_doc_offset += 3;
          current_des_offset += 3;
-         //current_doc_id += 3;
          ++doc_num;
       }
-      flushToDisk();
+      flushToDisk(chunk);
    }
 private:
    // reads a single space terminated word
@@ -90,20 +82,20 @@ private:
       return word_begin;
    }
 
-   void build_single_doc(char* doc_start, uint8_t* des_start, uint64_t docId){
-      fb::UnorderedSet<fb::String word> unique_words;
+   void build_single_doc(uint8_t* doc_start, uint8_t* des_start, uint64_t docId){
+      fb::UnorderedSet<fb::String> unique_words;
       fb::String word;
       uint8_t word_info;
-      char* current_word = doc_start;
+      char* current_word = (char *)doc_start;
       uint8_t* current_des = des_start;
       while(*current_word != '\0'){
          current_word = read_word(current_word, word);
-         unique_words.add(word);
+         unique_words.insert(word);
          word_info = *current_des;
          AbsoluteWordInfo absWord = {tokenCount, word_info};
          wordPositions[word].pushBack(absWord);
       }
-      for(thing : unique_words){
+      for(fb::String thing : unique_words){
          ++wordDocCounts[thing];
       }
       // increment for EOD
@@ -112,35 +104,22 @@ private:
       documents.pushBack(doc_info);
    }
    
-   void flushToDisk() 
+   void flushToDisk(int chunk) 
       {
-      WriteToDiskInput * input = new WriteToDiskInput;
-      input->filename = (root + "index_" + std::to_string(masterIndexData->numIndexes)).c_str();
+      fb::String filename = (root + "Index" + fb::toString(chunk));
+      // change this to use atomics
       ++masterIndexData->numIndexes;
-      fb::swap(input->map, wordPositions);
-      fb::swap(input->wordDocCounts, wordDocCounts);
 
-      fb::Thread worker(&writeToDisk, (void *) input);
-      worker.detach();
-      
+      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS> indexChunkBuilder(filename, wordPositions.bucket_count(), documents, tokenCount);
+
+      for(auto iter = wordPositions.begin(); iter != wordPositions.end(); ++iter)
+         {
+         indexChunkBuilder.addWord(iter.key(), *iter, wordDocCounts[iter.key()]);
+         }
+
       tokenCount = 1;
       }
 
-   // create dictionary: maps words to offset in the file where posting list is
-   static void * writeToDisk(void * arg) 
-      {
-      WriteToDiskInput input = *(WriteToDiskInput *)arg;
-
-      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS> indexChunkBuilder(input.filename, input.map.bucket_count());
-
-      for(auto iter = input.map.begin(); iter != input.map.end(); ++iter)
-         {
-         indexChunkBuilder.addWord(iter.key(), *iter, input.wordDocCounts[iter.key()]);
-         }
-
-      delete (WriteToDiskInput *) arg;
-      }
-   
    // folder for each index chunk, store root directory
    fb::String root;
    
@@ -156,7 +135,7 @@ private:
    fb::Vector<DocIdInfo> documents;
 
    // each chunk keeps track of its own word count
-   unsigned long tokenCount;
+   unsigned int tokenCount;
   	
 };
 

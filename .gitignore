@@ -3,3 +3,4 @@ bazel-*
 .vscode/
 master
 build
+.DS_Store

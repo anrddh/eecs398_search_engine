@@ -144,7 +144,7 @@ public:
 								assert(false);
 						}
 
-						for ( fb::SizeT link_offset : AdjStore::getStore().getList(url_info[i].AdjListOffsets.first,url_info[i].AdjListOffsets.second) ) {
+						for ( fb::SizeT link_info_offset : AdjStore::getStore().getList(url_info[i].AdjListOffsets.first,url_info[i].AdjListOffsets.second) ) {
 							 // fb::StringView link_url =
 								// 	UrlStore::getStore().getUrl( link_offset );
 							 // fb::SizeT link_hash = hasher( link_url );
@@ -152,16 +152,16 @@ public:
 							 // assert( link_it != info_hashes[ link_hash % NumBins ].first.end() );
 							 // assert( url_info[ *link_it ].UrlOffset == link_offset );
                      fb::StringView link_url =
-                     UrlStore::getStore().getUrl( link_offset );
+                     UrlStore::getStore().getUrl( url_info[link_info_offset].UrlOffset );
                      fb::SizeT link_hash = hasher( link_url );
                      auto link_it = info_hashes[ link_hash % NumBins ].first.find( link_url );
                      if ( link_it == info_hashes[ link_hash % NumBins ].first.end() ) {
                         std::cout << "Link for " << url << " does not urlstore" << std::endl;
-
                      }
-                     if ( url_info[ *link_it ].UrlOffset != link_offset ) {
-                        std::cout << "Link for url " << url << " has incorrect offset. in url_info: " <<
-                           url_info[ *link_it ].UrlOffset << " in adj_list " << link_offset << std::endl;
+                     else if ( *link_it != link_info_offset ) {
+                        std::cout << "Link for url " << url << 
+                           " has incorrect url_info offset. in url_info: " <<
+                           *link_it << " in adj_list " << link_info_offset << std::endl;
                      }
 						}
 			 }
@@ -176,12 +176,12 @@ public:
 
 			 auto it = info_hashes[ hash % NumBins ].first.find( url );
 			 if (it == info_hashes[ hash % NumBins ].first.end()) {
-					 //std::cout << "This page does not exist!" << std::endl;
+					 std::cout << "This page does not exist!" << std::endl;
 					return;
 			 }
 			 fb::SizeT url_info_offset = *it;
 
-			 //std::cout << "Info for page " << url << std::endl;
+			 std::cout << "Info for page " << url << std::endl;
 
 			for ( fb::SizeT link_offset : AdjStore::getStore().getList(
             url_info[ url_info_offset ].AdjListOffsets.first,
@@ -189,7 +189,7 @@ public:
             {
             fb::StringView link_url =
                UrlStore::getStore().getUrl( link_offset );
-                 //std::cout << "\tHas link " << link_url << std::endl;
+                 std::cout << "\tHas link " << link_url << std::endl;
             }
 		}
 
@@ -207,6 +207,18 @@ private:
 				 assert(dummy_url_offset == 0);
 			}
 
+         double reserve_size = url_info.size() * 2 / NumBins;
+         fb::SizeT next_pow_of_two = 1;
+         while (next_pow_of_two < reserve_size) {
+            next_pow_of_two *= 2;
+         }
+         std::cout << "Reserving size of " << next_pow_of_two << " for each of " 
+            << NumBins << " hashtables in UrlTable" << std::endl;
+         for ( fb::SizeT i = 0; i < NumBins; ++i ) {
+            info_hashes[i].first.reserve( next_pow_of_two );
+         }
+
+
 			for ( fb::SizeT url_info_offset = 0; url_info_offset < url_info.size();
 						++url_info_offset )
 			{
@@ -216,13 +228,7 @@ private:
 						continue;
 				 }
 
-<<<<<<< HEAD
 				 fb::StringView url = UrlStore::getStore().getUrl( url_offset );
-				 log(logfile, "in url info table ctor add url ", url, '\n');
-=======
-				 fb::StringView url = UrlStore::getStore().getUrl(
-							 url_info[ url_info_offset ].UrlOffset );
->>>>>>> fce8dcd34aa18cdf024a6448aead709f7406def1
 				 fb::SizeT hash = hasher( url );
 
 				 info_hashes[hash % NumBins].first[ url ] = url_info_offset;

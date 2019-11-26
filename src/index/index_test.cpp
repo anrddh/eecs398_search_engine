@@ -23,7 +23,7 @@ int main() {
     }
 	struct stat sb;
 	fstat(file, &sb);
-	char* beginning_of_file = mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0);
+	char* beginning_of_file = mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
 	if (beginning_of_file == MAP_FAILED) {
 		close(fd);
 		perror("Error mmapping the file");

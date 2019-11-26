@@ -110,14 +110,8 @@ public:
 private:
     fb::String getSpecialCharacter( )
 		{
-		try
-			{
-			return characterConversionMap.at( specialCharacterString );
-			}
-		catch ( ... )
-			{
-			return "";
-			}
+            auto it = characterConversionMap.find( specialCharacterString );
+            return it == characterConversionMap.end() ? "" : *it;
 		}
     void addWord( const fb::String &str )
 		{

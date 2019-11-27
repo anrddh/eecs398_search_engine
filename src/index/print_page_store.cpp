@@ -37,7 +37,7 @@ void print_single_doc(uint8_t* doc_start){
 	}
 }
 
-void print_page_store_file(char* start_of_file){
+void print_page_store_file(uint64_t* start_of_file){
 	std::cout << "\n";
 	uint64_t* current_doc_offset = start_of_file + 2;
 	unsigned int num_pages = start_of_file[1];
@@ -58,7 +58,7 @@ int main(){
 	}
 	struct stat sb;
 	int res = fstat(fd, &sb);
-	char* beginning_of_file = (char *)mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+	uint64_t* beginning_of_file = (uint64_t *)mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
 	if (beginning_of_file == MAP_FAILED) {
 		close(fd);
 		perror("Error mmapping the file");

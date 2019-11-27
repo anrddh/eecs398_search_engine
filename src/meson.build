@@ -6,4 +6,4 @@ master_source_files += files('adj_store.cpp', 'anchor_store.cpp', 'frontier.cpp'
                              'logfile.cpp')
 worker_source_files += files('worker_url_tcp.cpp', 'url_tcp.cpp',
                              'page_store.cpp', 'download_html.cpp',
-                             'debug.cpp', 'logfile.cpp')
+                             'debug.cpp', 'logfile.cpp', 'parser.cpp')

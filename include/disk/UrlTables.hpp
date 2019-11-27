@@ -124,51 +124,64 @@ public:
 		}
 
 		void assert_invariance() {
-			 for (fb::SizeT i = 0; i < NumBins; ++i) {
-					info_hashes[i].second.lock();
-			 }
+            std::cout << "Beginning consistency check..." << std::endl;
+
+            for (auto &[_, l] : info_hashes)
+                 l.lock();
+
+            std::cout << url_info.size() << " urls to check." << std::endl;
+
+            // For progress bar.
+            auto modFactor = url_info.size() / 100;
+            auto currPercentage = 1;
 
 			 // First one is a dummy
 			 for (fb::SizeT i = 1; i < url_info.size(); ++i) {
-						fb::StringView url =
-							 UrlStore::getStore().getUrl( url_info[ i ].UrlOffset );
+                 if (!(i % modFactor)) {
+                     std::cout << "Progress: " << currPercentage << '%' << std::endl;
+                     ++currPercentage;
+                 }
 
-						fb::SizeT hash = hasher(url);
-						auto it = info_hashes[ hash % NumBins ].first.find( url );
-						assert( it != info_hashes[ hash % NumBins ].first.end() );
-						if (*it != i) {
-								std::cout << "i = " << i << " has url " <<
-								UrlStore::getStore().getUrl( url_info[ i ].UrlOffset ) << std::endl;
-								std::cout << "*it = " << *it << " has url " <<
-								UrlStore::getStore().getUrl( url_info[ *it ].UrlOffset ) << std::endl;
-								assert(false);
-						}
+                 fb::StringView url =
+                     UrlStore::getStore().getUrl(url_info[ i ].UrlOffset);
 
-						for ( fb::SizeT link_info_offset : AdjStore::getStore().getList(url_info[i].AdjListOffsets.first,url_info[i].AdjListOffsets.second) ) {
-							 // fb::StringView link_url =
-								// 	UrlStore::getStore().getUrl( link_offset );
-							 // fb::SizeT link_hash = hasher( link_url );
-							 // auto link_it = info_hashes[ link_hash % NumBins ].first.find( link_url );
-							 // assert( link_it != info_hashes[ link_hash % NumBins ].first.end() );
-							 // assert( url_info[ *link_it ].UrlOffset == link_offset );
+                 fb::SizeT hash = hasher(url);
+                 auto it = info_hashes[ hash % NumBins ].first.find( url );
+                 if (it == info_hashes[ hash % NumBins ].first.end()) {
+                     std::cout << "`" << url
+                               << "' does not have a url info entry."
+                               << std::endl;
+                 }
+
+                 if (*it != i) {
+                     std::cout << "i = " << i << " has url " <<
+                         UrlStore::getStore().getUrl( url_info[ i ].UrlOffset ) << std::endl;
+                     std::cout << "*it = " << *it << " has url " <<
+                         UrlStore::getStore().getUrl( url_info[ *it ].UrlOffset ) << std::endl;
+                     break;
+                 }
+
+                 auto &adjStore = AdjStore::getStore();
+                 auto adjList =
+                     adjStore.getList(url_info[i].AdjListOffsets.first,
+                                      url_info[i].AdjListOffsets.second);
+
+                 for ( fb::SizeT link_info_offset : adjList) {
                      fb::StringView link_url =
-                     UrlStore::getStore().getUrl( url_info[link_info_offset].UrlOffset );
+                         UrlStore::getStore().getUrl( url_info[link_info_offset].UrlOffset );
                      fb::SizeT link_hash = hasher( link_url );
                      auto link_it = info_hashes[ link_hash % NumBins ].first.find( link_url );
-                     if ( link_it == info_hashes[ link_hash % NumBins ].first.end() ) {
+                     if ( link_it == info_hashes[ link_hash % NumBins ].first.end() )
                         std::cout << "Link for " << url << " does not urlstore" << std::endl;
-                     }
-                     else if ( *link_it != link_info_offset ) {
-                        std::cout << "Link for url " << url << 
+                     else if ( *link_it != link_info_offset )
+                        std::cout << "Link for url " << url <<
                            " has incorrect url_info offset. in url_info: " <<
                            *link_it << " in adj_list " << link_info_offset << std::endl;
-                     }
-						}
-			 }
+                 }
+             }
 
-			 for (fb::SizeT i = 0; i < NumBins; ++i) {
-					info_hashes[i].second.unlock();
-			 }
+            for (auto &[_, l] : info_hashes)
+                l.unlock();
 		}
 
 		void print_info( fb::StringView url ) {
@@ -212,7 +225,7 @@ private:
          while (next_pow_of_two < reserve_size) {
             next_pow_of_two *= 2;
          }
-         std::cout << "Reserving size of " << next_pow_of_two << " for each of " 
+         std::cout << "Reserving size of " << next_pow_of_two << " for each of "
             << NumBins << " hashtables in UrlTable" << std::endl;
          for ( fb::SizeT i = 0; i < NumBins; ++i ) {
             info_hashes[i].first.reserve( next_pow_of_two );
@@ -259,7 +272,7 @@ private:
 
 			bool is_new_url = (url_info_bucket.status == fb::MapStatus::Empty);
 
-         // DO NOT erase this variable - talk to Jayeoon 
+         // DO NOT erase this variable - talk to Jayeoon
          fb::SizeT info_offset = url_info_bucket.val;
 			if ( is_new_url )
 			{

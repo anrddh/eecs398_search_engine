@@ -83,10 +83,6 @@ class ParsedUrl
             Path = "";
          }
 
-      ~ParsedUrl( )
-         {
-         };
-
       // print function for debugging
       void print( ) const {
           log(logfile, "Complete Url = ", CompleteUrl, '\n', "Service = ", Service,

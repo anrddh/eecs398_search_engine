@@ -61,7 +61,7 @@ MUniquePtr<char> getReadline() {
 #else
 
 MUniquePtr<char> getReadline() {
-    std::cout << DriverPrompt;
+    cout << DriverPrompt;
 
     fb::String line;
     fb::getline(std::cin, line);
@@ -94,10 +94,14 @@ struct Args {
 
 FileDesc parseArguments( int argc, char **argv );
 void addSeed(fb::StringView fname);
+void * logThread(void *);
 
 int main(int argc, char **argv) try {
     FileDesc sock = parseArguments( argc, argv );
     Thread socket_handler(handle_socket, &sock );
+
+    Thread logger(logThread, nullptr);
+    logger.detach();
 
     auto &frontier = Frontier::getFrontier();
 
@@ -178,13 +182,13 @@ FileDesc parseArguments(int argc, char **argv) try {
     }
 
     auto rootDir = getRootDir();
-    std::cout << "Writing to " << rootDir << '\n';
+    cout << "Writing to " << rootDir << '\n';
 
     auto logfileloc = rootDir + MasterLogFile;
     logfile.open(logfileloc.data());
     if (!logfile.is_open()) {
-        std::cerr << "Could not open logfile `" << logfileloc
-                  << "'." << std::endl;
+        cerr << "Could not open logfile `" << logfileloc
+             << "'." << endl;
         throw ArgError();
     }
 
@@ -226,4 +230,20 @@ void addSeed(StringView fname) {
 
         frontier.addUrl({ url_offset, 0 });
     }
+}
+
+void * logThread(void *) {
+    while (true) {
+        cout << "Current status:\n"
+             << "Frontier size:\t" << Frontier::getFrontier().size() << '\n'
+             << "Num connections:\t" << num_threads_alive() << endl;
+
+        log(logfile, "Current status:\n",
+            "Frontier size:\t", Frontier::getFrontier().size(), '\n',
+            "Num connections:\t", num_threads_alive(), '\n');
+
+        sleep(5);
+    }
+
+    return nullptr;
 }

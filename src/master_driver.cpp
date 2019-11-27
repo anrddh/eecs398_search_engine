@@ -235,12 +235,12 @@ void addSeed(StringView fname) {
 void * logThread(void *) {
     while (true) {
         cout << "Current status:\n"
-             << "Frontier size:\t" << frontier.size() << '\n'
+             << "Frontier size:\t" << Frontier::getFrontier().size() << '\n'
              << "Num connections:\t" << num_threads_alive() << endl;
 
-        logfile(log, "Current status:\n",
-                "Frontier size:\t", frontier.size(), '\n',
-                "Num connections:\t", num_threads_alive(), '\n');
+        log(logfile, "Current status:\n",
+            "Frontier size:\t", Frontier::getFrontier().size(), '\n',
+            "Num connections:\t", num_threads_alive(), '\n');
 
         sleep(5);
     }

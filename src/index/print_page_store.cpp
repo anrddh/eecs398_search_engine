@@ -38,12 +38,14 @@ void print_single_doc(uint8_t* doc_start){
 }
 
 void print_page_store_file(char* start_of_file){
+	std::cout << "\n";
 	uint64_t* current_doc_offset = start_of_file + 2;
 	unsigned int num_pages = start_of_file[1];
 	uint64_t* end_page_headers = start_of_file + 2 + (num_pages * 3);
 	uint8_t * start = (uint8_t *) start_of_file;
 	while(current_doc_offset != end_page_headers){
 		print_single_doc(start + *current_doc_offset);
+		std::cout << "\n";
 		current_doc_offset += 3;
     }
 }

@@ -15,21 +15,21 @@
 
 int main() {
 	int fd = open(FILEPATH, O_RDWR);
-   std::cout << "fd: " << fd << std::endl;
+   	//std::cout << "fd: " << fd << std::endl;
 	if (fd == -1) {
 		perror("Error opening file for reading");
 		exit(EXIT_FAILURE);
     }
 	struct stat sb;
 	int res = fstat(fd, &sb);
-   std::cout << "res: " << res << std::endl;
-   std::cout << sb.st_size << std::endl;
+   	//std::cout << "res: " << res << std::endl;
+   	//std::cout << sb.st_size << std::endl;
 	char* beginning_of_file = (char *)mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
 	if (beginning_of_file == MAP_FAILED) {
 		close(fd);
 		perror("Error mmapping the file");
 		exit(EXIT_FAILURE);
-   }
+   	}
 
 	std::vector<std::vector<uint32_t>> all; 
 	std::vector<std::string> words; 

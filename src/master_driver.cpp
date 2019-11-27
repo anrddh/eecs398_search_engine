@@ -39,6 +39,7 @@ using fb::FileDesc;
 using fb::StringView;
 using fb::String;
 using fb::Thread;
+using fb::SizeT;
 
 using std::cerr;
 using std::cout;
@@ -65,6 +66,9 @@ MUniquePtr<char> getReadline() {
 
     fb::String line;
     fb::getline(std::cin, line);
+
+    if (line.empty())
+        return {};
 
     auto ptr = MUniquePtr<char>(static_cast<char *>(malloc(line.size() + 1)),
                                 FreeDeleter<char>());
@@ -93,7 +97,7 @@ struct Args {
 };
 
 FileDesc parseArguments( int argc, char **argv );
-void addSeed(fb::StringView fname);
+void addSeed(StringView fname);
 void * logThread(void *);
 
 int main(int argc, char **argv) try {
@@ -166,8 +170,7 @@ FileDesc parseArguments(int argc, char **argv) try {
     int option_idx;
     auto choice = 0;
 
-    fb::String port;
-
+    String port;
     while ((choice =
             getopt_long(argc, argv, "p:h", long_opts, &option_idx))
            != -1) {
@@ -224,7 +227,7 @@ void addSeed(StringView fname) {
 
     String url;
     while (fb::getline(file, url)) {
-        fb::SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
+        SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
         if ( url_offset == 0)
             continue;
 
@@ -234,15 +237,11 @@ void addSeed(StringView fname) {
 
 void * logThread(void *) {
     while (true) {
-        cout << "Current status:\n"
-             << "Frontier size:\t" << Frontier::getFrontier().size() << '\n'
-             << "Num connections:\t" << num_threads_alive() << endl;
-
         log(logfile, "Current status:\n",
-            "Frontier size:\t", Frontier::getFrontier().size(), '\n',
+            "Frontier size:\t\t", Frontier::getFrontier().size(), '\n',
             "Num connections:\t", num_threads_alive(), '\n');
 
-        sleep(5);
+        sleep(60);
     }
 
     return nullptr;

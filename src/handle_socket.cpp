@@ -51,13 +51,12 @@ void* handle_socket(void* sock_ptr) {
    int server_fd = * (int *) sock_ptr;
    int sock;
 
-   while (true) {
-      if (listen(server_fd, 3) < 0)
-      {
-          perror("listen");
-          exit(EXIT_FAILURE);
-      }
+   if (listen(server_fd, 3) < 0) {
+       perror("listen");
+       exit(EXIT_FAILURE);
+   }
 
+   while (true) {
       term_mtx.lock();
       if (do_terminate) {
          term_mtx.unlock();

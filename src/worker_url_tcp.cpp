@@ -116,13 +116,13 @@ void add_parsed( ParsedPage&& pp ) {
    while ( true ) {
       try {
          auto sock = open_socket_to_master();
-         logfile(log, "SEND socket:\t", static_cast<int>(sock), '\n');
+         log(logfile, "SEND socket:\t", static_cast<int>(sock), '\n');
          send_parsed_pages( sock, temp );
          return;
       }
       catch( SocketException& se)
       {
-          logfile(log, "Error while trying to send page.\n");
+          log(logfile, "Error while trying to send page.\n");
       }
    }
 }
@@ -135,7 +135,7 @@ void get_more_urls_from_master() {
 
    try {
       auto sock = open_socket_to_master();
-      logfile(log, "RECV socket:\t", static_cast<int>(sock), '\n');
+      log(logfile, "RECV socket:\t", static_cast<int>(sock), '\n');for
       // If we are short on urls to parse,
       // request for more
       to_parse_m.lock();
@@ -178,7 +178,7 @@ Vector< Pair<SizeT, String> > checkout_urls(int sock) {
 // Child Machine: First letter S (char),  number of pages (int)
 //    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text]
 //    x num_links many times ] x NUM_URLS_PER_SEND
-void send_parsed_pages(int sock, Vector<ParsedPage> &pages_to_send) {
+void send_parsed_pages(int sock, Vector<ParsedPage> &&pages_to_send) {
    send_char(sock, 'S');
 
    int size = pages_to_send.size();

@@ -117,7 +117,7 @@ void add_parsed( ParsedPage&& pp ) {
       try {
          auto sock = open_socket_to_master();
          log(logfile, "SEND socket:\t", static_cast<int>(sock), '\n');
-         send_parsed_pages( sock, temp );
+         send_parsed_pages( sock, std::move(temp) );
          return;
       }
       catch( SocketException& se)
@@ -135,7 +135,7 @@ void get_more_urls_from_master() {
 
    try {
       auto sock = open_socket_to_master();
-      log(logfile, "RECV socket:\t", static_cast<int>(sock), '\n');for
+      log(logfile, "RECV socket:\t", static_cast<int>(sock), '\n');
       // If we are short on urls to parse,
       // request for more
       to_parse_m.lock();

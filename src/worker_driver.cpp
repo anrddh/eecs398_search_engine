@@ -146,7 +146,7 @@ fb::SizeT parseArguments( int argc, char **argv ) {
 }
 
 void * parsePages( void * ) {
-   while(true) {
+   while (true) {
       auto urlPair = get_url_to_parse( );
 
 	  if (urlPair.second.empty()) {

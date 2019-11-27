@@ -52,7 +52,7 @@ void send_char(int sock, char c) {
 char recv_char(int sock) {
    char c;
 
-   if (recv(sock, &c, sizeof(c), MSG_WAITALL) < 0) {
+   if (recv(sock, &c, sizeof(c), MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_char failed");
    }
    return c;
@@ -84,7 +84,7 @@ void send_uint64_t(int sock, uint64_t num) {
 uint64_t recv_uint64_t(int sock) {
    uint64_t num;
 
-   if (recv(sock, &num, sizeof(uint64_t), MSG_WAITALL) < 0) {
+   if (recv(sock, &num, sizeof(uint64_t), MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_uint64_t failed");
    }
    return be64toh(num);

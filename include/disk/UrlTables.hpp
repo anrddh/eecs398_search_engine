@@ -109,10 +109,8 @@ public:
              // second is url_info_offset
 				 auto offset_pair = add_link(link.first, link.second);
 				 if ( offset_pair.first != 0 )
-				 {
 						to_add_to_frontier.pushBack( offset_pair.first );
-				 }
-             adj_list.pushBack(offset_pair.second);
+                 adj_list.pushBack(offset_pair.second);
 			}
 
 			info_hash.second.lock();

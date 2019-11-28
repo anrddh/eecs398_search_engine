@@ -6,6 +6,7 @@
 #include <fb/mutex.hpp>
 #include <fb/string.hpp>
 #include <fb/functional.hpp>
+#include <fb/type_traits.hpp>
 
 #include <utility>
 
@@ -24,7 +25,9 @@ public:
         : cont(std::forward<Args>(args)...) {
 
         static_assert(!(size % 8));
-        cont.resize(size / 8);
+        if constexpr (!fb::IsSameV<Cont<T>, DiskVec<T>>) {
+            cont.resize(size / 8);
+        }
     }
 
     void insert(const T &val) {

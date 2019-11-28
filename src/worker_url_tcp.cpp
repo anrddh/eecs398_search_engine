@@ -101,6 +101,7 @@ fb::FileDesc open_socket_to_master() {
 }
 
 void add_parsed( ParsedPage&& pp ) {
+   std::cout << "adding page with " << pp.links.size() << " many links" << std::endl;
    parsed_m.lock();
    urls_parsed.pushBack( std::move(pp) );
    if ( urls_parsed.size() < PAGES_PER_SEND )

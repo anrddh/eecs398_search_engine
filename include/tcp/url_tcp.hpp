@@ -29,10 +29,10 @@ public:
 
 // The minimum number of pages in buffer before worker will ask
 // the master for more pages to parse
-constexpr int MIN_BUFFER_SIZE = 2000;
+constexpr int MIN_BUFFER_SIZE = 200;
 
 // Number of page per send to master
-constexpr int PAGES_PER_SEND= 1000;
+constexpr int PAGES_PER_SEND= 100;
 
 // Number of retries in case of socket failure
 constexpr int NUM_RETRY = 3;

@@ -37,7 +37,7 @@ atomic<int> randSeedCounter = 0;
 // check 2 billion urls, have 0.1 false positive
 // with 3 hash tables
 constexpr SizeT MIN_NUM_BITS = 961664723;
-constexpr SizeT PAGE_SIZE = 4096; // default value
+constexpr SizeT PAGE_SIZE = 4096 * 8; // in bits
 constexpr SizeT NUM_PAGES = (MIN_NUM_BITS / PAGE_SIZE) + 1;
 constexpr SizeT BLOOM_FILTER_SIZE = PAGE_SIZE * NUM_PAGES;
 constexpr uint8_t NUM_HASHES = 3;
@@ -141,9 +141,10 @@ SizeT Frontier::size() const {
 
 void Frontier::addUrl(const String &url) {
    if ( !Bloom.tryInsert( url ) ) {
+      std::cout << "Failed to add " << url << std::endl;
       return;
    }
-   // TODO check this actually works
+    std::cout << "Adding " << url << std::endl;
 
     SizeT url_offset = UrlStore::getStore().addUrl( url );
     FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);

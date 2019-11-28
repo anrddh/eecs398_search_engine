@@ -11,8 +11,8 @@ namespace fb {
 //This hash function for char buffers from lecture slides
 constexpr SizeT fnvHash( const char *data, SizeT length ) noexcept
 {
-    constexpr SizeT FnvOffsetBasis = 146959810393466560;
-    constexpr SizeT FnvPrime = 1099511628211ul;
+    constexpr SizeT FnvOffsetBasis = 146959810393466560ull;
+    constexpr SizeT FnvPrime = 1099511628211ull;
     SizeT hash = FnvOffsetBasis;
     for( SizeT i = 0; i < length; ++i )
     {

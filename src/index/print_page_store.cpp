@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#define FILEPATH "PageStore0"
+#define FILEPATH "INDEX/PageStore2"
 
 char* read_word(char* &word_begin, std::string &word){
 	word = "";
@@ -57,7 +57,6 @@ int main(){
 		exit(EXIT_FAILURE);
 	}
 	struct stat sb;
-	int res = fstat(fd, &sb);
 	uint64_t* beginning_of_file = (uint64_t *)mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
 	if (beginning_of_file == MAP_FAILED) {
 		close(fd);

@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#define FILEPATH "INDEX/Index1"
+#define FILEPATH "INDEX/Index2"
 
 int main() {
 	int fd = open(FILEPATH, O_RDWR);

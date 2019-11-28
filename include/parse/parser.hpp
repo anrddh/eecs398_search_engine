@@ -34,7 +34,8 @@ struct ParserException
 class Parser
 {
 public:
-	fb::NoDeleteUnorderedMap<fb::String, fb::String> urlAnchorText;
+	// fb::NoDeleteUnorderedMap<fb::String, fb::String> urlAnchorText;
+	fb::Vector<fb::String> urls;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
 
@@ -100,11 +101,13 @@ public:
 
 	void printUrls( )
 		{
-		for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
-			{
-                log(logfile, "URL is: ", i.key(), '\n',
-                    "Anchor text: ", *i, '\n');
-			}
+		// for ( auto i = urlAnchorText.begin();   i != urlAnchorText.end();  ++i )
+		// 	{
+  //               log(logfile, "URL is: ", i.key(), '\n',
+  //                   "Anchor text: ", *i, '\n');
+		// 	}
+		for ( auto i = urls.begin( );  i != urls.end( );  ++i ) 
+			log(logfile, "URL is: ", i, '\n');
 		}
 
 private:
@@ -400,7 +403,8 @@ private:
 		return str.substr( start, end - start + 1 );
 		}
 
-	void addUrlAnchorTest( fb::String url, fb::String normalizedText )
+	void addUrlAnchorTest( fb::String url )
+		// , fb::String normalizedText )
 		{
 		if ( url.empty( ) )
 			return;
@@ -415,15 +419,15 @@ private:
 		else if ( url[ 0 ] == '.' )
 			url = parsedUrl.Service + "://" + parsedUrl.Host + "/" + url;
 
-		if ( !normalizedText.empty( ) )
-			{
-			auto normalizedView = trimSpace(normalizedText);
+		// if ( !normalizedText.empty( ) )
+		// 	{
+		// 	auto normalizedView = trimSpace(normalizedText);
 
-			fb::String & anchorText = urlAnchorText[ url ];
-			if (!anchorText.empty())
-				anchorText += ' ';
-			anchorText += normalizedView;
-			}
+		// 	fb::String & anchorText = urlAnchorText[ url ];
+		// 	if (!anchorText.empty())
+		// 		anchorText += ' ';
+		// 	anchorText += normalizedView;
+		// 	}
 		}
 
 	bool isActualUrl( fb::StringView url )
@@ -455,13 +459,13 @@ private:
 			// add anchor text to parsed result
 			addToResult( ' ' );
 
-			fb::SizeT parsedIndex = parsedResult.size( );
+			// fb::SizeT parsedIndex = parsedResult.size( );
 			for ( char i : anchorText )
 				addToResult( i );
 			addToResult( ' ' );
 
-			addUrlAnchorTest(std::move(url),
-                             parsedResult.substr(parsedIndex));
+			addUrlAnchorTest(std::move(url) );
+                             // parsedResult.substr(parsedIndex));
 			}
 
 		index = seekSubstr( index, ">"_sv );

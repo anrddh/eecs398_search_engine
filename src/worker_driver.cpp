@@ -163,7 +163,7 @@ void * parsePages( void * ) {
          Parser parser( result, std::move(url) );
          parser.parse( );
 
-         add_parsed( { urlPair.first, parser.urlAnchorText.convert_to_vector() } );
+         add_parsed( { urlPair.first, parser.urls } );
          addPage( std::move(parser.extractPage( urlPair.first )) );
       } catch ( ConnectionException e ) {
       }

@@ -98,6 +98,8 @@ Frontier *Frontier::ptr = nullptr;
 char Frontier::frontiers[ sizeof(FrontierBin) * NumFrontierBins ];
 
 void Frontier::init(String prefix) {
+    std::cout << "Initializing frontier: maximum value of rand() is " << RAND_MAX << std::endl;
+    std::cout << "if this is too low, frontier might not behave sufficiently randomly" << std::endl;
     delete ptr;
 
     ptr = new Frontier;

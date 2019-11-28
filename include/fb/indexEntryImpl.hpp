@@ -48,7 +48,7 @@ constexpr uint64_t twoBytePostMaxVal = 0x3fff;
 constexpr uint64_t fourBytePostMaxVal = 0x3fffffff;
 
 template <typename castType>
-inline char* write_num( char* curr, size_t num ) 
+inline char* write_num( char* curr, uint32_t num ) 
    {
    ( ( castType* ) curr )->size = castType::sizeEncoding;
    ( ( castType* ) curr )->value = num;
@@ -56,7 +56,7 @@ inline char* write_num( char* curr, size_t num )
    }
 
 template < typename castType >
-inline char* read_number( char* curr, uint64_t &num ) 
+inline char* read_number( char* curr, uint32_t &num ) 
    {
    num = ( ( castType* ) curr )->value;
    return curr + sizeof( castType );

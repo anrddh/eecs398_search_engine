@@ -1,7 +1,7 @@
 // Created by Jaeyoon Kim 11/15/2019
 #include "tcp/master_url_tcp.hpp"
 #include "tcp/url_tcp.hpp"
-#include "disk/UrlTables.hpp"
+#include "disk/frontier.hpp"
 #include "fb/vector.hpp"
 #include <iostream>
 

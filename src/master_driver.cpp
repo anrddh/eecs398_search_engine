@@ -132,14 +132,14 @@ int main(int argc, char **argv) try {
            cout << "Frontier size: " << frontier.size() << '\n'
                 << "Num connections: " << num_threads_alive() << endl;
         } else if (firstWord == "assert"_sv) {
-           UrlInfoTable::getTable().assert_invariance();
+           //UrlInfoTable::getTable().assert_invariance();
         } else if (firstWord == "url-info"_sv) {
             line.removePrefix(firstSpace + 1);
 
             if (isspace(line.back()))
                 line.removeSuffix(1);
 
-           UrlInfoTable::getTable().print_info( line );
+           //UrlInfoTable::getTable().print_info( line );
         } else if (firstWord == "shutdown"_sv) {
            terminate_workers();
            //socket_handler.join();
@@ -208,7 +208,7 @@ FileDesc parseArguments(int argc, char **argv) try {
     AdjStore::init(adjloc);
 
     auto urlinfo = rootDir + UrlInfoTableFile;
-    UrlInfoTable::init(urlinfo);
+    //UrlInfoTable::init(urlinfo);
 
     AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
     return info.getBoundSocket();
@@ -227,11 +227,7 @@ void addSeed(StringView fname) {
 
     String url;
     while (fb::getline(file, url)) {
-        SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
-        if ( url_offset == 0)
-            continue;
-
-        frontier.addUrl({ url_offset, 0 });
+       frontier.addUrl( url );
     }
 }
 

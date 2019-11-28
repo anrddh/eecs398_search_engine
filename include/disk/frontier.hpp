@@ -50,7 +50,9 @@ public:
 
     static Frontier & getFrontier();
 
-    void addUrl(const FrontierUrl &url);
+   // If this is a url we have seen for the first time
+   // then (most of the times) add the link to the frontier
+    void addUrl(const fb::String& url);
 
     // Note that this prints the estimate for the current size
     // but due to race conditions, it might not be exact

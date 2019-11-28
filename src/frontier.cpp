@@ -4,11 +4,14 @@
 
 #include <disk/frontier.hpp>
 #include <disk/disk_vec.hpp>
+#include <disk/url_store.hpp>
+#include <disk/UrlInfo.hpp>
 
 #include <fb/mutex.hpp>
 #include <fb/utility.hpp>
 #include <fb/string.hpp>
 #include <fb/string_view.hpp>
+#include <fb/bloom_filter.hpp>
 
 #include <atomic>
 #include <iostream>
@@ -29,6 +32,18 @@ using std::atomic;
 atomic<int> insertCounter = 0;
 atomic<int> getCounter = 0;
 atomic<int> randSeedCounter = 0;
+
+// The minimum number of bits required to
+// check 2 billion urls, have 0.1 false positive
+// with 3 hash tables
+constexpr SizeT MIN_NUM_BITS = 961664723;
+constexpr SizeT PAGE_SIZE = 4096; // default value
+constexpr SizeT NUM_PAGES = (MIN_NUM_BITS / PAGE_SIZE) + 1;
+constexpr SizeT BLOOM_FILTER_SIZE = PAGE_SIZE * NUM_PAGES;
+constexpr uint8_t NUM_HASHES = 3;
+
+BloomFilter< NUM_HASHES, BLOOM_FILTER_SIZE >  Bloom( "bloom_filter.txt" );
+
 
 
 FrontierBin::FrontierBin(StringView filename)
@@ -124,9 +139,15 @@ SizeT Frontier::size() const {
    return total;
 }
 
-void Frontier::addUrl(const FrontierUrl &url) {
+void Frontier::addUrl(const String &url) {
+   if ( !Bloom.tryInsert( url ) ) {
+      return;
+   }
+   // TODO check this actually works
+
+    SizeT url_offset = UrlStore::getStore().addUrl( url );
     FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
-    ptr[ (++insertCounter) % NumFrontierBins ].addUrl(url);
+    ptr[ (++insertCounter) % NumFrontierBins ].addUrl( {url_offset, RankUrl( url )} );
 }
 
 Vector<SizeT> Frontier::getUrl() const {

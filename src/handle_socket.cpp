@@ -2,8 +2,8 @@
 #include "tcp/handle_socket.hpp"
 #include "tcp/master_url_tcp.hpp"
 #include "disk/frontier.hpp"
-#include "disk/UrlTables.hpp"
 #include "disk/url_store.hpp"
+#include "disk/UrlInfo.hpp"
 #include "fb/exception.hpp"
 #include "fb/thread.hpp"
 #include "fb/cv.hpp"
@@ -14,7 +14,6 @@
 
 using namespace fb;
 
-Bloom; // TODO define this
 
 Mutex term_mtx;
 CV term_cv;
@@ -120,15 +119,13 @@ void* handle_socket_helper(void* sock_ptr) {
 void handle_send(int sock) {
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
 
-   for (SizeT i = 0; i < pages.size(); ++i) {
-      for ( const & fb::String link : pages[i].links )
+   for (SizeT i = 0; i < pages.size(); ++i) 
+   {
+      for ( const fb::String& link : pages[i].links )
       {
-         if ( Bloom.tryInsert( link ) )
-         {
-            SizeT url_offset = UrlStore::getStore().addUrl( link );
-            Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
-         }
+         Frontier::getFrontier().addUrl( link );
       }
+   }
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls
@@ -141,14 +138,7 @@ void handle_request(int sock) {
    }
    catch( SocketException& se)
    {
-      std::cerr << "SocketException in handle_request: " << se.what()
-         << " --- Will place urls back in to the frontier" << std::endl;
-
-      for ( SizeT url_offset : urls_to_parse )
-      {
-         StringView url = UrlStore::getStore().getUrl( url_offset );
-         Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
-      }
+      std::cerr << "SocketException in handle_request: " << se.what() << std::endl;
    }
 }
 

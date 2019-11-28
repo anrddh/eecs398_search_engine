@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tcp/url_tcp.hpp>
+
 #include <fb/file_descriptor.hpp>
 #include <fb/memory.hpp>
 

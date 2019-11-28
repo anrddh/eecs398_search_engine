@@ -33,15 +33,15 @@ public:
     void insert(const T &val) {
         computeHashes(val);
         fb::AutoLock l(m);
-        for (fb::SizeT i = 0; i < size; ++i)
-            set(i);
+        for (fb::SizeT i = 0; i < numHashes; ++i)
+            set( hashes[ i ]);
     }
 
     bool mightContain(const T &val) {
         computeHashes(val);
         fb::AutoLock l(m);
-        for (fb::SizeT i = 0; i < size; ++i)
-            if (!get(i))
+        for (fb::SizeT i = 0; i < numHashes; ++i)
+            if (!get( hashes[ i ]))
                 return false;
         return true;
     }
@@ -49,10 +49,10 @@ public:
     bool tryInsert(const T &val) {
         computeHashes(val);
         fb::AutoLock l(m);
-        for (fb::SizeT i = 0; i < size; ++i) {
-            if (!get(i)) {
-                for (fb::SizeT j = 0; j < size; ++j)
-                    set(j);
+        for (fb::SizeT i = 0; i < numHashes; ++i) {
+            if (!get( hashes[ i ])) {
+                for (fb::SizeT j = i; j < numHashes; ++j)
+                    set( hashes[ j ]);
                 return true;
             }
         }

@@ -191,8 +191,7 @@ void send_parsed_pages(int sock, Vector<ParsedPage> &&pages_to_send) {
       send_uint64_t( sock, page.url_offset ); // convert back to
       send_int( sock, page.links.size() );
       for ( fb::SizeT j = 0; j < page.links.size(); ++j) {
-         send_str( sock, page.links[j].first );
-         send_str( sock, page.links[j].second );
+         send_str( sock, page.links[j] );
       }
    }
 

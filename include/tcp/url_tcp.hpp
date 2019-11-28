@@ -14,7 +14,7 @@
 //                   sends url_offset (uint64_t), url (string)
 //                   All urls are null terminated
 // Child Machine: First letter S (char),  number of pages (int)
-//    [ url_offset (int), num_links (int), [ str_len (int), str, anchor_len (int), anchor_text]
+//    [ url_offset (int), num_links (int), [ str_len (int), str ]
 //    x num_links many times ] x NUM_URLS_PER_SEND
 //
 // Child Machine T First letter C (char) - ask if master wants to terminate
@@ -42,8 +42,8 @@ constexpr int NUM_RETRY = 3;
 const uint32_t VERFICATION_CODE = 1513424;
 
 struct ParsedPage {
-   fb::SizeT url_offset;
-   fb::Vector< fb::Pair<fb::String, fb::String> > links; // link, anchor text (concatenated)
+   fb::SizeT url_offset; // offset of master
+   fb::Vector< fb::String > links; // links
 };
 
 void send_char(int sock, char c);

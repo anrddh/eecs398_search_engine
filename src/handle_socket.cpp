@@ -14,6 +14,8 @@
 
 using namespace fb;
 
+Bloom; // TODO define this
+
 Mutex term_mtx;
 CV term_cv;
 int num_threads = 0;
@@ -119,16 +121,14 @@ void handle_send(int sock) {
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
 
    for (SizeT i = 0; i < pages.size(); ++i) {
-      Vector<SizeT> to_add_to_frontier =
-         UrlInfoTable::getTable().HandleParsedPage( std::move( pages[i] ) );
-
-      for (SizeT url_offset : to_add_to_frontier )
+      for ( const & fb::String link : pages[i].links )
       {
-         StringView url = UrlStore::getStore().getUrl( url_offset );
-         Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
+         if ( Bloom.tryInsert( link ) )
+         {
+            SizeT url_offset = UrlStore::getStore().addUrl( link );
+            Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
+         }
       }
-   }
-
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls

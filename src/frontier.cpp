@@ -30,8 +30,6 @@ atomic<int> insertCounter = 0;
 atomic<int> getCounter = 0;
 atomic<int> randSeedCounter = 0;
 
-constexpr SizeT NUM_TRY = 1000;
-constexpr SizeT NUM_SAMPLE = 3;
 
 FrontierBin::FrontierBin(StringView filename)
     : localSeed( ++randSeedCounter ),
@@ -47,11 +45,14 @@ SizeT FrontierBin::size() const
    return toParse.size();
 }
 
+
 Vector<SizeT> FrontierBin::getUrl( ) {
     SizeT rand_num[ NUM_TRY ];
     localSeedM.lock( );
     for ( SizeT i = 0;  i < NUM_TRY;  ++i )
         rand_num[ i ] = rand_r( &localSeed );
+
+    SizeT region = rand_r( &localSeed );
     localSeedM.unlock( );
 
     Vector<SizeT> urls_to_return;
@@ -65,9 +66,10 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     // Find what to sample
     // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
     for (SizeT i = 0; i < NUM_SAMPLE; ++i) {
-        if ( max_ranking < toParse[ rand_num[i] % toParse.size() ].ranking ) {
-            max_ranking = toParse[ rand_num[i] % toParse.size() ].ranking;
-            max_idx = rand_num[i] % toParse.size();
+       const SizeT idx = search_index(rand_num[i], region);
+        if ( max_ranking < toParse[ idx  ].ranking ) {
+            max_ranking = toParse[ idx ].ranking;
+            max_idx = idx;
         }
     }
 
@@ -81,9 +83,10 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     // Note that it is possible that same url might be checked multiple times
     // However, this is not likely since there should be many urls in here each time
     for ( auto i = NUM_SAMPLE; i < NUM_TRY && !toParse.empty(); ++i ) {
-        if ( toParse[ rand_num[i] % toParse.size() ].ranking >= max_ranking ) {
-            urls_to_return.pushBack( toParse[ rand_num[i] % toParse.size() ].offset ) ;
-            toParse[ rand_num[i] % toParse.size() ] = toParse.back();
+        const SizeT idx = search_index(rand_num[i], region);
+        if ( toParse[ idx ].ranking >= max_ranking ) {
+            urls_to_return.pushBack( toParse[ idx ].offset ) ;
+            toParse[ idx ] = toParse.back();
             toParse.popBack( );
         }
     }
@@ -95,6 +98,8 @@ Frontier *Frontier::ptr = nullptr;
 char Frontier::frontiers[ sizeof(FrontierBin) * NumFrontierBins ];
 
 void Frontier::init(String prefix) {
+    std::cout << "Initializing frontier: maximum value of rand() is " << RAND_MAX << std::endl;
+    std::cout << "if this is too low, frontier might not behave sufficiently randomly" << std::endl;
     delete ptr;
 
     ptr = new Frontier;

@@ -464,7 +464,7 @@ private:
 				addToResult( i );
 			addToResult( ' ' );
 
-			addUrlAnchorTest(std::move(url) )
+			addUrlAnchorTest(std::move(url) );
                              // parsedResult.substr(parsedIndex));
 			}
 

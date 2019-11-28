@@ -13,10 +13,10 @@
 constexpr fb::SizeT NumFrontierBins = 16;
 
 // we will only randomly choose from first SEARCH_RESTRICTION number of elements
-constexpr SizeT SEARCH_RESTRICTION= 16384; 
+constexpr fb::SizeT SEARCH_RESTRICTION= 16384; 
 
-constexpr SizeT NUM_TRY = 4000;
-constexpr SizeT NUM_SAMPLE = 3;
+constexpr fb::SizeT NUM_TRY = 4000;
+constexpr fb::SizeT NUM_SAMPLE = 3;
 
 struct FrontierUrl {
     fb::SizeT offset;
@@ -35,7 +35,7 @@ public:
 
 private:
     // Needs to be locked
-    inline fb::SizeT FrontierBin::search_index(fb::SizeT rand_num, fb::SizeT region_num) {
+    inline fb::SizeT search_index(fb::SizeT rand_num, fb::SizeT region_num) {
       return ((rand_num % SEARCH_RESTRICTION) + region_num) % toParse.size(); 
     }
     fb::Mutex localSeedM;

@@ -2,6 +2,7 @@
 #include "tcp/master_url_tcp.hpp"
 #include "tcp/url_tcp.hpp"
 #include "disk/frontier.hpp"
+#include "disk/url_store.hpp"
 #include "fb/vector.hpp"
 #include <iostream>
 

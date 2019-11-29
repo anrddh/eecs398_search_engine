@@ -41,7 +41,7 @@ int main(int argc, char **argv) try {
 
     fb::String userInput;
     do {
-        if (userInput == "status")
+        if (userInput == "status" || userInput == "s")
           {
             print_tcp_status();
             std::cout << "Num pages parsed in this process " << get_num_parsed() << std::endl;

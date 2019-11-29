@@ -4,3 +4,4 @@
 #subdir('parse')
 #subdir('tcp')
 #subdir('index')
+#subdir('bolt')

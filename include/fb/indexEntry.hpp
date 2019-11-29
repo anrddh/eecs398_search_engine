@@ -52,7 +52,7 @@ inline char* add_word_sentinel( char* curr )
  * mem = read_number(mem, value);
  * cout << value << endl;
  */
-inline char* read_word_post( char* curr, uint32_t &num) 
+inline const char* read_word_post( const char* curr, uint32_t &num) 
    {
       switch ( ( ( fbImpl::oneBytePost * ) curr )->size ) 
          {
@@ -67,9 +67,9 @@ inline char* read_word_post( char* curr, uint32_t &num)
          } 
    }
 
-inline bool is_word_sentinel( char* curr )
+inline bool is_word_sentinel( const char* curr )
    {
-   uint64_t num;
+   uint32_t num;
    read_word_post(curr, num);
    return num == 0;
    }
@@ -88,16 +88,16 @@ inline char* add_document_sentinel( char* curr )
    }
 
 // Reads document post. Returns the pointer to next address we should read from
-inline char* read_document_post( char* curr, uint32_t& delta, uint32_t& url_loc ) {
+inline const char* read_document_post( const char* curr, uint32_t& delta, uint32_t& url_loc ) {
    delta = (* (uint32_t *) curr);
    curr += sizeof(delta);
    url_loc = (* (uint32_t *) curr);
    return curr + sizeof(url_loc);
 }
 
-inline bool is_document_sentinel( char * curr )
+inline bool is_document_sentinel( const char * curr )
    {
-   size_t delta;
+   uint32_t delta;
    uint32_t url_loc;
    read_document_post(curr, delta, url_loc);
    return delta == 0;

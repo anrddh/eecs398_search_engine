@@ -5,7 +5,7 @@
 
 class AndInfo : IndexInfo
    {
-   PostInfo(Location startLoc_, Locaiton endLoc_) : startLoc(startLoc_), endLoc(endLoc_) { }
+   AndInfo(Location startLoc_, Locaiton endLoc_) : startLoc(startLoc_), endLoc(endLoc_) { }
 
    virtual Location GetStartLocation( )
       {
@@ -25,23 +25,29 @@ private:
 class AndISR : ISR
    {
 public:
- 
+   AndISR(fb::Vector<fb::UniquePtr<ISR>> ISRs, fb::UniquePtr<ISR> documentISR);
    virtual fb::UnqiuePtr<IndexInfo> Next( );
    virtual fb::UniquePtr<IndexInfo> NextDocument( );
    virtual fb::UniquePtr<IndexInfo> Seek( Location target );
+   virtual fb::UniquePtr<IndexInfo> GetCurrentInfo( );
    virtual bool AtEnd( );
 
 private:
    void seekAllPast(Location target);
-   void updateLocationInfo(fb::UniquePtr<IndexInfo> &info);
+   void updateLocationInfo();
 
    fb::Vector<fb::UniquePtr<ISR>> Terms;
    fb::UniquePtr<DocumentISR> DocIsr;
-   fb::SizeT nearestTerm, farthestTerm;
-   Location furthestLocation;
-   Location nearestStartLocation, nearestEndLocation;
+   fb::SizeT nearestStartTerm, nearestEndTerm, farthestStartTerm, farthestEndTerm;
+   Location nearestStartLocation, nearestEndLocation, furthestStartLocation, furthestEndLocation;
    bool isAtEnd;
    };
+
+
+AndISR::AndISR(fb::Vector<fb::UniquePtr<ISR>> ISRs, fb::UniquePtr<ISR> documentISR) : Terms(std::move(ISRs)), DocIsr(documentISR) 
+   {
+   Next( );
+   } 
 
 fb::UniquePtr<IndexInfo> AndISR::Seek( Location target );
    {
@@ -85,10 +91,15 @@ fb::UnqiuePtr<IndexInfo> AndISR::Next( )
    return Seek( nearestStartLocation + 1 );
    }
 
-virtual fb::UniquePtr<IndexInfo> NextDocument( )
+fb::UniquePtr<IndexInfo> NextDocument( )
    {
    DocIsr->Next( );
    Next( );
+   }
+
+fb::UniquePtr<IndexInfo> AndISR::GetCurrentInfo( )
+   {
+   return fb::makeUnique<AndInfo>(nearestStartLocation, furthestEndLocation);
    }
 
 bool AndISR::AtEnd( )
@@ -112,29 +123,39 @@ void AndISR::seekAllPast(Location target)
          return;
          }
       
-      updateLocationInfo(info);
+      updateLocationInfo(info, i);
       }
       
    }
 
-void AndISR::updateLocationInfo(fb::UniquePtr<IndexInfo> &info)
+void AndISR::updateLocationInfo( )
    {
-   Location endLoc = info->GetEndLocation( ); 
-   Location startLoc = info->GetStartLocation( );
-   
-   if(endLoc > furthestLocation)
-      {
-      furthesLocation = endLoc;
-      farthestTerm = i;
-      }
+      fb::UniquePtr<IndexInfo> info = Term[0].GetCurrentInfo( );
+      nearestStartTerm = info.GetStartLocation( );
+      nearestEndTerm = info.GetEndLocation( );
+      farthestStartTerm = info.GetStartLocation( );
+      farthestEndTerm = info.GetEndLocation( );
+      for( fb::SizeT i = 0; i < Term.size(); ++i )
+         {
+         info = Term[i].GetCurrentInfo( );
+         if(info.GetStartLocation( ) < nearestStartTerm)
+            {
+            nearestStartTerm = info.GetStartLocation( )
+            }
 
-   if(endLoc < nearestEndLocation)
-      {
-      nearestEndLocaiton = endLoc;
-      }
+         if(info.GetStartLocation( ) > furthestStartTerm)
+            {
+            furthestStartTerm = info.GetStartLocation( )
+            }
 
-   if(startLoc < nearestStartLocation)
-      {
-      nearestStartLocation = startLoc;
-      }
+         if(info.GetEndLocation( ) < nearestEndTerm)
+            {
+            nearestEndTerm = info.GetEndLocation( )
+            }
+
+         if(info.GetEndLocation( ) < furthestEndTerm)
+            {
+            furthestEndTerm = info.GetEndLocation( )
+            }
+         }
    }

@@ -256,7 +256,7 @@ namespace fb {
             for (auto i = size() + count - 1; i > (idx + count - 1); --i)
                 data()[i] = std::move(data()[i-count]);
 
-            for (auto i = 0; i < count; ++i)
+            for (SizeType i = 0; i < count; ++i)
                 data()[i + idx] = value;
 
             size_ += count;

@@ -56,7 +56,7 @@ inline char* write_num( char* curr, uint32_t num )
    }
 
 template < typename castType >
-inline char* read_number( char* curr, uint32_t &num ) 
+inline const char* read_number( const char* curr, uint32_t &num ) 
    {
    num = ( ( castType* ) curr )->value;
    return curr + sizeof( castType );

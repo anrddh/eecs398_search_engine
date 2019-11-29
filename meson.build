@@ -51,9 +51,12 @@ executable('build_index',
 
 executable('build_index_test',
             build_index_test_driver,
-            include_directories: inc
-)
+            include_directories: inc)
 
 executable('print_page_store',
             print_page_store_driver,
+            include_directories: inc)
+
+executable('search_index', 
+            search_index_driver,
             include_directories: inc)

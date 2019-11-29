@@ -10,8 +10,6 @@
 #include <fb/algorithm.hpp>
 #include <http/download_html.hpp>
 
-using namespace std;
-
 struct UrlInfo {
    // Must gaurentee that the UrlOffset is always valid (otherwise it should be zero)
    std::atomic<fb::SizeT> UrlOffset;

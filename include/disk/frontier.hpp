@@ -9,6 +9,7 @@
 #include <fb/thread.hpp>
 #include <fb/string.hpp>
 #include <fb/mutex.hpp>
+#include <fb/bloom_filter.hpp>
 
 constexpr fb::SizeT NumFrontierBins = 16;
 
@@ -18,6 +19,15 @@ constexpr fb::SizeT SEARCH_RESTRICTION= 16384;
 constexpr fb::SizeT NUM_TRY = 4000;
 constexpr fb::SizeT NUM_SAMPLE = 3;
 
+// The minimum number of bits required to
+// check 2 billion urls, have 0.1 false positive
+// with 3 hash tables
+constexpr fb::SizeT MIN_NUM_BITS = 961664723;
+constexpr fb::SizeT PAGE_SIZE = 4096 * 8; // in bits
+constexpr fb::SizeT NUM_PAGES = (MIN_NUM_BITS / PAGE_SIZE / NumFrontierBins) + 1;
+constexpr fb::SizeT BLOOM_FILTER_SIZE = PAGE_SIZE * NUM_PAGES;
+constexpr uint8_t NUM_HASHES = 3;
+
 struct FrontierUrl {
     fb::SizeT offset;
     fb::SizeT ranking;
@@ -25,9 +35,9 @@ struct FrontierUrl {
 
 class FrontierBin {
 public:
-    FrontierBin(fb::StringView filename);
+    FrontierBin(fb::String filename);
 
-    void addUrl(const FrontierUrl &url);
+    void addUrl(const fb::String &url );
 
     fb::Vector<fb::SizeT> getUrl( );
 
@@ -42,6 +52,7 @@ private:
     fb::Mutex toParseM;
     unsigned int localSeed;
     DiskVec<FrontierUrl> toParse;
+    BloomFilter<NUM_HASHES, BLOOM_FILTER_SIZE> bloom;
 };
 
 class Frontier {

@@ -12,6 +12,7 @@
 #include <fb/string.hpp>
 #include <fb/string_view.hpp>
 #include <fb/bloom_filter.hpp>
+#include <fb/functional.hpp>
 
 #include <atomic>
 #include <iostream>
@@ -33,26 +34,19 @@ atomic<int> insertCounter = 0;
 atomic<int> getCounter = 0;
 atomic<int> randSeedCounter = 0;
 
-// The minimum number of bits required to
-// check 2 billion urls, have 0.1 false positive
-// with 3 hash tables
-constexpr SizeT MIN_NUM_BITS = 961664723;
-constexpr SizeT PAGE_SIZE = 4096 * 8; // in bits
-constexpr SizeT NUM_PAGES = (MIN_NUM_BITS / PAGE_SIZE) + 1;
-constexpr SizeT BLOOM_FILTER_SIZE = PAGE_SIZE * NUM_PAGES;
-constexpr uint8_t NUM_HASHES = 3;
-
-BloomFilter< NUM_HASHES, BLOOM_FILTER_SIZE >  Bloom( "bloom_filter.txt" );
-
-
-
-FrontierBin::FrontierBin(StringView filename)
+FrontierBin::FrontierBin(String filename)
     : localSeed( ++randSeedCounter ),
-      toParse(filename) {}
+      toParse(filename), bloom(filename + "_bloom_filter") {}
 
-void FrontierBin::addUrl(const FrontierUrl &url) {
+void FrontierBin::addUrl(const String &url) {
+   if ( !bloom.tryInsert( url ) ) {
+      return;
+   }
+
+    SizeT url_offset = UrlStore::getStore().addUrl( url );
+    SizeT ranking = RankUrl( url );
     AutoLock lock( toParseM );
-    toParse.pushBack( url );
+    toParse.pushBack( {url_offset, ranking} );
 }
 
 SizeT FrontierBin::size() const
@@ -140,13 +134,8 @@ SizeT Frontier::size() const {
 }
 
 void Frontier::addUrl(const String &url) {
-   if ( !Bloom.tryInsert( url ) ) {
-      return;
-   }
-
-    SizeT url_offset = UrlStore::getStore().addUrl( url );
     FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
-    ptr[ (++insertCounter) % NumFrontierBins ].addUrl( {url_offset, RankUrl( url )} );
+    ptr[ fb::fnvHash( url.data(), url.size() ) % NumFrontierBins ].addUrl( url );
 }
 
 Vector<SizeT> Frontier::getUrl() const {

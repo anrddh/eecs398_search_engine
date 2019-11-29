@@ -43,6 +43,7 @@ using fb::SizeT;
 
 using std::cerr;
 using std::cout;
+using std::endl;
 using std::ifstream;
 
 constexpr auto DriverPrompt = ">> ";

@@ -163,7 +163,11 @@ void * parsePages( void * ) {
          Parser parser( result, std::move(url) );
          parser.parse( );
 
-         add_parsed( { urlPair.first, parser.urls } );
+         fb::Vector<fb::String> urls;
+         for( auto iter : parser.urls )
+          urls.push_back(iter);
+
+         add_parsed( { urlPair.first, urls } );
          addPage( std::move(parser.extractPage( urlPair.first )) );
       } catch ( ConnectionException e ) {
       }

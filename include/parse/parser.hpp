@@ -35,7 +35,8 @@ class Parser
 {
 public:
 	// fb::NoDeleteUnorderedMap<fb::String, fb::String> urlAnchorText;
-	fb::Vector<fb::String> urls;
+	// fb::Vector<fb::String> urls;
+	fb::UnorderedSet<fb::String> urls;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
 
@@ -419,6 +420,7 @@ private:
 		else if ( url[ 0 ] == '.' )
 			url = parsedUrl.Service + "://" + parsedUrl.Host + "/" + url;
 
+		urls.insert( url );
 		// if ( !normalizedText.empty( ) )
 		// 	{
 		// 	auto normalizedView = trimSpace(normalizedText);

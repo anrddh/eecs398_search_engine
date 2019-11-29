@@ -165,7 +165,7 @@ void * parsePages( void * ) {
 
          fb::Vector<fb::String> urls;
          for( auto iter : parser.urls )
-          urls.push_back(iter);
+          urls.pushBack(iter);
 
          add_parsed( { urlPair.first, urls } );
          addPage( std::move(parser.extractPage( urlPair.first )) );

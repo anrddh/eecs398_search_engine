@@ -108,7 +108,7 @@ public:
   //                   "Anchor text: ", *i, '\n');
 		// 	}
 		for ( auto i = urls.begin( );  i != urls.end( );  ++i ) 
-			log(logfile, "URL is: ", i, '\n');
+			log(logfile, "URL is: ", *i, '\n');
 		}
 
 private:

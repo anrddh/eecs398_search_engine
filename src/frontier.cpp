@@ -141,10 +141,8 @@ SizeT Frontier::size() const {
 
 void Frontier::addUrl(const String &url) {
    if ( !Bloom.tryInsert( url ) ) {
-      std::cout << "Failed to add " << url << std::endl;
       return;
    }
-    std::cout << "Adding " << url << std::endl;
 
     SizeT url_offset = UrlStore::getStore().addUrl( url );
     FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);

@@ -117,20 +117,16 @@ void* handle_socket_helper(void* sock_ptr) {
 // delete will be called on the socket
 // and the socket will be closed
 void handle_send(int sock) {
-   std::cout << "In handle send 1" << std::endl;
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
-   std::cout << "In handle send 2" << std::endl;
 
    for (SizeT i = 0; i < pages.size(); ++i) 
    {
       for ( const fb::String& link : pages[i].links )
       {
 
-         std::cout << "In handle send: adding " << link  << std::endl;
          Frontier::getFrontier().addUrl( link );
       }
    }
-   std::cout << "In handle send 3" << std::endl;
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls

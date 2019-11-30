@@ -35,9 +35,8 @@ public:
         : cont(std::forward<Args>(args)...) {
 
         static_assert(!(size % 8));
-        if constexpr (!fb::IsSameV<Cont<T>, DiskVec<T>>) {
+        if constexpr (!fb::IsSameV<Cont<T>, DiskVec<T>>)
             cont.resize(size / 8);
-        }
     }
 
     // This should be only be used to add seen

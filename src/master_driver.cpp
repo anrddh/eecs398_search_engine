@@ -143,18 +143,22 @@ int main(int argc, char **argv) try {
             SizeT size = UrlStore::getStore().access_disk().size();
             Vector<Thread> threads;
             for (SizeT i = 0; i < num_threads_adding_bloom_filter; ++i) {
-               threads.emplaceBack(add_to_bloom_filter, new 
-                     Pair<char*, SizeT>( UrlStore::getStore().access_disk().data() 
-                        + i * size / num_threads_adding_bloom_filter, 
+               threads.emplaceBack(add_to_bloom_filter, new
+                     Pair<char*, SizeT>( UrlStore::getStore().access_disk().data()
+                        + i * size / num_threads_adding_bloom_filter,
                         size /num_threads_adding_bloom_filter));
                }
 
             for (SizeT i = 0; i < num_threads_adding_bloom_filter; ++i) {
                threads[i].join();
-               std::cout << "Joined thread " << i + 1 << " out of " << num_threads_adding_bloom_filter << std::endl;
+               cout << "Joined thread " << i + 1 << " out of "
+                    << num_threads_adding_bloom_filter << endl;
             }
 
-            std::cout << "Done adding to bloom filter" << std::endl;
+            cout << "Done adding to bloom filter" << endl;
+        } else if (firstWord == "print-urls"_sv) {
+            line.removePrefix(firstSpace + 1);
+            Frontier::getFrontier().printUrls();
         } else if (firstWord == "url-info"_sv) {
             line.removePrefix(firstSpace + 1);
 

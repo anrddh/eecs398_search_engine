@@ -1,10 +1,11 @@
 #pragma once
 
 #include <disk/disk_vec.hpp>
+#include <atomic>
 
 #include <fb/stddef.hpp>
-#include <fb/mutex.hpp>
 #include <fb/string.hpp>
+#include <fb/string_view.hpp>
 #include <fb/functional.hpp>
 #include <fb/type_traits.hpp>
 
@@ -12,43 +13,55 @@
 
 #include <stdint.h>
 
+template <typename T> struct IsString : fb::FalseType {};
+template <> struct IsString<fb::String> : fb::TrueType {};
+template <> struct IsString<fb::StringView> : fb::TrueType {};
+template <typename T> constexpr bool IsStringV = IsString<T>::value;
+
 /* Thread safe implementation of bloom filter */
 template <uint8_t numHashes,
           fb::SizeT size,
           template <typename> typename Cont = DiskVec,
           typename T = fb::String,
-          typename HashPairGen = fb::HashPairGen<T>>
+          typename HashPairGen = fb::HashPairGen<fb::ConditionalT<IsStringV<T>, fb::StringView, T>>>
 class BloomFilter {
 public:
+    using Reference =
+        fb::ConditionalT<IsStringV<T>, fb::StringView, const T &>;
+
     template <typename ... Args>
     BloomFilter(Args && ... args)
         : cont(std::forward<Args>(args)...) {
 
         static_assert(!(size % 8));
-        if constexpr (!fb::IsSameV<Cont<T>, DiskVec<T>>) {
+        if constexpr (!fb::IsSameV<Cont<T>, DiskVec<T>>)
             cont.resize(size / 8);
-        }
     }
 
-    void insert(const T &val) {
+    // This should be only be used to add seen
+    // in frontier
+    void insertWithoutLock(Reference val) {
         computeHashes(val);
-        fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             set( hashes[ i ]);
     }
 
-    bool mightContain(const T &val) {
+    void insert(Reference val) {
         computeHashes(val);
-        fb::AutoLock l(m);
+        for (fb::SizeT i = 0; i < numHashes; ++i)
+            set( hashes[ i ]);
+    }
+
+    bool mightContain(Reference val) {
+        computeHashes(val);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             if (!get( hashes[ i ]))
                 return false;
         return true;
     }
 
-    bool tryInsert(const T &val) {
+    bool tryInsert(Reference val) {
         computeHashes(val);
-        fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i) {
             if (!get( hashes[ i ])) {
                 for (fb::SizeT j = i; j < numHashes; ++j)
@@ -66,7 +79,7 @@ private:
         return (hash1 + i * hash2) % size;
     }
 
-    constexpr void computeHashes(const T &val) noexcept {
+    constexpr void computeHashes(Reference val) noexcept {
         auto [hash1, hash2] = gen(val);
         for (uint8_t i = 0; i < numHashes; ++i)
             hashes[i] = ithhash(i, hash1, hash2);
@@ -80,8 +93,7 @@ private:
         return cont[idx/8] & (1 << (idx % 8));
     }
 
-    Cont<uint8_t> cont;
-    fb::Mutex m;
+    Cont<std::atomic<uint8_t>> cont;
     HashPairGen gen;
     uint64_t hashes[numHashes];
 };

@@ -8,6 +8,8 @@
 #include <disk/UrlInfo.hpp>
 
 #include <fb/mutex.hpp>
+#include <fb/thread.hpp>
+#include <fb/cv.hpp>
 #include <fb/utility.hpp>
 #include <fb/string.hpp>
 #include <fb/string_view.hpp>
@@ -26,6 +28,9 @@ using fb::Vector;
 using fb::AutoLock;
 using fb::StringView;
 using fb::String;
+using fb::Mutex;
+using fb::CV;
+using fb::Thread;
 
 using std::atomic;
 
@@ -34,20 +39,74 @@ atomic<int> insertCounter = 0;
 atomic<int> getCounter = 0;
 atomic<int> randSeedCounter = 0;
 
+Mutex doShutdownM;
+CV doShutdownCV;
+bool doShutdown = false;
+atomic<int> numBinsShutdown = 0;
+
 FrontierBin::FrontierBin(String filename)
     : localSeed( ++randSeedCounter ),
-      toParse(filename), bloom(filename + "_bloom_filter") {}
-
-void FrontierBin::addUrl(const String &url) {
-   if ( !bloom.tryInsert( url ) ) {
-      return;
+      toParse(filename), bloom(filename + "_bloom_filter") 
+   {
+   Thread t( addQueueToToParsed, this );
+   t.detach();
    }
 
-    SizeT url_offset = UrlStore::getStore().addUrl( url );
-    SizeT ranking = RankUrl( url );
-    AutoLock lock( toParseM );
-    toParse.pushBack( {url_offset, ranking} );
-}
+void* addQueueToToParsed(void *ptr) 
+   {
+   while ( true )
+      {
+
+      {
+      AutoLock lock( doShutdownM );
+      if ( doShutdown )
+         {
+         if ( ++numBinsShutdown == NumFrontierBins )
+            {
+            doShutdownCV.signal();
+            return nullptr;
+            }
+         }
+      }
+
+      reinterpret_cast< FrontierBin* >(ptr)->addToFrontierFromQueue( );
+      }
+   }
+
+void FrontierBin::addToQueue( fb::Vector< fb::String >&& urls ) 
+   {
+   AutoLock lock( toAddQueueM );
+   toAddQueue.pushBack( std::move( urls ) );
+   }
+
+void FrontierBin::addToFrontierFromQueue()
+   {
+   toAddQueueM.lock();
+   Vector< Vector< String > > temp;
+   temp.swap( toAddQueue );
+   toAddQueueM.unlock();
+
+   while ( !temp.empty() )
+      {
+      Vector< String > urls = std::move( temp.back() );
+      temp.popBack();
+      AutoLock lock( toParseM );
+      for ( const String& url : urls ) 
+         {
+         if ( !bloom.tryInsert( url ) )
+            continue;
+
+         SizeT url_offset = UrlStore::getStore().addUrl( url );
+         SizeT ranking = RankUrl( url );
+         toParse.pushBack( {url_offset, ranking} );
+         }
+      }
+   }
+
+void FrontierBin::addSeen(StringView url) 
+   {
+   bloom.insertWithoutLock( url );
+   }
 
 SizeT FrontierBin::size() const
 {
@@ -103,6 +162,11 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     return urls_to_return;
 }
 
+void FrontierBin::printUrls() const {
+    for (auto [url,_] : toParse)
+        std::cout << UrlStore::getStore().getUrl(url) << '\n';
+}
+
 Frontier *Frontier::ptr = nullptr;
 char Frontier::frontiers[ sizeof(FrontierBin) * NumFrontierBins ];
 
@@ -133,12 +197,47 @@ SizeT Frontier::size() const {
    return total;
 }
 
-void Frontier::addUrl(const String &url) {
+void Frontier::addSeen(StringView url) {
     FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
-    ptr[ fb::fnvHash( url.data(), url.size() ) % NumFrontierBins ].addUrl( url );
+    ptr[ fb::fnvHash( url.data(), url.size() ) % NumFrontierBins ].addSeen( url );
 }
 
-Vector<SizeT> Frontier::getUrl() const {
+void Frontier::addUrls( Vector< String >&& urls ) 
+   {
+   static Vector< String > buffers[ NumFrontierBins ];
+   for ( SizeT i = 0; i < urls.size(); ++i )
+      {
+      buffers[ fb::fnvHash( urls[i].data(), urls[i].size() ) % NumFrontierBins ].pushBack( 
+            std::move( urls[i] ) );
+      }
+
+   for ( SizeT j = 0; j < NumFrontierBins; ++j )
+      {
+      // This also sets buffers[ j ] to be default vector
+      reinterpret_cast<FrontierBin *>(frontiers)[ j ].addToQueue( std::move( buffers[ j ] ) );
+      }
+   }
+
+Vector<SizeT> Frontier::getUrl() const 
+   {
+   FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
+   return ptr[ (++getCounter) % NumFrontierBins ].getUrl();
+   }
+
+void Frontier::shutdown()  
+   {
+   doShutdownM.lock();
+   doShutdown = true;
+
+   while ( numBinsShutdown != NumFrontierBins )
+      {
+      doShutdownCV.wait( doShutdownM );
+      }
+      doShutdownM.unlock();
+   }
+
+void Frontier::printUrls() const {
     FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
-    return ptr[ (++getCounter) % NumFrontierBins ].getUrl();
+    for (SizeT i = 0; i < NumFrontierBins; ++i)
+        ptr[i].printUrls();
 }

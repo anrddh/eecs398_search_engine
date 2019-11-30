@@ -14,14 +14,22 @@
 
 #include <stdint.h>
 
+template <typename T> struct IsString : fb::FalseType {};
+template <> struct IsString<fb::String> : fb::TrueType {};
+template <> struct IsString<fb::StringView> : fb::TrueType {};
+template <typename T> constexpr bool IsStringV = IsString<T>::value;
+
 /* Thread safe implementation of bloom filter */
 template <uint8_t numHashes,
           fb::SizeT size,
           template <typename> typename Cont = DiskVec,
           typename T = fb::String,
-          typename HashPairGen = fb::HashPairGen<T>>
+          typename HashPairGen = fb::HashPairGen<fb::ConditionalT<IsStringV<T>, fb::StringView, T>>>
 class BloomFilter {
 public:
+    using Reference =
+        fb::ConditionalT<IsStringV<T>, fb::StringView, const T &>;
+
     template <typename ... Args>
     BloomFilter(Args && ... args)
         : cont(std::forward<Args>(args)...) {
@@ -34,20 +42,20 @@ public:
 
     // This should be only be used to add seen
     // in frontier
-    void insertWithoutLock(const T &val) {
+    void insertWithoutLock(Reference val) {
         computeHashes(val);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             set( hashes[ i ]);
     }
 
-    void insert(const T &val) {
+    void insert(Reference val) {
         computeHashes(val);
         fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             set( hashes[ i ]);
     }
 
-    bool mightContain(const T &val) {
+    bool mightContain(Reference val) {
         computeHashes(val);
         fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i)
@@ -56,7 +64,7 @@ public:
         return true;
     }
 
-    bool tryInsert(const T &val) {
+    bool tryInsert(Reference val) {
         computeHashes(val);
         fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i) {
@@ -76,7 +84,7 @@ private:
         return (hash1 + i * hash2) % size;
     }
 
-    constexpr void computeHashes(const T &val) noexcept {
+    constexpr void computeHashes(Reference val) noexcept {
         auto [hash1, hash2] = gen(val);
         for (uint8_t i = 0; i < numHashes; ++i)
             hashes[i] = ithhash(i, hash1, hash2);

@@ -43,6 +43,18 @@ namespace fb {
 
         BasicString(const char *cstr) : BasicString(cstr, strlen(cstr)) {}
 
+        BasicString(BasicString &&rhs) : buf(std::move(rhs.buf)) {
+            rhs.buf.pushBack(0);
+        }
+
+        BasicString & operator=(BasicString &&rhs) {
+            fb::swap(buf, rhs.buf);
+            return *this;
+        }
+
+        BasicString(const BasicString &) = default;
+        BasicString & operator=(const BasicString &) = default;
+
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= size())

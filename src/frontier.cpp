@@ -107,7 +107,7 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     return urls_to_return;
 }
 
-void FrontierBin::printUrls() {
+void FrontierBin::printUrls() const {
     for (auto [url,_] : toParse)
         std::cout << UrlStore::getStore().getUrl(url) << '\n';
 }

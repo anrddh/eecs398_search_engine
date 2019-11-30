@@ -49,6 +49,10 @@ void FrontierBin::addUrl(const String &url) {
     toParse.pushBack( {url_offset, ranking} );
 }
 
+void FrontierBin::addSeen(StringView url) {
+   bloom.insertWithoutLock( url );
+}
+
 SizeT FrontierBin::size() const
 {
    return toParse.size();
@@ -131,6 +135,11 @@ SizeT Frontier::size() const {
       total += reinterpret_cast<FrontierBin* >(frontiers + i * sizeof(FrontierBin))->size();
    }
    return total;
+}
+
+void Frontier::addSeen(StringView url) {
+    FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
+    ptr[ fb::fnvHash( url.data(), url.size() ) % NumFrontierBins ].addUrl( url );
 }
 
 void Frontier::addUrl(const String &url) {

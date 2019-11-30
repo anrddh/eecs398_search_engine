@@ -1,6 +1,7 @@
 #pragma once
 
 #include <disk/disk_vec.hpp>
+#include <atomic>
 
 #include <fb/stddef.hpp>
 #include <fb/mutex.hpp>
@@ -28,6 +29,12 @@ public:
         if constexpr (!fb::IsSameV<Cont<T>, DiskVec<T>>) {
             cont.resize(size / 8);
         }
+    }
+
+    void insertWithoutLock(const T &val) {
+        computeHashes(val);
+        for (fb::SizeT i = 0; i < numHashes; ++i)
+            set( hashes[ i ]);
     }
 
     void insert(const T &val) {
@@ -80,7 +87,7 @@ private:
         return cont[idx/8] & (1 << (idx % 8));
     }
 
-    Cont<uint8_t> cont;
+    Cont<std::atomic<uint8_t>> cont;
     fb::Mutex m;
     HashPairGen gen;
     uint64_t hashes[numHashes];

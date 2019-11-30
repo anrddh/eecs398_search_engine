@@ -43,6 +43,12 @@ public:
         return { urls.data() + idx };
     }
 
+    // This function is only supposed to be used by
+    // bloom filter constructor !!
+    DiskVec<char>& access_disk() {
+       return urls;
+    }
+
 private:
     UrlStore(fb::StringView filename) : urls(filename) {}
 

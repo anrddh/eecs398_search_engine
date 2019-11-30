@@ -40,13 +40,17 @@ using fb::StringView;
 using fb::String;
 using fb::Thread;
 using fb::SizeT;
+using fb::Vector;
+using fb::Pair;
 
 using std::cerr;
+using std::atomic;
 using std::cout;
 using std::endl;
 using std::ifstream;
 
 constexpr auto DriverPrompt = ">> ";
+constexpr SizeT num_threads_adding_bloom_filter = 16;
 
 template <typename T>
 struct FreeDeleter { void operator()(char *p) { free(p); } };
@@ -100,6 +104,7 @@ struct Args {
 FileDesc parseArguments( int argc, char **argv );
 void addSeed(StringView fname);
 void * logThread(void *);
+void* add_to_bloom_filter(void * val);
 
 int main(int argc, char **argv) try {
     FileDesc sock = parseArguments( argc, argv );
@@ -134,6 +139,22 @@ int main(int argc, char **argv) try {
                 << "Num connections: " << num_threads_alive() << endl;
         } else if (firstWord == "assert"_sv) {
            //UrlInfoTable::getTable().assert_invariance();
+        } else if (firstWord == "make_bloom_filter"_sv) {
+            SizeT size = UrlStore::getStore().access_disk().size();
+            Vector<Thread> threads;
+            for (SizeT i = 0; i < num_threads_adding_bloom_filter; ++i) {
+               threads.emplaceBack(add_to_bloom_filter, new 
+                     Pair<char*, SizeT>( UrlStore::getStore().access_disk().data() 
+                        + i * size / num_threads_adding_bloom_filter, 
+                        size /num_threads_adding_bloom_filter));
+               }
+
+            for (SizeT i = 0; i < num_threads_adding_bloom_filter; ++i) {
+               threads[i].join();
+               std::cout << "Joined thread " << i + 1 << " out of " << num_threads_adding_bloom_filter << std::endl;
+            }
+
+            std::cout << "Done adding to bloom filter" << std::endl;
         } else if (firstWord == "url-info"_sv) {
             line.removePrefix(firstSpace + 1);
 
@@ -242,4 +263,22 @@ void * logThread(void *) {
     }
 
     return nullptr;
+}
+
+atomic<SizeT> num_added_to_bloom_filter = 0;
+
+void* add_to_bloom_filter(void * val) {
+   Pair<char*, SizeT>* val_casted = (Pair<char*, SizeT>*) val;
+   char* ptr = val_casted->first;
+   SizeT size = val_casted->second;
+   delete val_casted;
+   Frontier& f = Frontier::getFrontier();
+   for ( SizeT n = 0; n + 1 < size; ++n) {
+      if ( ptr[ n ] == '\0' ) {
+         f.addSeen( ptr + n + 1 );
+         if (++num_added_to_bloom_filter % 1000000 == 0) {
+            std::cout << "Num added = " << num_added_to_bloom_filter << std::endl;
+         }
+      }
+   }
 }

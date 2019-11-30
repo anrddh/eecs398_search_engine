@@ -11,7 +11,7 @@
 #include <fb/mutex.hpp>
 #include <fb/bloom_filter.hpp>
 
-constexpr fb::SizeT NumFrontierBins = 16;
+constexpr fb::SizeT NumFrontierBins = 13;
 
 // we will only randomly choose from first SEARCH_RESTRICTION number of elements
 constexpr fb::SizeT SEARCH_RESTRICTION= 16384; 
@@ -38,6 +38,11 @@ public:
     FrontierBin(fb::String filename);
 
     void addUrl(const fb::String &url );
+    
+    // Adds to list of urls already seen
+    // Does not actually add to the frontier
+    // Does not lock! not thread safe
+    void addSeen( fb::StringView url );
 
     fb::Vector<fb::SizeT> getUrl( );
 
@@ -64,6 +69,11 @@ public:
    // If this is a url we have seen for the first time
    // then (most of the times) add the link to the frontier
     void addUrl(const fb::String& url);
+
+    // Adds to list of urls already seen
+    // Does not actually add to the frontier
+    // Does not lock! not thread safe
+    void addSeen(fb::StringView url);
 
     // Note that this prints the estimate for the current size
     // but due to race conditions, it might not be exact

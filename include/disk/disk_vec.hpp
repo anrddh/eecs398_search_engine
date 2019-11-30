@@ -105,6 +105,14 @@ public:
         return filePtr + *cursor;
     }
 
+    const T * begin() const {
+        return filePtr;
+    }
+
+    const T * end() const {
+        return filePtr + *cursor;
+    }
+
     T & front() {
         return *begin();
     }

@@ -139,7 +139,7 @@ SizeT Frontier::size() const {
 
 void Frontier::addSeen(StringView url) {
     FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
-    ptr[ fb::fnvHash( url.data(), url.size() ) % NumFrontierBins ].addUrl( url );
+    ptr[ fb::fnvHash( url.data(), url.size() ) % NumFrontierBins ].addSeen( url );
 }
 
 void Frontier::addUrl(const String &url) {

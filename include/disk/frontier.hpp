@@ -22,7 +22,7 @@ constexpr fb::SizeT NUM_SAMPLE = 3;
 // The minimum number of bits required to
 // check 2 billion urls, have 0.1 false positive
 // with 3 hash tables
-constexpr fb::SizeT MIN_NUM_BITS = 961664723;
+constexpr fb::SizeT MIN_NUM_BITS = 9616654723;
 constexpr fb::SizeT PAGE_SIZE = 4096 * 8; // in bits
 constexpr fb::SizeT NUM_PAGES = (MIN_NUM_BITS / PAGE_SIZE / NumFrontierBins) + 1;
 constexpr fb::SizeT BLOOM_FILTER_SIZE = PAGE_SIZE * NUM_PAGES;

@@ -6,6 +6,7 @@
 #include <fb/stddef.hpp>
 #include <fb/mutex.hpp>
 #include <fb/string.hpp>
+#include <fb/string_view.hpp>
 #include <fb/functional.hpp>
 #include <fb/type_traits.hpp>
 
@@ -31,7 +32,9 @@ public:
         }
     }
 
-    void insertWithoutLock(const T &val) {
+    // This should be only be used to add seen
+    // in frontier
+    void insert(const T &val) {
         computeHashes(val);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             set( hashes[ i ]);

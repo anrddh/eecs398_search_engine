@@ -32,9 +32,10 @@ public:
 
       start = (char *) mmap(nullptr, MAX_FILE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0);
       ((unsigned int*)start)[0] = 1;
-      ((unsigned int*)start)[1] = MAX_TOKEN_BITS;
+      ((unsigned int*)start)[1] = num_tokens;
       ((unsigned int*)start)[2] = tableSize;
       dictionary = ((unsigned int*)start) + 3;
+      std::memset(dictionary, 0, tableSize);
 
       nextAvailableLocation = (tableSize + 3) * sizeof(unsigned int);
       nextAvailableLocation += writeEODList(documents);
@@ -71,9 +72,18 @@ void IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::addWord
    (const fb::String &word, const fb::Vector<AbsoluteWordInfo> &offsets, unsigned int docCount)
    {
    fb::SizeT bucket = hash(word) % tableSize;
-   while(dictionary[bucket] != 0) 
+   fb::SizeT originalBucket = bucket;
+   if(dictionary[bucket] != 0)
       {
-      bucket = (bucket + 1) % tableSize;
+      ++bucket;
+      while(dictionary[bucket] != 0) 
+         {
+         bucket = (bucket + 1) % tableSize;
+         if(bucket == originalBucket)
+            {
+            perror("error empty bucket never found");
+            }
+         }
       }
 
    dictionary[bucket] = nextAvailableLocation;
@@ -100,8 +110,6 @@ int IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::writePostingList
 template<typename Hash, int NUM_SKIP_TABLE_BITS>
 int IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::writeEODList(const fb::Vector<DocIdInfo> &documents) 
    {
-   // 1 is for empty string
-   
    char * postingListLocation = start + nextAvailableLocation;
 
    PostingListBuilder<NUM_SKIP_TABLE_BITS> builder(fb::String(), postingListLocation, documents.size(), documents.size(), MAX_TOKEN_BITS);

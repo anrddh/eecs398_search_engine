@@ -34,10 +34,11 @@ public:
       currentPostPosition = beginning + (word.size() + 1) + getSizeOfRankingData() + getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
 
       }
+
    template<typename PostType>
    void addPost(PostType post)
       {
-      if((post.position >> (MAX_TOKEN_BITS - NUM_SKIP_TABLE_BITS)) > nextSkipTableEntry) 
+      while( ( post.position >> ( MAX_TOKEN_BITS - NUM_SKIP_TABLE_BITS ) ) >= nextSkipTableEntry ) 
          {
          skipTableStart[2 * nextSkipTableEntry] = currentPostPosition - beginning;
          skipTableStart[2 * nextSkipTableEntry + 1] = post.position;

@@ -1,6 +1,6 @@
 #pragma once
 
-char * findSkipTable(char * start) 
+const char * findSkipTable(const char * start) 
    {
    while(*(start++) != '\0')
       ;

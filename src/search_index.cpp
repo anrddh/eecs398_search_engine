@@ -1,11 +1,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 #include <iostream>
 
-#include "isr/isr.hpp"
 #include "isr/index_reader.hpp"
+
+#include "isr/word_isr.hpp"
+#include "isr/document_isr.hpp"
+#include "isr/and_isr.hpp"
 
 int main(int argc, char ** argv )
    {
@@ -25,11 +30,12 @@ int main(int argc, char ** argv )
       }
 
    struct stat details;
-   fstat(f, &details);
+   fstat(file, &details);
 
-   char * startOfIndex = ( char * ) mmap( nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, file, 0 );
+   const char * startOfIndex = ( const char * ) mmap( nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, file, 0 );
 
    IndexReader<4> reader(startOfIndex);
+   /*
    fb::Vector<fb::UniquePtr<ISR>> ISRs;
    for( int i = 2;  i < argc;  ++i )
       {
@@ -37,17 +43,38 @@ int main(int argc, char ** argv )
       ISRs.pushBack( reader.OpenWordISR( word ) );
       }
 
-   AndISR andISR( std::move( ISRs ), reader.GetDocumentISR( ) );
+   AndISR andISR( std::move( ISRs ), reader.OpenDocumentISR( ) );
    fb::Vector<Location> documents;
-   documents.pushBack( andISR.GetCurrentInfo( ).GetStartLocation( ) );
+   documents.pushBack( andISR.GetCurrentInfo( )->GetStartLocation( ) );
 
-   while(fb::UniquePtr<IndexInfo> info = andISR.next( ))
+   while(fb::UniquePtr<IndexInfo> info = andISR.Next( ))
       {
-      documents.pushBack( info.GetStartLocation( ) );
+      documents.pushBack( info->GetStartLocation( ) );
       }
 
-   DocumentISR docISR = reader.GetDocumentISR( );
+   fb::UniquePtr<DocumentISR> docISR = reader.OpenDocumentISR( );
    for(Location loc : documents)
-      fb::UniquePtr<DocumentInfo> docInfo = docISR.Seek( loc );
-      std::cout << docInfo.GetDocId( ) << std::endl;
+      {
+      docISR->Seek( loc );
+      std::cout << docISR->GetDocumentId( ) << std::endl;
+      }
+   }
+   */
+
+   fb::UniquePtr<WordISR> wordISR = reader.OpenWordISR( fb::String( argv[2] ) );
+   if(!wordISR)
+      {
+      std::cout << "Word Not Found!" << std::endl;
+      return 0;
+      }
+   fb::UniquePtr<DocumentISR> docISR = reader.OpenDocumentISR( );
+   fb::UniquePtr<IndexInfo> info = wordISR->GetCurrentInfo( );
+   while( info )
+      {
+      docISR->Seek( info->GetEndLocation( ) );
+      unsigned int docId = docISR->GetDocumentId( );
+      std::cout << docId << std::endl;
+      info = wordISR->NextDocument( );
+      }
+
    }

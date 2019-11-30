@@ -7,10 +7,14 @@
 #include "index_reader.hpp"
 #include "index_reader_helpers.hpp"
 
-class WordInfo : IndexInfo 
+template<int NUM_SKIP_TABLE_BITS>
+class IndexReader;
+
+class WordInfo : public IndexInfo 
    {
 public:
-   PostInfo(Location postLoc) : loc(postLoc) { }
+   WordInfo(Location postLoc) : loc(postLoc) { }
+   ~WordInfo( ) { }
    virtual Location GetStartLocation( )
       {
       return loc;
@@ -28,6 +32,8 @@ private:
 class WordISR : public ISR
    {
 public:
+   WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int NUM_SKIP_TABLE_BITS, int MAX_TOKEN_BITS);
+   ~WordISR( ) { }
    unsigned int GetDocumentCount( );
    unsigned int GetNumberOfOccurrences( );
    virtual fb::UniquePtr<IndexInfo> GetCurrentInfo( );
@@ -36,11 +42,7 @@ public:
    virtual fb::UniquePtr<IndexInfo> Seek( Location target );
    virtual bool AtEnd( );
 
-protected:
-   friend class IndexReader;
-
-   WordISR(char * location, fb::UniquePtr<ISRDocument> documentISR, int NUM_SKIP_TABLE_BITS, int MAX_TOKEN_BITS);
-
+private:
    fb::UniquePtr<DocumentISR> docISR;
    const int NUM_SKIP_TABLE_BITS, MAX_TOKEN_BITS;
    uint32_t absolutePosition;
@@ -51,18 +53,21 @@ protected:
    bool isAtEnd;
    };
 
-WordISR::ISRWord(char * location, fb::UniquePtr<DocumentISR> documentISR, int NUM_SKIP_TABLE_BITS_, int MAX_TOKEN_BITS_) 
+WordISR::WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int NUM_SKIP_TABLE_BITS_, int MAX_TOKEN_BITS_) 
    : docISR(std::move(documentISR)),
       NUM_SKIP_TABLE_BITS(NUM_SKIP_TABLE_BITS_), 
       MAX_TOKEN_BITS(MAX_TOKEN_BITS_),
       absolutePosition(0),
       skipTable((unsigned int *)findSkipTable(location)), 
       rankingData(skipTable - 2),
-      currentLocation(skipTable + (2 << NUM_SKIP_TABLE_BITS) * 2 * sizeof(unsigned int)),
+      currentLocation( ( const char * ) ( skipTable + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 ) ),
       start(location),
-      isAtEnd(false)
-   { 
-   Next( );
+      isAtEnd(fb::is_word_sentinel(currentLocation))
+   {
+   if(!isAtEnd) 
+      {
+      currentLocation = fb::read_word_post(currentLocation, absolutePosition);
+      }
    }
 
 unsigned int WordISR::GetDocumentCount( )
@@ -82,59 +87,59 @@ fb::UniquePtr<IndexInfo> WordISR::GetCurrentInfo( )
       return fb::UniquePtr<IndexInfo>( );
       }
 
-   return fb::makeUnique(absolutePosition);
+   return fb::makeUnique<WordInfo>(absolutePosition);
    }
 
 fb::UniquePtr<IndexInfo> WordISR::Next( ) 
    {
-   if(isAtEnd)
+   if(isAtEnd || fb::is_word_sentinel( currentLocation )  )
       {
+      isAtEnd = true;
       return fb::UniquePtr<IndexInfo>( );
       }
    
    uint32_t delta;
    currentLocation = fb::read_word_post(currentLocation, delta);
 
-   if( fb::is_word_sentinel( currentLocation ) ) 
+   absolutePosition += delta;
+   return fb::makeUnique<WordInfo>(absolutePosition);
+   }
+
+fb::UniquePtr<IndexInfo> WordISR::NextDocument( )
+   {
+   if( isAtEnd || fb::is_word_sentinel( currentLocation ) ) 
       {
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>( );
       }
 
-   absolutePosition += delta;
-   return fb::makeUnique(absolutePosition);
-   }
-
-fb::UniquePtr<IndexInfo> WordISR::NextDocument( )
-   {
-   if( isAtEnd ) 
-      {
-      return fb::UniquePtr<IndexInfo>( );
-      }
-
-   fb::UniquePtr<PostInfo> currentPostInfo = GetCurrentInfo( );
-
-   fb::UniquePtr<IndexInfo> docInfo = docISR->Seek( currentPostInfo->GetStartLocation( ) );
+   fb::UniquePtr<IndexInfo> docInfo = docISR->Seek( absolutePosition );
    
    if(!docInfo)
       {
       perror("ERROR, word with no EOD after it");
       }
 
-   return Seek( info->GetStartLocation( ) );
+   return Seek( docInfo->GetStartLocation( ) );
    }
 
 fb::UniquePtr<IndexInfo> WordISR::Seek( Location target )
    {
    isAtEnd = false;
    int index = target >> (MAX_TOKEN_BITS - NUM_SKIP_TABLE_BITS);
-   currentLocation = skipTable[2 * index];
+   currentLocation = start + skipTable[2 * index];
    absolutePosition = skipTable[2 * index + 1];
    if(!absolutePosition)
       {
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>();
       }
+   
+   uint32_t delta;
+   currentLocation = fb::read_word_post(currentLocation, delta); // move past first element
+
+   while( absolutePosition < target && Next( ) )
+      ;
 
    return GetCurrentInfo( );
    }

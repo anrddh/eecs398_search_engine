@@ -10,8 +10,6 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#define FILEPATH "INDEX/PageStore2"
-
 char* read_word(char* &word_begin, std::string &word){
 	word = "";
 	while(*word_begin != ' ' && *word_begin != '\0'){
@@ -29,39 +27,49 @@ char* read_word(char* &word_begin, std::string &word){
 }
 
 void print_single_doc(uint8_t* doc_start){
+   int counter = 1;
 	std::string word;
 	char* current_word = (char*) doc_start;
 	while(*current_word != '\0'){
 		current_word = read_word(current_word, word);
-		std::cout << word << "\n";
+		std::cout << counter++ << ": " << word << "\n";
 	}
 }
 
-void print_page_store_file(uint64_t* start_of_file){
+void print_page_store_file(uint64_t* start_of_file, int page_number){
 	std::cout << "\n";
-	uint64_t* current_doc_offset = start_of_file + 2;
+	uint64_t* current_doc_offset = start_of_file + 2 + (3 * page_number);
 	unsigned int num_pages = start_of_file[1];
 	uint64_t* end_page_headers = start_of_file + 2 + (num_pages * 3);
 	uint8_t * start = (uint8_t *) start_of_file;
+   print_single_doc(start + *current_doc_offset);
+   /*
 	while(current_doc_offset != end_page_headers){
 		print_single_doc(start + *current_doc_offset);
 		std::cout << "\n";
 		current_doc_offset += 3;
     }
+    */
 }
 
-int main(){
-	int fd = open(FILEPATH, O_RDWR);
+int main(int argc, char ** argv){
+   if(argc != 3) {
+      perror("Usage: print_page_store FILEPATH PAGE_NUM");
+   }
+
+	int fd = open(argv[1], O_RDWR);
 	if (fd == -1) {
 		perror("Error opening file for reading");
 		exit(EXIT_FAILURE);
 	}
 	struct stat sb;
-	uint64_t* beginning_of_file = (uint64_t *)mmap(nullptr, sb.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+	uint64_t* beginning_of_file = (uint64_t *)mmap(nullptr, 500000000, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
 	if (beginning_of_file == MAP_FAILED) {
 		close(fd);
 		perror("Error mmapping the file");
 		exit(EXIT_FAILURE);
 	}
-	print_page_store_file(beginning_of_file);
+
+   int page_number = atoi(argv[2]);
+	print_page_store_file(beginning_of_file, page_number);
 }

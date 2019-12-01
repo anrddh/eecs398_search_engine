@@ -47,13 +47,20 @@ public:
       flushToDisk(chunk);
    }
 private:
+
+   char to_lower(char letter){
+      if(letter >= 65 && letter <= 90){
+         return letter + 32;
+      }
+      return letter;
+   }
    // reads a single space terminated word
    // returns pointer to the beginning of the next word
    // increments tokenCount
    char* read_word(char* &word_begin, fb::String &word){
       word = "";
       while(*word_begin != ' ' && *word_begin != '\0'){
-         word = word + *word_begin;
+         word = word + to_lower(*word_begin);
          ++word_begin;
       }
       // check to see if we are at the end of a document

@@ -281,4 +281,5 @@ void* add_to_bloom_filter(void * val) {
          }
       }
    }
+   return nullptr;
 }

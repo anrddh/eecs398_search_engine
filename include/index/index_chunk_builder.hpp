@@ -35,7 +35,7 @@ public:
       ((unsigned int*)start)[1] = num_tokens;
       ((unsigned int*)start)[2] = tableSize;
       dictionary = ((unsigned int*)start) + 3;
-      std::memset(dictionary, 0, tableSize);
+      std::memset(dictionary, 0, tableSize * 2 * sizeof(unsigned int));
 
       nextAvailableLocation = (tableSize + 3) * sizeof(unsigned int);
       nextAvailableLocation += writeEODList(documents);

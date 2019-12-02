@@ -60,7 +60,7 @@ WordISR::WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, 
       absolutePosition(0),
       skipTable((unsigned int *)findSkipTable(location)), 
       rankingData(skipTable - 2),
-      currentLocation( ( const char * ) ( skipTable + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 ) ),
+      currentLocation( ( ( const char * ) skipTable ) + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 * sizeof( unsigned int ) ),
       start(location),
       isAtEnd(fb::is_word_sentinel(currentLocation))
    {
@@ -125,39 +125,23 @@ fb::UniquePtr<IndexInfo> WordISR::NextDocument( )
 
 fb::UniquePtr<IndexInfo> WordISR::Seek( Location target )
    {
-#if 0
    isAtEnd = false;
    int index = target >> (MAX_TOKEN_BITS - NUM_SKIP_TABLE_BITS);
    currentLocation = start + skipTable[2 * index];
    absolutePosition = skipTable[2 * index + 1];
-   if(!currentLocation)
+   if(!absolutePosition)
       {
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>();
       }
    
-   uint32_t delta;
-   currentLocation = fb::read_word_post(currentLocation, delta); // move past first element
-   absolutePosition += delta;
+   uint32_t trash;
+   currentLocation = fb::read_word_post(currentLocation, trash); // move past first element
 
    while( absolutePosition < target && Next( ) )
       ;
 
    return GetCurrentInfo( );
-#else
-   if( target < absolutePosition )
-      {
-      absolutePosition = 0;
-      currentLocation =
-          (const char *)(skipTable + (1 << NUM_SKIP_TABLE_BITS) * 2);
-      isAtEnd = false;
-      }
-
-   while(absolutePosition < target && Next( ))
-      ;  
-   return GetCurrentInfo( );
-
-#endif 
    }
 
 bool WordISR::AtEnd( ) 

@@ -34,7 +34,7 @@ int main(int argc, char ** argv )
 
    const char * startOfIndex = ( const char * ) mmap( nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, file, 0 );
 
-   IndexReader<4> reader(startOfIndex);
+   IndexReader<8> reader(startOfIndex);
 
    if(argc > 3)
       {

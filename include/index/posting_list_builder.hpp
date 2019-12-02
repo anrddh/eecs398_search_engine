@@ -41,7 +41,7 @@ public:
       while( ( post.position >> ( MAX_TOKEN_BITS - NUM_SKIP_TABLE_BITS ) ) >= nextSkipTableEntry ) 
          {
          skipTableStart[2 * nextSkipTableEntry] = currentPostPosition - beginning;
-         skipTableStart[2 * nextSkipTableEntry + 1] = lastLocation;
+         skipTableStart[2 * nextSkipTableEntry + 1] = post.position;
       
          ++nextSkipTableEntry;
          }

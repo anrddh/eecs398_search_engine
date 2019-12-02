@@ -34,7 +34,7 @@ public:
 
     // This should be only be used to add seen
     // in frontier
-    void insert(const T &val) {
+    void insertWithoutLock(const T &val) {
         computeHashes(val);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             set( hashes[ i ]);

@@ -57,7 +57,7 @@ private:
     fb::Mutex toParseM;
     unsigned int localSeed;
     DiskVec<FrontierUrl> toParse;
-    BloomFilter<NUM_HASHES, BLOOM_FILTER_SIZE> bloom;
+    BloomFilter<NUM_HASHES, BLOOM_FILTER_SIZE, DiskVec, fb::StringView> bloom;
 };
 
 class Frontier {

@@ -35,7 +35,8 @@ int main(int argc, char ** argv )
    const char * startOfIndex = ( const char * ) mmap( nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, file, 0 );
 
    IndexReader<4> reader(startOfIndex);
-   /*
+
+#if 0
    fb::Vector<fb::UniquePtr<ISR>> ISRs;
    for( int i = 2;  i < argc;  ++i )
       {
@@ -44,23 +45,15 @@ int main(int argc, char ** argv )
       }
 
    AndISR andISR( std::move( ISRs ), reader.OpenDocumentISR( ) );
-   fb::Vector<Location> documents;
-   documents.pushBack( andISR.GetCurrentInfo( )->GetStartLocation( ) );
+   sstd::cout << andISR.GetDocumentId( ) << std::endl;
 
    while(fb::UniquePtr<IndexInfo> info = andISR.Next( ))
       {
-      documents.pushBack( info->GetStartLocation( ) );
-      }
-
-   fb::UniquePtr<DocumentISR> docISR = reader.OpenDocumentISR( );
-   for(Location loc : documents)
-      {
-      docISR->Seek( loc );
-      std::cout << docISR->GetDocumentId( ) << std::endl;
+      std::cout << andISR.GetDocumentId( ) << std::endl;
       }
    }
-   */
 
+#else
    fb::UniquePtr<WordISR> wordISR = reader.OpenWordISR( fb::String( argv[2] ) );
    if(!wordISR)
       {
@@ -76,5 +69,5 @@ int main(int argc, char ** argv )
       std::cout << docId << std::endl;
       info = wordISR->NextDocument( );
       }
-
+#endif
    }

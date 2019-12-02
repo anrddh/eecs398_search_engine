@@ -40,7 +40,7 @@ public:
 
 private:
    const int NUM_SKIP_TABLE_BITS, MAX_TOKEN_BITS;
-   uint32_t absolutePosition, docId;
+   uint32_t absolutePosition, docId, docLength;
    unsigned int * const skipTable;
    unsigned int * rankingData;
    const char * currentLocation;
@@ -68,9 +68,7 @@ DocumentISR::DocumentISR(const char * location, int NUM_SKIP_TABLE_BITS_, int MA
 
 unsigned int DocumentISR::GetDocumentLength( )
    {
-   uint32_t delta;
-   fb::read_document_post(currentLocation, delta, docId);
-   return delta - 1;
+   return docLength;
    }
 
 unsigned int DocumentISR::GetDocumentCount( )
@@ -101,10 +99,9 @@ fb::UniquePtr<IndexInfo> DocumentISR::Next( )
       return fb::UniquePtr<IndexInfo>( );
       }
 
-   uint32_t delta;
-   currentLocation = fb::read_document_post(currentLocation, delta, docId);
+   currentLocation = fb::read_document_post(currentLocation, docLength, docId);
 
-   absolutePosition += delta;
+   absolutePosition += docLength;
    return fb::makeUnique<DocumentInfo>(absolutePosition);
    }
 

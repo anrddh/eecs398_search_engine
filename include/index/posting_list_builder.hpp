@@ -42,11 +42,10 @@ public:
          {
          skipTableStart[2 * nextSkipTableEntry] = currentPostPosition - beginning;
          skipTableStart[2 * nextSkipTableEntry + 1] = post.position;
-         ++nextSkipTableEntry;
+         +;
          }
 
       writePost(post);
-      lastLocation = post.position;
       }
 
    unsigned int getLength() 
@@ -69,6 +68,7 @@ public:
    writePost(PostType post) 
       {
       currentPostPosition = fb::add_word_post(currentPostPosition, post.position - lastLocation);
+      lastLocation = post.position;
       }
 
    template<typename PostType> 
@@ -76,6 +76,7 @@ public:
    writePost(PostType post) 
       {
       currentPostPosition = fb::add_document_post(currentPostPosition, post.position - lastLocation, post.docId);
+      lastLocation = post.position;
       }
 
 private:

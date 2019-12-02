@@ -112,23 +112,38 @@ fb::UniquePtr<IndexInfo> DocumentISR::NextDocument( )
 
 fb::UniquePtr<IndexInfo> DocumentISR::Seek( Location target )
    {
+#if 0
    isAtEnd = false;
    int index = target >> (MAX_TOKEN_BITS - NUM_SKIP_TABLE_BITS);
    currentLocation = start + skipTable[2 * index];
    absolutePosition = skipTable[2 * index + 1];
-   if(!absolutePosition)
+   if(!currentLocation)
       {
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>();
       }
 
-   uint32_t trash;
-   currentLocation = fb::read_document_post(currentLocation, trash, docId);
+   uint32_t delta;
+   currentLocation = fb::read_document_post(currentLocation, delta, docId);
+   absolutePosition += delta;
 
    while( absolutePosition < target && Next( ) )
       ;
 
    return GetCurrentInfo( );
+#else
+   if (target < absolutePosition) {
+      absolutePosition = 0;
+      docId = 0;
+      currentLocation =
+         (const char *)(skipTable + (1 << NUM_SKIP_TABLE_BITS) * 2);
+      isAtEnd = false;
+   }
+
+   while (absolutePosition < target && Next())
+      ;
+   return GetCurrentInfo();
+#endif 
    }
 
 bool DocumentISR::AtEnd( )

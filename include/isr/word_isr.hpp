@@ -125,11 +125,12 @@ fb::UniquePtr<IndexInfo> WordISR::NextDocument( )
 
 fb::UniquePtr<IndexInfo> WordISR::Seek( Location target )
    {
+#if 0
    isAtEnd = false;
    int index = target >> (MAX_TOKEN_BITS - NUM_SKIP_TABLE_BITS);
    currentLocation = start + skipTable[2 * index];
    absolutePosition = skipTable[2 * index + 1];
-   if(!absolutePosition)
+   if(!currentLocation)
       {
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>();
@@ -137,11 +138,26 @@ fb::UniquePtr<IndexInfo> WordISR::Seek( Location target )
    
    uint32_t delta;
    currentLocation = fb::read_word_post(currentLocation, delta); // move past first element
+   absolutePosition += delta;
 
    while( absolutePosition < target && Next( ) )
       ;
 
    return GetCurrentInfo( );
+#else
+   if( target < absolutePosition )
+      {
+      absolutePosition = 0;
+      currentLocation =
+          (const char *)(skipTable + (1 << NUM_SKIP_TABLE_BITS) * 2);
+      isAtEnd = false;
+      }
+
+   while(absolutePosition < target && Next( ))
+      ;  
+   return GetCurrentInfo( );
+
+#endif 
    }
 
 bool WordISR::AtEnd( ) 

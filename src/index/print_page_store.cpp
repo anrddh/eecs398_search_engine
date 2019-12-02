@@ -14,7 +14,7 @@
 char* read_word(char* &word_begin, std::string &word){
 	word = "";
 	while(*word_begin != ' ' && *word_begin != '\0'){
-		word = word + tolower(*word_begin);
+		word.push_back(char(std::tolower(*word_begin)));
 		++word_begin;
 	}
 	// check to see if we are at the end of a document

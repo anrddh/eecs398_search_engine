@@ -36,38 +36,39 @@ int main(int argc, char ** argv )
 
    IndexReader<4> reader(startOfIndex);
 
-#if 0
-   fb::Vector<fb::UniquePtr<ISR>> ISRs;
-   for( int i = 2;  i < argc;  ++i )
+   if(argc > 3)
       {
-      fb::String word(argv[i]);
-      ISRs.pushBack( reader.OpenWordISR( word ) );
-      }
+      fb::Vector<fb::UniquePtr<ISR>> ISRs;
+      for( int i = 2;  i < argc;  ++i )
+         {
+         fb::String word(argv[i]);
+         ISRs.pushBack( reader.OpenWordISR( word ) );
+         }
 
-   AndISR andISR( std::move( ISRs ), reader.OpenDocumentISR( ) );
-   sstd::cout << andISR.GetDocumentId( ) << std::endl;
-
-   while(fb::UniquePtr<IndexInfo> info = andISR.Next( ))
-      {
+      AndISR andISR( std::move( ISRs ), reader.OpenDocumentISR( ) );
       std::cout << andISR.GetDocumentId( ) << std::endl;
-      }
-   }
 
-#else
-   fb::UniquePtr<WordISR> wordISR = reader.OpenWordISR( fb::String( argv[2] ) );
-   if(!wordISR)
-      {
-      std::cout << "Word Not Found!" << std::endl;
-      return 0;
+      while(fb::UniquePtr<IndexInfo> info = andISR.NextDocument( ))
+         {
+         std::cout << andISR.GetDocumentId( ) << std::endl;
+         }
       }
-   fb::UniquePtr<DocumentISR> docISR = reader.OpenDocumentISR( );
-   fb::UniquePtr<IndexInfo> info = wordISR->GetCurrentInfo( );
-   while( info )
+   else
       {
-      docISR->Seek( info->GetEndLocation( ) );
-      unsigned int docId = docISR->GetDocumentId( );
-      std::cout << docId << std::endl;
-      info = wordISR->NextDocument( );
+      fb::UniquePtr<WordISR> wordISR = reader.OpenWordISR( fb::String( argv[2] ) );
+      if(!wordISR)
+         {
+         std::cout << "Word Not Found!" << std::endl;
+         return 0;
+         }
+      fb::UniquePtr<DocumentISR> docISR = reader.OpenDocumentISR( );
+      fb::UniquePtr<IndexInfo> info = wordISR->GetCurrentInfo( );
+      while( info )
+         {
+         docISR->Seek( info->GetEndLocation( ) );
+         unsigned int docId = docISR->GetDocumentId( );
+         std::cout << docId << std::endl;
+         info = wordISR->NextDocument( );
+         }
       }
-#endif
    }

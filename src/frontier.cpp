@@ -15,6 +15,7 @@
 #include <fb/string_view.hpp>
 #include <fb/bloom_filter.hpp>
 #include <fb/functional.hpp>
+#include <tcp/url_tcp.hpp>
 
 #include <atomic>
 #include <iostream>
@@ -33,6 +34,8 @@ using fb::CV;
 using fb::Thread;
 
 using std::atomic;
+using std::cout;
+using std::endl;
 
 // TODO set to 0?
 atomic<int> insertCounter = 0;
@@ -44,6 +47,8 @@ CV doShutdownCV;
 bool doShutdown = false;
 atomic<int> numBinsShutdown = 0;
 
+atomic<int> numVectorsAdded = 0;
+
 FrontierBin::FrontierBin(String filename)
     : localSeed( ++randSeedCounter ),
       toParse(filename), bloom(filename + "_bloom_filter") 
@@ -52,24 +57,40 @@ FrontierBin::FrontierBin(String filename)
    t.detach();
    }
 
-void* addQueueToToParsed(void *ptr) 
+bool FrontierBin::keepAddingFromQueue()
    {
-   while ( true )
+   toAddQueueM.lock( );
+   while ( toAddQueue.empty() )
       {
+      toAddQueueM.unlock( );
 
-      {
-      AutoLock lock( doShutdownM );
+      doShutdownM.lock();
       if ( doShutdown )
          {
+         doShutdownM.unlock();
          if ( ++numBinsShutdown == NumFrontierBins )
             {
             doShutdownCV.signal();
-            return nullptr;
+            return false;
             }
          }
-      }
+      doShutdownM.unlock();
 
-      reinterpret_cast< FrontierBin* >(ptr)->addToFrontierFromQueue( );
+      toAddQueueCV.wait( toAddQueueM );
+      }
+   toAddQueueM.unlock( );
+   return true;
+   }
+
+void* addQueueToToParsed(void *ptr) 
+   {
+   FrontierBin* bin = reinterpret_cast< FrontierBin* >(ptr);
+   while ( true )
+      {
+      if ( !bin->keepAddingFromQueue( ) )
+         return nullptr;
+
+      bin->addToFrontierFromQueue( );
       }
    }
 
@@ -77,6 +98,7 @@ void FrontierBin::addToQueue( fb::Vector< fb::String >&& urls )
    {
    AutoLock lock( toAddQueueM );
    toAddQueue.pushBack( std::move( urls ) );
+   toAddQueueCV.signal();
    }
 
 void FrontierBin::addToFrontierFromQueue()
@@ -218,6 +240,25 @@ void Frontier::addUrls( Vector< String >&& urls )
       }
    }
 
+void Frontier::addUrls( Vector< ParsedPage >&& pages ) 
+   {
+   static Vector< String > buffers[ NumFrontierBins ];
+   for ( SizeT j = 0; j < pages.size(); ++j ) 
+      {
+      for ( SizeT i = 0; i < pages[j].links.size(); ++i )
+         {
+         buffers[ fb::fnvHash( pages[j].links[i].data(), pages[j].links[i].size() ) 
+            % NumFrontierBins ].pushBack( std::move( pages[j].links[i] ) );
+         }
+      }
+
+   for ( SizeT j = 0; j < NumFrontierBins; ++j )
+      {
+      // This also sets buffers[ j ] to be default vector
+      reinterpret_cast<FrontierBin *>(frontiers)[ j ].addToQueue( std::move( buffers[ j ] ) );
+      }
+   }
+
 Vector<SizeT> Frontier::getUrl() const 
    {
    FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
@@ -228,6 +269,12 @@ void Frontier::shutdown()
    {
    doShutdownM.lock();
    doShutdown = true;
+
+   for ( SizeT j = 0; j < NumFrontierBins; ++j )
+      {
+      // This also sets buffers[ j ] to be default vector
+      reinterpret_cast<FrontierBin *>(frontiers)[ j ].toAddQueueCV.signal();
+      }
 
    while ( numBinsShutdown != NumFrontierBins )
       {

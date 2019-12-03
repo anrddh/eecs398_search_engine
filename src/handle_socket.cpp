@@ -120,11 +120,7 @@ void* handle_socket_helper(void* sock_ptr) {
 // and the socket will be closed
 void handle_send(int sock) {
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
-
-   for (SizeT i = 0; i < pages.size(); ++i) 
-   {
-      Frontier::getFrontier().addUrls( std::move( pages[ i ].links ) );
-   }
+   Frontier::getFrontier().addUrls( std::move( pages ) );
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls

@@ -9,7 +9,10 @@
 #include <fb/thread.hpp>
 #include <fb/string.hpp>
 #include <fb/mutex.hpp>
+#include <fb/cv.hpp>
 #include <fb/bloom_filter.hpp>
+
+#include <tcp/url_tcp.hpp>
 
 constexpr fb::SizeT NumFrontierBins = 13;
 // we will only randomly choose from first SEARCH_RESTRICTION number of elements
@@ -53,6 +56,7 @@ public:
     fb::SizeT size() const;
 
     void printUrls() const;
+    fb::CV toAddQueueCV;
 
 private:
     // Needs to be locked
@@ -61,6 +65,7 @@ private:
     }
 
     friend void* addQueueToToParsed( void* );
+    bool keepAddingFromQueue(); // helper for addToFrontierFromQueue
     void addToFrontierFromQueue();
 
     fb::Thread t;
@@ -82,6 +87,10 @@ public:
    // If this is a url we have seen for the first time
    // then (most of the times) add the link to the frontier
     void addUrls( fb::Vector< fb::String >&& urls );
+
+   // If this is a url we have seen for the first time
+   // then (most of the times) add the link to the frontier
+    void addUrls( fb::Vector< ParsedPage >&& urls );
 
     // Adds to list of urls already seen
     // Does not actually add to the frontier

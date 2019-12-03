@@ -4,7 +4,6 @@
 #include <atomic>
 
 #include <fb/stddef.hpp>
-#include <fb/mutex.hpp>
 #include <fb/string.hpp>
 #include <fb/string_view.hpp>
 #include <fb/functional.hpp>
@@ -49,14 +48,12 @@ public:
 
     void insert(Reference val) {
         computeHashes(val);
-        fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             set( hashes[ i ]);
     }
 
     bool mightContain(Reference val) {
         computeHashes(val);
-        fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i)
             if (!get( hashes[ i ]))
                 return false;
@@ -65,7 +62,6 @@ public:
 
     bool tryInsert(Reference val) {
         computeHashes(val);
-        fb::AutoLock l(m);
         for (fb::SizeT i = 0; i < numHashes; ++i) {
             if (!get( hashes[ i ])) {
                 for (fb::SizeT j = i; j < numHashes; ++j)
@@ -98,7 +94,6 @@ private:
     }
 
     Cont<std::atomic<uint8_t>> cont;
-    fb::Mutex m;
     HashPairGen gen;
     uint64_t hashes[numHashes];
 };

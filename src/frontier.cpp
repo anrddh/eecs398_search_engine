@@ -226,9 +226,9 @@ Vector<SizeT> Frontier::getUrl() const
 
 void Frontier::shutdown()  
    {
+   doShutdownM.lock();
    doShutdown = true;
 
-   doShutdownM.lock();
    while ( numBinsShutdown != NumFrontierBins )
       {
       doShutdownCV.wait( doShutdownM );

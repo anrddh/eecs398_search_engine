@@ -12,7 +12,6 @@
 #include <fb/bloom_filter.hpp>
 
 constexpr fb::SizeT NumFrontierBins = 13;
-
 // we will only randomly choose from first SEARCH_RESTRICTION number of elements
 constexpr fb::SizeT SEARCH_RESTRICTION= 16384; 
 
@@ -33,11 +32,16 @@ struct FrontierUrl {
     fb::SizeT ranking;
 };
 
+// This blocks
+void frontierTerminate();
+
+void* addQueueToToParsed( void * );
+
 class FrontierBin {
 public:
     FrontierBin(fb::String filename);
 
-    void addUrl(const fb::String &url );
+    void addToQueue( fb::Vector< fb::String >&& urls );
     
     // Adds to list of urls already seen
     // Does not actually add to the frontier
@@ -53,6 +57,13 @@ private:
     inline fb::SizeT search_index(fb::SizeT rand_num, fb::SizeT region_num) {
       return ((rand_num % SEARCH_RESTRICTION) + region_num) % toParse.size(); 
     }
+
+    friend void* addQueueToToParsed( void* );
+    void addToFrontierFromQueue();
+
+    fb::Thread t;
+    fb::Vector< fb::Vector< fb::String > > toAddQueue;
+    fb::Mutex toAddQueueM;
     fb::Mutex localSeedM;
     fb::Mutex toParseM;
     unsigned int localSeed;
@@ -68,7 +79,7 @@ public:
 
    // If this is a url we have seen for the first time
    // then (most of the times) add the link to the frontier
-    void addUrl(const fb::String& url);
+    void addUrls( fb::Vector< fb::String >&& urls );
 
     // Adds to list of urls already seen
     // Does not actually add to the frontier
@@ -80,6 +91,8 @@ public:
     fb::SizeT size() const;
 
     fb::Vector<fb::SizeT> getUrl() const;
+
+    static void shutdown();
 
 private:
     static Frontier *ptr;

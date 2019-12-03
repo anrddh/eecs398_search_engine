@@ -95,6 +95,8 @@ void* handle_socket_helper(void* sock_ptr) {
 
       while (true)  {
          char message_type = recv_char(sock);
+         if (do_terminate)
+            return nullptr;
          if (message_type == 'R') {
             handle_request(sock);
          } else if (message_type == 'S') {
@@ -121,11 +123,7 @@ void handle_send(int sock) {
 
    for (SizeT i = 0; i < pages.size(); ++i) 
    {
-      for ( const fb::String& link : pages[i].links )
-      {
-
-         Frontier::getFrontier().addUrl( link );
-      }
+      Frontier::getFrontier().addUrls( std::move( pages[ i ].links ) );
    }
 }
 

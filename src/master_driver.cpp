@@ -164,7 +164,8 @@ int main(int argc, char **argv) try {
            //UrlInfoTable::getTable().print_info( line );
         } else if (firstWord == "shutdown"_sv) {
            terminate_workers();
-           //socket_handler.join();
+           Frontier::shutdown();
+           socket_handler.join();
            return 0;
         } else if (firstWord == "info"_sv) {
 
@@ -248,9 +249,11 @@ void addSeed(StringView fname) {
     file.open(fname.data());
 
     String url;
+    Vector< String > urls;
     while (fb::getline(file, url)) {
-       frontier.addUrl( url );
+       urls.pushBack( std::move( url ) );
     }
+    frontier.addUrls( std::move( urls ) );
 }
 
 void * logThread(void *) {

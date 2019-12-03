@@ -162,6 +162,11 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     return urls_to_return;
 }
 
+void FrontierBin::printUrls() const {
+    for (auto [url,_] : toParse)
+        std::cout << UrlStore::getStore().getUrl(url) << '\n';
+}
+
 Frontier *Frontier::ptr = nullptr;
 char Frontier::frontiers[ sizeof(FrontierBin) * NumFrontierBins ];
 
@@ -213,7 +218,6 @@ void Frontier::addUrls( Vector< String >&& urls )
       }
    }
 
-
 Vector<SizeT> Frontier::getUrl() const 
    {
    FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
@@ -231,3 +235,9 @@ void Frontier::shutdown()
       }
       doShutdownM.unlock();
    }
+
+void Frontier::printUrls() const {
+    FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
+    for (SizeT i = 0; i < NumFrontierBins; ++i)
+        ptr[i].printUrls();
+}

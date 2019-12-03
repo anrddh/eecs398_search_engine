@@ -13,7 +13,7 @@
 
 constexpr fb::SizeT NumFrontierBins = 13;
 // we will only randomly choose from first SEARCH_RESTRICTION number of elements
-constexpr fb::SizeT SEARCH_RESTRICTION= 16384; 
+constexpr fb::SizeT SEARCH_RESTRICTION= 16384;
 
 constexpr fb::SizeT NUM_TRY = 4000;
 constexpr fb::SizeT NUM_SAMPLE = 3;
@@ -42,7 +42,7 @@ public:
     FrontierBin(fb::String filename);
 
     void addToQueue( fb::Vector< fb::String >&& urls );
-    
+
     // Adds to list of urls already seen
     // Does not actually add to the frontier
     // Does not lock! not thread safe
@@ -52,10 +52,12 @@ public:
 
     fb::SizeT size() const;
 
+    void printUrls() const;
+
 private:
     // Needs to be locked
     inline fb::SizeT search_index(fb::SizeT rand_num, fb::SizeT region_num) {
-      return ((rand_num % SEARCH_RESTRICTION) + region_num) % toParse.size(); 
+      return ((rand_num % SEARCH_RESTRICTION) + region_num) % toParse.size();
     }
 
     friend void* addQueueToToParsed( void* );
@@ -93,6 +95,8 @@ public:
     fb::Vector<fb::SizeT> getUrl() const;
 
     static void shutdown();
+
+    void printUrls() const;
 
 private:
     static Frontier *ptr;

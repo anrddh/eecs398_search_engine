@@ -242,7 +242,7 @@ void Frontier::addUrls( Vector< String >&& urls )
 
 void Frontier::addUrls( Vector< ParsedPage >&& pages ) 
    {
-   static Vector< String > buffers[ NumFrontierBins ];
+   Vector< String > buffers[ NumFrontierBins ];
    for ( SizeT j = 0; j < pages.size(); ++j ) 
       {
       for ( SizeT i = 0; i < pages[j].links.size(); ++i )

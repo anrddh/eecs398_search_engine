@@ -24,7 +24,7 @@ int main(int argc, char ** argv)
    fstat(f, &details);
 
    uint64_t * start = (uint64_t *) mmap(nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, f, 0);
-   IndexBuilder<4> builder(path);
+   IndexBuilder<8> builder(path);
    builder.build_chunk(start, fb::stoi(Number));
    std::cout << "DONE" << std::endl;
    }

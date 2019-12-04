@@ -60,7 +60,7 @@ WordISR::WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, 
       absolutePosition(0),
       skipTable((unsigned int *)findSkipTable(location)), 
       rankingData(skipTable - 2),
-      currentLocation( ( const char * ) ( skipTable + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 ) ),
+      currentLocation( ( ( const char * ) skipTable ) + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 * sizeof( unsigned int ) ),
       start(location),
       isAtEnd(fb::is_word_sentinel(currentLocation))
    {
@@ -135,8 +135,8 @@ fb::UniquePtr<IndexInfo> WordISR::Seek( Location target )
       return fb::UniquePtr<IndexInfo>();
       }
    
-   uint32_t delta;
-   currentLocation = fb::read_word_post(currentLocation, delta); // move past first element
+   uint32_t trash;
+   currentLocation = fb::read_word_post(currentLocation, trash); // move past first element
 
    while( absolutePosition < target && Next( ) )
       ;

@@ -21,6 +21,11 @@ using namespace std;
 
 int main( int argc, char * argv[] ){
 
+    if (argc < 2) {
+        std::cerr << "Usage: directory of pagestore files" << std::endl;
+        return 1;
+    }
+
     fb::SizeT total = 0;
     string dirname = string(argv[1]);
     std::cout << "dirname: " << dirname << std::endl;

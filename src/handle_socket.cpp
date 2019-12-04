@@ -138,6 +138,5 @@ void handle_request(int sock) {
 }
 
 int num_threads_alive() {
-    fb::AutoLock l(term_mtx);
     return num_threads;
 }

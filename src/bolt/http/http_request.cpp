@@ -15,15 +15,23 @@ HttpType getHttpType(fb::String type) {
 HttpRequest::HttpRequest(fb::UniquePtr<HttpConnection>& conn) {
   const fb::UniquePtr<char[]>& rawReq = conn->getRawRequest();
   int length = conn->getRawRequestLength();
+  std::cout << "Request: " << std::endl;
+  for(int i = 0; i < length; ++i )
+    {
+    std::cout << rawReq[i];
+    }
+    std::cout << std::endl << std::endl;
   BufferedReader bf(rawReq, length);
   parseType(bf);
   parsePath(bf);
   parseHeaders(bf);
 }
-
+ 
 HttpType HttpRequest::getType() { return httpType; }
 
 fb::String HttpRequest::getPath() { return path; }
+
+fb::UnorderedMap<fb::String, fb::String> HttpRequest::getFormOptions( ) { return formOptions; }
 
 fb::String HttpRequest::getHeader(fb::String headerKey) {
   if (headers.find(headerKey) == headers.end()) {
@@ -33,12 +41,50 @@ fb::String HttpRequest::getHeader(fb::String headerKey) {
   }
 }
 
-void HttpRequest::parseType(BufferedReader& bf) {
-  fb::String typeStr = bf.nextWord();
-  httpType = getHttpType(typeStr);
+void HttpRequest::parseType( BufferedReader& bf ) {
+  fb::String typeStr = bf.nextWord( );
+  httpType = getHttpType( typeStr );
 }
 
-void HttpRequest::parsePath(BufferedReader& bf) { path = bf.nextWord(); }
+void HttpRequest::parsePath( BufferedReader& bf ) 
+  { 
+  fb::String fullPath = bf.nextWord( ); 
+  char * start = fullPath.data( );
+  auto iter = fullPath.begin( );
+  for( ; iter != fullPath.end( ) && *iter != '?'; ++iter )
+    ;
+  path = fb::String( fullPath.begin( ), iter );
+  fb::String options = fb::String( ++iter, fullPath.end( ) );
+  if( !options.empty( ) )
+    {
+    auto iter = options.begin( );
+    while( iter != options.end( ) )
+      {
+      auto keyStart = iter;
+      for( ; iter != options.end( ) && *iter != '='; ++iter )
+        ;
+
+      fb::String key(keyStart, iter);
+
+      if( iter != options.end( ) ) 
+        {
+        ++iter;
+        }
+
+      auto valueStart = iter;
+      for( ; iter != options.end( ) && *iter != '&'; ++iter )
+        ;
+      fb::String value(valueStart, iter);
+      if( iter != options.end( ) )
+        {
+        ++iter;
+        }
+      std::cout << key << ": " << value << std::endl;
+      formOptions[key] = value;
+      }
+    }
+
+  }
 
 void HttpRequest::parseHeaders(BufferedReader& bf) {
   while (!bf.pastEnd()) {

@@ -5,19 +5,20 @@
 
 fb::Vector<fb::String> carNames;
 
-HtmlPage home() {
+HtmlPage home( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
   HtmlPage page;
   page.loadFromString("Hello World!");
   return page;
 }
 
-HtmlPage cars() {
+HtmlPage cars( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
   
   HtmlPage page;
-  page.loadFromString("<h1>Cars [% car %]!</h1>");
+  page.loadFromString("<h1>Cars [% car %]!</h1><p>User Query=[% query %]</p>");
 
   fb::SizeT random = rand();
   page.setValue("car", carNames[random % carNames.size()]);
+  page.setValue("query", formOptions["query"]);
   return page;
 }
 

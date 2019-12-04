@@ -14,7 +14,7 @@ class Bolt {
 
   void run();
 
-  void registerHandler(fb::String path, HtmlPage (*page)());
+  void registerHandler(fb::String path, HtmlPage (*page)(fb::UnorderedMap<fb::String, fb::String>));
 
   void setDefaultPath(HtmlPage (*page)());
 

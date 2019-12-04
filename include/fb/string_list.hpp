@@ -45,7 +45,7 @@ public:
 
    fb::String str() 
       {
-      fb::String out('a', numChars);
+      fb::String out(numChars, 'a');
       int currentChar = 0;
       for(fb::String str : strings) 
          {

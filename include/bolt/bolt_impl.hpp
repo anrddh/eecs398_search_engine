@@ -11,23 +11,24 @@
 class BoltImpl 
    {
 public:
-   BoltImpl(fb::UniquePtr<HttpConnectionHandler> ch);
+   BoltImpl( fb::UniquePtr<HttpConnectionHandler> ch );
 
-   void run();
+   void run( );
 
-   void registerHandler(fb::String, HtmlPage (*)());
+   void registerHandler( fb::String, HtmlPage ( * )( fb::UnorderedMap<fb::String, fb::String> ) );
 
-   void setDefaultPath(HtmlPage (*)());
+   void setDefaultPath( HtmlPage ( * ) ( ) );
 
-   void serveNextRequest();
+   void serveNextRequest( );
 
 private:
-   fb::UnorderedMap<fb::String, HtmlPage (*)()> mappings;
-   HtmlPage (*default_page)();
-
+   fb::UnorderedMap<fb::String, HtmlPage ( * )( fb::UnorderedMap<fb::String, fb::String> )> mappings;
+   HtmlPage ( *default_page ) ( );
    fb::UniquePtr<HttpConnectionHandler> connHandler;
 
-   const HtmlPage getHtmlPage(fb::String);
+   static void * respondToRequest( void * arg );
 
-   fb::UniquePtr<HttpConnection> getNextConnection();
+   const HtmlPage getHtmlPage( fb::String, fb::UnorderedMap<fb::String, fb::String> );
+
+   fb::UniquePtr<HttpConnection> getNextConnection( );
    };

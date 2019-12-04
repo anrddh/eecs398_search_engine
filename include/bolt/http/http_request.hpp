@@ -11,17 +11,19 @@ enum HttpType { GET, POST, OTHER };
 
 class HttpRequest {
  public:
-  HttpRequest(fb::UniquePtr<HttpConnection> &conn);
-  HttpType getType();
-  fb::String getPath();
-  fb::String getHeader(fb::String headerKey);
+  HttpRequest( fb::UniquePtr<HttpConnection> &conn );
+  HttpType getType( );
+  fb::String getPath( );
+  fb::UnorderedMap<fb::String, fb::String> getFormOptions( );
+  fb::String getHeader( fb::String headerKey );
 
  private:
   HttpType httpType;
   fb::String path;
+  fb::UnorderedMap<fb::String, fb::String> formOptions;
   fb::UnorderedMap<fb::String, fb::String> headers;
 
-  void parseType(BufferedReader &bf);
-  void parsePath(BufferedReader &bf);
-  void parseHeaders(BufferedReader &bf);
+  void parseType( BufferedReader &bf );
+  void parsePath( BufferedReader &bf );
+  void parseHeaders( BufferedReader &bf );
 };

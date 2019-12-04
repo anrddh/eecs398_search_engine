@@ -22,6 +22,10 @@ constexpr fb::SizeT NumThreadsToSpawn = 50;
 fb::Mutex endLock;
 fb::CV endCV;
 
+using std::cout;
+using std::endl;
+
+
 struct ArgError : std::exception {};
 
 fb::SizeT parseArguments( int argc, char **argv );

@@ -147,7 +147,7 @@ Vector<SizeT> FrontierBin::getUrl( ) {
 
     Vector<SizeT> urls_to_return;
     AutoLock lock( toParseM );
-    if (toParse.size( ) < NUM_SAMPLE)
+    if ( toParse.size( ) < NUM_SAMPLE )
         return {}; // empty url
 
     SizeT max_ranking = 0; // Requires that any ranking of urls to be greater than 0

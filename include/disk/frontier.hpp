@@ -16,7 +16,7 @@
 
 constexpr fb::SizeT NumFrontierBins = 13;
 // we will only randomly choose from first SEARCH_RESTRICTION number of elements
-constexpr fb::SizeT SEARCH_RESTRICTION= 16384;
+constexpr fb::SizeT SEARCH_RESTRICTION= 131072;
 
 constexpr fb::SizeT NUM_TRY = 4000;
 constexpr fb::SizeT NUM_SAMPLE = 3;

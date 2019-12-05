@@ -9,6 +9,7 @@
 #include <fb/thread.hpp>
 #include <fb/cv.hpp>
 #include <fb/mutex.hpp>
+#include <fb/shared_mutex.hpp>
 
 #include <disk/logfile.hpp>
 #include <debug.hpp>
@@ -23,9 +24,7 @@ constexpr fb::SizeT NumThreadsToSpawn = 50;
 fb::Mutex endLock;
 fb::CV endCV;
 
-fb::Mutex blockedHostsLock;
-fb::CV blockedHostsCV;
-bool addingBlockedHosts = false;
+fb::SharedMutex blockedHostsLock;
 
 using std::cout;
 using std::endl;
@@ -88,12 +87,9 @@ int main( int argc, char **argv )
             file.open( userInput.data( ) );
 
             blockedHostsLock.lock( );
-            addingBlockedHosts = true;
             fb::String host;
             while ( fb::getline( file, host ) )
                blockedHosts.insert( host );
-            addingBlockedHosts = false;
-            blockedHostsCV.broadcast( );
             blockedHostsLock.unlock( );
 
             file.close( );
@@ -209,11 +205,13 @@ void * parsePages( void * )
          {
          ParsedUrl urlInitial( urlPair.second );
 
-         while( addingBlockedHosts )
-            blockedHostsCV.wait( blockedHostsLock );
-
+         blockedHostsLock.lock_shared( );
          if ( blockedHosts.find( urlInitial.Host ) != blockedHosts.end( ) )
+         {
+            blockedHostsLock.unlock_shared( );
             continue;
+         }
+         blockedHostsLock.unlock_shared( );
 
          auto downloader = HTTPDownloader( );
 

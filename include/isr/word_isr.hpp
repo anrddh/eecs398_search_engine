@@ -36,6 +36,7 @@ public:
    ~WordISR( ) { }
    unsigned int GetDocumentCount( );
    unsigned int GetNumberOfOccurrences( );
+   virtual uint32_t GetDocumentId( );
    virtual fb::UniquePtr<IndexInfo> GetCurrentInfo( );
    virtual fb::UniquePtr<IndexInfo> Next( );
    virtual fb::UniquePtr<IndexInfo> NextDocument( );
@@ -78,6 +79,11 @@ unsigned int WordISR::GetDocumentCount( )
 unsigned int WordISR::GetNumberOfOccurrences( )
    {
    return rankingData[1];
+   }
+
+virtual uint32_t WordISR::GetDocumentId( )
+   {
+   return docISR->GetDocumentId( );
    }
 
 fb::UniquePtr<IndexInfo> WordISR::GetCurrentInfo( )

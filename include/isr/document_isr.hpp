@@ -30,7 +30,7 @@ public:
    ~DocumentISR( ) { }
    unsigned GetDocumentLength( );
    unsigned int GetDocumentCount( );
-   unsigned int GetDocumentId( );
+   virtual unsigned int GetDocumentId( );
    virtual fb::UniquePtr<IndexInfo> GetCurrentInfo( );
    virtual fb::UniquePtr<IndexInfo> Next( );
    virtual fb::UniquePtr<IndexInfo> NextDocument( );

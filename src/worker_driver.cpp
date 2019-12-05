@@ -79,12 +79,12 @@ int main(int argc, char **argv) try {
             {
             std::cout << "Provide a filename for urls to block\n";
             std::cin >> userInput;
-            ifstream file;
-            file.open( userInput );
+	    std::ifstream file;
+            file.open( userInput.data( ) );
 
             blockedHostsLock.lock( );
             addingBlockedHosts = true;
-            String host;
+	    fb::String host;
             while ( fb::getline( file, host ) )
                blockedHosts.insert( host );
             addingBlockedHosts = false;

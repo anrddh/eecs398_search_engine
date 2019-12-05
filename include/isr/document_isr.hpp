@@ -27,6 +27,7 @@ class DocumentISR : public ISR
    {
 public:
    DocumentISR(const char * location, int NUM_SKIP_TABLE_BITS, int MAX_TOKEN_BITS); 
+   DocumentISR(DocumentISR &&other) = default;
    ~DocumentISR( ) { }
    unsigned GetDocumentLength( );
    unsigned int GetDocumentCount( );
@@ -65,6 +66,20 @@ DocumentISR::DocumentISR(const char * location, int NUM_SKIP_TABLE_BITS_, int MA
       currentLocation = fb::read_document_post(currentLocation, absolutePosition, docId);
       }
    }
+
+/*
+DocumentISR::DoucmentISR( DocumentISR &&other ) =
+: NUM_SKIP_TABLE_BITS( other.NUM_SKIP_TABLE_BITS ), 
+   MAX_TOKEN_BITS( other.MAX_TOKEN_BITS ),
+   absolutePosition( other.absolutePosition ),
+   docId( other.docId ),
+   skipTable( other.skipTable ), 
+   rankingData( other.rankingData ),
+   currentLocation( other.currentLocation ),
+   start( other.location ),
+   isAtEnd( other.isAtEnd )
+   { }
+   */
 
 unsigned int DocumentISR::GetDocumentLength( )
    {

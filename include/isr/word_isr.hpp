@@ -33,6 +33,7 @@ class WordISR : public ISR
    {
 public:
    WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int NUM_SKIP_TABLE_BITS, int MAX_TOKEN_BITS);
+   WordISR(WordISR && other) = default;
    ~WordISR( ) { }
    unsigned int GetDocumentCount( );
    unsigned int GetNumberOfOccurrences( );
@@ -81,7 +82,7 @@ unsigned int WordISR::GetNumberOfOccurrences( )
    return rankingData[1];
    }
 
-virtual uint32_t WordISR::GetDocumentId( )
+uint32_t WordISR::GetDocumentId( )
    {
    return docISR->GetDocumentId( );
    }

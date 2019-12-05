@@ -11,6 +11,7 @@
 #include "isr/word_isr.hpp"
 #include "isr/document_isr.hpp"
 #include "isr/and_isr.hpp"
+#include "isr/constraint_solver.hpp"
 
 int main(int argc, char ** argv )
    {
@@ -39,19 +40,34 @@ int main(int argc, char ** argv )
    if(argc > 3)
       {
       fb::Vector<fb::UniquePtr<ISR>> ISRs;
+      fb::Vector<fb::UniquePtr<WordISR> > wordIsrs;
       for( int i = 2;  i < argc;  ++i )
          {
          fb::String word(argv[i]);
          ISRs.pushBack( reader.OpenWordISR( word ) );
+         wordIsrs.pushBack( reader.OpenWordISR( word ) );
          }
 
-      AndISR andISR( std::move( ISRs ), reader.OpenDocumentISR( ) );
+      fb::UniquePtr<AndISR> andISR = fb::makeUnique<AndISR>( std::move( ISRs ), reader.OpenDocumentISR( ) );
+      ConstraintSolver solver( std::move( andISR ), reader.OpenDocumentISR( ), std::move( wordIsrs ), 0);
+      solver.GetDocFrequencies( );
+      fb::Vector<rank_stats> rankingData = solver.GetDocumentsToRank( );
+      
+      for(const rank_stats &stat : rankingData)
+         {
+         std::cout << stat.page_store_index << std::endl;
+         }
+
+
+
+      /*
       std::cout << andISR.GetDocumentId( ) << std::endl;
 
       while(fb::UniquePtr<IndexInfo> info = andISR.NextDocument( ))
          {
          std::cout << andISR.GetDocumentId( ) << std::endl;
          }
+      */
       }
    else
       {

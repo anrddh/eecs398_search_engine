@@ -25,6 +25,7 @@ readline_dep = meson.get_compiler('cpp').find_library('readline', required : fal
 project_sources = []
 master_source_files = []
 worker_source_files = []
+page_store_total_files = []
 project_header_files = []
 
 
@@ -43,3 +44,8 @@ executable('worker',
            worker_driver, worker_source_files,
                       include_directories: inc,
                       dependencies: [readline_dep, threads_dep])
+
+
+executable('page_store_total',
+            page_store_total_driver, page_store_total_files,
+            include_directories: inc)

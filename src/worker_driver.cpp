@@ -39,11 +39,35 @@ void * parsePages( void * );
 
 fb::UnorderedSet< fb::String > blockedHosts;
 
+void addBlockedHosts( fb::String filename )
+   {
+   std::ifstream file;
+   file.open( filename.data( ) );
+
+   if( !file.is_open( ) )
+      {
+      std::cerr << "Could not open file `" << filename
+               << "'." << std::endl;
+      return;
+      }
+
+   blockedHostsLock.lock( );
+   fb::String host;
+   while ( fb::getline( file, host ) )
+      blockedHosts.insert( host );
+   blockedHostsLock.unlock( );
+
+   file.close( );
+
+   std::cout << "Number of blocked hosts: " << blockedHosts.size( ) << std::endl;
+   }
+
 int main( int argc, char **argv ) 
    try 
       {
    	auto numThreads = parseArguments( argc, argv );
 
+      addBlockedHosts( fb::String( BlockedHostsFile ) );
    	SSLWrapper::SSLInit( );
 
    	fb::Vector< fb::Thread > threads;
@@ -83,16 +107,8 @@ int main( int argc, char **argv )
             {
             std::cout << "Provide a filename for urls to block\n";
             std::cin >> userInput;
-             std::ifstream file;
-            file.open( userInput.data( ) );
-
-            blockedHostsLock.lock( );
-            fb::String host;
-            while ( fb::getline( file, host ) )
-               blockedHosts.insert( host );
-            blockedHostsLock.unlock( );
-
-            file.close( );
+            
+            addBlockedHosts( userInput );
             }
          }
       while ( std::cin >> userInput );

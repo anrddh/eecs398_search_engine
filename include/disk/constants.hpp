@@ -15,6 +15,7 @@ constexpr auto WorkerLogFile        = "/worker.log"_sv;
 constexpr auto UrlInfoTableFile     = "/urlinfo"_sv;
 constexpr auto PageStoreFile        = "/pagestore"_sv;
 constexpr auto PageStoreCounterFile = "/pagestore.counter"_sv;
+constexpr auto BlockedHostsFile     = "/blocked_hosts.txt"
 
 inline fb::String getRootDir() {
     auto envStr = getenv("CRAWLERDIR");

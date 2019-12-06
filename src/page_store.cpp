@@ -15,16 +15,37 @@
 #include <string.h>
 #include <errno.h>
 
-// TODO: small for testing, raise for real deal. this is the number of
-// pages per file
+PageStoreCounter *PageStoreCounter::ptr = nullptr;
 
 fb::Mutex QueueMtx;
 fb::CV QueueNECV;
-std::atomic<fb::SizeT> FileIndex(0);
+//std::atomic<fb::SizeT> FileIndex(0);
 std::atomic<fb::SizeT> PagesCounter(0);
+
+fb::Mutex numThreadsMtx;
+fb::CV numThreadsCV;
 std::atomic<fb::SizeT> NumThreads(0);
+
+// Number of pages parsed in this process
+std::atomic<fb::SizeT> NumParsed(0);
+fb::SizeT get_num_parsed() 
+{
+   return NumParsed;
+}
+
 fb::String Prefix;
 fb::Queue<Page> PagesToAdd;
+std::atomic<bool> need_to_shutdown = false;
+
+void page_store_shutdown() {
+   need_to_shutdown = true;
+   QueueNECV.broadcast();
+   numThreadsMtx.lock();
+   while (NumThreads != 0) {
+      numThreadsCV.wait(numThreadsMtx);
+   }
+   numThreadsMtx.unlock();
+}
 
 PageBin::PageBin(fb::StringView filename) : PageCount(0), PageCountOffset(0),
                 PageHeadersOffset(0), PagesBeginOffset(0), Pages(filename) {
@@ -55,6 +76,7 @@ fb::SizeT PageBin::addPage(Page&& p) {
     ++PageCount;
     memcpy(Pages.data() + PageCountOffset, &PageCount, sizeof(PageCount));
 
+    ++NumParsed;
     return idy + p.word_headers.size();
 }
 
@@ -62,13 +84,14 @@ void initializeFileName(fb::String fname){
     Prefix = std::move(fname);
 }
 
-void addPage(Page page){
+void addPage(Page&& page){
    QueueMtx.lock();
    PagesToAdd.push(std::move(page));
    QueueMtx.unlock();
    ++PagesCounter;
    if(PagesCounter % numPages == 1){
        pthread_t p;
+       NumThreads.fetch_add(1);
        pthread_create(&p, nullptr, runBin, NULL);
        pthread_detach(p);
    }
@@ -76,19 +99,26 @@ void addPage(Page page){
 }
 
 void * runBin(void *){
-    NumThreads.fetch_add(1);
-    fb::SizeT Index = FileIndex.fetch_add(1);
+    fb::SizeT Index = PageStoreCounter::getCounter().index();
+
     PageBin Bin(Prefix + fb::toString(Index));
     fb::SizeT i = 0;
     for( ; i < numPages; ++i){
         QueueMtx.lock();
-        while (PagesToAdd.empty())
-            QueueNECV.wait(QueueMtx);
+        while (PagesToAdd.empty()) {
+           if (need_to_shutdown) {
+              QueueMtx.unlock();
+              goto exit_point;
+           }
+           QueueNECV.wait(QueueMtx);
+        }
         Page P = std::move(PagesToAdd.front());
         PagesToAdd.pop();
         QueueMtx.unlock();
         Bin.addPage(std::move( P ));
     }
+
+exit_point:
 
     if (ftruncate(Bin.file_descriptor(), Bin.size() + 32)) {
         fb::String err = fb::String("Failed to truncate file: ") +
@@ -96,6 +126,8 @@ void * runBin(void *){
         throw fb::Exception(err);
     }
 
-    NumThreads.fetch_sub(1);
+    if (--NumThreads == 0) {
+      numThreadsCV.signal();
+    }
     return nullptr;
 }

@@ -10,6 +10,7 @@
 
 #include <tcp/handle_socket.hpp>
 #include <tcp/constants.hpp>
+#include <tcp/addr_info.hpp>
 
 #include <fb/stddef.hpp>
 #include <fb/file_descriptor.hpp>
@@ -38,12 +39,18 @@ using fb::FileDesc;
 using fb::StringView;
 using fb::String;
 using fb::Thread;
+using fb::SizeT;
+using fb::Vector;
+using fb::Pair;
 
 using std::cerr;
+using std::atomic;
 using std::cout;
+using std::endl;
 using std::ifstream;
 
 constexpr auto DriverPrompt = ">> ";
+constexpr SizeT num_threads_adding_bloom_filter = 16;
 
 template <typename T>
 struct FreeDeleter { void operator()(char *p) { free(p); } };
@@ -60,12 +67,15 @@ MUniquePtr<char> getReadline() {
 #else
 
 MUniquePtr<char> getReadline() {
-    std::cout << DriverPrompt;
+    cout << DriverPrompt;
 
     fb::String line;
     fb::getline(std::cin, line);
 
-    auto ptr = MUniquePtr<char>(static_cast<char *>(malloc(line.size())),
+    if (line.empty())
+        return {};
+
+    auto ptr = MUniquePtr<char>(static_cast<char *>(malloc(line.size() + 1)),
                                 FreeDeleter<char>());
     strcpy(ptr.get(), line.data());
     return ptr;
@@ -92,11 +102,16 @@ struct Args {
 };
 
 FileDesc parseArguments( int argc, char **argv );
-void addSeed(fb::StringView fname);
+void addSeed(StringView fname);
+void * logThread(void *);
+void* add_to_bloom_filter(void * val);
 
 int main(int argc, char **argv) try {
     FileDesc sock = parseArguments( argc, argv );
     Thread socket_handler(handle_socket, &sock );
+
+    Thread logger(logThread, nullptr);
+    logger.detach();
 
     auto &frontier = Frontier::getFrontier();
 
@@ -120,189 +135,103 @@ int main(int argc, char **argv) try {
 
             addSeed(line);
         } else if (firstWord == "status"_sv) {
-           cout << "Frontier size: " << frontier.size() << endl;
+           cout << "Frontier size: " << frontier.size() << '\n'
+                << "Num connections: " << num_threads_alive() << endl;
+        } else if (firstWord == "assert"_sv) {
+           //UrlInfoTable::getTable().assert_invariance();
+        } else if (firstWord == "make_bloom_filter"_sv) {
+            SizeT size = UrlStore::getStore().access_disk().size();
+            Vector<Thread> threads;
+            for (SizeT i = 0; i < num_threads_adding_bloom_filter; ++i) {
+               threads.emplaceBack(add_to_bloom_filter, new
+                     Pair<char*, SizeT>( UrlStore::getStore().access_disk().data()
+                        + i * size / num_threads_adding_bloom_filter,
+                        size /num_threads_adding_bloom_filter));
+               }
+
+            for (SizeT i = 0; i < num_threads_adding_bloom_filter; ++i) {
+               threads[i].join();
+               cout << "Joined thread " << i + 1 << " out of "
+                    << num_threads_adding_bloom_filter << endl;
+            }
+
+            cout << "Done adding to bloom filter" << endl;
+        } else if (firstWord == "print-urls"_sv) {
+            line.removePrefix(firstSpace + 1);
+            Frontier::getFrontier().printUrls();
+        } else if (firstWord == "url-info"_sv) {
+            line.removePrefix(firstSpace + 1);
+
+            if (isspace(line.back()))
+                line.removeSuffix(1);
+
+           //UrlInfoTable::getTable().print_info( line );
         } else if (firstWord == "shutdown"_sv) {
            terminate_workers();
-           //socket_handler.join();
-           return 0;
-        } else if (firstWord == "info"_sv) {
+              Frontier::shutdown();
+              //socket_handler.join();
+              return 0;
+           } else if (firstWord == "info"_sv) {
 
-        }
-    }
+           }
+       }
 
-    socket_handler.join();
-} catch (const ArgError &) {
-    cerr << "Usage: " << argv[0]
-         << " [-p port] [-u urls] [-a anchors] [-d adj] [-f frontier] "
-         << "[-d adj] [-f frontier] [-i urlinfo] [-l log]\n\n"
-         << "The `port' parameter accepts an integer in the range "
-         << "[1024, 65536). Default value: `" << DefaultPort << "'\n"
-         << "The `urls' parameter accepts a valid filename. Default value: `"
-         << DefaultUrlStoreFile << "'\n"
-         << "The `anchors' parameter accepts a valid filename. Default value: `"
-         << DefaultAnchorStoreFile << "'\n"
-         << "The `adj' parameter accepts a valid filename. Default value: `"
-         << DefaultAdjStoreFile << "'\n"
-         << "The `frontier' parameter accepts a valid filename prefix. Default value: `"
-         << DefaultFrontierBinsPrefix << "'\n"
-         << "The `log' parameter accepts a valid filename. Default value: `"
-         << DefaultLogFile << "'\n";
+       socket_handler.join();
+   } catch (const ArgError &) {
+       cerr << "Usage: " << argv[0]
+            << " [-p port]\n\n"
+            << "The `port' parameter accepts an integer in the range "
+            << "[1024, 65536). Default value: `" << DefaultPort << "'\n";
 
-    return 1;
-}
+       return 1;
+   }
 
-struct AddrInfo {
-    addrinfo *res = nullptr;
+   FileDesc parseArguments(int argc, char **argv) try {
+       option long_opts[] = {
+           {"port",     required_argument, nullptr, 'p'},
+           {"help",     no_argument,       nullptr, 'h'},
+           {nullptr, 0, nullptr, 0}
+       };
+       opterr = true;
 
-    struct AddrError : std::exception {};
+       int option_idx;
+       auto choice = 0;
 
-    AddrInfo( const char *port ) {
-        addrinfo hints;
-        memset(&hints, 0, sizeof(hints));
-        hints.ai_family = AF_UNSPEC;
-        hints.ai_socktype = SOCK_STREAM;
-        hints.ai_flags = AI_PASSIVE;
+       String port;
+       while ((choice =
+               getopt_long(argc, argv, "p:h", long_opts, &option_idx))
+              != -1) {
+           switch (choice) {
+           case 'p':
+               port = optarg;
+               break;
+           case 'h':
+           default:
+               throw ArgError();
+           }
+       }
 
-        int rval = getaddrinfo(nullptr, port, &hints, &res);
-        if (rval) {
-           cerr << gai_strerror(rval) << '\n';
-           throw AddrError();
-        }
-    }
+       auto rootDir = getRootDir();
+       cout << "Writing to " << rootDir << '\n';
 
-    FileDesc getBoundSocket() const {
-        FileDesc sock (socket(res->ai_family,
-                              res->ai_socktype,
-                              res->ai_protocol));
+       auto logfileloc = rootDir + MasterLogFile;
+       logfile.open(logfileloc.data());
+       if (!logfile.is_open()) {
+           cerr << "Could not open logfile `" << logfileloc
+                << "'." << endl;
+           throw ArgError();
+       }
 
-        if (::bind(sock, res->ai_addr, res->ai_addrlen)) {
-            cerr << "Could not bind:\n";
-            perror("");
-            throw AddrError();
-        }
+       auto urlstoreloc = rootDir + UrlStoreFile;
+       UrlStore::init(urlstoreloc);
 
-        return sock;
-    }
+       auto frontierloc = rootDir + FrontierBinsPrefix;
+       Frontier::init(frontierloc);
 
-    ~AddrInfo() noexcept {
-        if (res)
-            freeaddrinfo(res);
-    }
-};
-
-FileDesc parseArguments(int argc, char **argv) try {
-    option long_opts[] = {
-        {"port",     required_argument, nullptr, 'p'},
-        {"urls",     required_argument, nullptr, 'u'},
-        {"anchors",  required_argument, nullptr, 'a'},
-        {"adj",      required_argument, nullptr, 'd'},
-        {"frontier", required_argument, nullptr, 'f'},
-        {"urlinfo",  required_argument, nullptr, 'i'},
-        {"log",      required_argument, nullptr, 'l'},
-        {"help",     no_argument,       nullptr, 'h'},
-        {nullptr, 0, nullptr, 0}
-    };
-    opterr = true;
-
-    int option_idx;
-    auto choice = 0;
-
-    fb::String port, urls, anchors, adj, frontier, urlinfo, logs;
-
-    while ((choice =
-            getopt_long(argc, argv, "p:u:a:d:f:i:l:h", long_opts, &option_idx))
-           != -1) {
-        switch (choice) {
-        case 'p':
-            port = optarg;
-            break;
-        case 'u':
-            urls = optarg;
-            break;
-        case 'a':
-            anchors = optarg;
-            break;
-        case 'd':
-            adj = optarg;
-            break;
-        case 'f':
-            frontier = optarg;
-            break;
-        case 'i':
-            urlinfo = optarg;
-            break;
-        case 'l':
-            logs = optarg;
-            break;
-        case 'h':
-        default:
-            throw ArgError();
-        }
-    }
-
-    if (urls.empty() || frontier.empty() || anchors.empty() || adj.empty() ||
-        urlinfo.empty() || logs.empty()) {
-        auto rval = mkdir("/tmp/crawler", S_IRWXU | S_IRWXG | S_IRWXO);
-        if (rval && errno != EEXIST) {
-            std::cerr << "Error when creating /tmp/crawler: " << strerror(errno);
-            throw ArgError();
-        }
-    }
-
-    if (logs.empty()) {
-        std::cout << "Using default logfile: " << DefaultLogFile << '\n';
-        logfile.open(DefaultLogFile.data());
-    } else {
-        logfile.open(logs.data());
-    }
-
-    if (!logfile.is_open()) {
-        std::cerr << "Could not open logfile." << std::endl;
-        throw ArgError();
-    }
-
-    if (urls.empty()) {
-        std::cout << "Using default url store file: " << DefaultUrlStoreFile << '\n';
-        UrlStore::init(DefaultUrlStoreFile);
-    } else {
-        UrlStore::init(urls);
-    }
-
-    std::cout << std::endl;
-
-    if (frontier.empty()) {
-        std::cout << "Using default frontier prefix: " << DefaultFrontierBinsPrefix << '\n';
-        Frontier::init(fb::String(DefaultFrontierBinsPrefix.data(), DefaultFrontierBinsPrefix.size()));
-    } else {
-        Frontier::init(fb::String(DefaultFrontierBinsPrefix.data(), DefaultFrontierBinsPrefix.size()));
-        Frontier::init(fb::String(frontier.data(), frontier.size()));
-    }
-
-    if (anchors.empty()) {
-        std::cout << "Using default anchor store file: " << DefaultAnchorStoreFile << '\n';
-        AnchorStore::init(DefaultAnchorStoreFile);
-    } else {
-        AnchorStore::init(anchors);
-    }
-
-    if (adj.empty()) {
-        std::cout << "Using default adjacency store file: " << DefaultAdjStoreFile << '\n';
-        AnchorStore::init(DefaultAdjStoreFile);
-    } else {
-        AnchorStore::init(adj);
-    }
-
-    if (urlinfo.empty()) {
-        std::cout << "Using default url info store file: " << DefaultUrlInfoTableFile << '\n';
-        UrlInfoTable::init(DefaultUrlInfoTableFile);
-    } else {
-        UrlInfoTable::init(urlinfo);
-    }
-
-    AddrInfo info(port.empty() ? DefaultPort : port.data());
+    AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
     return info.getBoundSocket();
-} catch( const AddrInfo::AddrError & ) {
-    throw ArgError();
+} catch( const SocketException& ) {
+   throw ArgError();
 } catch ( const FileDesc::ConstructionError &e ) {
    cerr << e.what() << '\n';
    throw ArgError();
@@ -315,16 +244,40 @@ void addSeed(StringView fname) {
     file.open(fname.data());
 
     String url;
+    Vector< String > urls;
     while (fb::getline(file, url)) {
-        fb::SizeT url_offset = UrlInfoTable::getTable().addSeed(url);
-        if ( url_offset == 0) {
-            logfile << "url " << url << " was already in UrlInfoTable" << std::endl;
-            continue;
-        }
-
-        logfile << "Got url " << url << " stored it as " << UrlStore::getStore().getUrl( url_offset ) << std::endl;
-        //fb::SizeT rank = RankUrl( UrlStore::getStore().getUrl( url_offset ) );
-        frontier.addUrl({ url_offset, 0 });
-        logfile << url << "\t\t\t\toffset: " << url_offset << '\n';
+       urls.pushBack( std::move( url ) );
     }
+    frontier.addUrls( std::move( urls ) );
+}
+
+void * logThread(void *) {
+    while (true) {
+        log(logfile, "Current status:\n",
+            "Frontier size:\t\t", Frontier::getFrontier().size(), '\n',
+            "Num connections:\t", num_threads_alive(), '\n');
+
+        sleep(60);
+    }
+
+    return nullptr;
+}
+
+atomic<SizeT> num_added_to_bloom_filter = 0;
+
+void* add_to_bloom_filter(void * val) {
+   Pair<char*, SizeT>* val_casted = (Pair<char*, SizeT>*) val;
+   char* ptr = val_casted->first;
+   SizeT size = val_casted->second;
+   delete val_casted;
+   Frontier& f = Frontier::getFrontier();
+   for ( SizeT n = 0; n + 1 < size; ++n) {
+      if ( ptr[ n ] == '\0' ) {
+         f.addSeen( ptr + n + 1 );
+         if (++num_added_to_bloom_filter % 1000000 == 0) {
+            std::cout << "Num added = " << num_added_to_bloom_filter << std::endl;
+         }
+      }
+   }
+   return nullptr;
 }

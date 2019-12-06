@@ -27,7 +27,6 @@ namespace fb {
         FileDesc() = default;
 
         FileDesc(int fd_in) : fd(fd_in) {
-            log(logfile, "FileDesc got", fd_in, '\n');
             if (fd_in <= -1)
                 throw ConstructionError("Invalid file descriptor.");
         }

@@ -6,6 +6,10 @@
 #include <fb/string_view.hpp>
 #include <fb/exception.hpp>
 #include <fb/utility.hpp>
+#include <fb/iterator.hpp>
+
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 #include <stdint.h>
 
@@ -42,28 +46,43 @@ public:
     // url.
     fb::Pair<fb::SizeT, fb::SizeT> addStr(fb::StringView anchorText,
                                           fb::Pair<fb::SizeT,fb::SizeT> offsets) {
-        // Special case: if the anchor text is empty we dont change
-        // anything
-        if (anchorText.empty())
+        if (anchorText.size() == 1)
             return offsets;
 
         auto &[beginOffset, endOffset] = offsets;
 
-        // The loop
-        while (!anchorText.empty()){
-            auto idx = anchors.reserve(1);
+        if (!beginOffset) {
+            beginOffset = anchors.reserve(1);
+            auto numCharsCopied = anchorText.copy(anchors[beginOffset].arr,
+                                                  Chunk::TextSize);
 
-            // beginOffset == 0 <=> url doese not have any anchor text
-            // associated with it
-            if (!beginOffset)
-                offsets = { idx, idx };
+            if (numCharsCopied == Chunk::TextSize)
+                endOffset = anchors[beginOffset].ptr = anchors.reserve(1);
             else
-                endOffset = anchors[endOffset].ptr = idx;
-            anchorText.copy(anchors[idx].arr, Chunk::TextSize);
-            anchorText.removePrefix(Chunk::TextSize);
+                endOffset = beginOffset;
+
+            anchors[endOffset].arr[numCharsCopied % Chunk::TextSize] = 0;
+            anchors[endOffset].ptr = 0;
+            anchorText.removePrefix(numCharsCopied);
         }
 
-        anchors[endOffset].ptr = 0;
+        while (!anchorText.empty()) {
+            auto nullTerm =
+                fb::find(anchors[endOffset].arr,
+                         anchors[endOffset].arr + Chunk::TextSize,
+                         0);
+
+            auto nullTermIdx = nullTerm - anchors[endOffset].arr;
+            auto numToCopy = Chunk::TextSize - nullTermIdx;
+            auto numCopied = anchorText.copy(nullTerm, numToCopy);
+            if (numCopied == numToCopy)
+                endOffset = anchors[endOffset].ptr = anchors.reserve(1);
+
+            anchors[endOffset].arr[nullTermIdx + numCopied % numToCopy] = 0;
+            anchors[endOffset].ptr = 0;
+            anchorText.removePrefix(numCopied);
+        }
+
         return offsets;
     }
 

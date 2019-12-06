@@ -2,8 +2,8 @@
 #include "tcp/handle_socket.hpp"
 #include "tcp/master_url_tcp.hpp"
 #include "disk/frontier.hpp"
-#include "disk/UrlTables.hpp"
 #include "disk/url_store.hpp"
+#include "disk/UrlInfo.hpp"
 #include "fb/exception.hpp"
 #include "fb/thread.hpp"
 #include "fb/cv.hpp"
@@ -24,29 +24,23 @@ class ThreadLifeTracker {
 public:
    ThreadLifeTracker()
    {
-      term_mtx.lock();
+      fb::AutoLock l(term_mtx);
       ++num_threads;
-      term_mtx.unlock();
    }
 
    ~ThreadLifeTracker()
    {
-      term_mtx.lock();
+      fb::AutoLock l(term_mtx);
       if (--num_threads == 0)
-      {
          term_cv.signal();
-      }
-      term_mtx.unlock();
    }
 };
 
 void terminate_workers() {
-   term_mtx.lock();
+   fb::AutoLock l(term_mtx);
    do_terminate = true;
-   while (num_threads != 0) {
+   while (num_threads != 0)
       term_cv.wait(term_mtx);
-   }
-   term_mtx.unlock();
 }
 
 void* handle_socket_helper(void* sock_ptr);
@@ -58,14 +52,12 @@ void* handle_socket(void* sock_ptr) {
    int server_fd = * (int *) sock_ptr;
    int sock;
 
+   if (listen(server_fd, 3) < 0) {
+       perror("listen");
+       exit(EXIT_FAILURE);
+   }
 
    while (true) {
-      if (listen(server_fd, 3) < 0)
-      {
-          perror("listen");
-          exit(EXIT_FAILURE);
-      }
-
       term_mtx.lock();
       if (do_terminate) {
          term_mtx.unlock();
@@ -73,13 +65,11 @@ void* handle_socket(void* sock_ptr) {
       }
       term_mtx.unlock();
 
-
       if ((sock = accept(server_fd, nullptr, nullptr)) < 0)
       {
           perror("accept");
           exit(EXIT_FAILURE);
       }
-
 
       term_mtx.lock();
       if (do_terminate) {
@@ -100,26 +90,20 @@ void* handle_socket_helper(void* sock_ptr) {
    delete (int *) sock_ptr;
 
    try {
-   if ( recv_int(sock) != VERFICATION_CODE ) {
-      throw SocketException("Incorrect verfication code");
-   }
+      if (recv_int(sock) != VERFICATION_CODE)
+         throw SocketException("Incorrect verfication code");
 
       while (true)  {
          char message_type = recv_char(sock);
+         if (do_terminate)
+            return nullptr;
          if (message_type == 'R') {
             handle_request(sock);
          } else if (message_type == 'S') {
             handle_send(sock);
+            return nullptr;
          } else if (message_type == 'T')  {
-            term_mtx.lock();
-            if (do_terminate) {
-               term_mtx.unlock();
-               send_char(sock, 'T');
-               return nullptr;
-            } else {
-               term_mtx.unlock();
-               send_char(sock, 'N');
-            }
+            return nullptr;
          }
          else {
             throw SocketException( " got wrong message type" );
@@ -136,18 +120,7 @@ void* handle_socket_helper(void* sock_ptr) {
 // and the socket will be closed
 void handle_send(int sock) {
    Vector<ParsedPage> pages = recv_parsed_pages(sock);
-
-   for (SizeT i = 0; i < pages.size(); ++i) {
-      Vector<SizeT> to_add_to_frontier =
-         UrlInfoTable::getTable().HandleParsedPage( std::move( pages[i] ) );
-
-      for (SizeT url_offset : to_add_to_frontier )
-      {
-         StringView url = UrlStore::getStore().getUrl( url_offset );
-         Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
-      }
-   }
-
+   Frontier::getFrontier().addUrls( std::move( pages ) );
 }
 
 // Given dynamically allocated socket (int) that is requesting more urls
@@ -160,13 +133,10 @@ void handle_request(int sock) {
    }
    catch( SocketException& se)
    {
-      std::cerr << "SocketException in handle_request: " << se.what()
-         << " --- Will place urls back in to the frontier" << std::endl;
-
-      for ( SizeT url_offset : urls_to_parse )
-      {
-         StringView url = UrlStore::getStore().getUrl( url_offset );
-         Frontier::getFrontier().addUrl( {url_offset, RankUrl( url ) } );
-      }
+      std::cerr << "SocketException in handle_request: " << se.what() << std::endl;
    }
+}
+
+int num_threads_alive() {
+    return num_threads;
 }

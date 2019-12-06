@@ -83,15 +83,10 @@ class ParsedUrl
             Path = "";
          }
 
-      ~ParsedUrl( )
-         {
-         };
-
       // print function for debugging
       void print( ) const {
-          log("Complete Url = ", CompleteUrl, '\n', "Service = ", Service,
-              ", Host = ", Host, ", Port = ", Port,
-               << ", Path = " << Path << std::endl;
+          log(logfile, "Complete Url = ", CompleteUrl, '\n', "Service = ", Service,
+              ", Host = ", Host, ", Port = ", Port, ", Path = ", Path, '\n');
       }
    };
 
@@ -250,6 +245,17 @@ class ConnectionWrapper
                address->ai_socktype, address->ai_protocol ) );
             int set = 1;
             setsockopt(socketFD, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
+            struct timeval timeout;
+             timeout.tv_sec = 5;
+             timeout.tv_usec = 0;
+
+             if (setsockopt (socketFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                         sizeof(timeout)) < 0)
+                std::cerr << "failed at setsockopt recv" << std::endl;
+
+             if (setsockopt (socketFD, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+                         sizeof(timeout)) < 0)
+                std::cerr << "failed at setsockopt send" << std::endl;
             }
          catch ( fb::FileDesc::ConstructionError & e )
             {
@@ -469,7 +475,7 @@ HTTPDownloader( )
       {
       fb::String getMessage =
             "GET /" + url.Path + " HTTP/1.1\r\nHost: " + url.Host + "\r\n" +
-            "User-Agent: LinuxGetSsl/2.0 (Linux)\r\n" +
+            "User-Agent: donwload_html/2.0 (Linux) aniruddh@umich.edu\r\n" +
             "Accept: */*\r\n" +
             "Accept-Encoding: identity\r\n" +
             "Connection: close\r\n\r\n";
@@ -687,7 +693,7 @@ HTTPDownloader( )
 };
 
 inline void recordFailedLink( fb::String msg ) {
-   std::cerr << "Failed at " << msg << std::endl;
-   std::cerr << syscall(SYS_gettid) << std::endl;
+   //std::cerr << "Failed at " << msg << std::endl;
+   //std::cerr << syscall(SYS_gettid) << std::endl;
    throw ConnectionException(std::move(msg));
 }

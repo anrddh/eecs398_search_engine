@@ -2,18 +2,15 @@
 //Edited by Chandler Meyers 11/5/2019
 #pragma once
 
-#include "stddef.hpp"
-//Implementation of features typically from std::functional
-//Add things to this as needed
+#include <fb/stddef.hpp>
+#include <fb/utility.hpp>
 
 namespace fb {
 
-//This hash function for char buffers from lecture slides
-constexpr SizeT fnvHash( const char *data, SizeT length ) noexcept
-{
-    constexpr SizeT FnvOffsetBasis = 146959810393466560;
-    constexpr SizeT FnvPrime = 1099511628211ul;
-    SizeT hash = FnvOffsetBasis;
+constexpr SizeT fnvHashState(const char *data,
+                             SizeT length,
+                             SizeT hash) noexcept {
+    constexpr SizeT FnvPrime = 1099511628211ull;
     for( SizeT i = 0; i < length; ++i )
     {
         hash *= FnvPrime;
@@ -21,6 +18,20 @@ constexpr SizeT fnvHash( const char *data, SizeT length ) noexcept
     }
     return hash;
 }
+
+//This hash function for char buffers from lecture slides
+constexpr SizeT fnvHash( const char *data, SizeT length ) noexcept {
+    return fnvHashState(data, length, 146959810393466560ull);
+}
+
+inline Pair<SizeT, SizeT> fnvHashPair(const char *data, SizeT length) {
+    auto hash1 = fnvHash(data, length);
+    auto hash2 = fnvHashState(data, length, hash1);
+    return { hash1, hash2 };
+}
+
+template <typename T>
+struct HashPairGen {};
 
 template <typename T>
 struct Hash {};

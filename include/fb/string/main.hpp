@@ -52,6 +52,18 @@ namespace fb {
             buf.pushBack(0);
         }
 
+        BasicString(BasicString &&rhs) : buf(std::move(rhs.buf)) {
+            rhs.buf.pushBack(0);
+        }
+
+        BasicString & operator=(BasicString &&rhs) {
+            fb::swap(buf, rhs.buf);
+            return *this;
+        }
+
+        BasicString(const BasicString &) = default;
+        BasicString & operator=(const BasicString &) = default;
+
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= size())
@@ -359,19 +371,23 @@ namespace fb {
         }
 
         constexpr SizeType find(const BasicString &str, SizeType pos = 0 ) const noexcept {
-            return StringView(*this).find(str, pos);
+            return BasicStringView<CharT>(*this).find(str, pos);
+        }
+
+        constexpr SizeType find(BasicStringView<CharT> str, SizeType pos = 0 ) const noexcept {
+            return BasicStringView<CharT>(*this).find(str, pos);
         }
 
         constexpr SizeType find(const CharT *s, SizeType pos, SizeType count) const {
-            return StringView(*this).find(s,pos,count);
+            return BasicStringView<CharT>(*this).find(s,pos,count);
         }
 
         constexpr SizeType find(const CharT *s, SizeType pos = 0) const {
-            return StringView(*this).find(s,pos);
+            return BasicStringView<CharT>(*this).find(s,pos);
         }
 
         constexpr SizeType find(CharT ch, SizeType pos = 0) const noexcept {
-            return StringView(*this).find(ch, pos);
+            return BasicStringView<CharT>(*this).find(ch, pos);
         }
 
     private:

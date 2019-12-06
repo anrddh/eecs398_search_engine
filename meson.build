@@ -2,7 +2,7 @@ project('fantastic_bugs', 'cpp',
         version : '0.0.1',
         meson_version : '>= 0.50.0',
         default_options : [ 'warning_level=3',
-                            'buildtype=debugoptimized',
+                            'buildtype=debug',
                             'debug=true',
                             'cpp_std=c++17' ])
 
@@ -15,7 +15,6 @@ endif
 if build_machine.system() == 'linux'
 
 add_global_link_arguments('-I/usr/include/openssl', '-L/usr/lib/x86_64-linux-gnu', '-lssl', '-lcrypto', language: 'cpp')
-add_global_arguments('-g', language : 'cpp')
 
 endif
 
@@ -27,6 +26,7 @@ project_sources = []
 master_source_files = []
 worker_source_files = []
 server_source_files = []
+page_store_total_files = []
 project_header_files = []
 
 
@@ -67,4 +67,8 @@ executable('print_page_store',
 
 executable('search_index', 
             search_index_driver,
+            include_directories: inc)
+
+executable('page_store_total',
+            page_store_total_driver, page_store_total_files,
             include_directories: inc)

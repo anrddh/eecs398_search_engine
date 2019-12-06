@@ -67,7 +67,6 @@ int main( int argc, char **argv )
       {
    	auto numThreads = parseArguments( argc, argv );
 
-      addBlockedHosts( fb::String( BlockedHostsFile ) );
    	SSLWrapper::SSLInit( );
 
    	fb::Vector< fb::Thread > threads;
@@ -188,6 +187,8 @@ fb::SizeT parseArguments( int argc, char **argv )
 				<< "'." << std::endl;
 		throw ArgError( );
    	}
+
+   addBlockedHosts( rootDir + BlockedHostsFile );
 
 	auto pagebinloc = rootDir + PageStoreFile;
 	initializeFileName( std::move( pagebinloc ) );

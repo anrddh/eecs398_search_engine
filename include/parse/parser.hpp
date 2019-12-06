@@ -39,10 +39,10 @@ public:
 	fb::UnorderedSet<fb::String> urls;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
-	constexpr bool addUrls;
+        constexpr static bool addUrls = false;
 
-	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in, bool addUrls_in )
-        : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false), addUrls( addUrls_in )
+	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in )
+        : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false)
 		{
 		tagStack.pushBack( "DEFAULT" );
 
@@ -50,7 +50,7 @@ public:
 			flagCounter[i] = 0;
 		}
 
-   // This function will invalidate the parser object
+   // This function will invalidate the iarser object
    // Written by Jaeyoon Kim
    Page extractPage( fb::SizeT UrlOffset )
       {

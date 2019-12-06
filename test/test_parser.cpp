@@ -13,6 +13,7 @@
 
 using namespace fb;
 
+//   constexpr bool Parser::addUrls = false;
 void printFlag( const uint8_t flag )
 {
    if ( flag & INDEX_WORD_TITLE )
@@ -60,7 +61,7 @@ int main (int, char **argv){
 
    {
    bool addUrls = false;
-   auto parser = Parser(content, filename, addUrls);
+   auto parser = Parser(content, filename);
 
    parser.parse();
    auto retstr = parser.getParsedResult();
@@ -83,7 +84,7 @@ int main (int, char **argv){
 
    {
    bool addUrls = true;
-   auto parser = Parser(content, filename, addUrls);
+   auto parser = Parser(content, filename);
 
    parser.parse();
    auto retstr = parser.getParsedResult();

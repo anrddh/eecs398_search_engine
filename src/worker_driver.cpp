@@ -242,7 +242,7 @@ void * parsePages( void * )
 
          ParsedUrl url( downloader.finalUrl );
 
-			Parser parser( result, std::move( url ), addUrls );
+			Parser parser( result, std::move( url ) );
 			parser.parse( );
 
 			fb::Vector<fb::String> urls;

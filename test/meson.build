@@ -6,9 +6,9 @@
 #                                ['main.cpp', 'test-robots-2-http.cpp'],
 #                                include_directories : inc)
 #
-#test_parser = executable('test_parser',
-#                      ['test_parser.cpp'],
-#                      include_directories : inc)
+test_parser = executable('test_parser',
+                      ['test_parser.cpp'], worker_source_files,
+                      include_directories : inc)
 
 test_bloomfilter = executable('test_bloomfilter',
                               ['main.cpp',

@@ -29,6 +29,7 @@ fb::SharedMutex blockedHostsLock;
 using std::cout;
 using std::endl;
 
+bool addUrls = true;
 
 struct ArgError : std::exception 
    {
@@ -145,6 +146,7 @@ fb::SizeT parseArguments( int argc, char **argv )
 		{ "port",      required_argument, nullptr, 'p' },
 		{ "help",      no_argument,       nullptr, 'h' },
 		{ "threads",   no_argument,       nullptr, 't' },
+      { "urls",      no_argument,       nullptr, 'u' },
 		{ nullptr, 0, nullptr, 0 }
 		};
 	opterr = true;
@@ -155,7 +157,7 @@ fb::SizeT parseArguments( int argc, char **argv )
 	fb::String hostname, port, threads;
 
 	while ( ( choice =
-					getopt_long( argc, argv, "o:p:ht:", long_opts, &option_idx ) )
+					getopt_long( argc, argv, "o:p:ht:u", long_opts, &option_idx ) )
 				 != -1 ) 
       {
 		switch (choice) 
@@ -170,6 +172,9 @@ fb::SizeT parseArguments( int argc, char **argv )
    		case 't':
 				threads = optarg;
 				break;
+         case 'u':
+            addUrls = false;
+            break;
    		case 'h':
    		default:
 				throw ArgError( );
@@ -236,7 +241,7 @@ void * parsePages( void * )
 
          ParsedUrl url( downloader.finalUrl );
 
-			Parser parser( result, std::move( url ) );
+			Parser parser( result, std::move( url ), addUrls );
 			parser.parse( );
 
 			fb::Vector<fb::String> urls;

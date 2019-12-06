@@ -39,7 +39,7 @@ public:
 	fb::UnorderedSet<fb::String> urls;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
-        constexpr static bool addUrls = false;
+    constexpr static bool addUrls = false;
 
 	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in )
         : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false)

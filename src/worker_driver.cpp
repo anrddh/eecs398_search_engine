@@ -31,7 +31,7 @@ using std::endl;
 
 bool addUrls = true;
 
-struct ArgError : std::exception 
+struct ArgError : std::exception
    {
    };
 
@@ -63,8 +63,8 @@ void addBlockedHosts( fb::String filename )
    std::cout << "Number of blocked hosts: " << blockedHosts.size( ) << std::endl;
    }
 
-int main( int argc, char **argv ) 
-   try 
+int main( int argc, char **argv )
+   try
       {
    	auto numThreads = parseArguments( argc, argv );
 
@@ -78,24 +78,24 @@ int main( int argc, char **argv )
       	threads.emplaceBack( parsePages, nullptr );
 
    	fb::String userInput;
-   	do 
+   	do
          {
    		if ( userInput == "status" || userInput == "s" )
    			{
    			print_tcp_status( );
-   			std::cout << "Num pages parsed in this process " 
+   			std::cout << "Num pages parsed in this process "
                   << get_num_parsed( ) << std::endl;
    			continue;
    			}
-   		if ( userInput == "shutdown" ) 
+   		if ( userInput == "shutdown" )
             {
    			std::cout << "Are you sure? (type 'YES')\n";
    			std::cin >>  userInput;
-   			if ( userInput == "YES" ) 
+   			if ( userInput == "YES" )
                {
    				std::cout << "Really really sure? (type 'JAEYOON')\n";
    				std::cin >> userInput;
-   				if ( userInput == "JAEYOON" ) 
+   				if ( userInput == "JAEYOON" )
                   {
    					std::cout << "OK... Bye World" <<  std::endl;
    					break;
@@ -107,7 +107,7 @@ int main( int argc, char **argv )
             {
             std::cout << "Provide a filename for urls to block\n";
             std::cin >> userInput;
-            
+
             addBlockedHosts( userInput );
             }
          }
@@ -118,12 +118,12 @@ int main( int argc, char **argv )
       std::cout << "after initiate shutdown." << std::endl;
       page_store_shutdown( );
       std::cout << "Shutting down." << std::endl;
-      for ( auto &thread : threads ) 
+      for ( auto &thread : threads )
          {
          thread.join( );
          std::cout << "joined" << std::endl;
          }
-      } 
+      }
    catch ( const ArgError & )
       {
 		std::cerr << "Usage: " << argv[0]
@@ -139,9 +139,9 @@ int main( int argc, char **argv )
 		return 1;
       }
 
-fb::SizeT parseArguments( int argc, char **argv ) 
+fb::SizeT parseArguments( int argc, char **argv )
    {
-	option long_opts[ ] = 
+	option long_opts[ ] =
       {
 		{ "hostname",  required_argument, nullptr, 'o' },
 		{ "port",      required_argument, nullptr, 'p' },
@@ -159,9 +159,9 @@ fb::SizeT parseArguments( int argc, char **argv )
 
 	while ( ( choice =
 					getopt_long( argc, argv, "o:p:ht:u", long_opts, &option_idx ) )
-				 != -1 ) 
+				 != -1 )
       {
-		switch (choice) 
+		switch (choice)
          {
    		case 'p':
 				port = optarg;
@@ -187,7 +187,7 @@ fb::SizeT parseArguments( int argc, char **argv )
 
 	auto logfileloc = rootDir + WorkerLogFile;
 	logfile.open( logfileloc.data( ) );
-	if ( !logfile.is_open( ) ) 
+	if ( !logfile.is_open( ) )
       {
 		std::cerr << "Could not open logfile `" << logfileloc
 				<< "'." << std::endl;
@@ -212,19 +212,19 @@ fb::SizeT parseArguments( int argc, char **argv )
 			static_cast< fb::SizeT >( stoll( threads ) );
    }
 
-void * parsePages( void * ) 
+void * parsePages( void * )
    {
-   while ( true ) 
+   while ( true )
       {
 		auto urlPair = get_url_to_parse( );
 
-		if ( urlPair.second.empty( ) ) 
+		if ( urlPair.second.empty( ) )
          {
 			endCV.signal( );
          return nullptr;
 			}
 
-		try 
+		try
          {
          ParsedUrl urlInitial( urlPair.second );
 
@@ -245,14 +245,16 @@ void * parsePages( void * )
 			Parser parser( result, std::move( url ) );
 			parser.parse( );
 
-			fb::Vector<fb::String> urls;
-			for( auto iter : parser.urls )
-				urls.pushBack( iter );
+            if constexpr (Parser::addUrls) {
+                fb::Vector<fb::String> urls;
+                for( auto iter : parser.urls )
+                    urls.pushBack( iter );
+                add_parsed( { urlPair.first, urls } );
+            }
 
-			add_parsed( { urlPair.first, urls } );
 			addPage( std::move(parser.extractPage( urlPair.first ) ) );
 			}
-      catch ( ConnectionException e ) 
+      catch ( ConnectionException e )
          {
 			}
       }

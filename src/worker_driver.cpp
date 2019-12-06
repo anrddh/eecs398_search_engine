@@ -127,13 +127,14 @@ int main( int argc, char **argv )
    catch ( const ArgError & )
       {
 		std::cerr << "Usage: " << argv[0]
-      		<< " [-p port] [-o hostname] [-t threads]\n\n"
+      		<< " [-p port] [-o hostname] [-t threads] [-u urls]\n\n"
       		<< "The `port' parameter accepts an integer in the range "
       		<< "[1024, 65536). Default value: `" << DefaultPort << "'\n"
       		<< "The `hostname' parameter accepts a valid filename. Default value: `"
       		<< DefaultHostname << "'\n"
       		<< "The `threads' parameter accepts a valid non-negative integer. Default value: `"
-      		<< NumThreadsToSpawn << "'\n";
+      		<< NumThreadsToSpawn << "'\n"
+            << "The `urls' parameter sets a flag to not add urls. Default value: `true'\n";
 
 		return 1;
       }

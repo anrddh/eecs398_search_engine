@@ -9,7 +9,7 @@
 test_parser = executable('test_parser',
                       ['test_parser.cpp'], worker_source_files,
                       include_directories : inc,
-                      dependencies: [readline_dep, threads_dep]))
+                      dependencies: [readline_dep, threads_dep])
 
 test_bloomfilter = executable('test_bloomfilter',
                               ['main.cpp',

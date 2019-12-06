@@ -58,7 +58,9 @@ int main (int, char **argv){
 
    String domain = "https://en.wikipedia.org/wiki/Commutative_algebra";
 
-   auto parser = Parser(content, filename);
+   {
+   bool addUrls = false;
+   auto parser = Parser(content, filename, addUrls);
 
    parser.parse();
    auto retstr = parser.getParsedResult();
@@ -67,7 +69,7 @@ int main (int, char **argv){
 
    std::ofstream outfile;
    // outfile.open("htmlstagless/" + filename.substr(6));
-   outfile.open(  (filename + "_tagless").data() );
+   outfile.open(  (filename + "_tagless_not_add_urls").data() );
 
    // std::cout << retstr << std::endl;
 
@@ -75,10 +77,31 @@ int main (int, char **argv){
    outfile.close();
 
    std::cout << parser.wordFlags.size() << std::endl;
-   for( const auto i : parser.wordFlags )
-      printFlag(i);
+   // for( const auto i : parser.wordFlags )
+      // printFlag(i);
+   }
 
-   uint8_t aaa = 4;
-   std::cout << aaa << std::endl;
+   {
+   bool addUrls = true;
+   auto parser = Parser(content, filename, addUrls);
+
+   parser.parse();
+   auto retstr = parser.getParsedResult();
+
+   parser.printUrls();
+
+   std::ofstream outfile;
+   // outfile.open("htmlstagless/" + filename.substr(6));
+   outfile.open(  (filename + "_tagless_add_urls").data() );
+
+   // std::cout << retstr << std::endl;
+
+   outfile << retstr;
+   outfile.close();
+
+   std::cout << parser.wordFlags.size() << std::endl;
+   // for( const auto i : parser.wordFlags )
+   //    printFlag(i);
+   }
 
 }

@@ -39,9 +39,10 @@ public:
 	fb::UnorderedSet<fb::String> urls;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
+	bool addUrls;
 
-	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in )
-        : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false)
+	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in, bool addUrls_in )
+        : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false), addUrls( addUrls_in )
 	{
 		tagStack.pushBack( "DEFAULT" );
 
@@ -449,27 +450,27 @@ private:
 
         index = seekSubstr( index, "<"_sv );
 
-        fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
-        fb::String url(urlView.data(), urlView.size());
-        fb::StringView anchorText = content.substr(tagEndIndex,
-                                                  index - tagEndIndex );
+        if( addUrls )
+	        {
+	        fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
+	        fb::String url(urlView.data(), urlView.size());
+	        fb::StringView anchorText = content.substr(tagEndIndex,
+	                                                  index - tagEndIndex );
 
-		index = seekSubstrIgnoreCase( index, "</a"_sv );
+			if ( isActualUrl( url ) )
+				{
+				// add anchor text to parsed result
+				addToResult( ' ' );
 
-		if ( isActualUrl( url ) )
-			{
-			// add anchor text to parsed result
-			addToResult( ' ' );
+				for ( char i : anchorText )
+					addToResult( i );
+				addToResult( ' ' );
 
-			// fb::SizeT parsedIndex = parsedResult.size( );
-			for ( char i : anchorText )
-				addToResult( i );
-			addToResult( ' ' );
-
-			addUrlAnchorTest(std::move(url) );
-                             // parsedResult.substr(parsedIndex));
+				addUrlAnchorTest(std::move(url) );
+				}
 			}
 
+		index = seekSubstrIgnoreCase( index, "</a"_sv );
 		index = seekSubstr( index, ">"_sv );
 
 		return index;

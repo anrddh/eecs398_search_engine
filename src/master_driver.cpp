@@ -228,15 +228,6 @@ int main(int argc, char **argv) try {
        auto frontierloc = rootDir + FrontierBinsPrefix;
        Frontier::init(frontierloc);
 
-       auto anchorsloc = rootDir + AnchorStoreFile;
-       AnchorStore::init(anchorsloc);
-
-       auto adjloc = rootDir + AdjStoreFile;
-       AdjStore::init(adjloc);
-
-    auto urlinfo = rootDir + UrlInfoTableFile;
-    //UrlInfoTable::init(urlinfo);
-
     AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
     return info.getBoundSocket();
 } catch( const SocketException& ) {

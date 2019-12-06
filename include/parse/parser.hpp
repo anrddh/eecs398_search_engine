@@ -43,12 +43,12 @@ public:
 
 	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in, bool addUrls_in )
         : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false), addUrls( addUrls_in )
-	{
+		{
 		tagStack.pushBack( "DEFAULT" );
 
 		for ( int i = 0; i < 4; ++i )
 			flagCounter[i] = 0;
-	}
+		}
 
    // This function will invalidate the parser object
    // Written by Jaeyoon Kim
@@ -450,24 +450,21 @@ private:
 
         index = seekSubstr( index, "<"_sv );
 
+        fb::StringView anchorText = content.substr(tagEndIndex,
+               index - tagEndIndex );
+
+		addToResult( ' ' );
+
+		for ( char i : anchorText )
+			addToResult( i );
+		addToResult( ' ' );
+
         if( addUrls )
 	        {
 	        fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
 	        fb::String url(urlView.data(), urlView.size());
-	        fb::StringView anchorText = content.substr(tagEndIndex,
-	                                                  index - tagEndIndex );
-
 			if ( isActualUrl( url ) )
-				{
-				// add anchor text to parsed result
-				addToResult( ' ' );
-
-				for ( char i : anchorText )
-					addToResult( i );
-				addToResult( ' ' );
-
-				addUrlAnchorTest(std::move(url) );
-				}
+				addUrlAnchorTest( std::move(url) );
 			}
 
 		index = seekSubstrIgnoreCase( index, "</a"_sv );

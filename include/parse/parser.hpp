@@ -39,7 +39,7 @@ public:
 	fb::UnorderedSet<fb::String> urls;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
-	bool addUrls;
+	constexpr bool addUrls;
 
 	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in, bool addUrls_in )
         : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false), addUrls( addUrls_in )
@@ -459,7 +459,7 @@ private:
 			addToResult( i );
 		addToResult( ' ' );
 
-        if( addUrls )
+        if constexpr ( addUrls )
 	        {
 	        fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
 	        fb::String url(urlView.data(), urlView.size());

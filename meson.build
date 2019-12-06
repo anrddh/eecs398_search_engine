@@ -49,6 +49,10 @@ executable('worker',
                       include_directories: inc,
                       dependencies: [readline_dep, threads_dep])
 
+executable('build_index_chunk',
+            build_index_chunk_driver,
+            include_directories: inc)
+
 executable('build_index',
             build_index_driver,
             include_directories: inc)

@@ -19,6 +19,8 @@ server_source_files += files('bolt/bolt.cpp',
 
 build_index_driver = files('build_index.cpp')
 
+build_index_chunk_driver = files('build_index_chunk.cpp')
+
 build_index_test_driver = files('index/index_test.cpp')
 
 print_page_store_driver = files('index/print_page_store.cpp')

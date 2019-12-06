@@ -5,26 +5,58 @@
 
 #include "fb/string.hpp"
 #include "index/index_builder.hpp"
+#include "disk/constants.hpp"
 
-int main(int argc, char ** argv)
+int main( int argc, char ** argv )
    {
-   if(argc != 3) 
+   if( argc != 2 )
       {
-         fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" path number");
+      std::cout << "USAGE: " << argv[0] << " [PATH TO INDEX FOLDER]" << std::endl;
+      exit( 1 );
       }
-   fb::String path(argv[1]);
-   fb::String Number(argv[2]);
-   int f = open((path + "PageStore" + Number).data(), O_RDWR);
-   if(f < 0)
-      {
-      // write debug message
-      exit(1);
-      }
-   struct stat details;
-   fstat(f, &details);
 
-   uint64_t * start = (uint64_t *) mmap(nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, f, 0);
-   IndexBuilder<8> builder(path);
-   builder.build_chunk(start, fb::stoi(Number));
-   std::cout << "DONE" << std::endl;
+   fb::String path( argv[1] );
+
+   bool initIndexCounter = false;
+   int indexCounterFile = open((path + "IndexCounter").data(), O_RDWR);
+   if(indexCounterFile < 0)
+      {
+      indexCounterFile = open((path + "IndexCounter").data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+      initIndexCounter = true;
+
+      if(indexCounterFile < 0)
+         {
+         std::cout << "ERROR: No IndexCounter was found and could not create one" << std::endl; 
+         }
+      } 
+ 
+   ftruncate(indexCounterFile, sizeof(int));
+   int &indexCounter = *(int *) mmap(nullptr, sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, indexCounterFile, 0);
+   if( initIndexCounter )
+      {
+      indexCounter = 0;
+      }
+
+   
+
+   for(int i = indexCounter + 1; i < end; ++i)
+      {
+      IndexBuilder<8> builder(path);
+      fb::String PageStoreFileName = (path + "PageStore" + fb::toString(i));
+      std::cout << PageStoreFileName << std::endl;
+      int PageStoreFile = open(PageStoreFileName.data(), O_RDWR);
+      if(PageStoreFile < 0)
+         {
+         std::cout << "ERROR: PageStore" << i << " not found" << std::endl;
+         }
+      else
+         {
+         struct stat details;
+         fstat(PageStoreFile, &details);
+         uint64_t * start = (uint64_t *) mmap(nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, PageStoreFile, 0);
+
+         builder.build_chunk(start, i);
+         }
+      ++indexCounter; 
+      }
    }

@@ -49,6 +49,7 @@ int main(int argc, char ** argv )
          }
 
       fb::UniquePtr<AndISR> andISR = fb::makeUnique<AndISR>( std::move( ISRs ), reader.OpenDocumentISR( ) );
+      /*
       ConstraintSolver solver( std::move( andISR ), reader.OpenDocumentISR( ), std::move( wordIsrs ), 0);
       solver.GetDocFrequencies( );
       fb::Vector<rank_stats> rankingData = solver.GetDocumentsToRank( );
@@ -60,14 +61,14 @@ int main(int argc, char ** argv )
 
 
 
-      /*
-      std::cout << andISR.GetDocumentId( ) << std::endl;
+      /*/
+      std::cout << andISR->GetDocumentId( ) << std::endl;
 
-      while(fb::UniquePtr<IndexInfo> info = andISR.NextDocument( ))
+      while(fb::UniquePtr<IndexInfo> info = andISR->NextDocument( ))
          {
-         std::cout << andISR.GetDocumentId( ) << std::endl;
+         std::cout << andISR->GetDocumentId( ) << std::endl;
          }
-      */
+      //*/
       }
    else
       {

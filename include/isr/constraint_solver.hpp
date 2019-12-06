@@ -23,11 +23,12 @@ public:
          doc_frequencies[i] = wordIsrs[i]->GetDocumentCount( );
          }
 
-      saveMatch( );
+      fb::UniquePtr<IndexInfo> info = mainIsr->GetCurrentInfo( );
 
-      while( fb::UniquePtr<IndexInfo> info = mainIsr->NextDocument( ) )
+      while( info )
          {
          saveMatch( );
+         info = mainIsr->NextDocument( );
          }
       }
 

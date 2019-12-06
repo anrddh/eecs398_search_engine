@@ -57,7 +57,10 @@ AndISR::AndISR( fb::Vector<fb::UniquePtr<ISR>> ISRs, fb::UniquePtr<DocumentISR> 
       isAtEnd |= isr->AtEnd( );
       }
 
-   Seek( 1 );
+   if(!isAtEnd)
+      {
+      Seek( 1 );
+      }
    } 
 
 fb::UniquePtr<IndexInfo> AndISR::Seek( Location target )
@@ -108,7 +111,14 @@ fb::UniquePtr<IndexInfo> AndISR::NextDocument( )
 
 fb::UniquePtr<IndexInfo> AndISR::GetCurrentInfo( )
    {
-   return fb::makeUnique<AndInfo>(nearestStartLocation, farthestEndLocation);
+   if(isAtEnd)
+      {
+      return fb::UniquePtr<IndexInfo>( );
+      }
+   else
+      {
+      return fb::makeUnique<AndInfo>(nearestStartLocation, farthestEndLocation);
+      }
    }
 
 bool AndISR::AtEnd( )

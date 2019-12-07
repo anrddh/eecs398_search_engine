@@ -12,6 +12,7 @@
 #include "isr/document_isr.hpp"
 #include "isr/and_isr.hpp"
 #include "isr/or_isr.hpp"
+#include "isr/phrase_isr.hpp"
 #include "isr/constraint_solver.hpp"
 
 int main(int argc, char ** argv )
@@ -40,7 +41,7 @@ int main(int argc, char ** argv )
 
    if(argc > 3)
       {
-      fb::Vector<fb::UniquePtr<ISR>> ISRs;
+      fb::Vector<fb::UniquePtr<WordISR>> ISRs;
       fb::Vector<fb::UniquePtr<WordISR> > wordIsrs;
       for( int i = 2;  i < argc;  ++i )
          {
@@ -49,9 +50,9 @@ int main(int argc, char ** argv )
          wordIsrs.pushBack( reader.OpenWordISR( word ) );
          }
 
-      fb::UniquePtr<OrISR> orISR = fb::makeUnique<OrISR>( std::move( ISRs ), reader.OpenDocumentISR( ) );
+      fb::UniquePtr<PhraseISR> phraseISR = fb::makeUnique<PhraseISR>( std::move( ISRs ), reader.OpenDocumentISR( ) );
       //*
-      ConstraintSolver solver( std::move( orISR ), reader.OpenDocumentISR( ), std::move( wordIsrs ), 0);
+      ConstraintSolver solver( std::move( phraseISR ), reader.OpenDocumentISR( ), std::move( wordIsrs ), 0);
       solver.GetDocFrequencies( );
       fb::Vector<rank_stats> rankingData = solver.GetDocumentsToRank( );
       

@@ -26,7 +26,8 @@ int main( int argc, char ** argv )
 
       if(indexCounterFile < 0)
          {
-         std::cout << "ERROR: No IndexCounter was found and could not create one" << std::endl; 
+         std::cout << "ERROR: No IndexCounter file was found and could not create one" << std::endl; 
+         exit(1);
          }
       } 
  
@@ -37,7 +38,13 @@ int main( int argc, char ** argv )
       indexCounter = 0;
       }
 
-   
+   fb::String PageStoreCounterFileName = fb::String(path.begin(), path.end() - 1) + PageStoreCounterFile;
+   int PageStoreCounterFile = open(PageStoreCounterFileName.data( ), O_RDWR);
+   if( !PageStoreCountereFile )
+      {
+      std::cout << "ERROR: No PageStoreCounter file was found" << std::endl;
+      exit(1);
+      }
 
    for(int i = indexCounter + 1; i < end; ++i)
       {

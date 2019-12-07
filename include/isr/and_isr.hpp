@@ -34,7 +34,7 @@ public:
    virtual fb::UniquePtr<IndexInfo> Seek( Location target );
    virtual fb::UniquePtr<IndexInfo> GetCurrentInfo( );
    virtual bool AtEnd( );
-   uint32_t GetDocumentId( );
+   virtual uint32_t GetDocumentId( );
 
 private:
    void seekAllPast(Location target);

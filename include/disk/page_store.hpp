@@ -13,7 +13,7 @@
 #include <fb/cv.hpp>
 #include <pthread.h>
 
-constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
+constexpr fb::SizeT numPages = 100000; //TODO: small for testing, raise for real deal
 extern std::atomic<fb::SizeT> NumThreads;
 
 // Number of pages parsed in this process

@@ -49,8 +49,12 @@ namespace fb {
         while (is && (c = is.peek()) && isspace(c))
             is.get();
 
+        std::cout << "Skipped whitespace\n";
+
         while (is && (c = is.peek()) && !isspace(c))
             str += is.get();
+
+        std::cout << str;
 
         return is;
     }
@@ -89,11 +93,8 @@ namespace fb {
         ToStringConvErr(const char *msg_) : Exception(msg_) {}
     };
 
-    template <typename T>
-    String toString(T);
 
-    template <>
-    inline String toString<int>( int value ) {
+    inline String toString( int value ) {
         auto num = snprintf(nullptr, 0, "%d", value);
         if (num <= 0)
             throw ToStringConvErr("");
@@ -105,8 +106,7 @@ namespace fb {
         return str;
     }
 
-    template <>
-    inline String toString<unsigned long>( unsigned long value ) {
+    inline String toString( unsigned long value ) {
         auto num = snprintf(nullptr, 0, "%lu", value);
         if (num <= 0)
             throw ToStringConvErr("");
@@ -118,8 +118,7 @@ namespace fb {
         return str;
     }
 
-    template <>
-    inline String toString<unsigned long long>( unsigned long long value ) {
+    inline String toString( unsigned long long value ) {
         auto num = snprintf(nullptr, 0, "%llu", value);
         if (num <= 0)
             throw ToStringConvErr("");

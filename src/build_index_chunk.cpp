@@ -12,6 +12,7 @@ int main(int argc, char ** argv)
       {
          fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" path number");
          std::cout << ErrorMessage << std::endl;
+         exit(1);
       }
    fb::String path(argv[1]);
    fb::String Number(argv[2]);
@@ -19,6 +20,7 @@ int main(int argc, char ** argv)
    if(f < 0)
       {
       // write debug message
+      std::cout << "ERROR OPENING FILE" << std::endl; 
       exit(1);
       }
    struct stat details;

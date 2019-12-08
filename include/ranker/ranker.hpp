@@ -20,12 +20,6 @@ using namespace std;
 
 constexpr TOTAL_DOCUMENTS = 1;
 
-struct rank_stats{
-	uint64_t unique_doc_id; //possibly change to storing chunk index and offset
-	unsigned int total_term_count; //number of words in this document
-	vector<unsigned int> term_freq; //frequencies of each of the words in the query
-};
-
 class Ranker{
 	bool operator()(pair<uint64_t,uint64_t> &lhs, pair<uint64_t,uint64_t> &rhs){
 		return lhs.second < rhs.second;

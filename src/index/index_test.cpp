@@ -56,5 +56,6 @@ int main(int argc, char* argv[]) {
 	reconstruct(all, words, original);
 	//std::cout << "original: " << original.size() << std::endl;
 	print_recon(original);
+	//std::cout << "word count: " << words.size() << std::endl;
 	//std::cout << "DONE" << std::endl;
 }

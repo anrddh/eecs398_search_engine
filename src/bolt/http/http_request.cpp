@@ -1,4 +1,4 @@
-#include "bolt/http/http_request.hpp"
+#include <bolt/http/http_request.hpp>
 
 namespace {
 HttpType getHttpType(fb::String type) {
@@ -26,7 +26,7 @@ HttpRequest::HttpRequest(fb::UniquePtr<HttpConnection>& conn) {
   parsePath(bf);
   parseHeaders(bf);
 }
- 
+
 HttpType HttpRequest::getType() { return httpType; }
 
 fb::String HttpRequest::getPath() { return path; }
@@ -46,15 +46,17 @@ void HttpRequest::parseType( BufferedReader& bf ) {
   httpType = getHttpType( typeStr );
 }
 
-void HttpRequest::parsePath( BufferedReader& bf ) 
-  { 
-  fb::String fullPath = bf.nextWord( ); 
+void HttpRequest::parsePath( BufferedReader& bf )
+  {
+  fb::String fullPath = bf.nextWord( );
   char * start = fullPath.data( );
   auto iter = fullPath.begin( );
   for( ; iter != fullPath.end( ) && *iter != '?'; ++iter )
     ;
   path = fb::String( fullPath.begin( ), iter );
-  fb::String options = fb::String( ++iter, fullPath.end( ) );
+  if (*iter == '?')
+      ++iter;
+  fb::String options ( iter, fullPath.end( ) );
   if( !options.empty( ) )
     {
     auto iter = options.begin( );
@@ -66,7 +68,7 @@ void HttpRequest::parsePath( BufferedReader& bf )
 
       fb::String key(keyStart, iter);
 
-      if( iter != options.end( ) ) 
+      if( iter != options.end( ) )
         {
         ++iter;
         }

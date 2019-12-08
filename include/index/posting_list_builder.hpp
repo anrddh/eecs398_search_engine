@@ -29,7 +29,7 @@ public:
       rankingData[1] = numOccurences;
 
       skipTableStart = (unsigned int *) (beginning + (word.size() + 1) + getSizeOfRankingData()); // past word and past the num of documents and num of occurences of word
-      std::memset(skipTableStart, 0, getSizeOfSkipTable(NUM_SKIP_TABLE_BITS)); // 0 out skip table
+      memset(skipTableStart, 0, getSizeOfSkipTable(NUM_SKIP_TABLE_BITS)); // 0 out skip table
 
       currentPostPosition = beginning + (word.size() + 1) + getSizeOfRankingData() + getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
 

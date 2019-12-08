@@ -5,7 +5,6 @@
 
 #include "fb/string.hpp"
 #include "index/index_builder.hpp"
-#include "disk/constants.hpp"
 
 int main( int argc, char ** argv )
    {
@@ -37,7 +36,7 @@ int main( int argc, char ** argv )
       {
       indexCounter = 0;
       }
-
+/*
    fb::String PageStoreCounterFileName = fb::String(path.begin(), path.end() - 1) + PageStoreCounterFile;
    int PageStoreCounterFile = open(PageStoreCounterFileName.data( ), O_RDWR);
    if( !PageStoreCountereFile )
@@ -45,7 +44,8 @@ int main( int argc, char ** argv )
       std::cout << "ERROR: No PageStoreCounter file was found" << std::endl;
       exit(1);
       }
-
+*/
+   int end = 5;
    for(int i = indexCounter + 1; i < end; ++i)
       {
       IndexBuilder<8> builder(path);

@@ -64,6 +64,13 @@ namespace fb {
         BasicString(const BasicString &) = default;
         BasicString & operator=(const BasicString &) = default;
 
+        template <typename It>
+        BasicString(It a, It b) {
+            for ( ; a != b && a != 0; ++a)
+               buf.pushBack(*a);
+            buf.pushBack(0);
+        }
+
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= size())

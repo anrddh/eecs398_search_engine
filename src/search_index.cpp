@@ -48,22 +48,53 @@ int main(int argc, char ** argv )
          if(argv[i][0] == '!')
             {
             fb::String word(argv[i] + 1);
-            std::cout << "Excluded: " << word << std::endl;
-            ExcludeWords.pushBack( reader.OpenWordISR( word ) );
+            std::cout << "!" << word;
+            if( reader.WordExists( word ) )
+               {
+               ExcludeWords.pushBack( reader.OpenWordISR( word ) );
+               std::cout << " does exist" << std::endl;
+               }
+            else
+               {
+               std::cout << " does not exists" << std::endl;
+               }
             }
          else
             {
             fb::String word(argv[i]); 
-            IncludeWords.pushBack( reader.OpenWordISR( word ) );
-            WordIsrs.pushBack( reader.OpenWordISR( word ) );
+            std::cout << word;
+            if( reader.WordExists( word ) )
+               {
+               IncludeWords.pushBack( reader.OpenWordISR( word ) );
+               WordIsrs.pushBack( reader.OpenWordISR( word ) );
+               std::cout << " does exist" << std::endl;
+               }
+            else
+               {
+               std::cout << " does not exist" << std::endl;
+               }
             }
          }
 
+      if( IncludeWords.empty( ) )
+         {
+         std::cout << "no words in the query are in the index" << std::endl;
+         }
       fb::UniquePtr<AndISR> IncludeIsr = fb::makeUnique<AndISR>( std::move( IncludeWords ), reader.OpenDocumentISR( ) );
-      fb::UniquePtr<AndISR> ExcludeIsr = fb::makeUnique<AndISR>( std::move( ExcludeWords ), reader.OpenDocumentISR( ) );
-      fb::UniquePtr<ContainerISR> ContainerIsr = fb::makeUnique<ContainerISR>( std::move( IncludeIsr ), std::move( ExcludeIsr ), reader.OpenDocumentISR( ) );
+      fb::UniquePtr<ISR> Final;
+
+      if( ExcludeWords.empty( ) )
+         {
+         Final = std::move( IncludeIsr );
+         }
+      else
+         {
+         fb::UniquePtr<AndISR> ExcludeIsr = fb::makeUnique<AndISR>( std::move( ExcludeWords ), reader.OpenDocumentISR( ) );
+         Final = fb::makeUnique<ContainerISR>( std::move( IncludeIsr ), std::move( ExcludeIsr ), reader.OpenDocumentISR( ) );
+         }
+
       //*
-      ConstraintSolver solver( std::move( ContainerIsr ), reader.OpenDocumentISR( ), std::move( WordIsrs ), 0);
+      ConstraintSolver solver( std::move( Final ), reader.OpenDocumentISR( ), std::move( WordIsrs ), 0);
       solver.GetDocFrequencies( );
       fb::Vector<rank_stats> rankingData = solver.GetDocumentsToRank( );
       

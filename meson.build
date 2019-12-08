@@ -72,3 +72,7 @@ executable('search_index',
 executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
+
+executable('isr_example',
+            isr_example_driver,
+            include_directories: inc)

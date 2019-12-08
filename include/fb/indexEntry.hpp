@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cassert>
 #include "indexEntryImpl.hpp" // where implementation details are hidden
-
+#include <iostream> //delete later
 
 namespace fb {
 // Bit layout - first two bits are dedicated for indicating the number of bytes

@@ -142,7 +142,6 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     for ( SizeT i = 0;  i < NUM_TRY;  ++i )
         rand_num[ i ] = rand_r( &localSeed );
 
-    SizeT region = rand_r( &localSeed );
     localSeedM.unlock( );
 
     Vector<SizeT> urls_to_return;
@@ -153,7 +152,7 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     // Note that it is possible that same url might be checked multiple times
     // However, this is not likely since there should be many urls in here each time
     for ( auto i = NUM_SAMPLE; i < NUM_TRY && !toParse.empty(); ++i ) {
-        const SizeT idx = search_index(rand_num[i], region);
+        const SizeT idx = search_index(rand_num[i]);
         urls_to_return.pushBack( toParse[ idx ].offset ) ;
         toParse[ idx ] = toParse.back();
         toParse.popBack( );

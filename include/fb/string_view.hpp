@@ -320,6 +320,13 @@ namespace fb {
             return fnvHash( data.data(), data.size() );
         }
     };
+
+    template <>
+    struct HashPairGen<StringView> {
+        Pair<SizeT, SizeT> operator() (StringView data) const noexcept {
+            return fnvHashPair( data.data(), data.size() );
+        }
+    };
 }
 
 constexpr fb::StringView operator "" _sv(const char *str, unsigned long len) noexcept {

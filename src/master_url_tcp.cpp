@@ -1,7 +1,8 @@
 // Created by Jaeyoon Kim 11/15/2019
 #include "tcp/master_url_tcp.hpp"
 #include "tcp/url_tcp.hpp"
-#include "disk/UrlTables.hpp"
+#include "disk/frontier.hpp"
+#include "disk/url_store.hpp"
 #include "fb/vector.hpp"
 #include <iostream>
 
@@ -10,7 +11,7 @@ using namespace fb;
 void send_urls(int sock, const Vector<SizeT>& urls_to_parse) {
    send_int(sock, urls_to_parse.size());
 
-   for (int i = 0; i < urls_to_parse.size(); ++i) {
+   for (SizeT i = 0; i < urls_to_parse.size(); ++i) {
       send_uint64_t(sock, urls_to_parse[i]);
       send_str(sock, UrlStore::getStore().getUrl( urls_to_parse[ i ] ) );
    }
@@ -26,8 +27,7 @@ Vector<ParsedPage> recv_parsed_pages(int sock) {
       num_links = recv_int( sock );
       for (int j = 0; j < num_links; ++j ) {
          String link = recv_str( sock );
-         String anchor_text = recv_str( sock );
-         pp.links.pushBack( fb::make_pair(std::move(link), std::move(anchor_text)) );
+         pp.links.emplaceBack( std::move(link) );
       }
       recv_pages.pushBack( std::move(pp) );
    }

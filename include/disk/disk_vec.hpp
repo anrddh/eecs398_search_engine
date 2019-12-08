@@ -8,6 +8,8 @@
 #include <fb/string_view.hpp>
 #include <fb/file_descriptor.hpp>
 #include <fb/algorithm.hpp>
+#include <disk/logfile.hpp>
+#include <debug.hpp>
 
 #include <iostream> // TODO delete
 #include <atomic>
@@ -17,9 +19,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-//TODO: Change back! just for testing its smaller!
-//constexpr fb::SizeT MAXFILESIZE = 0x1000000000; // 128 GiB
-constexpr fb::SizeT MAXFILESIZE = 0x20000000; // 512 MiB
+constexpr fb::SizeT MAXFILESIZE = 0x48C27395000; // 5 TB
 
 // This is the class that represents an array saved on disk
 // ASSUMES that there won't be more than 128 Gb of data
@@ -31,29 +31,31 @@ constexpr fb::SizeT MAXFILESIZE = 0x20000000; // 512 MiB
 template <typename T>
 class DiskVec {
 public:
-    DiskVec(fb::StringView fname, bool init = false)  {
-        fb::FileDesc fd = open(fname.data(),
-                               O_RDWR | O_CREAT,
-                               S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+    DiskVec(fb::StringView fname, fb::SizeT file_size_ = MAXFILESIZE)
+        : file_size(file_size_), fd(open(fname.data(),
+                  O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH))  {
 
-        if (ftruncate(fd, MAXFILESIZE))
+        if (ftruncate(fd, file_size))
             throw fb::Exception("SavedObj: Failed to truncate file.");
 
-        auto ptr = mmap(nullptr, MAXFILESIZE, PROT_WRITE | PROT_READ | PROT_EXEC,
+        auto ptr = mmap(nullptr,
+                        file_size_, PROT_WRITE | PROT_READ | PROT_EXEC,
                         MAP_SHARED, fd, 0);
 
         if (ptr == (void *) -1)
             throw fb::Exception("SavedObj: Failed to mmap.");
 
-        if (init)
-            cursor = new (ptr) std::atomic<fb::SizeT>(0);
-        else
-            cursor = static_cast<std::atomic<fb::SizeT> *>(ptr);
+        cursor = new (ptr)
+            std::atomic<fb::SizeT>(*static_cast<fb::SizeT *>(ptr));
         filePtr = reinterpret_cast<T *>(cursor + 1);
     }
 
     ~DiskVec() noexcept {
-        munmap(static_cast<void *>(cursor), MAXFILESIZE);
+        munmap(static_cast<void *>(cursor), file_size);
+    }
+
+    int file_descriptor() const {
+        return fd;
     }
 
     [[nodiscard]] constexpr T * data() const noexcept {
@@ -101,6 +103,14 @@ public:
         return filePtr + *cursor;
     }
 
+    const T * begin() const {
+        return filePtr;
+    }
+
+    const T * end() const {
+        return filePtr + *cursor;
+    }
+
     T & front() {
         return *begin();
     }
@@ -110,6 +120,8 @@ public:
     }
 
 private:
+    fb::SizeT file_size;
     T *filePtr;
+    fb::FileDesc fd;
     std::atomic<fb::SizeT> *cursor;
 };

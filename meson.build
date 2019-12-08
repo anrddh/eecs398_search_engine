@@ -2,7 +2,7 @@ project('fantastic_bugs', 'cpp',
         version : '0.0.1',
         meson_version : '>= 0.50.0',
         default_options : [ 'warning_level=3',
-                            'buildtype=debugoptimized',
+                            'buildtype=debug',
                             'debug=true',
                             'cpp_std=c++17' ])
 
@@ -26,6 +26,7 @@ project_sources = []
 master_source_files = []
 worker_source_files = []
 server_source_files = []
+page_store_total_files = []
 project_header_files = []
 
 
@@ -43,6 +44,12 @@ executable('server',
            server_driver, server_source_files,
            include_directories: inc)
 
-#executable('worker',
-#           worker_driver, worker_source_files,
-#           include_directories: inc)
+executable('worker',
+           worker_driver, worker_source_files,
+                      include_directories: inc,
+                      dependencies: [readline_dep, threads_dep])
+
+
+executable('page_store_total',
+            page_store_total_driver, page_store_total_files,
+            include_directories: inc)

@@ -22,9 +22,9 @@
 
 class UrlStore {
 public:
-    static void init(fb::StringView filename, bool init) {
+    static void init(fb::StringView filename) {
         delete ptr;
-        ptr = new UrlStore(filename, init);
+        ptr = new UrlStore(filename);
         ptr->addUrl("Dummy");
     }
 
@@ -43,8 +43,14 @@ public:
         return { urls.data() + idx };
     }
 
+    // This function is only supposed to be used by
+    // bloom filter constructor !!
+    DiskVec<char>& access_disk() {
+       return urls;
+    }
+
 private:
-    UrlStore(fb::StringView filename, bool init) : urls(filename, init) {}
+    UrlStore(fb::StringView filename) : urls(filename) {}
 
     static UrlStore *ptr;
     DiskVec<char> urls;

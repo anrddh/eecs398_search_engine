@@ -13,15 +13,52 @@
 #include <fb/cv.hpp>
 #include <pthread.h>
 
+constexpr fb::SizeT numPages = 10000; //TODO: small for testing, raise for real deal
+extern std::atomic<fb::SizeT> NumThreads;
+
+// Number of pages parsed in this process
+fb::SizeT get_num_parsed();
+
+//singleton class for pagestore
+class PageStoreCounter{
+public:
+    static void init(fb::StringView filename) {
+        delete ptr;
+        ptr = new PageStoreCounter(filename);
+    }
+
+    static PageStoreCounter & getCounter() {
+        return *ptr;
+    }
+
+    fb::SizeT index() {
+        return PageStoreCounterFile.reserve(1);
+    }
+
+    fb::SizeT getCount() {
+        return PageStoreCounterFile.reserve(0);
+    }
+
+private:
+    PageStoreCounter(fb::StringView filename) : PageStoreCounterFile(filename) {}
+
+    static PageStoreCounter *ptr;
+    DiskVec<char> PageStoreCounterFile;
+};
 
 //TODO: Change this structure to whatever jinsoo provides
 //should in theory be just a byte, make this a lot easier if it is
 //I'm begging you, let it be a byte, i dont want to do the math if it isnt
 using WordDescriptors = uint8_t;
 
-using Page = fb::Pair<fb::SizeT, fb::Pair<fb::String, fb::Vector<WordDescriptors>>>;
+// Written by Jaeyoon
+struct Page {
+   fb::SizeT UrlOffset;
+   fb::String page_str;
+   fb::Vector<WordDescriptors> word_headers;
+};
 
-extern std::atomic<fb::SizeT> NumThreads;
+void page_store_shutdown();
 
 struct PageHeader {
     fb::SizeT beginOffset;
@@ -31,14 +68,23 @@ struct PageHeader {
 
 class PageBin {
 public:
-    PageBin(fb::StringView filename, bool init);
+    struct Error : fb::Exception {};
 
-    void addPage(fb::SizeT UrlOffset, fb::Pair<fb::String, fb::Vector<WordDescriptors>> page);
+    PageBin(fb::StringView filename);
+
+    fb::SizeT addPage(Page&& p);
 
     fb::Pair<fb::String, fb::Vector<WordDescriptors>> getPage(fb::SizeT offset);
 
+    int file_descriptor() const {
+        return Pages.file_descriptor();
+    }
+
+    fb::SizeT size(){
+        return Pages.size();
+    }
+
 private:
-    static constexpr fb::SizeT numPages = 5; //TODO: small for testing, raise for real deal
     fb::SizeT PageCount ;
     fb::SizeT PageCountOffset;
     fb::SizeT PageHeadersOffset;
@@ -48,6 +94,6 @@ private:
 
 void initializeFileName(fb::String fname);
 
-void addPage(Page page);
+void addPage(Page&& page);
 
 void * runBin(void *);

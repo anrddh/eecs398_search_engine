@@ -103,8 +103,9 @@ public:
 
     //Returns an iterator to the first element in the map
     Iterator begin() {
-        int count = 0;
-        while (count < buckets.size() && buckets[count].status != Status::Filled) count++;
+        SizeT count = 0;
+        while (count < buckets.size() && buckets[count].status != Status::Filled)
+            ++count;
         return Iterator(&buckets, count);
     }
 
@@ -136,9 +137,10 @@ public:
     //This function is for brave souls (or naive souls) only. It gives you the
     //power to change a key inside the hash table. This is likely foolish, and
     //you should make sure you have a very good reason for doing so
-    fb::Pair<K&, V&> functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
+    fb::Pair<K*, V*> functionThatIsOnlyForJaeyoonInThatOneSpecialCase(K& key){
+        (*this)[key];
         auto it = find(key);
-        return {it.bravery(), *it};
+        return {&it.bravery(), &*it };
     }
 
     // returns a reference to the value in the bucket with the key, if it
@@ -331,6 +333,19 @@ public:
     Pred key_eq() {
         return pred;
     }
+
+    // Moves this unordered map to vector
+    // invalidates this object
+    Vector<Pair<K, V>> convert_to_vector() {
+       Vector<Pair<K, V>> vec;
+       for (SizeT i = 0; i < buckets.size(); ++i) {
+          if ( buckets[i].status == Status::Filled ) {
+            vec.emplaceBack( std::move( buckets[i].key ), std::move( buckets[i].val ) );
+          }
+       }
+
+       return vec;
+    }
 private:
     SizeT num_elements = 0;
     SizeT num_ghosts = 0;
@@ -350,6 +365,26 @@ private:
                 insert(temp[i].key, temp[i].val);
             }
         }
+    }
+
+    Bucket &findPlaceToInsert(const K& key) {
+        if(num_elements+num_ghosts > buckets.size() * max_load){
+            rehash_and_grow(buckets.size() * 2);
+        }
+        SizeT desired_bucket = hash(key) % buckets.size();
+        //if the bucket is not empty
+        if(buckets[desired_bucket].status != Status::Empty){
+            //search until an empty bucket
+            while(buckets[desired_bucket].status != Status::Empty){
+                //if a bucket has the key, return
+                if(buckets[desired_bucket].status == Status::Filled && pred(buckets[desired_bucket].key, key)){
+                    return Iterator(&buckets, desired_bucket);
+                }
+                desired_bucket = (desired_bucket+1) % buckets.size();
+            }
+        }
+        //bucket is empty, or key not found so return end
+        return end();
     }
 };
 

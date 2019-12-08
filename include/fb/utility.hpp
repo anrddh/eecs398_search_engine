@@ -17,6 +17,11 @@ namespace fb {
         : first( first_in ), second( second_in )
             {
             }
+
+        Pair( T&&first_in, V&& second_in )
+        : first( std::move(first_in) ), second( std::move(second_in) )
+            {
+            }
     };
 
     template <typename T1, typename T2>

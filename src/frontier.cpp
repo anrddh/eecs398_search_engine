@@ -23,6 +23,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+// For shuffling
+#include <random>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+
 using fb::SizeT;
 using fb::Pair;
 using fb::Vector;
@@ -184,6 +190,24 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     return urls_to_return;
 }
 
+// Don't add to frontier anymore!
+void FrontierBin::shuffle( ) {
+   std::random_device rd;
+   std::mt19937 g(rd());
+   std::shuffle(toParse.begin(), toParse.end(), g);
+   std::cout << "finished shuffling one of the bins" << std::endl;
+}
+
+// Don't add to frontier anymore!
+FrontierUrl* FrontierBin::getUrlFast( ) {
+   // Reserve it!
+   SizeT val = toParse.reserve(-NUM_TRY);
+   if ( val > 100000000000 )
+     return nullptr; 
+
+   return &toParse[ val ];
+}
+
 void FrontierBin::printUrls() const {
     for (auto [url,_] : toParse)
         std::cout << UrlStore::getStore().getUrl(url) << '\n';
@@ -208,6 +232,26 @@ void Frontier::init(String prefix) {
 
 Frontier & Frontier::getFrontier() {
     return *ptr;
+}
+
+void* shuffleHelper( void *ptr ) {
+   reinterpret_cast<FrontierBin* >( ptr )->shuffle();
+   return nullptr;
+}
+
+void Frontier::shuffle() {
+   std::cout << "shuffling make sure there are no workers" << std::endl;
+   fb::Vector<fb::Thread> threads;
+   for (SizeT i = 0; i < NumFrontierBins; ++i)
+   {
+      threads.emplaceBack( shuffleHelper, (frontiers + i * sizeof(FrontierBin)));
+   }
+
+   for (fb::Thread& thread : threads) {
+      thread.join();
+   }
+
+   std::cout << "finished shuffling" << std::endl;
 }
 
 SizeT Frontier::size() const {
@@ -264,6 +308,13 @@ Vector<SizeT> Frontier::getUrl() const
    FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
    return ptr[ (++getCounter) % NumFrontierBins ].getUrl();
    }
+
+// Don't add to frontier anymore!
+FrontierUrl* Frontier::getUrlFast( ) {
+   // Reserve it!
+   FrontierBin *ptr = reinterpret_cast<FrontierBin *>(frontiers);
+   return ptr[ (++getCounter) % NumFrontierBins ].getUrlFast();
+}
 
 void Frontier::shutdown()  
    {

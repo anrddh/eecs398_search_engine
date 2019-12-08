@@ -159,6 +159,8 @@ int main(int argc, char **argv) try {
         } else if (firstWord == "print-urls"_sv) {
             line.removePrefix(firstSpace + 1);
             Frontier::getFrontier().printUrls();
+        } else if (firstWord == "shuffle"_sv) {
+            Frontier::getFrontier().shuffle();
         } else if (firstWord == "url-info"_sv) {
             line.removePrefix(firstSpace + 1);
 

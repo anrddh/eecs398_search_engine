@@ -18,7 +18,7 @@ constexpr fb::SizeT NumFrontierBins = 13;
 // we will only randomly choose from first SEARCH_RESTRICTION number of elements
 constexpr fb::SizeT SEARCH_RESTRICTION= 8388608;
 
-constexpr fb::SizeT NUM_TRY = 100000;
+constexpr fb::SizeT NUM_TRY = 10000;
 constexpr fb::SizeT NUM_SAMPLE = 3;
 
 // The minimum number of bits required to
@@ -51,12 +51,16 @@ public:
     // Does not lock! not thread safe
     void addSeen( fb::StringView url );
 
+    FrontierUrl* getUrlFast();
+
     fb::Vector<fb::SizeT> getUrl( );
 
     fb::SizeT size() const;
 
     void printUrls() const;
     fb::CV toAddQueueCV;
+
+    void shuffle( );
 
 private:
     // Needs to be locked
@@ -103,9 +107,13 @@ public:
 
     fb::Vector<fb::SizeT> getUrl() const;
 
+    FrontierUrl* getUrlFast();
+
     static void shutdown();
 
     void printUrls() const;
+
+    void shuffle();
 
 private:
     static Frontier *ptr;

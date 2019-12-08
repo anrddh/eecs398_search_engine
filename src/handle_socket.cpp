@@ -127,7 +127,8 @@ void handle_send(int sock) {
 // delete will be called on the socket
 // and the socket will be closed
 void handle_request(int sock) {
-   Vector<SizeT> urls_to_parse = Frontier::getFrontier().getUrl();
+   FrontierUrl* urls_to_parse = Frontier::getFrontier().getUrlFast();
+   assert( urls_to_parse );
    try {
       send_urls(sock, urls_to_parse);
    }

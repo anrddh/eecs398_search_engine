@@ -17,6 +17,16 @@ void send_urls(int sock, const Vector<SizeT>& urls_to_parse) {
    }
 }
 
+// fast mode
+void send_urls(int sock, const FrontierUrl* urls_to_parse) {
+   send_int(sock, NUM_TRY);
+
+   for (SizeT i = 0; i < NUM_TRY; ++i) {
+      send_uint64_t(sock, urls_to_parse[i].offset);
+      send_str(sock, UrlStore::getStore().getUrl( urls_to_parse[ i ].offset ) );
+   }
+}
+
 Vector<ParsedPage> recv_parsed_pages(int sock) {
    Vector<ParsedPage> recv_pages;
    int num_pages = recv_int(sock);

@@ -1,7 +1,7 @@
 #pragma once
 
 int getSizeOfSkipTable(int NUM_SKIP_TABLE_BITS) {
-    return ((1 << NUM_SKIP_TABLE_BITS) * 2 * sizeof(unsigned int));
+    return ( ( ( ( 1 << NUM_SKIP_TABLE_BITS ) * 2 ) + 1 ) * sizeof(unsigned int));
 }
 
 int getSizeOfRankingData() {

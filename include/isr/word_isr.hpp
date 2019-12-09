@@ -7,9 +7,6 @@
 #include "index_reader.hpp"
 #include "index_reader_helpers.hpp"
 
-template<int NUM_SKIP_TABLE_BITS>
-class IndexReader;
-
 class WordInfo : public IndexInfo 
    {
 public:
@@ -32,7 +29,7 @@ private:
 class WordISR : public ISR
    {
 public:
-   WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int NUM_SKIP_TABLE_BITS, int MAX_TOKEN_BITS);
+   WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int MAX_TOKEN_BITS);
    WordISR(WordISR && other) = default;
    ~WordISR( ) { }
    unsigned int GetDocumentCount( );
@@ -55,12 +52,12 @@ private:
    bool isAtEnd;
    };
 
-WordISR::WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int NUM_SKIP_TABLE_BITS_, int MAX_TOKEN_BITS_) 
+WordISR::WordISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int MAX_TOKEN_BITS_) 
    : docISR(std::move(documentISR)),
-      NUM_SKIP_TABLE_BITS(NUM_SKIP_TABLE_BITS_), 
+      NUM_SKIP_TABLE_BITS( *( unsigned int * ) findSkipTable( location ) ), 
       MAX_TOKEN_BITS(MAX_TOKEN_BITS_),
       absolutePosition(0),
-      skipTable((unsigned int *)findSkipTable(location)), 
+      skipTable(((unsigned int *)findSkipTable(location)) + 1), 
       rankingData(skipTable - 2),
       currentLocation( ( ( const char * ) skipTable ) + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 * sizeof( unsigned int ) ),
       start(location),

@@ -21,3 +21,4 @@ test_bloomfilter = executable('test_bloomfilter',
 #test('Robots 2 (HTTP)', test_robots_2_http, suite: 'robots')
 #test('Parser', test_parser)
 test('Filter', test_bloomfilter)
+isr_example_driver = files('isr_example.cpp')

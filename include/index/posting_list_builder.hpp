@@ -13,13 +13,13 @@ struct EODPost {
    uint64_t url_uid;
 };
 
-template<int NUM_SKIP_TABLE_BITS>
 class PostingListBuilder 
    {
 public:
 
-   PostingListBuilder(const fb::String &word, char * location, int numDocs, int numOccurences, int MAX_TOKEN_BITS_) 
-      : beginning(location), lastLocation(0), nextSkipTableEntry(0), MAX_TOKEN_BITS(MAX_TOKEN_BITS_)
+   PostingListBuilder(const fb::String &word, char * location, int numDocs, 
+                      int numOccurences, int MAX_TOKEN_BITS_, int NUM_SKIP_TABLE_BITS_) 
+      : beginning(location), lastLocation(0), nextSkipTableEntry(0), MAX_TOKEN_BITS(MAX_TOKEN_BITS_), NUM_SKIP_TABLE_BITS(NUM_SKIP_TABLE_BITS_)
       {
       strcpy(beginning, word.data());
       
@@ -29,6 +29,8 @@ public:
       rankingData[1] = numOccurences;
 
       skipTableStart = (unsigned int *) (beginning + (word.size() + 1) + getSizeOfRankingData()); // past word and past the num of documents and num of occurences of word
+      skipTableStart[0] = NUM_SKIP_TABLE_BITS;
+      ++skipTableStart;
       memset(skipTableStart, 0, getSizeOfSkipTable(NUM_SKIP_TABLE_BITS)); // 0 out skip table
 
       currentPostPosition = beginning + (word.size() + 1) + getSizeOfRankingData() + getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
@@ -87,5 +89,5 @@ private:
    unsigned int * skipTableStart;
    unsigned int lastLocation;
    unsigned int nextSkipTableEntry;
-   int MAX_TOKEN_BITS;
+   int MAX_TOKEN_BITS, NUM_SKIP_TABLE_BITS;
    };

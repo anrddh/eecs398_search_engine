@@ -36,7 +36,7 @@ int main(int argc, char ** argv )
 
    const char * startOfIndex = ( const char * ) mmap( nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, file, 0 );
 
-   IndexReader<8> reader(startOfIndex);
+   IndexReader reader(startOfIndex);
    fb::UniquePtr<WordISR> cat = reader.OpenWordISR( fb::String( "cat" ) );
    fb::UniquePtr<WordISR> dog = reader.OpenWordISR( fb::String( "dog" ) );
    fb::UniquePtr<WordISR> tree = reader.OpenWordISR( fb::String( "tree" ) );
@@ -55,16 +55,16 @@ int main(int argc, char ** argv )
    fb::Vector<fb::UniquePtr<ISR>> andList;
    andList.pushBack( std::move( catOrDog ) );
    andList.pushBack( std::move( tree ) );
-   
+
    fb::UniquePtr<AndISR> final = fb::makeUnique<AndISR>( std::move(andList), reader.OpenDocumentISR( ) );
 
    ConstraintSolver solver( std::move( final ), reader.OpenDocumentISR( ), std::move( WordsIsrs ), 0);
    solver.GetDocFrequencies( );
    fb::Vector<rank_stats> rankingData = solver.GetDocumentsToRank( );
-   
+
    for(const rank_stats &stat : rankingData)
       {
       std::cout << stat.page_store_index << std::endl;
       }
-   
+
    }

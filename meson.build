@@ -42,7 +42,8 @@ executable('master',
 
 executable('server',
            server_driver, server_source_files,
-           include_directories: inc)
+           include_directories: inc,
+           dependencies: [threads_dep])
 
 executable('worker',
            worker_driver, worker_source_files,
@@ -65,7 +66,7 @@ executable('print_page_store',
             print_page_store_driver,
             include_directories: inc)
 
-executable('search_index', 
+executable('search_index',
             search_index_driver,
             include_directories: inc)
 

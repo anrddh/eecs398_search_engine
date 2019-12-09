@@ -26,6 +26,7 @@ project_sources = []
 master_source_files = []
 worker_source_files = []
 page_store_total_files = []
+page_store_merge_files = []
 project_header_files = []
 
 
@@ -49,3 +50,8 @@ executable('worker',
 executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
+
+executable('page_store_merge',
+            page_store_merge_driver, page_store_merge_files,
+            include_directories: inc,
+            dependencies: [threads_dep])

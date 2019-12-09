@@ -70,7 +70,7 @@ class PageBin {
 public:
     struct Error : fb::Exception {};
 
-    PageBin(fb::StringView filename);
+    PageBin(fb::StringView filename, fb::SizeT number_of_pages  = numPages);
 
     fb::SizeT addPage(Page&& p);
 
@@ -78,6 +78,14 @@ public:
 
     int file_descriptor() const {
         return Pages.file_descriptor();
+    }
+
+    fb::SizeT num_stored_pages() const {
+        return *(fb::SizeT *)Pages.data();
+    }
+
+    char * data() const {
+        return Pages.data();
     }
 
     fb::SizeT size(){

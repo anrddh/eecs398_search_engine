@@ -52,7 +52,7 @@ int main( int argc, char * argv[] ){
     fb::String fbDirname(argv[1]);
     fb::String MergedFileName = fbDirname + "/"_sv + PageStoreMergedFile;
 
-    std::cout << "Created merged file: " << MergedFileName << std::endl;
+    std::cout << "Creating merged file: " << MergedFileName << std::endl;
 
     PageBin MergedBin(MergedFileName, total);
 
@@ -75,8 +75,8 @@ int main( int argc, char * argv[] ){
             char *NextHeader = CurHeadersBegin + ((i+1) * sizeof(PageHeader));
             PageHeader header = *(PageHeader *)CurHeader;
             PageHeader nHeader = *(PageHeader *)NextHeader;
-            std::cout << "header: " << std::hex << header.UrlOffset << " " << header.beginOffset << " " << header.VecOffset << std::endl;
-            std::cout << "nHeader: " << std::hex << nHeader.UrlOffset << " " << nHeader.beginOffset << " " << nHeader.VecOffset << std::endl;
+            // std::cout << "header: " << std::hex << header.UrlOffset << " " << header.beginOffset << " " << header.VecOffset << std::endl;
+            // std::cout << "nHeader: " << std::hex << nHeader.UrlOffset << " " << nHeader.beginOffset << " " << nHeader.VecOffset << std::endl;
             Page p;
             p.UrlOffset = header.UrlOffset;
             p.page_str = fb::String(CurBin.data() + header.beginOffset - sizeof(std::atomic<fb::SizeT>));
@@ -87,6 +87,6 @@ int main( int argc, char * argv[] ){
         }
     }
 
-    std::cout << "Total number of stored pages: " << total << std::endl;
+    std::cout << "Done" << std::endl;
     return 0;
 }

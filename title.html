@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Search results</title>
+  <title>Fantastic Bugs Search Engine</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
@@ -41,8 +41,6 @@
 
   <script>
 $(function() {
-
-  
   // default is varying levels of transparent white sparkles
   $(".sparkley:first").sparkleh();
   
@@ -61,9 +59,9 @@ $(function() {
   // speed allows us to control... the ... velocity 
   $("#image").imagesLoaded( function() {
     $(".img").sparkleh({
-      count: 1000,
-      color: ["#f3edc4","#253943","#659e3f"],
-    speed: 10
+      count: 500,
+      color: ["skyblue", "gold"],
+    speed: 0.8
     });
   });
 });
@@ -153,11 +151,28 @@ Sparkle.prototype = {
       } else if( $.type(this.options.color) === "array" ) {
         color = this.options.color[ Math.floor(Math.random()*this.options.color.length) ];
       }
+         tipx = this.canvas.width *87/100;
+         tipy = this.canvas.height *30/100;
+         radius = this.canvas.width *3/100;
+
+         var randTheta = Math.random() * 2 * Math.PI;
+         var randR = Math.random();
+         // if ( randR > 0.8 )
+         //   {
+         //   randR = 2 * Math.random() * radius;
+         //   }
+         //  else
+         //  {
+            randR = Math.random( ) * radius;
+          // }
+
+         xRand = Math.cos(randTheta) * randR + tipx;
+         yRand = Math.sin(randTheta) * randR + tipy;
 
       holder[i] = {
         position: {
-          x: Math.floor(Math.random()*w),
-          y: Math.floor(Math.random()*h)
+          x: Math.floor(xRand),
+          y: Math.floor(yRand)
         },
         style: this.sprites[ Math.floor(Math.random()*4) ],
         delta: {
@@ -222,26 +237,34 @@ Sparkle.prototype = {
          var randX = ( Math.random() > Math.random()*2 );
          var randY = ( Math.random() > Math.random()*3 );
          
-         if( randX ) {
-           u.position.x += ((u.delta.x * _this.options.speed) / 1500); 
-         }        
+
+         var currentAngle = Math.atan2(  (u.position.y - tipy), (u.position.x - tipx) );
+         currentAngle += Math.PI/2;
+         u.position.x += Math.cos(currentAngle) * _this.options.speed;
+         u.position.y += Math.sin(currentAngle) * _this.options.speed;
+        // if( randX ) {
+        //    u.position.x += ((u.delta.x * _this.options.speed) / 1500); 
+        //  }        
          
-         if( !randY ) {
-           u.position.y -= ((u.delta.y * _this.options.speed) / 800);
-         }
+        //  if( !randY ) {
+        //    u.position.y -= ((u.delta.y * _this.options.speed) / 800);
+        //  }
 
-         if( u.position.x > _this.canvas.width ) {
-           u.position.x = -7;
-         } else if ( u.position.x < -7 ) {
-           u.position.x = _this.canvas.width; 
-         }
+         tipx = _this.canvas.width *87/100;
+         tipy = _this.canvas.height *30/100;
+         radius = _this.canvas.width *3/100;
 
-         if( u.position.y > _this.canvas.height ) {
-           u.position.y = -7;
-           u.position.x = Math.floor(Math.random()*_this.canvas.width);
-         } else if ( u.position.y < -7 ) {
-           u.position.y = _this.canvas.height; 
-           u.position.x = Math.floor(Math.random()*_this.canvas.width);
+         var randTheta = Math.random() * 2 * Math.PI;
+         var randR = Math.random( ) * radius;
+
+         xRand = Math.cos(randTheta) * randR + tipx;
+         yRand = Math.sin(randTheta) * randR + tipy;
+         xdelta = u.position.x - tipx;
+         ydelta = u.position.y - tipy;
+
+         if( xdelta * xdelta + ydelta * ydelta > radius * radius * (1 + Math.random() ) ) {
+           u.position.y = yRand; 
+           u.position.x = xRand;
          }
          
          if( _this.fade ) {
@@ -384,7 +407,7 @@ $(document).ready(function(){
           </div>
         </div>
         <div class="img">
-          <img id="image" src="wand.jpg" class="rotateimg6" style="z-index:1;">
+          <img id="image" src="wand.jpg" class="rotateimg6" style="z-index:1">
         </div>
         <div class="butttton">
           <button class="btn btn-primary">Ani is feeling fantastic!</button>

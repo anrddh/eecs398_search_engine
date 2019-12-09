@@ -103,15 +103,24 @@ public:
        return location >= input.size();
    }
 
-   fb::StringView ParseWord() {
+   template <typename Pred>
+   fb::StringView ParseUntil(Pred p) {
        if (AllConsumed())
            return "";
 
        auto begin = location;
-       while (!AllConsumed() && !CharIsControl(input[location]))
+       while (!AllConsumed() && !p(input[location]))
            ++location;
 
        return fb::StringView(input.data() + begin, location - begin);
+   }
+
+   fb::StringView ParseUntil(char c) {
+       return ParseUntil([c](char d) { return c == d; });
+   }
+
+   fb::StringView ParseWord() {
+       return ParseUntil([](char c) { return CharIsControl(c); });
    }
 };
 

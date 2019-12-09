@@ -30,5 +30,6 @@ Vector<Thread> threads;
 void* listen_to_master(void *) {
 }
 
+// We will create an thread for each index
 int main( int argc, char **argv ) {
 }

@@ -250,6 +250,7 @@ public:
         }
 
     }
+
     // erase returns the number of items remove (0 or 1)
     SizeT erase(const K& key) {
         SizeT desired_bucket = hash(key) % buckets.size();

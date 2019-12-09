@@ -24,6 +24,7 @@ namespace fb {
  */
 inline char* add_word_post( char* curr, uint32_t num) 
    {
+      // Because most deltas are small, checking from smallest value is
       if ( num <= fbImpl::oneBytePostMaxVal ) 
          {
          return fbImpl::write_num<fbImpl::oneBytePost>( curr, num );
@@ -32,8 +33,12 @@ inline char* add_word_post( char* curr, uint32_t num)
          {
          return fbImpl::write_num<fbImpl::twoBytePost>( curr, num );
          }
+      if ( num <= fbImpl::fourBytePostMaxVal ) 
+         {
+         return fbImpl::write_num<fbImpl::fourBytePost>( curr, num );
+         }
 
-      return fbImpl::write_num<fbImpl::fourBytePost>( curr, num );
+      return fbImpl::write_num<fbImpl::eightBytePost>( curr, num );
    }
 
 inline char* add_word_sentinel( char* curr )
@@ -62,8 +67,8 @@ inline const char* read_word_post( const char* curr, uint32_t &num)
             return fbImpl::read_number<fbImpl::twoBytePost>( curr, num );
          case 2:
             return fbImpl::read_number<fbImpl::fourBytePost>( curr, num );
-         default:
-            assert( false );
+         case 3:
+            return fbImpl::read_number<fbImpl::eightBytePost>( curr, num );
          } 
    }
 

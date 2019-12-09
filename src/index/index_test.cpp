@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 	}
 	const char* FILEPATH = argv[1];
 	int fd = open(FILEPATH, O_RDWR);
-   	//std::cout << "fd: " << fd << std::endl;
+
 	if (fd == -1) {
 		perror("Error opening file for reading");
 		exit(EXIT_FAILURE);
@@ -38,24 +38,18 @@ int main(int argc, char* argv[]) {
 	std::vector<std::string> words; 
 	std::vector<std::pair<uint32_t,uint32_t>> EOD_posting_list;
 	trans_file_to_offsets(beginning_of_file, all, words, EOD_posting_list);	
-	// std::cout << "all: " <<all.size() << std::endl;
-	// if(!all.empty()){
-	// 	std::cout << "all[0]:" << all[0].size() << std::endl;
-	// }
-	// for(int i = 0; i < words.size(); ++i){
-	// 	std::cout << words[i] << std::endl;
-	// }
 	size_t count = 0;
 	for(size_t i = 0; i < all.size(); ++i){
 		for(size_t j = 0; j < all[i].size(); ++j){
 			++count;
 		}
 	}
-
+	std::cout << "EOD size: " << EOD_posting_list.size() << std::endl;
+	std::cout << "total word count: " << count << std::endl;
 	std::vector<std::string> original(count + EOD_posting_list.size() + 1, "");
 	reconstruct(all, words, original);
-	//std::cout << "original: " << original.size() << std::endl;
+	print_stats(all, words);
 	print_recon(original);
-	//std::cout << "word count: " << words.size() << std::endl;
-	//std::cout << "DONE" << std::endl;
+	std::cout << "unique word count: " << words.size() << std::endl;
+	std::cout << "DONE" << std::endl;
 }

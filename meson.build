@@ -76,3 +76,7 @@ executable('page_store_total',
 executable('isr_example',
             isr_example_driver,
             include_directories: inc)
+
+executable('ranker_test',
+            ranker_test_driver,
+            include_directories: inc)

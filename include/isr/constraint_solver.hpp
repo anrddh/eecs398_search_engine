@@ -10,6 +10,7 @@ struct rank_stats
    uint32_t page_store_index;
 	unsigned int total_term_count; // doc length
 	fb::Vector<uint32_t> term_freq;
+   double rank = -1;
    };
 
 class ConstraintSolver 

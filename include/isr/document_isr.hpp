@@ -26,7 +26,7 @@ private:
 class DocumentISR : public ISR 
    {
 public:
-   DocumentISR(const char * location, int NUM_SKIP_TABLE_BITS, int MAX_TOKEN_BITS); 
+   DocumentISR(const char * location, int MAX_TOKEN_BITS); 
    DocumentISR(DocumentISR &&other) = default;
    ~DocumentISR( ) { }
    unsigned GetDocumentLength( );
@@ -50,12 +50,12 @@ private:
 
    };
 
-DocumentISR::DocumentISR(const char * location, int NUM_SKIP_TABLE_BITS_, int MAX_TOKEN_BITS_) 
-: NUM_SKIP_TABLE_BITS(NUM_SKIP_TABLE_BITS_), 
+DocumentISR::DocumentISR(const char * location, int MAX_TOKEN_BITS_) 
+: NUM_SKIP_TABLE_BITS( *( unsigned int * ) findSkipTable( location ) ), 
    MAX_TOKEN_BITS(MAX_TOKEN_BITS_),
    absolutePosition(0),
    docId(0),
-   skipTable((unsigned int *)findSkipTable(location)), 
+   skipTable( ( ( unsigned int * ) findSkipTable( location ) ) + 1), 
    rankingData(skipTable - 2),
    currentLocation( ( const char * ) ( skipTable + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 ) ),
    start(location),

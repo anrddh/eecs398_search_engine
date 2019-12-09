@@ -29,6 +29,5 @@ print_page_store_driver = files('index/print_page_store.cpp')
 
 search_index_driver = files('search_index.cpp')
 
-isr_example_driver = files('isr_example.cpp')
 
 ranker_test_driver = files('ranker_test.cpp')

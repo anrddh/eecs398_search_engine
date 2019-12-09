@@ -43,9 +43,19 @@ struct fourBytePost
 
 static_assert( sizeof( fourBytePost ) == 4 );
 
+struct eightBytePost 
+   {
+   static constexpr int sizeEncoding = 3;
+   uint8_t size: 2;
+   uint64_t value: 62; // max value 0x1f ff ff ff ff ff ff ff
+   };
+
+static_assert( sizeof( eightBytePost ) == 8 );
+
 constexpr uint64_t oneBytePostMaxVal = 0x3f;
 constexpr uint64_t twoBytePostMaxVal = 0x3fff;
 constexpr uint64_t fourBytePostMaxVal = 0x3fffffff;
+constexpr uint64_t eightBytePostMaxVal = 0x3fffffffffffffff;
 
 template <typename castType>
 inline char* write_num( char* curr, uint32_t num ) 

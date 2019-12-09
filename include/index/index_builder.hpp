@@ -23,7 +23,6 @@
  */
 
 
-template<int NUM_SKIP_TABLE_BITS>
 class IndexBuilder {
 public:
    // root must contain a trailing '/'
@@ -100,9 +99,8 @@ private:
       {
       fb::String filename = (root + "Index" + fb::toString(chunk));
       // change this to use atomics
-      ++masterIndexData->numIndexes;
 
-      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS> indexChunkBuilder(filename, wordPositions.bucket_count(), documents, tokenCount);
+      IndexChunkBuilder<fb::Hash<fb::String>> indexChunkBuilder(filename, wordPositions.bucket_count(), documents, tokenCount);
 
       for(auto iter = wordPositions.begin(); iter != wordPositions.end(); ++iter)
          {
@@ -114,10 +112,6 @@ private:
 
    // folder for each index chunk, store root directory
    fb::String root;
-   
-   // some meta data about the index chunks in this index
-   MasterIndexData * masterIndexData;
-   fb::Mutex masterIndexDataLock;
 
    // the actual map that stores the positions of the words, is a unique pointer so that we can pass this ownership to a thread.
    fb::UnorderedMap<fb::String, fb::Vector<AbsoluteWordInfo>> wordPositions;

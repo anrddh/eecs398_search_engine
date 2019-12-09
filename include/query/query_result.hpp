@@ -2,6 +2,8 @@
 #pragma once
 #include <fb/priority_queue.hpp>
 #include <fb/mutex.hpp>
+#include <fb/string.hpp>
+#include <fb/stddef.hpp>
 #include <atomic>
 
 // TODO add ranking info
@@ -13,7 +15,7 @@ class TopPages {
    void addRankStats( double ranking, rank_stats&& rankingInfo ) {
       if ( ranking < min_allowed_rank )
          return;
-      
+
       fb::AutoLock l(mtx);
       // TODO make rank pair
       top.push( rankPair );
@@ -32,4 +34,17 @@ private:
    fb::Mutex mtx;
    std::atomic<double> min_allowed_rank;
    int n;
+};
+
+struct SnippetOffsets{
+    fb::SizeT begin;
+    fb::SizeT end;
+}
+
+struct SnippetStats {
+    //since we currently think each worker computer will only have one merged
+    //pagestore file, we can probably later make this static
+    fb::String FileName; //the corresponding pagestore file
+    fb::SizeT DocIndex; //gives which number document in that pagestore file
+    SnippetOffsets Offsets; //gives the begin and end word number within that document
 };

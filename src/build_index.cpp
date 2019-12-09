@@ -46,9 +46,9 @@ int main( int argc, char ** argv )
       }
 */
    int end = 5;
-   for(int i = indexCounter + 1; i < end; ++i)
+   for(int i = indexCounter; i < end; ++i)
       {
-      IndexBuilder<8> builder(path);
+      IndexBuilder builder(path);
       fb::String PageStoreFileName = (path + "PageStore" + fb::toString(i));
       std::cout << PageStoreFileName << std::endl;
       int PageStoreFile = open(PageStoreFileName.data(), O_RDWR);

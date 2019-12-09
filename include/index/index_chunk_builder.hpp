@@ -17,7 +17,7 @@ int getHighestBit(int num)
 
 constexpr long MAX_FILE_SIZE = 4000000000;
 
-template<typename Hash, int NUM_SKIP_TABLE_BITS>
+template<typename Hash>
 class IndexChunkBuilder {
 public:
    IndexChunkBuilder(fb::String filename, uint32_t capacity, const fb::Vector<DocIdInfo> &documents, int num_tokens) 
@@ -67,8 +67,8 @@ int file;
 int MAX_TOKEN_BITS;
 };
 
-template<typename Hash, int NUM_SKIP_TABLE_BITS>
-void IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::addWord
+template<typename Hash>
+void IndexChunkBuilder<Hash>::addWord
    (const fb::String &word, const fb::Vector<AbsoluteWordInfo> &offsets, unsigned int docCount)
    {
    fb::SizeT bucket = hash(word) % tableSize;
@@ -91,13 +91,13 @@ void IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::addWord
    nextAvailableLocation += writePostingList(word, offsets, docCount);
    }
 
-template<typename Hash, int NUM_SKIP_TABLE_BITS>
-int IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::writePostingList
+template<typename Hash>
+int IndexChunkBuilder<Hash>::writePostingList
    (const fb::String &word, const fb::Vector<AbsoluteWordInfo> &offsets, unsigned int docCount) 
    {
    char * postingListLocation = start + nextAvailableLocation;
-
-   PostingListBuilder<NUM_SKIP_TABLE_BITS> builder(word, postingListLocation, docCount, offsets.size(), MAX_TOKEN_BITS);
+   int num_skip_table_bits = std::min( 10, std::max(1, getHighestBit( offsets.size( ) ) - 6) );
+   PostingListBuilder builder(word, postingListLocation, docCount, offsets.size(), MAX_TOKEN_BITS, num_skip_table_bits);
    for(const AbsoluteWordInfo &word : offsets) 
       {
       builder.addPost(word);
@@ -107,12 +107,13 @@ int IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::writePostingList
    return builder.getLength();
    }
 
-template<typename Hash, int NUM_SKIP_TABLE_BITS>
-int IndexChunkBuilder<Hash, NUM_SKIP_TABLE_BITS>::writeEODList(const fb::Vector<DocIdInfo> &documents) 
+template<typename Hash>
+int IndexChunkBuilder<Hash>::writeEODList(const fb::Vector<DocIdInfo> &documents) 
    {
    char * postingListLocation = start + nextAvailableLocation;
+   int num_skip_table_bits = std::min( 10, std::max(1, getHighestBit( documents.size( ) ) - 6) );
 
-   PostingListBuilder<NUM_SKIP_TABLE_BITS> builder(fb::String(), postingListLocation, documents.size(), documents.size(), MAX_TOKEN_BITS);
+   PostingListBuilder builder( fb::String(), postingListLocation, documents.size(), documents.size(), MAX_TOKEN_BITS, num_skip_table_bits );
    for(const DocIdInfo &post : documents)
       {
       builder.addPost(post);

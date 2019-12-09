@@ -8,7 +8,6 @@
 #include "word_isr.hpp"
 #include "document_isr.hpp"
 
-template<int NUM_SKIP_TABLE_BITS>
 class IndexReader
    {
 public:
@@ -24,15 +23,13 @@ private:
    unsigned int * dictionary;
    };
 
-template<int NUM_SKIP_TABLE_BITS>
-IndexReader<NUM_SKIP_TABLE_BITS>::IndexReader(const char * startOfIndex) 
+IndexReader::IndexReader(const char * startOfIndex) 
 : start(startOfIndex), 
    MAX_TOKEN_BITS( getHighestBit( *( ( ( unsigned int * ) start ) + 1 ) ) ), 
    DICTIONARY_SIZE( *( ( ( unsigned int * ) start ) + 2 ) ), 
    dictionary( ( ( unsigned int * ) start ) + 3 ) { }
 
-template<int NUM_SKIP_TABLE_BITS>
-fb::UniquePtr<WordISR> IndexReader<NUM_SKIP_TABLE_BITS>::OpenWordISR( fb::String word )
+fb::UniquePtr<WordISR> IndexReader::OpenWordISR( fb::String word )
    {
    fb::Hash<fb::String> hash;
    uint64_t bucket = hash(word) % DICTIONARY_SIZE;
@@ -43,7 +40,7 @@ fb::UniquePtr<WordISR> IndexReader<NUM_SKIP_TABLE_BITS>::OpenWordISR( fb::String
 
    if(dictionary[bucket]) 
       {
-      fb::UniquePtr<WordISR> wordISR = fb::makeUnique<WordISR>(start + dictionary[bucket], OpenDocumentISR( ), NUM_SKIP_TABLE_BITS, MAX_TOKEN_BITS);
+      fb::UniquePtr<WordISR> wordISR = fb::makeUnique<WordISR>(start + dictionary[bucket], OpenDocumentISR( ), MAX_TOKEN_BITS);
       return wordISR;
       }
    else
@@ -52,15 +49,13 @@ fb::UniquePtr<WordISR> IndexReader<NUM_SKIP_TABLE_BITS>::OpenWordISR( fb::String
       }
    }
 
-template<int NUM_SKIP_TABLE_BITS>
-fb::UniquePtr<DocumentISR> IndexReader<NUM_SKIP_TABLE_BITS>::OpenDocumentISR( ) 
+fb::UniquePtr<DocumentISR> IndexReader::OpenDocumentISR( ) 
    {
-   fb::UniquePtr<DocumentISR> docISR = fb::makeUnique<DocumentISR>((char * ) (dictionary + DICTIONARY_SIZE), NUM_SKIP_TABLE_BITS, MAX_TOKEN_BITS);
+   fb::UniquePtr<DocumentISR> docISR = fb::makeUnique<DocumentISR>((char * ) (dictionary + DICTIONARY_SIZE), MAX_TOKEN_BITS);
    return docISR;
    }
 
-template<int NUM_SKIP_TABLE_BITS>
-bool IndexReader<NUM_SKIP_TABLE_BITS>::WordExists( fb::String word )
+bool IndexReader::WordExists( fb::String word )
    {
    fb::Hash<fb::String> hash;
    uint64_t bucket = hash(word) % DICTIONARY_SIZE;

@@ -23,7 +23,6 @@
  */
 
 
-template<int NUM_SKIP_TABLE_BITS>
 class IndexBuilder {
 public:
    // root must contain a trailing '/'
@@ -102,7 +101,7 @@ private:
       // change this to use atomics
       ++masterIndexData->numIndexes;
 
-      IndexChunkBuilder<fb::Hash<fb::String>, NUM_SKIP_TABLE_BITS> indexChunkBuilder(filename, wordPositions.bucket_count(), documents, tokenCount);
+      IndexChunkBuilder<fb::Hash<fb::String>> indexChunkBuilder(filename, wordPositions.bucket_count(), documents, tokenCount);
 
       for(auto iter = wordPositions.begin(); iter != wordPositions.end(); ++iter)
          {

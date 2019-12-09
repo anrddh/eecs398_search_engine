@@ -29,7 +29,7 @@ public:
 
 // The minimum number of pages in buffer before worker will ask
 // the master for more pages to parse
-constexpr int MIN_BUFFER_SIZE = 1000;
+constexpr int MIN_BUFFER_SIZE = 5000;
 
 // Number of page per send to master
 constexpr int PAGES_PER_SEND= 1000;

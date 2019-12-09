@@ -142,43 +142,20 @@ Vector<SizeT> FrontierBin::getUrl( ) {
     for ( SizeT i = 0;  i < NUM_TRY;  ++i )
         rand_num[ i ] = rand_r( &localSeed );
 
-    SizeT region = rand_r( &localSeed );
     localSeedM.unlock( );
 
     Vector<SizeT> urls_to_return;
     AutoLock lock( toParseM );
-    if ( toParse.size( ) < NUM_SAMPLE )
-        return {}; // empty url
-
-    SizeT max_ranking = 0; // Requires that any ranking of urls to be greater than 0
-    SizeT max_idx = 0;
-
-    // Find what to sample
-    // Compute the highest ranking amongst first NUM_SAMPLE randomly picked urls
-    for (SizeT i = 0; i < NUM_SAMPLE; ++i) {
-       const SizeT idx = search_index(rand_num[i], region);
-        if ( max_ranking < toParse[ idx  ].ranking ) {
-            max_ranking = toParse[ idx ].ranking;
-            max_idx = idx;
-        }
-    }
-
-    urls_to_return.pushBack( toParse[ max_idx ].offset );
-    toParse[ max_idx ] = toParse.back( );
-    toParse.popBack( );
-
     // We randomly check urls
     // If their ranking is greater than or equal to max_ranking,
     // then we will take them to be parsed
     // Note that it is possible that same url might be checked multiple times
     // However, this is not likely since there should be many urls in here each time
     for ( auto i = NUM_SAMPLE; i < NUM_TRY && !toParse.empty(); ++i ) {
-        const SizeT idx = search_index(rand_num[i], region);
-        if ( toParse[ idx ].ranking >= max_ranking ) {
-            urls_to_return.pushBack( toParse[ idx ].offset ) ;
-            toParse[ idx ] = toParse.back();
-            toParse.popBack( );
-        }
+        const SizeT idx = search_index(rand_num[i]);
+        urls_to_return.pushBack( toParse[ idx ].offset ) ;
+        toParse[ idx ] = toParse.back();
+        toParse.popBack( );
     }
 
     return urls_to_return;

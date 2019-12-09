@@ -99,7 +99,6 @@ private:
       {
       fb::String filename = (root + "Index" + fb::toString(chunk));
       // change this to use atomics
-      ++masterIndexData->numIndexes;
 
       IndexChunkBuilder<fb::Hash<fb::String>> indexChunkBuilder(filename, wordPositions.bucket_count(), documents, tokenCount);
 
@@ -113,10 +112,6 @@ private:
 
    // folder for each index chunk, store root directory
    fb::String root;
-   
-   // some meta data about the index chunks in this index
-   MasterIndexData * masterIndexData;
-   fb::Mutex masterIndexDataLock;
 
    // the actual map that stores the positions of the words, is a unique pointer so that we can pass this ownership to a thread.
    fb::UnorderedMap<fb::String, fb::Vector<AbsoluteWordInfo>> wordPositions;

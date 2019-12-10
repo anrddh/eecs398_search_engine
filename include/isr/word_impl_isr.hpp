@@ -40,6 +40,7 @@ public:
    virtual fb::UniquePtr<IndexInfo> NextDocument( );
    virtual fb::UniquePtr<IndexInfo> Seek( Location target );
    virtual bool AtEnd( );
+   virtual fb::String GetWord( );
 
 private:
    fb::UniquePtr<DocumentISR> docISR;
@@ -151,4 +152,9 @@ fb::UniquePtr<IndexInfo> WordImplISR::Seek( Location target )
 bool WordImplISR::AtEnd( ) 
    {
    return isAtEnd;
+   }
+
+fb::String WordImplISR::GetWord( )
+   {
+   return fb::String(start);
    }

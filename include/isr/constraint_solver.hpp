@@ -9,7 +9,7 @@ struct rank_stats
 	uint32_t page_store_number;
    uint32_t page_store_index;
 	unsigned int total_term_count; // doc length
-	fb::Vector<uint32_t> term_freq;
+   fb::Vector<fb::Vector<uint32_t>> occurrences;
    double rank = -1;
    };
 
@@ -31,6 +31,17 @@ public:
          saveMatch( );
          info = mainIsr->NextDocument( );
          }
+      }
+
+   fb::Vector<fb::String> GetWords( )
+      {
+      fb::Vector<fb::String> words;
+      for(fb::UniquePtr<WordISR> &wordIsr : wordIsrs)
+         {
+         words.pushBack(wordIsr->GetWord( ) );
+         }
+
+      return words;
       }
 
    fb::Vector<fb::SizeT> GetDocFrequencies( )
@@ -57,24 +68,18 @@ private:
       Location docEnd = docIsr->Seek( mainIsr->GetCurrentInfo( )->GetStartLocation( ) )->GetEndLocation( );
       uint32_t docLength = docIsr->GetDocumentLength( );
       Location docStart = docEnd - docLength;
-      fb::Vector<uint32_t> term_freqs( wordIsrs.size( ), 0 );
-      for( fb::SizeT i = 0; i < term_freqs.size( ); ++i)
+      fb::Vector<fb::Vector<uint32_t>> occurrences( wordIsrs.size( ) );
+      for( fb::SizeT i = 0; i < occurrences.size( ); ++i)
          {
          fb::UniquePtr<IndexInfo> wordInfo = wordIsrs[i]->Seek( docStart );
          while( wordInfo && wordInfo->GetEndLocation( ) < docEnd ) 
             {
-            ++term_freqs[i];
+            occurrences[i].pushBack(wordInfo->GetStartLocation( ) - docStart );
             wordInfo = wordIsrs[i]->Next( );
             }
          }
 
-      rank_stats stats;
-      stats.page_store_number = page_store_num;
-      stats.page_store_index = mainIsr->GetDocumentId( );
-      stats.total_term_count = docLength;
-      stats.term_freq = std::move( term_freqs );
-
-      documents_to_rank.emplaceBack( rank_stats{ page_store_num, mainIsr->GetDocumentId( ), docLength, std::move( term_freqs ) } );
+      documents_to_rank.emplaceBack( rank_stats{ page_store_num, mainIsr->GetDocumentId( ), docLength, std::move( occurrences ) } );
       }
 
    };

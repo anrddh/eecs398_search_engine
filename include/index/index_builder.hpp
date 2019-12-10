@@ -20,10 +20,14 @@
 
 #include "porter_stemmer.hpp"
 
+#include "debug.hpp"
+#include "disk/logfile.hpp"
+
 /*
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
 
+struct LOG_ERROR{};
 
 class IndexBuilder {
 public:
@@ -32,6 +36,12 @@ public:
    ~IndexBuilder( ) { free_stemmer( porterStemmer ); }
 
    void build_chunk(uint64_t* start_of_file, int chunk) {
+      logfile.open("index_building_log.txt");
+      if ( !logfile.is_open( ) )
+      {
+      std::cerr << "Could not open logfile" << std::endl;
+      throw LOG_ERROR( );
+      }
       // move past first 16 bytes
       // the page headers end where the first page starts
       uint64_t* current_doc_offset = start_of_file + 2;
@@ -45,8 +55,12 @@ public:
          current_doc_offset += 3;
          current_des_offset += 3;
          ++doc_num;
+         if(doc_num%5000 == 0){
+            log(logfile, "Built 5000 docs\n");
+         }
       }
       flushToDisk(chunk);
+      log(logfile, "Flushed to disk\n");
    }
 private:
 

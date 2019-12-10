@@ -35,10 +35,24 @@ HtmlPage defaultPath() {
     return page;
 }
 
+HtmlPage next( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+    HtmlPage page;
+    page.loadFromString("<h1>Next page not found.</h1>");
+    return page;
+}
+
+HtmlPage previous( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+    HtmlPage page;
+    page.loadFromString("<h1>Previous page not found.</h1>");
+    return page;
+}
+
 int main() {
     Bolt bolt;
     bolt.registerHandler("/", home);
     bolt.registerHandler("/results", results);
+    bolt.registerHandler("/next", next);
+    bolt.registerHandler("/previous", previous);
 
     bolt.run();
 }

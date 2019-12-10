@@ -23,11 +23,12 @@ private:
    Location loc;
 
    };
-   
+
 class OrISR : public ISR
    {
 public:
-   OrISR(fb::Vector<fb::UniquePtr<ISR>> ISRs, fb::UniquePtr<DocumentISR> documentISR);
+   OrISR(fb::Vector<fb::UniquePtr<ISR>> ISRs,
+         fb::UniquePtr<DocumentISR> documentISR);
    ~OrISR( ) { }
    virtual fb::UniquePtr<IndexInfo> Next( );
    virtual fb::UniquePtr<IndexInfo> NextDocument( );

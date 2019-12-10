@@ -1,53 +1,23 @@
-#pragma once
+#include <isr/index_reader.hpp>
+#include <isr/word_impl_isr.hpp>
+#include <isr/document_isr.hpp>
 
-#include "fb/memory.hpp"
-#include "fb/functional.hpp"
-#include "fb/string.hpp"
-#include "fb/stddef.hpp"
-
-#include "index_reader_helpers.hpp"
-#include "word_isr.hpp"
-#include "empty_isr.hpp"
-
-#include "porter_stemmer.hpp"
-
-class DocumentISR;
-
-class IndexReader
-   {
-public:
-   IndexReader(const char * startOfIndex, fb::SizeT index);
-   ~IndexReader( ) { free_stemmer( porterStemmer ); }
-
-   fb::UniquePtr<WordISR> OpenWordISR( fb::String word );
-   fb::UniquePtr<DocumentISR> OpenDocumentISR( );
-   bool WordExists( fb::String word );
-   fb::SizeT getIndex( ) { return index; }
-
-private:
-   const char * start;
-   const unsigned int MAX_TOKEN_BITS, DICTIONARY_SIZE;
-   unsigned int * dictionary;
-   fb::SizeT index;
-   stemmer * porterStemmer;
-   };
-<<<<<<< HEAD
-
-IndexReader::IndexReader(const char * startOfIndex, fb::SizeT index)
+IndexReader::IndexReader(const char * startOfIndex)
 : start(startOfIndex),
    MAX_TOKEN_BITS( getHighestBit( *( ( ( unsigned int * ) start ) + 1 ) ) ),
    DICTIONARY_SIZE( *( ( ( unsigned int * ) start ) + 2 ) ),
    dictionary( ( ( unsigned int * ) start ) + 3 ),
-   index(index);
    porterStemmer( create_stemmer( ) ) { }
 
 fb::UniquePtr<WordISR> IndexReader::OpenWordISR( fb::String word )
    {
+   fb::String old_word = word;
    int new_size = stem(porterStemmer, word.data( ), word.size( ) - 1) + 1;
    word.resize( new_size );
+   std::cout << old_word << " -> " << word << " " << old_word.size( ) << " " << word.size( ) << std::endl;
    fb::Hash<fb::String> hash;
    uint64_t bucket = hash(word) % DICTIONARY_SIZE;
-   while(dictionary[bucket] && word.compare(start + dictionary[bucket]))
+   while(dictionary[bucket] && strcmp(start + dictionary[bucket], word.data()))
       {
       bucket = (bucket + 1) % DICTIONARY_SIZE;
       }
@@ -58,13 +28,8 @@ fb::UniquePtr<WordISR> IndexReader::OpenWordISR( fb::String word )
       }
    else
       {
-      return fb::makeUnique<EmptyISR>( );
+      return fb::makeUnique<EmptyISR>();
       }
-   }
-
-fb::UniquePtr<WordISR> IndexReader::GetEmptyISR( )
-   {
-   return fb::makeUnique<EmptyISR>( );
    }
 
 fb::UniquePtr<DocumentISR> IndexReader::OpenDocumentISR( )
@@ -83,5 +48,3 @@ bool IndexReader::WordExists( fb::String word )
 
    return dictionary[bucket];
    }
-=======
->>>>>>> cd670bdfbd265cbb6ae1fdfb1b7d0fa6b77557b6

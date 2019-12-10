@@ -27,7 +27,8 @@ private:
 class PhraseISR : public ISR
    {
 public:
-   PhraseISR(fb::Vector<fb::UniquePtr<WordISR>> ISRs, fb::UniquePtr<DocumentISR> documentISR);
+   PhraseISR(fb::Vector<fb::UniquePtr<WordISR>> ISRs,
+             fb::UniquePtr<DocumentISR> documentISR);
    ~PhraseISR( ) { }
    virtual fb::UniquePtr<IndexInfo> Next( );
    virtual fb::UniquePtr<IndexInfo> NextDocument( );
@@ -139,7 +140,7 @@ fb::UniquePtr<IndexInfo> PhraseISR::Seek( Location target )
                }
             ++successfulTerms;
             }
-         } 
+         }
       }
 
       return GetCurrentInfo( );
@@ -183,7 +184,7 @@ void PhraseISR::updateLocationInfo( )
          {
          farthestLocation = info->GetStartLocation( );
          }
-      
+
       isFirst = false;
       }
 

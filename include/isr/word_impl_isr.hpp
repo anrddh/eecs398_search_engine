@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include <stdio.h> // perror
 
@@ -7,7 +7,7 @@
 #include "document_isr.hpp"
 #include "index_reader_helpers.hpp"
 
-class WordInfo : public IndexInfo 
+class WordInfo : public IndexInfo
    {
 public:
    WordInfo(Location postLoc) : loc(postLoc) { }
@@ -29,7 +29,9 @@ private:
 class WordImplISR : public WordISR
    {
 public:
-   WordImplISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int MAX_TOKEN_BITS);
+   WordImplISR(const char * location,
+               fb::UniquePtr<DocumentISR> documentISR,
+               int MAX_TOKEN_BITS);
    WordImplISR(WordImplISR && other) = default;
    ~WordImplISR( ) { }
    virtual unsigned int GetDocumentCount( );
@@ -53,18 +55,18 @@ private:
    bool isAtEnd;
    };
 
-WordImplISR::WordImplISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int MAX_TOKEN_BITS_) 
+WordImplISR::WordImplISR(const char * location, fb::UniquePtr<DocumentISR> documentISR, int MAX_TOKEN_BITS_)
    : docISR(std::move(documentISR)),
-      NUM_SKIP_TABLE_BITS( *( unsigned int * ) findSkipTable( location ) ), 
+      NUM_SKIP_TABLE_BITS( *( unsigned int * ) findSkipTable( location ) ),
       MAX_TOKEN_BITS(MAX_TOKEN_BITS_),
       absolutePosition(0),
-      skipTable(((unsigned int *)findSkipTable(location)) + 1), 
+      skipTable(((unsigned int *)findSkipTable(location)) + 1),
       rankingData(skipTable - 2),
       currentLocation( ( ( const char * ) skipTable ) + ( 1 << NUM_SKIP_TABLE_BITS ) * 2 * sizeof( unsigned int ) ),
       start(location),
       isAtEnd(fb::is_word_sentinel(currentLocation))
    {
-   if(!isAtEnd) 
+   if(!isAtEnd)
       {
       currentLocation = fb::read_word_post(currentLocation, absolutePosition);
       }
@@ -95,14 +97,14 @@ fb::UniquePtr<IndexInfo> WordImplISR::GetCurrentInfo( )
    return fb::makeUnique<WordInfo>(absolutePosition);
    }
 
-fb::UniquePtr<IndexInfo> WordImplISR::Next( ) 
+fb::UniquePtr<IndexInfo> WordImplISR::Next( )
    {
    if(isAtEnd || fb::is_word_sentinel( currentLocation )  )
       {
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>( );
       }
-   
+
    uint32_t delta;
    currentLocation = fb::read_word_post(currentLocation, delta);
 
@@ -112,14 +114,14 @@ fb::UniquePtr<IndexInfo> WordImplISR::Next( )
 
 fb::UniquePtr<IndexInfo> WordImplISR::NextDocument( )
    {
-   if( isAtEnd || fb::is_word_sentinel( currentLocation ) ) 
+   if( isAtEnd || fb::is_word_sentinel( currentLocation ) )
       {
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>( );
       }
 
    fb::UniquePtr<IndexInfo> docInfo = docISR->Seek( absolutePosition );
-   
+
    if(!docInfo)
       {
       perror("ERROR, word with no EOD after it");
@@ -139,7 +141,7 @@ fb::UniquePtr<IndexInfo> WordImplISR::Seek( Location target )
       isAtEnd = true;
       return fb::UniquePtr<IndexInfo>();
       }
-   
+
    uint32_t trash;
    currentLocation = fb::read_word_post(currentLocation, trash); // move past first element
 
@@ -149,7 +151,7 @@ fb::UniquePtr<IndexInfo> WordImplISR::Seek( Location target )
    return GetCurrentInfo( );
    }
 
-bool WordImplISR::AtEnd( ) 
+bool WordImplISR::AtEnd( )
    {
    return isAtEnd;
    }

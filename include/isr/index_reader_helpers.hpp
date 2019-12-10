@@ -1,6 +1,6 @@
 #pragma once
 
-const char * findSkipTable(const char * start) 
+inline const char * findSkipTable(const char * start)
    {
    while(*(start++) != '\0')
       ;
@@ -8,7 +8,7 @@ const char * findSkipTable(const char * start)
    return start;
    }
 
-int getHighestBit(int num)
+inline int getHighestBit(int num)
    {
    int val = 0;
    while(num)

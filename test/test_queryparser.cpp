@@ -3,27 +3,30 @@
 #include "doctest.h"
 
 TEST_CASE( "Queryparser Test 1" ) {
-        fb::String stream = "cat dog";
-        Parser p(stream);
-        auto expr = p.Parse();
-        CHECK(static_cast<bool>(expr));
-        expr->Eval();
-    }
+    fb::String stream = "cat dog";
+    Parser p(stream);
+    auto expr = p.Parse();
+    CHECK(static_cast<bool>(expr));
+    expr->Print();
+    std::cout << "\n\n\n\n";
+}
 
-    TEST_CASE( "Queryparser Test 2" ) {
-        fb::String stream = "cat \\ dog";
-        Parser p(stream);
-        auto expr = p.Parse();
-        CHECK(static_cast<bool>(expr));
-        expr->Eval();
-    }
+TEST_CASE( "Queryparser Test 2" ) {
+    fb::String stream = "cat \\ dog";
+    Parser p(stream);
+    auto expr = p.Parse();
+    CHECK(static_cast<bool>(expr));
+    expr->Print();
+    std::cout << "\n\n\n\n";
+}
 
 TEST_CASE( "Queryparser Test 3" ) {
     fb::String stream = "cats \\ \"Alex\"";
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 4" ) {
@@ -31,7 +34,8 @@ TEST_CASE( "Queryparser Test 4" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 5" ) {
@@ -39,7 +43,8 @@ TEST_CASE( "Queryparser Test 5" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 5" ) {
@@ -47,7 +52,8 @@ TEST_CASE( "Queryparser Test 5" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 6" ) {
@@ -55,7 +61,8 @@ TEST_CASE( "Queryparser Test 6" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 6" ) {
@@ -63,7 +70,8 @@ TEST_CASE( "Queryparser Test 6" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 6" ) {
@@ -71,7 +79,8 @@ TEST_CASE( "Queryparser Test 6" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 7" ) {
@@ -79,7 +88,8 @@ TEST_CASE( "Queryparser Test 7" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 8" ) {
@@ -87,6 +97,7 @@ TEST_CASE( "Queryparser Test 8" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(!static_cast<bool>(expr));
+    std::cout << "\n\n\n\n";
 }
 
 TEST_CASE( "Queryparser Test 9" ) {
@@ -94,5 +105,6 @@ TEST_CASE( "Queryparser Test 9" ) {
     Parser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
-    expr->Eval();
+    expr->Print();
+    std::cout << "\n\n\n\n";
 }

@@ -3,7 +3,7 @@
 #include "posting_list_builder.hpp"
 #include "index_data_structures.hpp"
 
-int getHighestBit(int num)
+inline int getHighestBit(int num)
    {
    int val = 0;
    while(num)
@@ -20,10 +20,10 @@ constexpr long MAX_FILE_SIZE = 4000000000;
 template<typename Hash>
 class IndexChunkBuilder {
 public:
-   IndexChunkBuilder(fb::String filename, uint32_t capacity, const fb::Vector<DocIdInfo> &documents, int num_tokens) 
-      : tableSize(capacity), file(open(filename.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH)), MAX_TOKEN_BITS(getHighestBit(num_tokens)) 
-      { 
-      if(file == -1) 
+   IndexChunkBuilder(fb::String filename, uint32_t capacity, const fb::Vector<DocIdInfo> &documents, int num_tokens)
+      : tableSize(capacity), file(open(filename.data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH)), MAX_TOKEN_BITS(getHighestBit(num_tokens))
+      {
+      if(file == -1)
          {
          // TODO: throw error or something
          }
@@ -41,7 +41,7 @@ public:
       nextAvailableLocation += writeEODList(documents);
       }
 
-   ~IndexChunkBuilder() 
+   ~IndexChunkBuilder()
       {
       munmap(start, MAX_FILE_SIZE);
       ftruncate(file, nextAvailableLocation);
@@ -76,7 +76,7 @@ void IndexChunkBuilder<Hash>::addWord
    if(dictionary[bucket] != 0)
       {
       ++bucket;
-      while(dictionary[bucket] != 0) 
+      while(dictionary[bucket] != 0)
          {
          bucket = (bucket + 1) % tableSize;
          if(bucket == originalBucket)
@@ -87,18 +87,18 @@ void IndexChunkBuilder<Hash>::addWord
       }
 
    dictionary[bucket] = nextAvailableLocation;
-   
+
    nextAvailableLocation += writePostingList(word, offsets, docCount);
    }
 
 template<typename Hash>
 int IndexChunkBuilder<Hash>::writePostingList
-   (const fb::String &word, const fb::Vector<AbsoluteWordInfo> &offsets, unsigned int docCount) 
+   (const fb::String &word, const fb::Vector<AbsoluteWordInfo> &offsets, unsigned int docCount)
    {
    char * postingListLocation = start + nextAvailableLocation;
    int num_skip_table_bits = std::min( 10, std::max(1, getHighestBit( offsets.size( ) ) - 6) );
    PostingListBuilder builder(word, postingListLocation, docCount, offsets.size(), MAX_TOKEN_BITS, num_skip_table_bits);
-   for(const AbsoluteWordInfo &word : offsets) 
+   for(const AbsoluteWordInfo &word : offsets)
       {
       builder.addPost(word);
       }
@@ -108,7 +108,7 @@ int IndexChunkBuilder<Hash>::writePostingList
    }
 
 template<typename Hash>
-int IndexChunkBuilder<Hash>::writeEODList(const fb::Vector<DocIdInfo> &documents) 
+int IndexChunkBuilder<Hash>::writeEODList(const fb::Vector<DocIdInfo> &documents)
    {
    char * postingListLocation = start + nextAvailableLocation;
    int num_skip_table_bits = std::min( 10, std::max(1, getHighestBit( documents.size( ) ) - 6) );

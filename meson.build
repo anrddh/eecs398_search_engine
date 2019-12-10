@@ -67,9 +67,10 @@ executable('print_page_store',
             print_page_store_driver,
             include_directories: inc)
 
-executable('search_index',
-            search_index_driver,
-            include_directories: inc)
+#executable('search_index',
+#           search_index_driver,
+#           ['src/index_reader.cpp'],
+#            include_directories: inc)
 
 executable('page_store_total',
             page_store_total_driver, page_store_total_files,
@@ -82,4 +83,3 @@ executable('isr_example',
 executable('ranker_test',
             ranker_test_driver,
             include_directories: inc)
-

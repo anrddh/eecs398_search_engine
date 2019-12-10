@@ -27,7 +27,9 @@ private:
 class ContainerISR : public ISR
    {
 public:
-   ContainerISR(fb::UniquePtr<ISR> IncludeISR, fb::UniquePtr<ISR> ExcludeISR, fb::UniquePtr<DocumentISR> documentISR);
+   ContainerISR(fb::UniquePtr<ISR> IncludeISR,
+                fb::UniquePtr<ISR> ExcludeISR,
+                fb::UniquePtr<DocumentISR> documentISR);
    ~ContainerISR( ) { }
    virtual fb::UniquePtr<IndexInfo> Next( );
    virtual fb::UniquePtr<IndexInfo> NextDocument( );

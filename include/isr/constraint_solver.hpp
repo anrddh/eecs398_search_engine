@@ -13,12 +13,12 @@ struct rank_stats
    double rank = -1;
    };
 
-class ConstraintSolver 
+class ConstraintSolver
    {
 public:
-   ConstraintSolver( fb::UniquePtr<ISR> isrIn, fb::UniquePtr<DocumentISR> docIsrIn, fb::Vector<fb::UniquePtr<WordISR>> wordIsrsIn, uint32_t page_store_number ) 
+   ConstraintSolver( fb::UniquePtr<ISR> isrIn, fb::UniquePtr<DocumentISR> docIsrIn, fb::Vector<fb::UniquePtr<WordISR>> wordIsrsIn, uint32_t page_store_number )
    : mainIsr( std::move( isrIn ) ), docIsr( std::move( docIsrIn ) ), wordIsrs( std::move( wordIsrsIn ) ), page_store_num( page_store_number ), doc_frequencies(wordIsrs.size( ), 0)
-      { 
+      {
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
          {
          doc_frequencies[i] = wordIsrs[i]->GetDocumentCount( );
@@ -63,7 +63,7 @@ private:
    fb::Vector<fb::SizeT> doc_frequencies;
    fb::Vector<rank_stats> documents_to_rank;
 
-   void saveMatch( ) 
+   void saveMatch( )
       {
       Location docEnd = docIsr->Seek( mainIsr->GetCurrentInfo( )->GetStartLocation( ) )->GetEndLocation( );
       uint32_t docLength = docIsr->GetDocumentLength( );
@@ -72,7 +72,7 @@ private:
       for( fb::SizeT i = 0; i < occurrences.size( ); ++i)
          {
          fb::UniquePtr<IndexInfo> wordInfo = wordIsrs[i]->Seek( docStart );
-         while( wordInfo && wordInfo->GetEndLocation( ) < docEnd ) 
+         while( wordInfo && wordInfo->GetEndLocation( ) < docEnd )
             {
             occurrences[i].pushBack(wordInfo->GetStartLocation( ) - docStart );
             wordInfo = wordIsrs[i]->Next( );

@@ -6,6 +6,7 @@
 #include <tcp/constants.hpp>
 #include <disk/page_store.hpp>
 #include <disk/constants.hpp>
+#include <ranker/ranker.hpp>
 
 #include <fb/thread.hpp>
 #include <fb/cv.hpp>
@@ -46,7 +47,10 @@ struct IndexInfo {
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    ConstraintSolver info.e->eval(info.reader);
+    ConstraintSolver cSolver = info.e->eval(info.reader);
+    Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank();
+    Vector<SizeT> docFreqs = cSolver.GetDocFrequencies();
+    tfidf_rank(docsToRank, docFreqs);
     //TODO
 }
 

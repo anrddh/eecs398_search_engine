@@ -6,10 +6,10 @@
 #include <iostream>
 #include <sstream>
 
-class HtmlTemplate 
+class HtmlTemplate
    {
 public:
-   void loadTemplateFromFile(fb::String path) 
+   void loadTemplateFromFile(fb::String path)
       {
       std::ifstream file;
       file.open(path.data());
@@ -22,19 +22,15 @@ public:
 
    void loadTemplateFromString(const fb::String &templ) { html = templ; }
 
-   fb::String getRenderedHtml(fb::UnorderedMap<fb::String, fb::String>& variables) 
+   fb::String getRenderedHtml(fb::UnorderedMap<fb::String, fb::String>& variables)
       {
       fb::StringList sl;
-      for (htmlIter = html.begin(); htmlIter < html.end() - 1; ++htmlIter) 
+      for (htmlIter = html.begin(); htmlIter < html.end() - 1; ++htmlIter)
          {
-         if (*htmlIter == '[' && *(htmlIter + 1) == '%') 
-            {
+         if (*htmlIter == '[' && *(htmlIter + 1) == '%')
             loadVariableIntoTemplate(variables, sl);
-            } 
-         else 
-            {
+         else
             sl << *htmlIter;
-            }
          }
       sl << *htmlIter;
 
@@ -46,7 +42,7 @@ private:
   fb::String::Iterator htmlIter;
 
   void loadVariableIntoTemplate(fb::UnorderedMap<fb::String, fb::String>& variables,
-      fb::StringList& sl) 
+      fb::StringList& sl)
       {
       ++htmlIter;
       while (*(++htmlIter) == ' ')
@@ -57,13 +53,13 @@ private:
          ;
 
       fb::String variableKey(stringStart, htmlIter);
-      if (variables.find(variableKey) != variables.end()) 
+      if (variables.find(variableKey) != variables.end())
          {
          sl << variables.at(variableKey);
          }
 
       while (((*htmlIter != '%') || (*(htmlIter + 1) != ']')) &&
-           htmlIter < html.end() - 1) 
+           htmlIter < html.end() - 1)
          {
          ++htmlIter;
       }
@@ -79,9 +75,9 @@ HtmlPage::HtmlPage(const HtmlPage& other)
      htmlTemplate(fb::makeUnique<HtmlTemplate>(*other.htmlTemplate))
    { }
 
-HtmlPage& HtmlPage::operator=(const HtmlPage& other) 
+HtmlPage& HtmlPage::operator=(const HtmlPage& other)
    {
-   if (this != &other) 
+   if (this != &other)
       {
       htmlTemplate = fb::makeUnique<HtmlTemplate>(*other.htmlTemplate);
       header = other.header;
@@ -92,21 +88,21 @@ HtmlPage& HtmlPage::operator=(const HtmlPage& other)
 
 HtmlPage ::~HtmlPage() {}
 
-void HtmlPage::loadFromString(const fb::String &html) 
+void HtmlPage::loadFromString(const fb::String &html)
    {
    htmlTemplate->loadTemplateFromString(html);
    }
-void HtmlPage::loadFromFile(const fb::String &path) 
+void HtmlPage::loadFromFile(const fb::String &path)
    {
    htmlTemplate->loadTemplateFromFile(path);
    }
 
-void HtmlPage::setValue(const fb::String &key, const fb::String &value) 
+void HtmlPage::setValue(const fb::String &key, const fb::String &value)
    {
    templateVariables[key] = value;
    }
 
-fb::String HtmlPage::getPageHtml() 
+fb::String HtmlPage::getPageHtml()
    {
    return htmlTemplate->getRenderedHtml(templateVariables);
    }

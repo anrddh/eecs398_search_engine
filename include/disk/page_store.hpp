@@ -35,6 +35,10 @@ public:
         return PageStoreCounterFile.reserve(1);
     }
 
+    fb::SizeT getCount() {
+        return PageStoreCounterFile.reserve(0);
+    }
+
 private:
     PageStoreCounter(fb::StringView filename) : PageStoreCounterFile(filename) {}
 

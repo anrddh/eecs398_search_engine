@@ -39,17 +39,18 @@ public:
 	fb::UnorderedSet<fb::String> urls;
 	fb::Vector<uint8_t> wordFlags;
 	const ParsedUrl parsedUrl;
+    constexpr static bool addUrls = false;
 
 	Parser( fb::StringView content_in, const ParsedUrl parsedUrl_in )
         : parsedUrl(parsedUrl_in), content(content_in), inSpecialCharacter(false)
-	{
+		{
 		tagStack.pushBack( "DEFAULT" );
 
 		for ( int i = 0; i < 4; ++i )
 			flagCounter[i] = 0;
-	}
+		}
 
-   // This function will invalidate the parser object
+   // This function will invalidate the iarser object
    // Written by Jaeyoon Kim
    Page extractPage( fb::SizeT UrlOffset )
       {
@@ -449,27 +450,24 @@ private:
 
         index = seekSubstr( index, "<"_sv );
 
-        fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
-        fb::String url(urlView.data(), urlView.size());
         fb::StringView anchorText = content.substr(tagEndIndex,
-                                                  index - tagEndIndex );
+               index - tagEndIndex );
 
-		index = seekSubstrIgnoreCase( index, "</a"_sv );
+		addToResult( ' ' );
 
-		if ( isActualUrl( url ) )
-			{
-			// add anchor text to parsed result
-			addToResult( ' ' );
+		for ( char i : anchorText )
+			addToResult( i );
+		addToResult( ' ' );
 
-			// fb::SizeT parsedIndex = parsedResult.size( );
-			for ( char i : anchorText )
-				addToResult( i );
-			addToResult( ' ' );
-
-			addUrlAnchorTest(std::move(url) );
-                             // parsedResult.substr(parsedIndex));
+        if constexpr ( addUrls )
+	        {
+	        fb::StringView urlView = extractURL( tagStartIndex, tagEndIndex );
+	        fb::String url(urlView.data(), urlView.size());
+			if ( isActualUrl( url ) )
+				addUrlAnchorTest( std::move(url) );
 			}
 
+		index = seekSubstrIgnoreCase( index, "</a"_sv );
 		index = seekSubstr( index, ">"_sv );
 
 		return index;

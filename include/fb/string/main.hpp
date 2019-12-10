@@ -64,6 +64,13 @@ namespace fb {
         BasicString(const BasicString &) = default;
         BasicString & operator=(const BasicString &) = default;
 
+        template <typename It>
+        BasicString(It a, It b) {
+            for ( ; a != b && a != 0; ++a)
+               buf.pushBack(*a);
+            buf.pushBack(0);
+        }
+
         /*  Element access  */
         Reference at(SizeType pos) {
             if (pos >= size())
@@ -351,19 +358,21 @@ namespace fb {
 
 
         void resize(SizeType count) {
-            buf.resize(count + 1);
+            buf.resize(count);
+            buf.pushBack(0);
         }
 
         void resize(SizeType count, CharT ch) {
             if (count <= size()) {
-                buf.resize(count + 1);
+                buf.resize(count);
+                buf.pushBack(0);
                 return;
             }
 
             buf.last() = ch;
             buf.reserve(count + 1);
             buf.resize(count, ch);
-            buf.push_back(0);
+            buf.pushBack(0);
         }
 
         constexpr void swap(BasicString &other) noexcept {

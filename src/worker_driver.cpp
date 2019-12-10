@@ -29,8 +29,7 @@ fb::SharedMutex blockedHostsLock;
 using std::cout;
 using std::endl;
 
-
-struct ArgError : std::exception 
+struct ArgError : std::exception
    {
    };
 
@@ -39,8 +38,31 @@ void * parsePages( void * );
 
 fb::UnorderedSet< fb::String > blockedHosts;
 
-int main( int argc, char **argv ) 
-   try 
+void addBlockedHosts( fb::String filename )
+   {
+   std::ifstream file;
+   file.open( filename.data( ) );
+
+   if( !file.is_open( ) )
+      {
+      std::cerr << "Could not open file `" << filename
+               << "'." << std::endl;
+      return;
+      }
+
+   blockedHostsLock.lock( );
+   fb::String host;
+   while ( fb::getline( file, host ) )
+      blockedHosts.insert( host );
+   blockedHostsLock.unlock( );
+
+   file.close( );
+
+   std::cout << "Number of blocked hosts: " << blockedHosts.size( ) << std::endl;
+   }
+
+int main( int argc, char **argv )
+   try
       {
    	auto numThreads = parseArguments( argc, argv );
 
@@ -54,24 +76,24 @@ int main( int argc, char **argv )
       	threads.emplaceBack( parsePages, nullptr );
 
    	fb::String userInput;
-   	do 
+   	do
          {
    		if ( userInput == "status" || userInput == "s" )
    			{
    			print_tcp_status( );
-   			std::cout << "Num pages parsed in this process " 
+   			std::cout << "Num pages parsed in this process "
                   << get_num_parsed( ) << std::endl;
    			continue;
    			}
-   		if ( userInput == "shutdown" ) 
+   		if ( userInput == "shutdown" )
             {
    			std::cout << "Are you sure? (type 'YES')\n";
    			std::cin >>  userInput;
-   			if ( userInput == "YES" ) 
+   			if ( userInput == "YES" )
                {
    				std::cout << "Really really sure? (type 'JAEYOON')\n";
    				std::cin >> userInput;
-   				if ( userInput == "JAEYOON" ) 
+   				if ( userInput == "JAEYOON" )
                   {
    					std::cout << "OK... Bye World" <<  std::endl;
    					break;
@@ -83,16 +105,8 @@ int main( int argc, char **argv )
             {
             std::cout << "Provide a filename for urls to block\n";
             std::cin >> userInput;
-             std::ifstream file;
-            file.open( userInput.data( ) );
 
-            blockedHostsLock.lock( );
-            fb::String host;
-            while ( fb::getline( file, host ) )
-               blockedHosts.insert( host );
-            blockedHostsLock.unlock( );
-
-            file.close( );
+            addBlockedHosts( userInput );
             }
          }
       while ( std::cin >> userInput );
@@ -102,16 +116,16 @@ int main( int argc, char **argv )
       std::cout << "after initiate shutdown." << std::endl;
       page_store_shutdown( );
       std::cout << "Shutting down." << std::endl;
-      for ( auto &thread : threads ) 
+      for ( auto &thread : threads )
          {
          thread.join( );
          std::cout << "joined" << std::endl;
          }
-      } 
+      }
    catch ( const ArgError & )
       {
 		std::cerr << "Usage: " << argv[0]
-      		<< " [-p port] [-o hostname] [-t threads]\n\n"
+      		<< " [-p port] [-o hostname] [-t threads] [-u urls]\n\n"
       		<< "The `port' parameter accepts an integer in the range "
       		<< "[1024, 65536). Default value: `" << DefaultPort << "'\n"
       		<< "The `hostname' parameter accepts a valid filename. Default value: `"
@@ -122,9 +136,9 @@ int main( int argc, char **argv )
 		return 1;
       }
 
-fb::SizeT parseArguments( int argc, char **argv ) 
+fb::SizeT parseArguments( int argc, char **argv )
    {
-	option long_opts[ ] = 
+	option long_opts[ ] =
       {
 		{ "hostname",  required_argument, nullptr, 'o' },
 		{ "port",      required_argument, nullptr, 'p' },
@@ -141,9 +155,9 @@ fb::SizeT parseArguments( int argc, char **argv )
 
 	while ( ( choice =
 					getopt_long( argc, argv, "o:p:ht:", long_opts, &option_idx ) )
-				 != -1 ) 
+				 != -1 )
       {
-		switch (choice) 
+		switch (choice)
          {
    		case 'p':
 				port = optarg;
@@ -166,12 +180,14 @@ fb::SizeT parseArguments( int argc, char **argv )
 
 	auto logfileloc = rootDir + WorkerLogFile;
 	logfile.open( logfileloc.data( ) );
-	if ( !logfile.is_open( ) ) 
+	if ( !logfile.is_open( ) )
       {
 		std::cerr << "Could not open logfile `" << logfileloc
 				<< "'." << std::endl;
 		throw ArgError( );
    	}
+
+   addBlockedHosts( rootDir + BlockedHostsFile );
 
 	auto pagebinloc = rootDir + PageStoreFile;
 	initializeFileName( std::move( pagebinloc ) );
@@ -189,19 +205,19 @@ fb::SizeT parseArguments( int argc, char **argv )
 			static_cast< fb::SizeT >( stoll( threads ) );
    }
 
-void * parsePages( void * ) 
+void * parsePages( void * )
    {
-   while ( true ) 
+   while ( true )
       {
 		auto urlPair = get_url_to_parse( );
 
-		if ( urlPair.second.empty( ) ) 
+		if ( urlPair.second.empty( ) )
          {
 			endCV.signal( );
          return nullptr;
 			}
 
-		try 
+		try
          {
          ParsedUrl urlInitial( urlPair.second );
 
@@ -222,14 +238,16 @@ void * parsePages( void * )
 			Parser parser( result, std::move( url ) );
 			parser.parse( );
 
-			fb::Vector<fb::String> urls;
-			for( auto iter : parser.urls )
-				urls.pushBack( iter );
+            if constexpr (Parser::addUrls) {
+                fb::Vector<fb::String> urls;
+                for( auto iter : parser.urls )
+                    urls.pushBack( iter );
+                add_parsed( { urlPair.first, urls } );
+            }
 
-			add_parsed( { urlPair.first, urls } );
 			addPage( std::move(parser.extractPage( urlPair.first ) ) );
 			}
-      catch ( ConnectionException e ) 
+      catch ( ConnectionException e )
          {
 			}
       }

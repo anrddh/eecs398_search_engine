@@ -36,20 +36,20 @@ subdir('src')
 subdir('test')
 subdir('external')
 
-executable('master',
-           master_driver, master_source_files,
-           include_directories: inc,
-           dependencies: [readline_dep, threads_dep])
+#executable('master',
+#           master_driver, master_source_files,
+#           include_directories: inc,
+#           dependencies: [readline_dep, threads_dep])
 
 executable('server',
            server_driver, server_source_files,
            include_directories: inc,
            dependencies: [threads_dep])
 
-executable('worker',
-           worker_driver, worker_source_files,
-                      include_directories: inc,
-                      dependencies: [readline_dep, threads_dep])
+#executable('worker',
+#           worker_driver, worker_source_files,
+#                      include_directories: inc,
+#                      dependencies: [readline_dep, threads_dep])
 
 executable('build_index_chunk',
             build_index_chunk_driver,

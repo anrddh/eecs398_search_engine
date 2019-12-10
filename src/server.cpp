@@ -23,12 +23,37 @@ HtmlPage kthResults() {
 
     fb::String counterString = fb::toString(resultCounter);
 
-    int numResults = 10;
-    for(int i = 0; i < numResults; ++i) {
-        fb::String iString = fb::toString(i);
-        page.setValue("title" + iString, counterString +  iString + "th Result for " + resultOptions["query"]);
-        page.setValue("url" + iString, counterString + iString + "th Url");
-        page.setValue("snippet" + iString, counterString + iString + "th Snippet");
+    if( resultOptions["query"] == "aniruddh" )
+    {
+        page.setValue("title0", "Aniruddh Agarwal - MATH 593 (Graduate Algebra I) Grader...");
+        page.setValue("url0", "https://www.linkedin.com/in/agarwalaniruddh");
+        page.setValue("snippet0", "Undergraduate student at the University of Michigan majoring in Computer Science and Mathematics. Interested in systems programming and machine learning.");
+
+        page.setValue("title1", "User Aniruddh Agarwal - MathOverflow");
+        page.setValue("url1", "https://mathoverflow.net/users/136734/aniruddh-agarwal");
+        page.setValue("snippet1", "Undergrad at Michigan interested in arithmetic geometry.");
+
+        page.setValue("title2", "Aniruddh Agarwal");
+        page.setValue("url2", "https://www.facebook.com/aniruddh.agarwal.3");
+        page.setValue("snippet2", "");
+
+        page.setValue("title3", "Aniruddh Agarwal");
+        page.setValue("url3", "https://github.com/anrddh");
+        page.setValue("snippet3", "Aniruddh Agarwal anrddh");
+
+        page.setValue("title4", "User Aniruddh Agarwal - Stack Overflow");
+        page.setValue("url4", "https://stackoverflow.com/users/11428421/aniruddh-agarwal");
+        page.setValue("snippet4", "Undergrad at Michigan interested in arithmetic geometry.");
+    }
+    else
+    {
+        int numResults = 10;
+        for(int i = 0; i < numResults; ++i) {
+            fb::String iString = fb::toString(i);
+            page.setValue("title" + iString, counterString +  iString + "th Result for " + resultOptions["query"]);
+            page.setValue("url" + iString, counterString + iString + "th Url");
+            page.setValue("snippet" + iString, counterString + iString + "th Snippet");
+        }
     }
 
     return page;

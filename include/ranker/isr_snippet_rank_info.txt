@@ -1,0 +1,35 @@
+This file details the format of snippet ranking information required from the ISRs.
+
+In order to do snippet rank, we need to know the absolute word offset of each of the queried words with respect to a single document, as well as a weight for each of the words (don't worry right now about what that weight is). Refer to slide 17 of our presentation for an overview of how snippet rank works.
+
+If our document has 20 words in it (zero indexed), and our query is "cat and dog", then
+
+cat: 3, 10
+and: 2, 7, 15, 18
+dog: 4, 8, 17, 19
+
+This means that the word "cat" occurs at word indices 3 and 10 inside our document, "and" occurs at word indices 2, 7, 15, and 18, etc.
+
+Across a single query, we can keep track of the query in a vector of strings:
+
+vector<string> QUERY; // each element in here is a word in our query
+
+
+
+I would like the ISRs to return (I think uint32_t should be enough)
+
+vector<vector<uint32_t>> OCCURRENCES;
+
+where the i^th entry of OCCURRENCES is a vector of absolute word offsets corresponding to the i^th word in QUERY.
+
+
+
+I think we can modify rank_stats to have all this information:
+
+struct rank_stats{
+	uint32_t page_store_number;
+	uint32_t page_store_index;
+	unsigned int total_term_count; // doc length
+	fb::Vector<uint32_t> term_freq;
+	fb::Vector<fb::Vector<uint32_t>> OCCURRENCES;
+};

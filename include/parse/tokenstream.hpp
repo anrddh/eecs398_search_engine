@@ -50,12 +50,12 @@ bool CharIsIrrelevant( char c ) {
  * deemed "irrelevant" by the CharIsIrrelevant function above
  */
 class TokenStream {
+public:
    // The input we receive, with only relevant characters left
    fb::String input;
    // Where we currently are in the input
     size_t location { 0 };
 
-public:
 
    /**
     * Construct a token stream that uses a copy of the input
@@ -73,7 +73,8 @@ public:
            input += word.c_str();
 
        while (stream >> word) {
-           if (!CharIsControl(input.back()) && !CharIsControl(word.front()))
+           if ((!CharIsControl(input.back()) && !CharIsControl(word.front()))
+               || (word.front() == '(' && !CharIsControl(input.back())))
                input += ' ';
            input += word.c_str();
        }

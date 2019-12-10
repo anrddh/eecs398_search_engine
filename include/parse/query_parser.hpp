@@ -10,6 +10,7 @@
  * The actual expression parser
  */
 class Parser {
+public:
     // Stream of tokens to consume input from
     TokenStream stream;
 
@@ -95,7 +96,6 @@ class Parser {
         return nullptr;
     }
 
-public:
 
    /**
     * Construct parser based on given input

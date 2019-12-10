@@ -1,8 +1,9 @@
 #pragma once
 
-#include "fb/memory.hpp"
+#include <fb/memory.hpp>
 
-#include "isr/isr.hpp"
+#include <isr/isr.hpp>
+#include <isr/document_isr.hpp>
 
 struct rank_stats
    {
@@ -16,9 +17,15 @@ struct rank_stats
 class ConstraintSolver
    {
 public:
-   ConstraintSolver( fb::UniquePtr<ISR> isrIn, fb::UniquePtr<DocumentISR> docIsrIn, fb::Vector<fb::UniquePtr<WordISR>> wordIsrsIn, uint32_t page_store_number )
-   : mainIsr( std::move( isrIn ) ), docIsr( std::move( docIsrIn ) ), wordIsrs( std::move( wordIsrsIn ) ), page_store_num( page_store_number ), doc_frequencies(wordIsrs.size( ), 0)
-      {
+   ConstraintSolver(fb::UniquePtr<ISR> isrIn,
+                    fb::UniquePtr<DocumentISR> docIsrIn,
+                    fb::Vector<fb::UniquePtr<WordISR>> wordIsrsIn,
+                    uint32_t page_store_number)
+   : mainIsr( std::move( isrIn ) ),
+     docIsr( std::move( docIsrIn ) ),
+     wordIsrs( std::move( wordIsrsIn ) ),
+     page_store_num( page_store_number ),
+     doc_frequencies(wordIsrs.size( ), 0) {
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
          {
          doc_frequencies[i] = wordIsrs[i]->GetDocumentCount( );

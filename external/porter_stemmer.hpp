@@ -1,3 +1,5 @@
+#pragma once
+
 // NOTICE: NOT WRITTEN BY THE FANTASTIC BUGS AND WHERE TO FIND THEM SEARCH ENGINE TEAM
 //         https://tartarus.org/martin/PorterStemmer/
 //         SMALL MODIFICATIONS WERE MADE TO FIX COMPILER WARNINGS
@@ -90,13 +92,13 @@ struct stemmer {
 */
 
 
-extern struct stemmer * create_stemmer(void)
+inline struct stemmer * create_stemmer(void)
 {
     return (struct stemmer *) malloc(sizeof(struct stemmer));
     /* assume malloc succeeds */
 }
 
-extern void free_stemmer(struct stemmer * z)
+inline void free_stemmer(struct stemmer * z)
 {
     free(z);
 }
@@ -378,7 +380,7 @@ static void step5(struct stemmer * z)
    length, so 0 <= k' <= k.
 */
 
-extern int stem(struct stemmer * z, char * b, int k)
+inline int stem(struct stemmer * z, char * b, int k)
 {
    if (k <= 1) return k; /*-DEPARTURE-*/
    z->b = b; z->k = k; /* copy the parameters into z */
@@ -408,7 +410,7 @@ static int i_max = INC;  /* maximum offset in s */
 
 #define LETTER(ch) (isupper(ch) || islower(ch))
 
-void stemfile(struct stemmer * z, FILE * f)
+inline void stemfile(struct stemmer * z, FILE * f)
 {  while(TRUE)
    {  int ch = getc(f);
       if (ch == EOF) return;

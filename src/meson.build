@@ -11,18 +11,12 @@ worker_driver = files('worker_driver.cpp')
 worker_source_files += files('worker_url_tcp.cpp', 'url_tcp.cpp',
                              'page_store.cpp', 'download_html.cpp',
                              'debug.cpp', 'logfile.cpp', 'parser.cpp')
-<<<<<<< HEAD
-
-server_driver = files('server.cpp')
-=======
->>>>>>> webserver
 server_source_files += files('bolt/bolt.cpp',
                              'bolt/buffered_reader.cpp',
                              'bolt/html_page.cpp',
                              'bolt/http/http_connection_handler_factory.cpp',
                              'bolt/http/http_request.cpp',
                              'bolt/http/socket_http_connection_handler.cpp')
-<<<<<<< HEAD
 
 build_index_driver = files('build_index.cpp', 'logfile.cpp', 'debug.cpp')
 
@@ -35,5 +29,3 @@ print_page_store_driver = files('index/print_page_store.cpp')
 search_index_driver = files('search_index.cpp')
 
 ranker_test_driver = files('ranker_test.cpp')
-=======
->>>>>>> webserver

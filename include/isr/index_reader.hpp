@@ -31,7 +31,6 @@ private:
    fb::SizeT index;
    stemmer * porterStemmer;
    };
-<<<<<<< HEAD
 
 IndexReader::IndexReader(const char * startOfIndex, fb::SizeT index)
 : start(startOfIndex),
@@ -83,5 +82,3 @@ bool IndexReader::WordExists( fb::String word )
 
    return dictionary[bucket];
    }
-=======
->>>>>>> cd670bdfbd265cbb6ae1fdfb1b7d0fa6b77557b6

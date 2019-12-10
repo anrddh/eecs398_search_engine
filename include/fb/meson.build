@@ -5,8 +5,4 @@ project_header_files += files('queue.hpp', 'thread.hpp', 'iterator.hpp',
                               'utility.hpp', 'algorithm.hpp', 'memory.hpp',
                               'string_view.hpp', 'vector.hpp', 'cv.hpp',
                               'view.hpp', 'file_descriptor.hpp', 'mutex.hpp',
-<<<<<<< HEAD
                               'functional.hpp', 'priority_queue.hpp', 'string_list.hpp', 'no_delete_unordered_map.hpp')
-=======
-                              'functional.hpp', 'priority_queue.hpp', 'string_list.hpp')
->>>>>>> webserver

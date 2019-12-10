@@ -9,14 +9,11 @@
 class HtmlTemplate
    {
 public:
-<<<<<<< HEAD
-=======
    void setSkipRender( bool val )
       {
       skipRender = val;
       }
 
->>>>>>> webserver
    void loadTemplateFromFile(fb::String path)
       {
       std::ifstream file;
@@ -101,15 +98,12 @@ HtmlPage& HtmlPage::operator=(const HtmlPage& other)
 
 HtmlPage ::~HtmlPage() {}
 
-<<<<<<< HEAD
-=======
 void HtmlPage::loadRawFile(const fb::String &path)
    {
    htmlTemplate->loadTemplateFromFile(path);
    htmlTemplate->setSkipRender( true );
    }
 
->>>>>>> webserver
 void HtmlPage::loadFromString(const fb::String &html)
    {
    htmlTemplate->loadTemplateFromString(html);

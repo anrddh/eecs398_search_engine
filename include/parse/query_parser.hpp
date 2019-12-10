@@ -1,7 +1,6 @@
 #pragma once
 
 #include <fb/string.hpp>
-<<<<<<< HEAD
 #include <fb/string_view.hpp>
 
 #include <parse/tokenstream.hpp>
@@ -136,7 +135,3 @@ public:
     }
 };
 // class Parser
-=======
-
-#include "tokenstream.hpp"
->>>>>>> webserver

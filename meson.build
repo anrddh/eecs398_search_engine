@@ -59,7 +59,6 @@ executable('build_index',
             build_index_driver,
             include_directories: inc)
 
-<<<<<<< HEAD
 executable('build_index_test',
             build_index_test_driver,
             include_directories: inc)
@@ -67,12 +66,6 @@ executable('build_index_test',
 executable('print_page_store',
             print_page_store_driver,
             include_directories: inc)
-=======
-#executable('worker',
-#           worker_driver, worker_source_files,
-#                      include_directories: inc,
-#                      dependencies: [readline_dep, threads_dep])
->>>>>>> webserver
 
 #executable('search_index',
 #           search_index_driver,

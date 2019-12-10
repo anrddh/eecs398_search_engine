@@ -51,11 +51,7 @@ public:
                   = 0)
         noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
 
-<<<<<<< HEAD
     // move assignment operator
-=======
-   // move assignment operator
->>>>>>> webserver
     constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
         swap(rhs);
         return *this;

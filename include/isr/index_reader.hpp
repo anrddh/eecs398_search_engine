@@ -6,6 +6,8 @@
 
 #include "index_reader_helpers.hpp"
 #include "word_isr.hpp"
+#include "word_impl_isr.hpp"
+#include "empty_isr.hpp"
 #include "document_isr.hpp"
 
 #include "porter_stemmer.hpp"
@@ -49,19 +51,17 @@ fb::UniquePtr<WordISR> IndexReader::OpenWordISR( fb::String word )
 
    if(dictionary[bucket]) 
       {
-      fb::UniquePtr<WordISR> wordISR = fb::makeUnique<WordISR>(start + dictionary[bucket], OpenDocumentISR( ), MAX_TOKEN_BITS);
-      return wordISR;
+      return fb::makeUnique<WordImplISR>(start + dictionary[bucket], OpenDocumentISR( ), MAX_TOKEN_BITS);
       }
    else
       {
-      return fb::UniquePtr<WordISR>();
+      return fb::makeUnique<EmptyISR>();
       }
    }
 
 fb::UniquePtr<DocumentISR> IndexReader::OpenDocumentISR( ) 
    {
-   fb::UniquePtr<DocumentISR> docISR = fb::makeUnique<DocumentISR>((char * ) (dictionary + DICTIONARY_SIZE), MAX_TOKEN_BITS);
-   return docISR;
+   return fb::makeUnique<DocumentISR>((char * ) (dictionary + DICTIONARY_SIZE), MAX_TOKEN_BITS);
    }
 
 bool IndexReader::WordExists( fb::String word )

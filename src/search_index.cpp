@@ -48,30 +48,15 @@ int main(int argc, char ** argv )
          if(argv[i][0] == '!')
             {
             fb::String word(argv[i] + 1);
-            std::cout << "!" << word;
-            if( reader.WordExists( word ) )
-               {
-               ExcludeWords.pushBack( reader.OpenWordISR( word ) );
-               std::cout << " does exist" << std::endl;
-               }
-            else
-               {
-               std::cout << " does not exists" << std::endl;
-               }
+            ExcludeWords.pushBack( reader.OpenWordISR( word ) );
             }
          else
             {
             fb::String word(argv[i]); 
-            std::cout << word;
+            IncludeWords.pushBack( reader.OpenWordISR( word ) );
             if( reader.WordExists( word ) )
                {
-               IncludeWords.pushBack( reader.OpenWordISR( word ) );
                WordIsrs.pushBack( reader.OpenWordISR( word ) );
-               std::cout << " does exist" << std::endl;
-               }
-            else
-               {
-               std::cout << " does not exist" << std::endl;
                }
             }
          }

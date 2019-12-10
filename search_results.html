@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Search results</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+  <style>
+      @font-face { font-family: Animales; src: url('Animales-Fantastic.otf'); } 
+      h1 {
+         font-family: Animales
+      }
+
+            .btn {border-color: gainsboro;}
+
+      .glass {
+  opacity: 0.35;
+  filter: alpha(opacity=35); /* For IE8 and earlier */
+}
+  </style>
+
+  <script>
+  function search_query() {
+    var url = $("#query").val();
+    // window.open(url);
+    window.location.href = url;
+  }
+
+$(document).ready(function(){
+    $('#query').keypress(function(e){
+      if(e.keyCode==13)
+        $('#search').click();
+    });
+});
+</script>
+</head>
+<body>
+
+<div class="container-fluid">
+  <div class="search-container p-2">
+      <center>
+        <h1>Fantastic Bugs Search Engine</h1>
+
+    
+        <div class="input-group input-group-lg mb-3">
+          <div class="input-group-prepend">
+            <button class="btn btn-outline-secondary border-right-0" type="button" id="search" onclick="search_query()">
+            <img src="https://cdn2.iconfinder.com/data/icons/large-svg-icons-part-3/512/zoom_search_find_magnifying_glass-512.png" style="width:25px;height:25px;"> </button>
+          </div>
+          <input id="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
+    </div>
+          </center>
+    
+    <hr>
+
+    <center>
+        <button class="btn btn-primary">Am I feeling fantastic?</button>
+    </center>
+  </div>
+  <hr>
+
+  <div class="pl-4 pt-4">
+    <div class="pb-4">
+      <div class="card rounded border-danger" style="width: 60rem;">
+        <div class="card-body">
+          <h4 class="card-title"> Powered by Hamilton Laboratories </h4>
+          <a href="https://hamiltonlabs.com/" class="card-link">Link</a>
+        </div>
+      </div>
+    </div>
+  
+    <div class="pb-4">
+      <div class="card rounded" style="width: 60rem;">
+        <div class="card-body">
+          <a href="https://google.com">
+            <h4 class="card-title"> Title 1 </h4>
+            <p class="card-link text-success"> Url 1</p>
+          </a>
+          <p class="card-text">Snippet 1</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="pb-4">
+      <div class="card rounded" style="width: 60rem;">
+        <div class="card-body">
+          <a href="https://google.com">
+            <h4 class="card-title"> Title 1 </h4>
+            <p class="card-link text-success"> Url 1</p>
+          </a>
+          <p class="card-text">Snippet 1</p>
+        </div>
+      </div>
+    </div>
+    
+</div>
+
+</body>
+</html>

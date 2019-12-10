@@ -43,7 +43,7 @@ int main( int argc, char * argv[] ){
         fseek(fptr, sizeof(atomic<fb::SizeT>), SEEK_SET);
         fb::SizeT count;
         fread(&count, sizeof(atomic<fb::SizeT>), 1, fptr);
-        std::cout << "filename: " << filename << " count: " << count << std::endl;
+        //std::cout << "filename: " << filename << " count: " << count << std::endl;
         fclose(fptr);
         total += count;
     }

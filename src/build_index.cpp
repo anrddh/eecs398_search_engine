@@ -8,48 +8,24 @@
 
 int main( int argc, char ** argv )
    {
-   if( argc != 2 )
+      if( argc != 4 )
       {
-      std::cout << "USAGE: " << argv[0] << " [PATH TO INDEX FOLDER]" << std::endl;
+      std::cout << "USAGE: " << argv[0] << " [PATH TO INDEX FOLDER] [PREFIX FILE NAME] [NUM_PAGE_STORE_FILES]" << std::endl;
       exit( 1 );
       }
 
    fb::String path( argv[1] );
-
-   bool initIndexCounter = false;
-   int indexCounterFile = open((path + "IndexCounter").data(), O_RDWR);
-   if(indexCounterFile < 0)
+   if(path.back( ) != '/')
       {
-      indexCounterFile = open((path + "IndexCounter").data(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
-      initIndexCounter = true;
-
-      if(indexCounterFile < 0)
-         {
-         std::cout << "ERROR: No IndexCounter file was found and could not create one" << std::endl; 
-         exit(1);
-         }
-      } 
- 
-   ftruncate(indexCounterFile, sizeof(int));
-   int &indexCounter = *(int *) mmap(nullptr, sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, indexCounterFile, 0);
-   if( initIndexCounter )
-      {
-      indexCounter = 0;
+      path.pushBack('/');
       }
-/*
-   fb::String PageStoreCounterFileName = fb::String(path.begin(), path.end() - 1) + PageStoreCounterFile;
-   int PageStoreCounterFile = open(PageStoreCounterFileName.data( ), O_RDWR);
-   if( !PageStoreCountereFile )
-      {
-      std::cout << "ERROR: No PageStoreCounter file was found" << std::endl;
-      exit(1);
-      }
-*/
-   int end = 5;
-   for(int i = indexCounter; i < end; ++i)
+   fb::String PageStorePrefix(argv[2]);
+   int num_page_store_files = atoi(argv[3]);
+
+   for(int i = 0; i < num_page_store_files; ++i)
       {
       IndexBuilder builder(path);
-      fb::String PageStoreFileName = (path + "PageStore" + fb::toString(i));
+      fb::String PageStoreFileName = (path + PageStorePrefix + fb::toString(i));
       std::cout << PageStoreFileName << std::endl;
       int PageStoreFile = open(PageStoreFileName.data(), O_RDWR);
       if(PageStoreFile < 0)
@@ -64,6 +40,5 @@ int main( int argc, char ** argv )
 
          builder.build_chunk(start, i);
          }
-      ++indexCounter; 
       }
    }

@@ -18,6 +18,8 @@
 #include "index/index_helpers.hpp" 
 #include "index/index_data_structures.hpp"
 
+#include "porter_stemmer.hpp"
+
 /*
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
@@ -26,7 +28,8 @@
 class IndexBuilder {
 public:
    // root must contain a trailing '/'
-   IndexBuilder(fb::String path) : root(path), tokenCount(1) { }
+   IndexBuilder(fb::String path) : root(path), tokenCount(1), porterStemmer( create_stemmer( ) ) { }
+   ~IndexBuilder( ) { free_stemmer( porterStemmer ); }
 
    void build_chunk(uint64_t* start_of_file, int chunk) {
       // move past first 16 bytes
@@ -69,6 +72,9 @@ private:
       // otherwise move past the space and return the start
       // of the next word
       ++word_begin;
+
+      int size = stem( porterStemmer, word.data( ), word.size( ) - 1 ) + 1; // returns the last position of the resulting word
+      word.resize( size );
       return word_begin;
    }
 
@@ -123,6 +129,7 @@ private:
    // each chunk keeps track of its own word count
    unsigned int tokenCount;
   	
+   stemmer * porterStemmer;
 };
 
 

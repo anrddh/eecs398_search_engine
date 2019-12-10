@@ -28,7 +28,7 @@ std::atomic<fb::SizeT> NumThreads(0);
 
 // Number of pages parsed in this process
 std::atomic<fb::SizeT> NumParsed(0);
-fb::SizeT get_num_parsed() 
+fb::SizeT get_num_parsed()
 {
    return NumParsed;
 }
@@ -100,7 +100,6 @@ void addPage(Page&& page){
 
 void * runBin(void *){
     fb::SizeT Index = PageStoreCounter::getCounter().index();
-
     PageBin Bin(Prefix + fb::toString(Index));
     fb::SizeT i = 0;
     for( ; i < numPages; ++i){

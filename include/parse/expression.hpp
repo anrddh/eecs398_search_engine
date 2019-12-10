@@ -21,11 +21,11 @@ public:
 /**
  * A word
  */
-class Word : public Expression {
+class WordExpression : public Expression {
 public:
     fb::StringView word;
 
-    Word(fb::StringView wordIn) : word(wordIn) {}
+    WordExpression(fb::StringView wordIn) : word(wordIn) {}
 
     void Eval( ) const override {
         std::cout << "Word Expression: " << word << '\n';
@@ -60,13 +60,14 @@ public:
 
 class PhraseExpression : public Expression {
 public:
-    fb::Vector<fb::StringView> words;
+    fb::StringView phrase;
+
+    PhraseExpression(fb::StringView phraseIn) : phrase(phraseIn) {}
 
     void Eval() const override {
         /* Call phrase ISR */
-        std::cout << "Phrase Expression. Words:\n";
-        for (auto word : words)
-            std::cout << word << ',' << ' ';
+        std::cout << "Phrase Expression. Phrase:\n";
+        std::cout << phrase << ',' << ' ';
         std::cout << '\n';
     }
 };

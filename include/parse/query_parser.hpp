@@ -27,10 +27,10 @@ public:
             else
                 return nullptr;
         } else if (stream.Match('"')) {
-            auto word = stream.ParseUntil('"');
-            if (word.empty())
+            auto phrase = stream.ParseUntil('"');
+            if (phrase.empty())
                 return nullptr;
-            auto expr = fb::makeUnique<Word>(word);
+            auto expr = fb::makeUnique<PhraseExpression>(phrase);
             if (stream.Match('"'))
                 return expr;
             return nullptr;
@@ -39,7 +39,7 @@ public:
         if (word.empty()) {
             return nullptr;
         } else
-            return fb::makeUnique<Word>(word);
+            return fb::makeUnique<WordExpression>(word);
     }
 
     fb::UniquePtr<Expression> FindOr() {

@@ -17,9 +17,14 @@ HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
 
     fb::SizeT random = rand();
     page.setValue("query", formOptions["query"]);
-    page.setValue("title", "Google");
-    page.setValue("url", "https://www.google.com");
-    page.setValue("snippet", "Google snippet");
+
+    int numResults = 10;
+    for(int i = 0; i < numResults; ++i) {
+        fb::String iString = fb::toString(i);
+        page.setValue("title" + iString, iString + "th Result for " + formOptions["query"]);
+        page.setValue("url" + iString, iString + "th Url");
+        page.setValue("snippet" + iString, iString + "th Snippet");
+    }
 
     return page;
 }

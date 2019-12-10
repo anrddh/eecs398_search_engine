@@ -29,6 +29,7 @@ public:
    HtmlPage& operator=(const HtmlPage& other);
    ~HtmlPage();
 
+   void loadRawFile(const fb::String &path);
    void loadFromString(const fb::String &html);
    void loadFromFile(const fb::String &path);
 

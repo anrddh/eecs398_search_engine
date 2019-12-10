@@ -43,15 +43,6 @@ namespace fb {
 
         BasicString(const char *cstr) : BasicString(cstr, strlen(cstr)) {}
 
-        template<typename Iter>
-        BasicString(Iter a, Iter b) : buf(0) {
-            while(a != b && a != 0) {
-               buf.pushBack(*a);
-               ++a;
-            }
-            buf.pushBack(0);
-        }
-
         BasicString(BasicString &&rhs) : buf(std::move(rhs.buf)) {
             rhs.buf.pushBack(0);
         }
@@ -63,6 +54,13 @@ namespace fb {
 
         BasicString(const BasicString &) = default;
         BasicString & operator=(const BasicString &) = default;
+
+        template <typename It>
+        BasicString(It a, It b) {
+            for ( ; a != b && a != 0; ++a)
+               buf.pushBack(*a);
+            buf.pushBack(0);
+        }
 
         /*  Element access  */
         Reference at(SizeType pos) {

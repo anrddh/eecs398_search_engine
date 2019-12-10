@@ -34,7 +34,7 @@ public:
 
     template<typename OtherType>
     constexpr UniquePtr(UniquePtr<OtherType>&& other,
-                        EnableIfT<std::is_base_of_v<T, OtherType>, int> = 0) 
+                        EnableIfT<std::is_base_of_v<T, OtherType>, int> = 0)
       noexcept : owner{other.release()}, deleter{std::move(other.getDeleter())} {}
 
     constexpr explicit UniquePtr(Pointer p,
@@ -51,14 +51,18 @@ public:
                   = 0)
         noexcept : owner{rhs.release()}, deleter{std::move(rhs.getDeleter())} {}
 
+<<<<<<< HEAD
     // move assignment operator
+=======
+   // move assignment operator
+>>>>>>> webserver
     constexpr UniquePtr & operator=(UniquePtr &&rhs) noexcept {
         swap(rhs);
         return *this;
     }
 
    template<typename OtherType>
-   EnableIfT<std::is_base_of_v<T, OtherType>, UniquePtr&> 
+   EnableIfT<std::is_base_of_v<T, OtherType>, UniquePtr&>
    operator=(UniquePtr<OtherType>&& rhs) noexcept {
       if(owner)
          {

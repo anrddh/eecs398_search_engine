@@ -92,14 +92,7 @@ fb::UniquePtr<HttpConnection> SocketHttpConnectionHandler::getRequest()
 void SocketHttpConnectionHandler::sendResponse(
    fb::UniquePtr<HttpConnection> conn) {
    SocketHttpConnection *sockConn = (SocketHttpConnection *)conn.get();
-   std::cout << std::endl << std::endl << "Response: " << std::endl;
    fb::UniquePtr<char[]> response = sockConn->getRawResponse( );
-   for(int i = 0; i < sockConn->getRawResponseLength( ); ++i )
-      {
-      std::cout << response[i];
-      }
-
-   std::cout << std::endl << std::endl;
    int bytesWritten =
       write(sockConn->getClientHandle(), response.get(),
             sockConn->getRawResponseLength());

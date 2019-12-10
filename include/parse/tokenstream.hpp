@@ -50,12 +50,19 @@ bool CharIsIrrelevant( char c ) {
  * deemed "irrelevant" by the CharIsIrrelevant function above
  */
 class TokenStream {
+<<<<<<< HEAD
 public:
+=======
+>>>>>>> webserver
    // The input we receive, with only relevant characters left
    fb::String input;
    // Where we currently are in the input
     size_t location { 0 };
 
+<<<<<<< HEAD
+=======
+public:
+>>>>>>> webserver
 
    /**
     * Construct a token stream that uses a copy of the input
@@ -73,8 +80,12 @@ public:
            input += word.c_str();
 
        while (stream >> word) {
+<<<<<<< HEAD
            if ((!CharIsControl(input.back()) && !CharIsControl(word.front()))
                || (word.front() == '(' && !CharIsControl(input.back())))
+=======
+           if (!CharIsControl(input.back()) && !CharIsControl(word.front()))
+>>>>>>> webserver
                input += ' ';
            input += word.c_str();
        }
@@ -104,17 +115,26 @@ public:
        return location >= input.size();
    }
 
+<<<<<<< HEAD
    template <typename Pred>
    fb::StringView ParseUntil(Pred p) {
+=======
+   fb::StringView ParseWord() {
+>>>>>>> webserver
        if (AllConsumed())
            return "";
 
        auto begin = location;
+<<<<<<< HEAD
        while (!AllConsumed() && !p(input[location]))
+=======
+       while (!AllConsumed() && !CharIsControl(input[location]))
+>>>>>>> webserver
            ++location;
 
        return fb::StringView(input.data() + begin, location - begin);
    }
+<<<<<<< HEAD
 
    fb::StringView ParseUntil(char c) {
        return ParseUntil([c](char d) { return c == d; });
@@ -123,6 +143,8 @@ public:
    fb::StringView ParseWord() {
        return ParseUntil([](char c) { return CharIsControl(c); });
    }
+=======
+>>>>>>> webserver
 };
 
 #endif /* TOKENSTREAM_H_ */

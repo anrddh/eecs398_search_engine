@@ -33,6 +33,17 @@ public:
          }
       }
 
+   fb::Vector<fb::String> GetWords( )
+      {
+      fb::Vector<fb::String> words;
+      for(fb::UniquePtr<WordISR> &wordIsr : wordIsrs)
+         {
+         words.pushBack(wordIsr->GetWord( ) );
+         }
+
+      return words;
+      }
+
    fb::Vector<fb::SizeT> GetDocFrequencies( )
       {
       return doc_frequencies;

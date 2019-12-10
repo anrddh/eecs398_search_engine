@@ -14,4 +14,5 @@ public:
    virtual fb::UniquePtr<IndexInfo> NextDocument( ) = 0;
    virtual fb::UniquePtr<IndexInfo> Seek( Location target ) = 0;
    virtual bool AtEnd( ) = 0;
+   virtual fb::String GetWord( ) = 0;
    };

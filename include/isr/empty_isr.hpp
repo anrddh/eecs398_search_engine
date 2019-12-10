@@ -18,7 +18,8 @@ public:
    virtual fb::UniquePtr<IndexInfo> Next( ) override;
    virtual fb::UniquePtr<IndexInfo> NextDocument( ) override;
    virtual fb::UniquePtr<IndexInfo> Seek( Location target ) override;
-   virtual bool AtEnd( )override;
+   virtual bool AtEnd( ) override;
+   virtual fb::String GetWord( ) override;
    };
 
 unsigned int EmptyISR::GetDocumentCount( ) { return 0; }
@@ -29,3 +30,4 @@ fb::UniquePtr<IndexInfo> EmptyISR::Next( ) { return fb::UniquePtr<IndexInfo>( );
 fb::UniquePtr<IndexInfo> EmptyISR::NextDocument( ) { return fb::UniquePtr<IndexInfo>( ); }
 fb::UniquePtr<IndexInfo> EmptyISR::Seek( Location target ) { return fb::UniquePtr<IndexInfo>( ); }
 bool EmptyISR::AtEnd( ) { return true; }
+fb::String EmptyISR::GetWord( ) { return fb::String( ); }

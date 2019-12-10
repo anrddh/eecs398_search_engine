@@ -414,13 +414,16 @@
         <br>
         <br>
         <div class="col-md-10" style="z-index:2;">
-          <div class="input-group input-group-lg mb-2">
-            <div class="input-group-prepend">
-              <button class="btn btn-light btn-outline-secondary border-right-0" type="button" id="search" onclick="search_query()">
-              <img class="glass" src="https://cdn3.iconfinder.com/data/icons/gray-toolbar/512/find-512.png" style="width:25px;height:25px;"> </button>
+          <form action="/results">
+            <div class="input-group input-group-lg mb-2">
+              <div class="input-group-prepend">
+                <button class="btn btn-light btn-outline-secondary border-right-0" type="submit" id="search">
+                  <img class="glass" src="https://cdn3.iconfinder.com/data/icons/gray-toolbar/512/find-512.png" style="width:25px;height:25px;"> 
+                </button>
+              </div>
+              <input id="query" name="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
             </div>
-            <input id="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
-          </div>
+          </form>
         </div>
         <div class="img">
           <img id="image" src="wwandd.png" class="rotateimg6" style="position: float; z-index:0;" width="60%" height="60%">

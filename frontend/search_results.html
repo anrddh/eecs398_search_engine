@@ -51,15 +51,16 @@
       <center>
         <h1><font color="white">Fantastic Bugs Search Engine</font></h1>
 
-    
-        <div class="input-group input-group-lg mb-3">
-          <div class="input-group-prepend">
-            <button class="btn btn-light btn-outline-secondary border-right-0" type="button" id="search" onclick="search_query()">
-            <img src="https://cdn2.iconfinder.com/data/icons/large-svg-icons-part-3/512/zoom_search_find_magnifying_glass-512.png" style="width:25px;height:25px;"> </button>
+        <form action="/results">
+          <div class="input-group input-group-lg mb-3">
+            <div class="input-group-prepend">
+              <button class="btn btn-light btn-outline-secondary border-right-0" type="button" id="search" onclick="search_query()">
+              <img src="https://cdn2.iconfinder.com/data/icons/large-svg-icons-part-3/512/zoom_search_find_magnifying_glass-512.png" style="width:25px;height:25px;"> </button>
+            </div>
+            <input id="query" name="query" type="text" value="[% query %]" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
           </div>
-          <input id="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
-    </div>
-          </center>
+        </form>
+      </center>
     
     <hr>
   </div>
@@ -74,67 +75,18 @@
         </div>
       </div>
     </div>
-  
-    <div class="pb-4">
-      <div class="card rounded">
-        <div class="card-body">
-          <a href="https://google.com">
-            <h4 class="card-title"> Title 1 </h4>
-            <p class="card-link text-success"> Url 1</p>
-          </a>
-          <p class="card-text">Snippet 1</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="pb-4">
-      <div class="card rounded">
-        <div class="card-body">
-          <a href="https://google.com">
-            <h4 class="card-title"> Title 1 </h4>
-            <p class="card-link text-success"> Url 1</p>
-          </a>
-          <p class="card-text">Snippet 1</p>
-        </div>
-      </div>
-    </div>
-
-        <div class="pb-4">
-      <div class="card rounded">
-        <div class="card-body">
-          <a href="https://google.com">
-            <h4 class="card-title"> Title 1 </h4>
-            <p class="card-link text-success"> Url 1</p>
-          </a>
-          <p class="card-text">Snippet 1</p>
-        </div>
-      </div>
-    </div>
 
     <div class="pb-4">
       <div class="card rounded">
         <div class="card-body">
-          <a href="https://google.com">
-            <h4 class="card-title"> Title 1 </h4>
-            <p class="card-link text-success"> Url 1</p>
+          <a href="[% url %]">
+            <h4 class="card-title"> [% title %] </h4>
+            <p class="card-link text-success"> [% url %]</p>
           </a>
-          <p class="card-text">Snippet 1</p>
+          <p class="card-text">[% snippet %]</p>
         </div>
       </div>
     </div>
-
-        <div class="pb-4">
-      <div class="card rounded">
-        <div class="card-body">
-          <a href="https://google.com">
-            <h4 class="card-title"> Title 1 </h4>
-            <p class="card-link text-success"> Url 1</p>
-          </a>
-          <p class="card-text">Snippet 1</p>
-        </div>
-      </div>
-    </div>
-    
 </div>
 
 </body>

@@ -5,18 +5,21 @@
 
 HtmlPage home( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
     HtmlPage page;
-    page.loadFromFile("../html/index.html");
+    page.loadFromFile("frontend/title.html");
     return page;
 }
 
 HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
     HtmlPage page;
-    page.loadFromString("<h1>Cars [% car %]!</h1><p>User Query=[% query %]</p>");
+    page.loadFromFile("frontend/search_results.html");
 
     /* Invoke ranker */
 
     fb::SizeT random = rand();
     page.setValue("query", formOptions["query"]);
+    page.setValue("title", "Google");
+    page.setValue("url", "https://www.google.com");
+    page.setValue("snippet", "Google snippet");
 
     return page;
 }

@@ -1,3 +1,10 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <string.h>
+
 #include "fb/thread.hpp"
 
 #include "bolt/bolt.hpp"
@@ -45,10 +52,9 @@ void Bolt::setDefaultPath( HtmlPage ( *page ) ( ) )
    }
 
 namespace {
-const fb::String createResponse(HtmlPage page) 
+const fb::String createResponse(HtmlPage &page) 
    {
    fb::String html = page.getPageHtml();
-   std::cout << std::endl << "HTML: " << html << std::endl << std::endl;
    return fb::String(HTTP_VERSION) + " " + fb::toString(static_cast<int>(page.header.status)) + "\n"
       + "Content-Type: " + page.header.ctype + "\n"
       + "Content-Length: " + fb::toString(html.size()) + "\n"
@@ -66,7 +72,6 @@ void * BoltImpl::respondToRequest(void * arg)
    HtmlPage page = info.boltImpl.getHtmlPage( request.getPath( ), request.getFormOptions( ) );
 
    fb::String response = createResponse(page);
-   std::cout << "RESPONSE: " << std::endl << response << std::endl;
    fb::UniquePtr<char[]> responseBuf =
          fb::makeUnique<char[]>(response.size());
    memcpy(responseBuf.get(), response.data(), response.size());
@@ -131,9 +136,25 @@ void BoltImpl::registerHandler( fb::String path, HtmlPage ( func ) ( fb::Unorder
 void BoltImpl::setDefaultPath( HtmlPage( func )( ) ) { default_page = func; }
 
 const HtmlPage BoltImpl::getHtmlPage( fb::String path, fb::UnorderedMap<fb::String, fb::String> formOptions ) {
-  if ( mappings.find( path ) != mappings.end( ) ) {
-    return mappings[path](formOptions);
-  } else {
-    return default_page();
-  }
+   if ( mappings.find( path ) != mappings.end( ) ) 
+      {
+      return mappings[path](formOptions);
+      } 
+   else 
+      {
+      fb::String stripped_path(path.data( ) + 1);
+      int f = open(stripped_path.data( ), O_RDWR);
+      if(f > 0) 
+         {
+         close(f);
+         HtmlPage page;
+         page.loadRawFile(stripped_path);
+         page.header.ctype = "image/png";
+         return page;
+         }  
+      else
+         {
+         return default_page();
+         }
+   }
 }

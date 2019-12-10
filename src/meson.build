@@ -11,8 +11,6 @@ worker_driver = files('worker_driver.cpp')
 worker_source_files += files('worker_url_tcp.cpp', 'url_tcp.cpp',
                              'page_store.cpp', 'download_html.cpp',
                              'debug.cpp', 'logfile.cpp', 'parser.cpp')
-
-server_driver = files('server.cpp')
 server_source_files += files('bolt/bolt.cpp',
                              'bolt/buffered_reader.cpp',
                              'bolt/html_page.cpp',

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Fantastic Bugs Search Engine</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+  <style type="text/css">
+    body {
+      margin: 0;
+      overflow: hidden;
+      /*background: #061928;*/
+      background-image: url('frontend/hogwarts_lightning.gif');
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+    }
+  </style>
+
+  <style>
+    .form-control:focus {
+      border-color: none;
+      box-shadow: none;
+    }
+
+    @font-face { font-family: Animales; src: url('frontend/Animales-Fantastic.otf'); } 
+    h1 {
+     font-family: Animales
+    }
+
+    .form-control {border-color: gainsboro;}
+    .btn {border-color: gainsboro;}
+
+    .glass {
+      opacity: 0.35;
+      filter: alpha(opacity=35); /* For IE8 and earlier */
+    }
+
+    .rotateimg6 {
+      -webkit-transform:rotate(18deg);
+      -moz-transform: rotate(18deg);
+      -ms-transform: rotate(18deg);
+      -o-transform: rotate(18deg);
+      transform: rotate(18deg);
+    }
+
+    .butttton {
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+
+  <!-- Adapted from https://codepen.io/simeydotme/pen/jgcvi -->
+  <script>
+    $(function() {
+      // default is varying levels of transparent white sparkles
+      $(".sparkley:first").sparkleh();
+      
+      // rainbow as a color generates random rainbow colros
+      // count determines number of sparkles
+      // overlap allows sparkles to migrate... watch out for other dom elements though.
+      $(".sparkley:last").sparkleh({
+        color: "rainbow",
+        count: 100,
+        overlap: 10
+      });
+      
+      // an array can be passed, too for colours
+      // for an image, the image needs to be fully loaded to set
+      // the canvas to it's height/width.
+      // speed allows us to control... the ... velocity 
+      $("#image").imagesLoaded( function() {
+        $(".img").sparkleh({
+          count: 200,
+          color: ["rainbow"],
+        speed: 0.8
+        });
+      });
+    });
+
+  $.fn.sparkleh = function( options ) {
+      
+    return this.each( function(k,v) {
+      
+      var $this = $(v).css("position","relative");
+      
+      var settings = $.extend({
+        width: $this.outerWidth(),
+        height: $this.outerHeight(),
+        color: "#FFFFFF",
+        count: 30,
+        overlap: 0,
+        speed: 1
+      }, options );
+      
+      var sparkle = new Sparkle( $this, settings );
+      
+      $this.on({
+        "mouseover focus" : function(e) {
+          sparkle.over();
+        },
+        "mouseout blur" : function(e) {
+          sparkle.out();
+        }
+      });
+    });
+  }
+  function Sparkle( $parent, options ) {
+    this.options = options;
+    this.init( $parent );
+  }
+
+  Sparkle.prototype = {
+    "init" : function( $parent ) {
+      var _this = this;
+      this.$canvas = 
+        $("<canvas>")
+          .addClass("sparkle-canvas")
+          .css({
+            position: "absolute",
+            top: "-"+_this.options.overlap+"px",
+            left: "-"+_this.options.overlap+"px",
+            "pointer-events": "none"
+          })
+          .appendTo($parent);
+      this.canvas = this.$canvas[0];
+      this.context = this.canvas.getContext("2d");
+        
+      this.sprite = new Image();
+      this.sprites = [0,6,13,20];
+      this.sprite.src = this.datauri;
+        
+      this.canvas.width = this.options.width + ( this.options.overlap * 2);
+      this.canvas.height = this.options.height + ( this.options.overlap * 2); 
+        
+      this.particles = this.createSparkles( this.canvas.width , this.canvas.height );
+        
+      this.anim = null;
+      this.fade = false;
+    },
+    "createSparkles" : function( w , h ) {
+      var holder = [];
+      for( var i = 0; i < this.options.count; i++ ) {
+        var color = this.options.color;
+        
+        if( this.options.color == "rainbow" ) {
+          color = '#'+ ('000000' + Math.floor(Math.random()*16777215).toString(16)).slice(-6);
+        } else if( $.type(this.options.color) === "array" ) {
+          color = this.options.color[ Math.floor(Math.random()*this.options.color.length) ];
+        }
+        tipx = this.canvas.width *82/100;
+        tipy = this.canvas.height *45/100;
+        radius = this.canvas.width *3/100;
+
+        var randTheta = Math.random() * 2 * Math.PI;
+        var randR = Math.random() * radius;
+        xRand = Math.cos(randTheta) * randR + tipx;
+        yRand = Math.sin(randTheta) * randR + tipy;
+        holder[i] = {
+          position: {
+            x: Math.floor(xRand),
+            y: Math.floor(yRand)
+          },
+          style: this.sprites[ Math.floor(Math.random()*4) ],
+          delta: {
+            x: Math.floor(Math.random() * 1000) - 500,
+            y: Math.floor(Math.random() * 1000) - 500
+          },
+          size: parseFloat((Math.random()*2).toFixed(2)),
+          color: color
+        };       
+      }
+      return holder;
+    },
+    "draw" : function( time, fade ) {    
+      var ctx = this.context;
+      ctx.clearRect( 0, 0, this.canvas.width, this.canvas.height );
+            
+      for( var i = 0; i < this.options.count; i++ ) {
+
+        var derpicle = this.particles[i];
+        var modulus = Math.floor(Math.random()*7);
+        
+        if( Math.floor(time) % modulus === 0 ) {
+          derpicle.style = this.sprites[ Math.floor(Math.random()*4) ];
+        }
+        
+        ctx.save();
+        ctx.globalAlpha = derpicle.opacity;
+        ctx.drawImage(this.sprite, derpicle.style, 0, 7, 7, derpicle.position.x, derpicle.position.y, 7, 7);
+        
+        if( this.options.color ) {  
+          
+          ctx.globalCompositeOperation = "source-atop";
+          ctx.globalAlpha = 0.5;
+          ctx.fillStyle = derpicle.color;
+          ctx.fillRect(derpicle.position.x, derpicle.position.y, 7, 7);
+          
+        }
+        ctx.restore();
+      }    
+    },
+    "update" : function() {
+      
+       var _this = this;
+      
+       this.anim = window.requestAnimationFrame( function(time) {
+
+        for( var i = 0; i < _this.options.count; i++ ) {
+
+          var u = _this.particles[i];
+
+          tipx = _this.canvas.width *82/100;
+          tipy = _this.canvas.height *45/100;
+
+          var currentAngle = Math.atan2(  (u.position.y - tipy), (u.position.x - tipx) );
+          currentAngle += Math.PI/2;
+          u.position.x += Math.cos(currentAngle) * _this.options.speed;
+          u.position.y += Math.sin(currentAngle) * _this.options.speed;
+          u.position.x = (u.position.x - tipx) * (1 + 0.01 * Math.cos(currentAngle/5)) + tipx;
+          u.position.y = (u.position.y - tipy) * (1 + 0.01 * Math.cos(currentAngle/5)) + tipy;
+
+          radius = _this.canvas.width *3/100;
+
+          var randTheta = Math.random() * 2 * Math.PI;
+          var randR = Math.random( ) * radius;
+
+          xRand = Math.cos(randTheta) * randR + tipx;
+          yRand = Math.sin(randTheta) * randR + tipy;
+          xdelta = u.position.x - tipx;
+          ydelta = u.position.y - tipy;
+
+          if( xdelta * xdelta + ydelta * ydelta > radius * radius * (1 + Math.random() ) ) {
+            u.position.y = yRand; 
+            u.position.x = xRand;
+          }
+           
+          if( _this.fade ) {
+            u.opacity -= 0.02;
+          } 
+          else {
+            u.opacity -= 0.005;
+          }
+           
+          if( u.opacity <= 0 ) {
+            u.opacity = ( _this.fade ) ? 0 : 1;
+          }   
+        }
+         
+        _this.draw( time );
+         
+        if( _this.fade ) {
+          _this.fadeCount -= 1;
+          if( _this.fadeCount < 0 ) {
+            window.cancelAnimationFrame( _this.anim );
+          } 
+          else {
+            _this.update(); 
+          }
+        } 
+        else {
+          _this.update();
+        }   
+      });
+    },
+    "cancel" : function() {
+      this.fadeCount = 100;
+    },
+    "over" : function() {
+      window.cancelAnimationFrame( this.anim );
+      for( var i = 0; i < this.options.count; i++ ) {
+        this.particles[i].opacity = Math.random();
+      }
+      this.fade = false;
+      this.update();
+
+    },
+    "out" : function() {
+      this.fade = true;
+      this.cancel();
+    },
+    "datauri" : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAHCAYAAAD5wDa1AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozNDNFMzM5REEyMkUxMUUzOEE3NEI3Q0U1QUIzMTc4NiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozNDNFMzM5RUEyMkUxMUUzOEE3NEI3Q0U1QUIzMTc4NiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjM0M0UzMzlCQTIyRTExRTM4QTc0QjdDRTVBQjMxNzg2IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjM0M0UzMzlDQTIyRTExRTM4QTc0QjdDRTVBQjMxNzg2Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+jzOsUQAAANhJREFUeNqsks0KhCAUhW/Sz6pFSc1AD9HL+OBFbdsVOKWLajH9EE7GFBEjOMxcUNHD8dxPBCEE/DKyLGMqraoqcd4j0ChpUmlBEGCFRBzH2dbj5JycJAn90CEpy1J2SK4apVSM4yiKonhePYwxMU2TaJrm8BpykpWmKQ3D8FbX9SOO4/tOhDEG0zRhGAZo2xaiKDLyPGeSyPM8sCxr868+WC/mvu9j13XBtm1ACME8z7AsC/R9r0fGOf+arOu6jUwS7l6tT/B+xo+aDFRo5BykHfav3/gSYAAtIdQ1IT0puAAAAABJRU5ErkJggg=="
+  }; 
+
+
+
+
+
+  // $('img.photo',this).imagesLoaded(myFunction)
+  // execute a callback when all images have loaded.
+  // needed because .load() doesn't work on cached images
+   
+  // mit license. paul irish. 2010.
+  // webkit fix from Oren Solomianik. thx!
+   
+  // callback function is passed the last image to load
+  //   as an argument, and the collection as `this`
+   
+   
+  $.fn.imagesLoaded = function(callback){
+    var elems = this.filter('img'),
+        len   = elems.length,
+        blank = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+        
+    elems.bind('load.imgloaded',function(){
+        if (--len <= 0 && this.src !== blank){ 
+          elems.unbind('load.imgloaded');
+          callback.call(elems,this); 
+        }
+    }).each(function(){
+       // cached images don't fire load sometimes, so we reset src.
+       if (this.complete || this.complete === undefined){
+          var src = this.src;
+          // webkit hack from https://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
+          // data uri bypasses webkit log warning (thx doug jones)
+          this.src = blank;
+          this.src = src;
+       }  
+    }); 
+   
+    return this;
+  };
+  </script>
+
+
+  <script>
+    function search_query() {
+      var url = $("#query").val();
+      // window.open(url);
+      window.location.href = url;
+    }
+
+    $(document).ready(function(){
+      $('#query').keypress(function(e){
+        if(e.keyCode==13)
+          $('#search').click();
+      });
+    });
+  </script>
+
+  <!-- https://www.html5canvastutorials.com/advanced/html5-canvas-rain-effect/ -->
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var canvas = $('#canvas')[0];
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      if (canvas.getContext) {
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width;
+        var h = canvas.height;
+        ctx.strokeStyle = 'rgba(174,194,224,0.5)';
+        ctx.lineWidth = 1;
+        ctx.lineCap = 'round';
+
+
+        var init = [];
+        var maxParts = 1000;
+        for (var a = 0; a < maxParts; a++) {
+          init.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            l: Math.random() * 1,
+            xs: -4 + Math.random() * 4 + 2,
+            ys: Math.random() * 10 + 10
+          })
+        }
+
+        var particles = [];
+        for (var b = 0; b < maxParts; b++) {
+          particles[b] = init[b];
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, w, h);
+          for (var c = 0; c < particles.length; c++) {
+            var p = particles[c];
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + p.l * p.xs, p.y + p.l * p.ys);
+            ctx.stroke();
+          }
+          move();
+        }
+
+        function move() {
+          for (var b = 0; b < particles.length; b++) {
+            var p = particles[b];
+            p.x += p.xs;
+            p.y += p.ys;
+            if (p.x > w || p.y > h) {
+              p.x = Math.random() * w;
+              p.y = -20;
+            }
+          }
+        }
+        setInterval(draw, 30);
+      }
+    });
+  </script>
+</head>
+
+<body>
+<canvas id="canvas" style="position: absolute; z-index: -1;"></canvas>
+<div style="background:transparent !important" class="jumbotron d-flex align-items-center min-vh-100" style="z-index:99 float:left;">
+  <div class="container text-center">
+    <div class="search-container p-2">
+      <center>
+        <h1><font color="white">Fantastic Bugs Search Engine</font></h1>
+        <br>
+        <br>
+        <div class="col-md-10" style="z-index:2;">
+          <form action="/results">
+            <div class="input-group input-group-lg mb-2">
+              <div class="input-group-prepend">
+                <button class="btn btn-light btn-outline-secondary border-right-0" type="submit" id="search">
+                  <img class="glass" src="https://cdn3.iconfinder.com/data/icons/gray-toolbar/512/find-512.png" style="width:25px;height:25px;"> 
+                </button>
+              </div>
+              <input id="query" name="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
+            </div>
+          </form>
+        </div>
+        <div class="img">
+          <img id="image" src="frontend/wwandd.png" class="rotateimg6" style="position: float; z-index:0;" width="60%" height="60%">
+        </div>
+        <div class="butttton">
+          <button class="btn btn-primary border-0">Ani is feeling fantastic!</button>
+        </div>
+      </center>
+    </div>    
+  </div>
+</div>
+
+</body>
+</html>

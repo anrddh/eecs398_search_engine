@@ -9,6 +9,11 @@
 class HtmlTemplate
    {
 public:
+   void setSkipRender( bool val )
+      {
+      skipRender = val;
+      }
+
    void loadTemplateFromFile(fb::String path)
       {
       std::ifstream file;
@@ -24,6 +29,10 @@ public:
 
    fb::String getRenderedHtml(fb::UnorderedMap<fb::String, fb::String>& variables)
       {
+      if(skipRender)
+         {
+         return html;
+         }
       fb::StringList sl;
       for (htmlIter = html.begin(); htmlIter < html.end() - 1; ++htmlIter)
          {
@@ -40,6 +49,7 @@ public:
 private:
   fb::String html;
   fb::String::Iterator htmlIter;
+  bool skipRender;
 
   void loadVariableIntoTemplate(fb::UnorderedMap<fb::String, fb::String>& variables,
       fb::StringList& sl)
@@ -87,6 +97,12 @@ HtmlPage& HtmlPage::operator=(const HtmlPage& other)
    }
 
 HtmlPage ::~HtmlPage() {}
+
+void HtmlPage::loadRawFile(const fb::String &path)
+   {
+   htmlTemplate->loadTemplateFromFile(path);
+   htmlTemplate->setSkipRender( true );
+   }
 
 void HtmlPage::loadFromString(const fb::String &html)
    {

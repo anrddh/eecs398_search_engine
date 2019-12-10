@@ -39,7 +39,7 @@ Vector<Thread> threads;
 Vector<fb::UniquePtr<IndexReader>> Readers;
 
 // to be used as arguments to a thread
-struct IndexInfo {
+struct IndexInfoArg {
     fb::UniquePtr<Expression> e;
     fb::UniquePtr<IndexReader> reader;
 }
@@ -47,7 +47,8 @@ struct IndexInfo {
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    ConstraintSolver cSolver = info.e->eval(info.reader);
+    IndexInfoArg &arg = *(IndexInfoArg *) void;
+    ConstraintSolver cSolver = arg.e->eval(info.reader);
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank();
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies();
     tfidf_rank(docsToRank, docFreqs);

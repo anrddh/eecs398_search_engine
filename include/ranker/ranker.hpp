@@ -19,15 +19,15 @@
 //and total term count per document
 
 //TODO: fill this in
-constexpr double TOTAL_DOCUMENTS = 5;
+constexpr double TOTAL_DOCUMENTS = 10000;
 
 //takes in vector with stirngs of the query
 //takes in vector with document frequencies of each of the words in the query 
-void tfidf_rank(fb::Vector<rank_stats> &documents_to_rank, const fb::Vector<size_t> &doc_freq){
+void tfidf_rank(fb::Vector<rank_stats> &documents_to_rank, const fb::Vector<fb::SizeT> &doc_freq){
 	for(rank_stats &document : documents_to_rank){
 		double current_rank = 0;
-		for(size_t i = 0; i < document.term_freq.size(); ++i){
-			current_rank += (double(document.term_freq[i])/double(document.total_term_count))*log2(TOTAL_DOCUMENTS/double(doc_freq[i]));
+		for(size_t i = 0; i < document.occurrences.size(); ++i){
+			current_rank += (double(document.occurrences[i].size( ))/double(document.total_term_count))*log2(TOTAL_DOCUMENTS/double(doc_freq[i]));
 		}
 		document.rank = current_rank;
 	}

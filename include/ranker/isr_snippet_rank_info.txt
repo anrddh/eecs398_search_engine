@@ -30,6 +30,5 @@ struct rank_stats{
 	uint32_t page_store_number;
 	uint32_t page_store_index;
 	unsigned int total_term_count; // doc length
-	fb::Vector<uint32_t> term_freq;
 	fb::Vector<fb::Vector<uint32_t>> OCCURRENCES;
 };

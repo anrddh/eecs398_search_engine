@@ -114,11 +114,11 @@ int main(int argc, char ** argv )
          std::cout << stat.page_store_number << std::endl;
          std::cout << stat.page_store_index << std::endl;
          std::cout << stat.total_term_count << std::endl;
-         for(const uint32_t term: stat.term_freq){
-            std::cout << term << " ";
+         for(const fb::Vector<uint32_t> &occurrence : stat.occurrences){
+            std::cout << occurrence.size( ) << " ";
          }
          std::cout << std::endl;
-         std::cout << stat.rank << std::endl;
+         std::cout << stat.rank << std::endl << std::endl;
          }
 
       /*/

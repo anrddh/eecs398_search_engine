@@ -29,3 +29,5 @@ build_index_test_driver = files('index/index_test.cpp')
 print_page_store_driver = files('index/print_page_store.cpp')
 
 search_index_driver = files('search_index.cpp')
+
+ranker_test_driver = files('ranker_test.cpp')

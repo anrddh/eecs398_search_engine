@@ -48,3 +48,10 @@ struct SnippetStats {
     fb::SizeT DocIndex; //gives which number document in that pagestore file
     SnippetOffsets Offsets; //gives the begin and end word number within that document
 };
+
+struct QueryResult{
+    fb::SizeT UrlId;
+    double rank;
+    fb::String Title;
+    fb::String Snippet;
+}

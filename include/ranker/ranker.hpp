@@ -22,7 +22,7 @@
 constexpr size_t TOTAL_DOCUMENTS = 1;
 
 //takes in vector with stirngs of the query
-//takes in vector with document frequencies of each of the words in the query 
+//takes in vector with document frequencies of each of the words in the query
 void tfidf_rank(fb::Vector<rank_stats> &documents_to_rank, fb::Vector<fb::String> &query, fb::Vector<size_t> &doc_freq){
 	for(rank_stats document : documents_to_rank){
 		double current_rank = 0;

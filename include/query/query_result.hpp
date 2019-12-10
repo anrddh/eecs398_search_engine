@@ -7,30 +7,45 @@
 #include <atomic>
 
 // TODO add ranking info
+struct QueryResult{
+    fb::SizeT UrlId;
+    double rank;
+    fb::String Title;
+    fb::String Snippet;
+}
 
 // Stores top n pages
 // Thread safe ( highly concurrent )
 class TopPages {
    TopPages( int n_ ) : n(n_) {};
-   void addRankStats( double ranking, rank_stats&& rankingInfo ) {
-      if ( ranking < min_allowed_rank )
+   void addRankStats( QueryResult& result ) {
+      if ( result.rank < min_allowed_rank )
          return;
 
       fb::AutoLock l(mtx);
       // TODO make rank pair
-      top.push( rankPair );
+      top.push( result );
       if ( top.size() <= n )
          return;
 
       topPair.pop();
       min_allowed_rank = topPair.top();
    }
+
+   fb::Vector<QueryResult> GetTopResults( )
+      {
+      fb::Vector<QueryResult> results;
+      while( topPair.size( ) )
+         {
+         results.pushBack(topPair.top( ) );
+         topPair.pop( );
+         }
+
+      return results;
+      } 
 private:
-   struct RankPair {
-      double rank;
-      // TODO put data here
-   }
-   fb::PriorityQueue<RankPair> topPair;
+
+   fb::PriorityQueue<QueryResult> topPair;
    fb::Mutex mtx;
    std::atomic<double> min_allowed_rank;
    int n;

@@ -1,5 +1,12 @@
 #pragma once
 
+#include <isr/constraint_solver.hpp>
+#include <isr/or_isr.hpp>
+#include <isr/and_isr.hpp>
+#include <isr/container_isr.hpp>
+#include <isr/empty_isr.hpp>
+#include <isr/phrase_isr.hpp>
+
 #include <fb/vector.hpp>
 #include <fb/string_view.hpp>
 #include <fb/memory.hpp>
@@ -15,7 +22,8 @@ public:
 
     virtual ~Expression() = default;
 
-    virtual void Eval() const = 0;
+    virtual fb::UniquePtr<ISR> Eval(IndexReader &) const = 0;
+    virtual void Print() const = 0;
 };
 
 /**
@@ -27,8 +35,16 @@ public:
 
     WordExpression(fb::StringView wordIn) : word(wordIn) {}
 
-    void Eval( ) const override {
-        std::cout << "Word Expression: " << word << '\n';
+    fb::UniquePtr<WordISR> WordEval(IndexReader &reader) const {
+        return reader.OpenWordISR({word.data(),word.size()});
+    }
+
+    virtual fb::UniquePtr<ISR> Eval(IndexReader &reader) const override {
+        return WordEval(reader);
+    }
+
+    virtual void Print() const override {
+        std::cout << word;
     }
 };
 
@@ -36,12 +52,26 @@ class AndExpression : public Expression {
 public:
     fb::Vector<fb::UniquePtr<Expression>> terms;
 
-    void Eval() const override {
-        /* Call And ISR */
-        std::cout << "And Expression. Terms:\n";
+    virtual fb::UniquePtr<ISR> Eval(IndexReader &reader) const override {
+        fb::Vector<fb::UniquePtr<ISR>> ISRs;
+
         for (auto &term : terms)
-            term->Eval();
-        std::cout << '\n';
+            ISRs.pushBack(term->Eval(reader));
+
+        return fb::makeUnique<AndISR>(std::move(ISRs), reader.OpenDocumentISR());
+    }
+
+    virtual void Print() const override {
+        std::cout << '(' << ' ';
+        if (terms.size())
+            terms.front()->Print();
+
+        for (size_t i = 1; i < terms.size(); ++i) {
+            std::cout << "\t&\t";
+            terms[i]->Print();
+        }
+
+        std::cout << ' ' << ')';
     }
 };
 
@@ -49,26 +79,56 @@ class OrExpression : public Expression {
 public:
     fb::Vector<fb::UniquePtr<Expression>> terms;
 
-    void Eval( ) const override {
-        /* Call Or ISR */
-        std::cout << "Or Expression. Terms:\n";
+    virtual fb::UniquePtr<ISR> Eval(IndexReader &reader) const override {
+        fb::Vector<fb::UniquePtr<ISR>> ISRs;
+
         for (auto &term : terms)
-            term->Eval();
-        std::cout << '\n';
+            ISRs.pushBack(term->Eval(reader));
+
+        return fb::makeUnique<OrISR>(std::move(ISRs), reader.OpenDocumentISR());
+    }
+
+    virtual void Print() const override {
+        std::cout << '(' << ' ';
+        if (terms.size())
+            terms.front()->Print();
+
+        for (size_t i = 1; i < terms.size(); ++i) {
+            std::cout << "\t|\t";
+            terms[i]->Print();
+        }
+
+        std::cout << ' ' << ')';
     }
 };
 
 class PhraseExpression : public Expression {
 public:
-    fb::StringView phrase;
+    fb::Vector<fb::UniquePtr<WordExpression>> terms;
 
-    PhraseExpression(fb::StringView phraseIn) : phrase(phraseIn) {}
+    PhraseExpression() {}
 
-    void Eval() const override {
-        /* Call phrase ISR */
-        std::cout << "Phrase Expression. Phrase:\n";
-        std::cout << phrase << ',' << ' ';
-        std::cout << '\n';
+    virtual fb::UniquePtr<ISR> Eval(IndexReader &reader) const override {
+        fb::Vector<fb::UniquePtr<WordISR>> isrs;
+
+        for (auto &term : terms)
+            isrs.pushBack(term->WordEval(reader));
+
+        return fb::makeUnique<PhraseISR>(std::move(isrs),
+                                         reader.OpenDocumentISR());
+    }
+
+    virtual void Print() const override {
+        std::cout << '"';
+        if (terms.size())
+            terms.front()->Print();
+
+        for (size_t i = 1; i < terms.size(); ++i) {
+            std::cout << " ";
+            terms[i]->Print();
+        }
+
+        std::cout << '"';
     }
 };
 
@@ -77,12 +137,22 @@ public:
     fb::UniquePtr<Expression> toReturn;
     fb::UniquePtr<Expression> notToReturn;
 
-    void Eval( ) const override {
-        std::cout << "SM Expression:\n";
-        std::cout << "toReturn:\t"; toReturn->Eval();
-        if (notToReturn) {
-            std::cout << "notToReturn:\t";notToReturn->Eval();
-        }
-        /* Call IsR */
+    virtual fb::UniquePtr<ISR> Eval(IndexReader &reader) const override {
+        return
+            fb::makeUnique<ContainerISR>(toReturn->Eval(reader),
+                         notToReturn ? notToReturn->Eval(reader) : fb::makeUnique<EmptyISR>(),
+                         reader.OpenDocumentISR());
+    }
+
+    virtual void Print() const override {
+        std::cout << '(' << ' ';
+        toReturn->Print();
+        std::cout << ' ' << ')';
+        std::cout << " BUT NOT ";
+
+        std::cout << '(' << ' ';
+        if (notToReturn)
+            notToReturn->Print();
+        std::cout << ' ' << ')';
     }
 };

@@ -27,14 +27,34 @@ public:
             else
                 return nullptr;
         } else if (stream.Match('"')) {
-            auto phrase = stream.ParseUntil('"');
-            if (phrase.empty())
+            auto expr = fb::makeUnique<PhraseExpression>();
+            while (true) {
+                bool gotQuote = false;
+                auto phrase = stream.ParseUntil([&gotQuote](char c) {
+                    if (c == ' ')
+                        return true;
+
+                    if (c == '"') {
+                        gotQuote = true;
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                if (phrase.empty())
+                    return nullptr;
+
+                expr->terms.pushBack(fb::makeUnique<WordExpression>(phrase));
+
+                if (gotQuote)
+                    break;
+            }
+            if (!stream.Match('"'))
                 return nullptr;
-            auto expr = fb::makeUnique<PhraseExpression>(phrase);
-            if (stream.Match('"'))
-                return expr;
-            return nullptr;
+            return expr;
         }
+
         auto word = stream.ParseWord();
         if (word.empty()) {
             return nullptr;
@@ -66,9 +86,9 @@ public:
             andExpr->terms.pushBack(std::move(left));
             while (stream.Match(' ')) {
                 left = FindFactor();
-                if (left) {
+                if (left)
                     andExpr->terms.pushBack(std::move(left));
-                } else
+                else
                     return nullptr;
             }
             return andExpr;

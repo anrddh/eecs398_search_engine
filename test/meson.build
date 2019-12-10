@@ -23,14 +23,18 @@ test_tokenstream = executable('test_tokestream',
                               include_directories : inc)
 
 test_queryparser = executable('test_queryparser',
-                              ['main.cpp', 'test_queryparser.cpp'],
+                              ['main.cpp',
+                               'test_queryparser.cpp',
+                               '../src/index_reader.cpp',
+                               '../src/empty_isr.cpp',
+                               '../src/document_isr.cpp'],
                               include_directories : inc)
 
 #test('Robots 1', test_robots_1, suite: 'robots')
 #test('Robots 2 (HTTP)', test_robots_2_http, suite: 'robots')
 #test('Parser', test_parser)
 #test('Filter', test_bloomfilter)
-isr_example_driver = files('isr_example.cpp')
+#isr_example_driver = files('isr_example.cpp', '../src/index_reader.cpp')
 #test('Filter', test_bloomfilter)
 test('token', test_tokenstream)
 test('query', test_queryparser)

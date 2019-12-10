@@ -9,24 +9,35 @@ HtmlPage home( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
     return page;
 }
 
-HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+int resultCounter = -1;
+fb::UnorderedMap<fb::String, fb::String> resultOptions;
+
+HtmlPage kthResults() {
     HtmlPage page;
     page.loadFromFile("frontend/search_results.html");
 
     /* Invoke ranker */
 
     fb::SizeT random = rand();
-    page.setValue("query", formOptions["query"]);
+    page.setValue("query", resultOptions["query"]);
+
+    fb::String counterString = fb::toString(resultCounter);
 
     int numResults = 10;
     for(int i = 0; i < numResults; ++i) {
         fb::String iString = fb::toString(i);
-        page.setValue("title" + iString, iString + "th Result for " + formOptions["query"]);
-        page.setValue("url" + iString, iString + "th Url");
-        page.setValue("snippet" + iString, iString + "th Snippet");
+        page.setValue("title" + iString, counterString +  iString + "th Result for " + resultOptions["query"]);
+        page.setValue("url" + iString, counterString + iString + "th Url");
+        page.setValue("snippet" + iString, counterString + iString + "th Snippet");
     }
 
     return page;
+}
+
+HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+    resultCounter = 0;
+    resultOptions = formOptions;
+    return kthResults();
 }
 
 HtmlPage defaultPath() {
@@ -36,15 +47,17 @@ HtmlPage defaultPath() {
 }
 
 HtmlPage next( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
-    HtmlPage page;
-    page.loadFromString("<h1>Next page not found.</h1>");
-    return page;
+    if( resultCounter == -1 )
+        return defaultPath();
+    ++resultCounter;
+    return kthResults();
 }
 
 HtmlPage previous( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
-    HtmlPage page;
-    page.loadFromString("<h1>Previous page not found.</h1>");
-    return page;
+    if( resultCounter <= 0 )
+        return defaultPath();
+    --resultCounter;
+    return kthResults();
 }
 
 int main() {

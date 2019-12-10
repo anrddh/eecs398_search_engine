@@ -7,9 +7,9 @@
 #include <algorithm>
 using namespace fb;
 
+//#include "index_helpers.hpp"
+#include "index_builder.hpp"
 
-// TO DO: Fill this in
-constexpr int SKIP_TABLE_BYTES = (1 << 8) * 2 * sizeof(unsigned int);
 
 // read a single posting list and add all the nums to vector
 void read_posting_list(const char* current, std::vector<uint32_t> &posting_list){
@@ -27,14 +27,16 @@ const char * read_EOD_posting_list(const char* current, std::vector<std::pair<ui
 	uint32_t url_id = 0;
 	++current; 
 	current += (2 * sizeof(unsigned int));
-	current += SKIP_TABLE_BYTES;
+	int NUM_SKIP_TABLE_BITS = *((unsigned int *) current);
+	std::cout << "EOD skip table bits: " << NUM_SKIP_TABLE_BITS << std::endl;
+	current += getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
 
 	while(true){
 		current = read_document_post(current, delta, url_id);
 		if(delta == 0){
 			break;
 		}else{
-			EOD_posting_list.push_back(std::pair<size_t,uint64_t>(delta, url_id));
+			EOD_posting_list.push_back(std::pair<uint32_t,uint32_t>(delta, url_id));
 		}
 	}
 
@@ -65,8 +67,6 @@ void trans_file_to_offsets(const char* start, std::vector<std::vector<uint32_t>>
 			{
 			current = start + posting_list_offsets[i];
 			words.emplace_back(current);
-			// while(*(current++) != '\0')
-			//    ;
 			while(true){
 	         	if(*current == '\0'){
 	         		++current;
@@ -77,7 +77,9 @@ void trans_file_to_offsets(const char* start, std::vector<std::vector<uint32_t>>
 			}
 	        
 			current += (2 * sizeof(unsigned int));
-			current += SKIP_TABLE_BYTES;
+			int NUM_SKIP_TABLE_BITS = *((int *) current);
+			current += getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
+			std::cout << words.back() << ":" << NUM_SKIP_TABLE_BITS << std::endl;
 			std::vector<uint32_t> posting_list;
 			read_posting_list(current, posting_list);
 			all.push_back(posting_list);

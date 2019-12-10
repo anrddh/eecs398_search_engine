@@ -48,8 +48,8 @@ int main(int argc, char* argv[]) {
 	std::cout << "total word count: " << count << std::endl;
 	std::vector<std::string> original(count + EOD_posting_list.size() + 1, "");
 	reconstruct(all, words, original);
-	print_stats(all, words);
-	print_recon(original);
+	//print_stats(all, words);
+	//print_recon(original);
 	std::cout << "unique word count: " << words.size() << std::endl;
 	std::cout << "DONE" << std::endl;
 }

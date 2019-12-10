@@ -15,12 +15,6 @@ HttpType getHttpType(fb::String type) {
 HttpRequest::HttpRequest(fb::UniquePtr<HttpConnection>& conn) {
   const fb::UniquePtr<char[]>& rawReq = conn->getRawRequest();
   int length = conn->getRawRequestLength();
-  std::cout << "Request: " << std::endl;
-  for(int i = 0; i < length; ++i )
-    {
-    std::cout << rawReq[i];
-    }
-    std::cout << std::endl << std::endl;
   BufferedReader bf(rawReq, length);
   parseType(bf);
   parsePath(bf);
@@ -81,7 +75,6 @@ void HttpRequest::parsePath( BufferedReader& bf )
         {
         ++iter;
         }
-      std::cout << key << ": " << value << std::endl;
       formOptions[key] = value;
       }
     }

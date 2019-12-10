@@ -30,10 +30,11 @@ page_store_total_files = []
 project_header_files = []
 
 
-inc = [include_directories('include')]
+inc = [include_directories('include'), include_directories('external')]
 subdir('include')
 subdir('src')
 subdir('test')
+subdir('external')
 
 executable('master',
            master_driver, master_source_files,
@@ -78,6 +79,3 @@ executable('isr_example',
             isr_example_driver,
             include_directories: inc)
 
-executable('ranker_test',
-            ranker_test_driver,
-            include_directories: inc)

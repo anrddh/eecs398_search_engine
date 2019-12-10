@@ -1,7 +1,0 @@
-Notes on parsing.
-
-Ani & Chandler / Oct 4
-
-- We need to filter
-  - links that end with [.pdf  .css  .js  .svg  .jpg  .png  .jpeg  .gif  ]
-  - links that begin with [mailto:  #  ftp:  file:  data:  irc:]

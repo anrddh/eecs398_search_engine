@@ -43,6 +43,15 @@ namespace fb {
 
         BasicString(const char *cstr) : BasicString(cstr, strlen(cstr)) {}
 
+        template<typename Iter>
+        BasicString(Iter a, Iter b) : buf(0) {
+            while(a != b && a != 0) {
+               buf.pushBack(*a);
+               ++a;
+            }
+            buf.pushBack(0);
+        }
+
         BasicString(BasicString &&rhs) : buf(std::move(rhs.buf)) {
             rhs.buf.pushBack(0);
         }
@@ -342,19 +351,21 @@ namespace fb {
 
 
         void resize(SizeType count) {
-            buf.resize(count + 1);
+            buf.resize(count);
+            buf.pushBack(0);
         }
 
         void resize(SizeType count, CharT ch) {
             if (count <= size()) {
-                buf.resize(count + 1);
+                buf.resize(count);
+                buf.pushBack(0);
                 return;
             }
 
             buf.last() = ch;
             buf.reserve(count + 1);
             buf.resize(count, ch);
-            buf.push_back(0);
+            buf.pushBack(0);
         }
 
         constexpr void swap(BasicString &other) noexcept {

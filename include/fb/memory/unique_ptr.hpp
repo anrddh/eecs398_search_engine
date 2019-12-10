@@ -32,6 +32,11 @@ public:
     constexpr UniquePtr(NullPtrT,
                         EnableIfT<defConstPtr, int> = 0) noexcept {}
 
+    template<typename OtherType>
+    constexpr UniquePtr(UniquePtr<OtherType>&& other,
+                        EnableIfT<std::is_base_of_v<T, OtherType>, int> = 0) 
+      noexcept : owner{other.release()}, deleter{std::move(other.getDeleter())} {}
+
     constexpr explicit UniquePtr(Pointer p,
                                  EnableIfT<defConstPtr, int> = 0)
         noexcept : owner{p} {}
@@ -51,6 +56,18 @@ public:
         swap(rhs);
         return *this;
     }
+
+   template<typename OtherType>
+   EnableIfT<std::is_base_of_v<T, OtherType>, UniquePtr&> 
+   operator=(UniquePtr<OtherType>&& rhs) noexcept {
+      if(owner)
+         {
+         deleter(owner);
+         }
+      owner = rhs.release();
+      deleter = rhs.getDeleter();
+      return *this;
+   }
 
     ~UniquePtr() noexcept {
         if (get())

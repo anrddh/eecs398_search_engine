@@ -25,27 +25,57 @@ readline_dep = meson.get_compiler('cpp').find_library('readline', required : fal
 project_sources = []
 master_source_files = []
 worker_source_files = []
+server_source_files = []
 page_store_total_files = []
 project_header_files = []
 
 
-inc = [include_directories('include')]
+inc = [include_directories('include'), include_directories('external')]
 subdir('include')
 subdir('src')
 subdir('test')
+subdir('external')
 
-executable('master',
-           master_driver, master_source_files,
+#executable('master',
+#           master_driver, master_source_files,
+#           include_directories: inc,
+#           dependencies: [readline_dep, threads_dep])
+
+executable('server',
+           server_driver, server_source_files,
            include_directories: inc,
-           dependencies: [readline_dep, threads_dep])
+           dependencies: [threads_dep])
 
+#executable('worker',
+#           worker_driver, worker_source_files,
+#                      include_directories: inc,
+#                      dependencies: [readline_dep, threads_dep])
 
-executable('worker',
-           worker_driver, worker_source_files,
-                      include_directories: inc,
-                      dependencies: [readline_dep, threads_dep])
+executable('build_index_chunk',
+            build_index_chunk_driver,
+            include_directories: inc)
 
+executable('build_index',
+            build_index_driver,
+            include_directories: inc)
+
+executable('build_index_test',
+            build_index_test_driver,
+            include_directories: inc)
+
+executable('print_page_store',
+            print_page_store_driver,
+            include_directories: inc)
+
+executable('search_index',
+            search_index_driver,
+            include_directories: inc)
 
 executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
+
+executable('isr_example',
+            isr_example_driver,
+            include_directories: inc)
+

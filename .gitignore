@@ -1,2 +1,6 @@
+bazel-*
+**/build/
+.vscode/
 master
 build
+.DS_Store

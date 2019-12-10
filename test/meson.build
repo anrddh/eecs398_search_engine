@@ -29,7 +29,7 @@ test_queryparser = executable('test_queryparser',
 #test('Robots 1', test_robots_1, suite: 'robots')
 #test('Robots 2 (HTTP)', test_robots_2_http, suite: 'robots')
 #test('Parser', test_parser)
-test('Filter', test_bloomfilter)
+#test('Filter', test_bloomfilter)
 isr_example_driver = files('isr_example.cpp')
 #test('Filter', test_bloomfilter)
 test('token', test_tokenstream)

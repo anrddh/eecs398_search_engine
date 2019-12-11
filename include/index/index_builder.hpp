@@ -63,7 +63,7 @@ private:
     // returns pointer to the beginning of the next word
     // increments tokenCount
     char* read_word(char* &word_begin, fb::String &word) {
-       word = "";
+       word.clear();
        while (*word_begin && *word_begin != ' ')
            word += tolower(*word_begin++);
 

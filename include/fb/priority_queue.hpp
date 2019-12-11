@@ -41,7 +41,7 @@ private:
 
 public:
 
-   typedef Container container_type;
+   typedef Container ContainerType;
    typedef typename Container::ValueType ValueType;
    typedef typename Container::SizeType SizeType;
    typedef typename Container::Reference Reference;

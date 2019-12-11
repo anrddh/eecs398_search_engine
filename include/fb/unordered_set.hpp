@@ -5,7 +5,7 @@
 #include <fb/vector.hpp>
 #include <iostream>
 
-#define INITIAL_SIZE 16384
+#define INITIAL_SIZE 65536
 
 namespace fb {
 

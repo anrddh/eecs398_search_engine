@@ -2,6 +2,7 @@ master_driver = files('master_driver.cpp')
 worker_driver = files('worker_driver.cpp')
 server_driver = files('server.cpp')
 page_store_total_driver = files('page_store_total.cpp')
+page_store_check_driver = files('page_store_check.cpp')
 master_source_files += files('adj_store.cpp', 'anchor_store.cpp', 'frontier.cpp',
                              'handle_socket.cpp', 'url_tcp.cpp', 'master_url_tcp.cpp',
                              'url_store.cpp', 'url_tables.cpp', 'debug.cpp',
@@ -17,6 +18,8 @@ server_source_files += files('bolt/bolt.cpp',
                              'bolt/http/http_connection_handler_factory.cpp',
                              'bolt/http/http_request.cpp',
                              'bolt/http/socket_http_connection_handler.cpp')
+
+page_store_check_files += files('page_store.cpp')
 
 build_index_driver = files('build_index.cpp', 'logfile.cpp', 'debug.cpp')
 

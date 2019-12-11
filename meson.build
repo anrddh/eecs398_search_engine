@@ -83,3 +83,4 @@ executable('page_store_merge',
             page_store_merge_files,
             include_directories: inc,
             dependencies: [threads_dep])
+            include_directories: inc)

@@ -8,7 +8,7 @@
 #include <fb/utility.hpp>
 #include <cmath>
 #include <isr/constraint_solver.hpp>
-#include <parser/parser.hpp>
+#include <parse/parser.hpp>
 
 //OBSERVATION: In calculating the inverse document frequency,
 //the total number of documents does not change. Need only calculate once.
@@ -21,7 +21,7 @@
 //and total term count per document
 
 //TODO: fill this in
-constexpr double TOTAL_DOCUMENTS;
+extern double TOTAL_DOCUMENTS;
 
 //takes in vector with stirngs of the query
 //takes in vector with document frequencies of each of the words in the query

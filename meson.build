@@ -81,9 +81,9 @@ executable('page_store_total',
 #            isr_example_driver,
 #            include_directories: inc)
 
-executable('ranker_test',
-            ranker_test_driver,
-            include_directories: inc)
+#executable('ranker_test',
+#            ranker_test_driver,
+#            include_directories: inc)
 
 executable('query_worker',
             query_worker_driver,

@@ -10,14 +10,14 @@
 namespace fb {
 
 // A bucket's status tells you whether it's filled, empty, or contains a ghost.
-enum class MapStatus {
+enum class NoDeleteMapStatus {
     Empty,
     Filled
 };
 
 template<typename K, typename V, typename Hasher = Hash<K>, typename Pred = EqualTo<K>>
 class NoDeleteUnorderedMap {
-    using Status = MapStatus;
+    using Status = NoDeleteMapStatus;
 public:
     friend class Iterator;
     // A bucket has a status, a key, and a value.

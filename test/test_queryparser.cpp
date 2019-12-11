@@ -2,107 +2,107 @@
 
 #include "doctest.h"
 
-TEST_CASE( "Queryparser Test 1" ) {
+TEST_CASE( "QueryQueryParser Test 1" ) {
     fb::String stream = "cat dog";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 2" ) {
+TEST_CASE( "QueryQueryParser Test 2" ) {
     fb::String stream = "cat \\ dog";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 3" ) {
+TEST_CASE( "QueryQueryParser Test 3" ) {
     fb::String stream = "cats \\ \"Alex\"";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 4" ) {
+TEST_CASE( "QueryQueryParser Test 4" ) {
     fb::String stream = "cats \\ dogs bears";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 5" ) {
+TEST_CASE( "QueryQueryParser Test 5" ) {
     fb::String stream = "cats \\ (dogs bears)";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 5" ) {
+TEST_CASE( "QueryQueryParser Test 5" ) {
     fb::String stream = "unsigned long variables";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 6" ) {
+TEST_CASE( "QueryQueryParser Test 6" ) {
     fb::String stream = "b \\ b";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 6" ) {
+TEST_CASE( "QueryQueryParser Test 6" ) {
     fb::String stream = "a b \\ c | d";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 6" ) {
+TEST_CASE( "QueryQueryParser Test 6" ) {
     fb::String stream = "a ( b \\ c ) | d";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 7" ) {
+TEST_CASE( "QueryQueryParser Test 7" ) {
     fb::String stream = "a ( b )";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 8" ) {
+TEST_CASE( "QueryQueryParser Test 8" ) {
     fb::String stream = "a ()";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(!static_cast<bool>(expr));
     std::cout << "\n\n\n\n";
 }
 
-TEST_CASE( "Queryparser Test 9" ) {
+TEST_CASE( "QueryQueryParser Test 9" ) {
     fb::String stream = "a ((b))";
-    Parser p(stream);
+    QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
     expr->Print();

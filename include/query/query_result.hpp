@@ -24,8 +24,8 @@ class TopPages {
 
       fb::AutoLock l(mtx);
       // TODO make rank pair
-      top.push( result );
-      if ( top.size() <= n )
+      topPair.push( result );
+      if ( topPair.size() <= n )
          return;
 
       topPair.pop();
@@ -49,24 +49,4 @@ private:
    fb::Mutex mtx;
    std::atomic<double> min_allowed_rank;
    int n;
-};
-
-struct SnippetOffsets{
-    fb::SizeT begin;
-    fb::SizeT end;
-};
-
-struct SnippetStats {
-    //since we currently think each worker computer will only have one merged
-    //pagestore file, we can probably later make this static
-    fb::String FileName; //the corresponding pagestore file
-    fb::SizeT DocIndex; //gives which number document in that pagestore file
-    SnippetOffsets Offsets; //gives the begin and end word number within that document
-};
-
-struct QueryResult{
-    fb::SizeT UrlId;
-    double rank;
-    fb::String Title;
-    fb::String Snippet;
 };

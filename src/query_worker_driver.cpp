@@ -25,7 +25,7 @@
 #include <fb/vector.hpp>
 #include <fb/string.hpp>
 
-#include "query_result.hpp" //move this to whatever appropriate location
+#include <query/query_result.hpp> //move this to whatever appropriate location
 
 // TCP protocol
 // worker establishes socket to master (sends a verfication code)

@@ -31,12 +31,12 @@
 #include <fb/vector.hpp>
 #include <fb/string.hpp>
 
-#include "query_result.hpp"
+#include <query/query_result.hpp>
 
 fb::UniquePtr<Expression> ParseQuery( fb::String query )
     {
     // First: we send the query to the query compiler
-    Parser p(query);
+    QueryParser p(query);
     return p.Parse( );
     }
 

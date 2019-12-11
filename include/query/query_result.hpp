@@ -128,5 +128,5 @@ private:
       send_str( sock, qr.Snippet );
    }
 
-   TopNQueue top;
+   TopNQueue<QueryResult> top;
 };

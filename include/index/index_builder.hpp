@@ -153,14 +153,12 @@ private:
     // returns pointer to the beginning of the next word
     // increments tokenCount
     char* read_word(char* &word_begin, fb::String &word) {
-        word = "";
-        while (*word_begin != ' ' && *word_begin != '\0') {
-            word = word + tolower(*word_begin);
-            ++word_begin;
-        }
+        word.clear();
+        while (*word_begin && *word_begin != ' ')
+            word += tolower(*word_begin++);
 
         // check to see if we are at the end of a document
-        if (*word_begin == '\0')
+        if (!*word_begin)
             return word_begin;
 
         // otherwise move past the space and return the start
@@ -168,10 +166,7 @@ private:
         ++word_begin;
 
         // returns the last position of the resulting word
-        int size = stem(porterStemmer,
-                        word.data(),
-                        word.size() - 1) + 1;
-        word.resize(size);
+        word.resize(stem(porterStemmer, word.data(), word.size() - 1) + 1);
         return word_begin;
     }
 
@@ -183,7 +178,7 @@ private:
         uint8_t word_info;
         char* current_word = (char *)doc_start;
         uint8_t* current_des = des_start;
-        while (*current_word != '\0'){
+        while (*current_word) {
             current_word = read_word(current_word, word);
             word_info = *current_des;
             AbsoluteWordInfo absWord = {tokenCount, word_info};

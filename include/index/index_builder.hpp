@@ -15,7 +15,7 @@
 #include "fb/unordered_set.hpp"
 
 #include "index/index_chunk_builder.hpp"
-#include "index/index_helpers.hpp" 
+#include "index/index_helpers.hpp"
 #include "index/index_data_structures.hpp"
 
 #include "porter_stemmer.hpp"
@@ -78,7 +78,7 @@ private:
    char* read_word(char* &word_begin, fb::String &word){
       word = "";
       while(*word_begin != ' ' && *word_begin != '\0'){
-         word = word + to_lower(*word_begin);
+         word += to_lower(*word_begin); //Event count from perf: 157848185238 (wowza)
          ++word_begin;
       }
       // check to see if we are at the end of a document
@@ -111,7 +111,7 @@ private:
          auto iter = wordCountsPositions.insert( word, {} );
          iter->second.pushBack( absWord );
 
-         if(unique_words.insert(iter.key())) 
+         if(unique_words.insert(iter.key()))
             ++(iter->first);
 
       }
@@ -121,8 +121,8 @@ private:
       ++tokenCount;
       documents.pushBack(doc_info);
    }
-   
-   void flushToDisk(int chunk) 
+
+   void flushToDisk(int chunk)
       {
       fb::String filename = (root + "Index" + fb::toString(chunk));
       // change this to use atomics
@@ -155,9 +155,6 @@ private:
 
    // each chunk keeps track of its own word count
    unsigned int tokenCount;
-  	
+
    stemmer * porterStemmer;
 };
-
-
-

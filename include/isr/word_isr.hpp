@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fb/string.hpp>
+
 #include "isr.hpp"
 
 class WordISR : public ISR

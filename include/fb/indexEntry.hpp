@@ -14,7 +14,7 @@ namespace fb {
 // length = 10 -> 4 bytes
 
 /* GIVEN a pointer, will insert a numerical value
- * RETURNs the pointer to end of the inserted data 
+ * RETURNs the pointer to end of the inserted data
  * (first byte that hasn't bit written to yet)
  * example use case
  * char* mem= (char*) new uint64_t[16];
@@ -22,18 +22,18 @@ namespace fb {
  * mem = add_num(mem, 1623);
  * mem = add_num(mem, 610516583);
  */
-inline char* add_word_post( char* curr, uint32_t num) 
+inline char* add_word_post( char* curr, uint32_t num)
    {
       // Because most deltas are small, checking from smallest value is
-      if ( num <= fbImpl::oneBytePostMaxVal ) 
+      if ( num <= fbImpl::oneBytePostMaxVal )
          {
          return fbImpl::write_num<fbImpl::oneBytePost>( curr, num );
          }
-      if ( num <= fbImpl::twoBytePostMaxVal ) 
+      if ( num <= fbImpl::twoBytePostMaxVal )
          {
          return fbImpl::write_num<fbImpl::twoBytePost>( curr, num );
          }
-      if ( num <= fbImpl::fourBytePostMaxVal ) 
+      if ( num <= fbImpl::fourBytePostMaxVal )
          {
          return fbImpl::write_num<fbImpl::fourBytePost>( curr, num );
          }
@@ -57,27 +57,26 @@ inline char* add_word_sentinel( char* curr )
  * mem = read_number(mem, value);
  * cout << value << endl;
  */
-inline const char* read_word_post( const char* curr, uint32_t &num) 
-   {
-      switch ( ( ( fbImpl::oneBytePost * ) curr )->size ) 
-         {
-         case 0:
-            return fbImpl::read_number<fbImpl::oneBytePost>( curr, num );
-         case 1:
-            return fbImpl::read_number<fbImpl::twoBytePost>( curr, num );
-         case 2:
-            return fbImpl::read_number<fbImpl::fourBytePost>( curr, num );
-         case 3:
-            return fbImpl::read_number<fbImpl::eightBytePost>( curr, num );
-         } 
-   }
+inline const char* read_word_post(const char* curr, uint32_t &num) {
+    switch (((fbImpl::oneBytePost *) curr)->size) {
+    case 0:
+        return fbImpl::read_number<fbImpl::oneBytePost>(curr, num);
+    case 1:
+        return fbImpl::read_number<fbImpl::twoBytePost>(curr, num);
+    case 2:
+        return fbImpl::read_number<fbImpl::fourBytePost>(curr, num);
+    case 3:
+        return fbImpl::read_number<fbImpl::eightBytePost>(curr, num);
+    default:
+        assert(false);
+    }
+}
 
-inline bool is_word_sentinel( const char* curr )
-   {
-   uint32_t num;
-   read_word_post(curr, num);
-   return num == 0;
-   }
+inline bool is_word_sentinel(const char* curr) {
+    uint32_t num;
+    read_word_post(curr, num);
+    return num == 0;
+}
 
 // Adds document post. Returns the pointer to next address we should add to
 inline char* add_document_post( char* curr, uint32_t delta, uint32_t url_loc) {

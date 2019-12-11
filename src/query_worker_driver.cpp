@@ -70,8 +70,6 @@ Vector<QueryResult> SearchQuery( String query );
 //    void* mmapAddr;
 // };
 
-Vector< PageStoreInfo > indexes;
-
 // We will create an thread for each index
 int main( int argc, char **argv ) {
 
@@ -101,7 +99,7 @@ int main( int argc, char **argv ) {
         fstat(f, &details);
 
         char *IndexPtr = (char *)mmap(nullptr, details.st_size, PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, f, 0);
-        Readers.PushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
+        Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 
     //TODO: GET QUERIES

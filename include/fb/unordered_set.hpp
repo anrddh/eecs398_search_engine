@@ -1,10 +1,11 @@
 //Edited by Chandler Meyers on 11/6/2019
 #pragma once
 
-#include "functional.hpp"
-#include "vector.hpp"
+#include <fb/functional.hpp>
+#include <fb/vector.hpp>
+#include <iostream>
 
-#define INITIAL_SIZE 1024
+#define INITIAL_SIZE 16384
 
 namespace fb {
 
@@ -342,6 +343,7 @@ private:
     Pred pred = EqualTo<K>();
 
     void rehash_and_grow(SizeT n) {
+        std::cout << "rehash_and_grow" << std::endl;
         Vector<Bucket> temp = buckets;
         buckets.clear();
         num_elements = 0;

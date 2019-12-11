@@ -80,10 +80,12 @@ private:
        return word_begin;
     }
 
+    fb::UnorderedSet<fb::String> unique_words;
+
     void build_single_doc(uint8_t* doc_start,
                           uint8_t* des_start,
                           uint64_t docId) {
-        fb::UnorderedSet<fb::String> unique_words;
+        unique_words.clear();
         fb::String word;
         uint8_t word_info;
         char* current_word = (char *)doc_start;

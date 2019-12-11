@@ -80,7 +80,7 @@ class TopPages {
    ~TopPages() {
       int sock; //TODO
       try {
-         send_int( top.size() );
+         send_int( sock, top.size() );
          while ( !top.empty() ) {
             send_query_result( sock, top.top() );
             top.pop();

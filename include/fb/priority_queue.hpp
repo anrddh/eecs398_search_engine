@@ -80,7 +80,7 @@ public:
 
    void push( T && value )
       {
-      data.PushBack( std::move( value ) );
+      data.pushBack( std::move( value ) );
       push_heap();
       }
 

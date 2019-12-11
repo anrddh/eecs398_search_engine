@@ -1,14 +1,29 @@
 #pragma once
 
-#include "query_result.hpp"
-#include "fb/thread.hpp"
-
+#include <query_result.hpp>
+#include <fb/thread.hpp>
+#include <algorithm>
 
 struct IndexInfoArg {
     fb::UniquePtr<Expression> &e;
     fb::UniquePtr<IndexReader> &reader;
     TopPages &pages;
 };
+
+//merge together the rank stats vector into the snippet
+//for now, assuming the weight of each word is 1
+//just to get something working quickly
+//im literally just going to sort it for now lol
+fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>> &occurrences):{
+    fb::Vector<fb::SizeT> vec;
+    for (auto& v : occurrences){
+        for (uint32_t i : v){
+            vec.PushBack(i);
+        }
+    }
+    std::sort(vec.begin(), vec.end());
+    return vec;
+}
 
 void* RankPages( void *info ) {
    // Just keep calling add to top pages
@@ -21,20 +36,20 @@ void* RankPages( void *info ) {
       {
       QueryResult qr;
       qr.rank = stat.rank;
-      
+
       arg.pages
       }
 }
 
-class QueryHandler 
+class QueryHandler
    {
 public:
-   QueryHandler( fb::String path , fb::String prefix, int num_indices ) 
+   QueryHandler( fb::String path , fb::String prefix, int num_indices )
       {
       fb::String dirname(argv[1]);
       fb::String Prefix(argv[2]);
       int num_index_files = atoi(argv[3]);
-      for (int i = 0; i < num_index_files; ++i) 
+      for (int i = 0; i < num_index_files; ++i)
          {
          fb::String filename = dirname + "/" + Prefix + fb::toString(i);
          int f = open(filename.data(), O_RDWR);
@@ -52,7 +67,7 @@ public:
          Readers.PushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
          }
 
-      
+
       }
    ~QueryHandler( )
 
@@ -74,7 +89,7 @@ public:
 
       return pages.GetTopResults( );
       }
-      
+
 private:
    Vector<fb::UniquePtr<IndexReader>> Readers;
 

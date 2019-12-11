@@ -7,9 +7,10 @@
 
 struct rank_stats
    {
-	uint32_t page_store_number;
+   uint32_t page_store_number;
    uint32_t page_store_index;
-	unsigned int total_term_count; // doc length
+   unsigned int total_term_count; // doc length
+   fb::SizeT UrlId; //to be set during snippets
    fb::Vector<fb::Vector<uint32_t>> occurrences;
    double rank = -1;
    };

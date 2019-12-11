@@ -7,7 +7,7 @@
 #include <functional> //std::swap, std::move TODO
 
 namespace fb {
-template< typename T, typename Container = Vector< T >, typename Compare = Less< typename Container::value_type > >
+template< typename T, typename Container = Vector< T >, typename Compare = Less< typename Container::ValueType > >
 class PriorityQueue
 {
 private:
@@ -41,11 +41,11 @@ private:
 
 public:
 
-   typedef Container container_type;
-   typedef typename Container::value_type value_type;
-   typedef typename Container::size_type size_type;
-   typedef typename Container::reference reference;
-   typedef typename Container::const_reference const_reference;
+   typedef Container ContainerType;
+   typedef typename Container::ValueType ValueType;
+   typedef typename Container::SizeType SizeType;
+   typedef typename Container::Reference Reference;
+   typedef typename Container::ConstReference ConstReference;
 
    PriorityQueue ( )
       : data ( Container{ } ), compare( Compare{ } )
@@ -57,7 +57,7 @@ public:
       {
       }
 
-   const const_reference top() const
+   const ConstReference top() const
       {
       return data[0];
       }

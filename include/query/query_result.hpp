@@ -60,10 +60,10 @@ public:
       return top.size();
    }
 
-   inline T& pop() {
-      T& temp = top.top();
+   inline T&& pop() {
+      T temp = std::move( top.top() );
       top.pop();
-      return temp;
+      return std::move( temp );
    }
 
 private:

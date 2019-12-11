@@ -23,6 +23,8 @@
 #include "debug.hpp"
 #include "disk/logfile.hpp"
 
+#include "fb/no_delete_unordered_map.hpp"
+
 /*
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
@@ -93,22 +95,27 @@ private:
    }
 
    void build_single_doc(uint8_t* doc_start, uint8_t* des_start, uint64_t docId){
-      fb::UnorderedSet<fb::String> unique_words;
+      fb::UnorderedSet<fb::StringView> unique_words;
       fb::String word;
       uint8_t word_info;
       char* current_word = (char *)doc_start;
       uint8_t* current_des = des_start;
       while(*current_word != '\0'){
          current_word = read_word(current_word, word);
-         unique_words.insert(word);
          word_info = *current_des;
          AbsoluteWordInfo absWord = {tokenCount, word_info};
          ++tokenCount;
-         wordPositions[word].pushBack(absWord);
+
+         // wordPositions[word].pushBack(absWord);
+
+         auto iter = wordCountsPositions.insert( word, {} );
+         iter->second.pushBack( absWord );
+
+         if(unique_words.insert(iter.key())) 
+            ++(iter->first);
+
       }
-      for(fb::String thing : unique_words){
-         ++wordDocCounts[thing];
-      }
+
       // increment for EOD
       DocIdInfo doc_info = {tokenCount, docId};
       ++tokenCount;
@@ -120,12 +127,15 @@ private:
       fb::String filename = (root + "Index" + fb::toString(chunk));
       // change this to use atomics
 
-      IndexChunkBuilder<fb::Hash<fb::String>> indexChunkBuilder(filename, wordPositions.bucket_count(), documents, tokenCount);
+      IndexChunkBuilder<fb::Hash<fb::String>> indexChunkBuilder(filename, wordCountsPositions.bucket_count(), documents, tokenCount);
 
-      for(auto iter = wordPositions.begin(); iter != wordPositions.end(); ++iter)
-         {
-         indexChunkBuilder.addWord(iter.key(), *iter, wordDocCounts[iter.key()]);
-         }
+      // for(auto iter = wordPositions.begin(); iter != wordPositions.end(); ++iter)
+      //    {
+      //    indexChunkBuilder.addWord(iter.key(), *iter, wordDocCounts[iter.key()]);
+      //    }
+
+      for(auto iter = wordCountsPositions.begin(); iter != wordCountsPositions.end(); ++iter)
+         indexChunkBuilder.addWord(iter.key(), iter->second, iter->first);
 
       tokenCount = 1;
       }
@@ -134,9 +144,12 @@ private:
    fb::String root;
 
    // the actual map that stores the positions of the words, is a unique pointer so that we can pass this ownership to a thread.
-   fb::UnorderedMap<fb::String, fb::Vector<AbsoluteWordInfo>> wordPositions;
+   // fb::UnorderedMap<fb::String, fb::Vector<AbsoluteWordInfo>> wordPositions;
    // this is the number of documents a word appears in
-   fb::UnorderedMap<fb::String, unsigned int> wordDocCounts;
+   // fb::UnorderedMap<fb::String, unsigned int> wordDocCounts;
+
+   fb::NoDeleteUnorderedMap<fb::String, fb::Pair< unsigned int, fb::Vector<AbsoluteWordInfo> > > wordCountsPositions;
+
   	fb::Mutex wordPositionsLock;
    fb::Vector<DocIdInfo> documents;
 

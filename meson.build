@@ -75,11 +75,3 @@ executable('print_page_store',
 executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
-
-executable('isr_example',
-            isr_example_driver,
-            include_directories: inc)
-
-executable('ranker_test',
-            ranker_test_driver,
-            include_directories: inc)

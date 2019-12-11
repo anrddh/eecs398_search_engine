@@ -65,6 +65,10 @@ executable('build_index_test',
             build_index_test_driver,
             include_directories: inc)
 
+executable('merged_index_test',
+            merged_index_test_driver,
+            include_directories: inc)
+
 executable('print_page_store',
             print_page_store_driver,
             include_directories: inc)
@@ -82,5 +86,5 @@ executable('page_store_merge',
             page_store_merge_driver,
             page_store_merge_files,
             include_directories: inc,
-            dependencies: [threads_dep])
+            dependencies: [threads_dep],
             include_directories: inc)

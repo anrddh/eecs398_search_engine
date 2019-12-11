@@ -28,6 +28,8 @@ build_index_chunk_driver = files('build_index_chunk.cpp', 'logfile.cpp', 'debug.
 
 build_index_test_driver = files('index/index_test.cpp', 'logfile.cpp', 'debug.cpp')
 
+merged_index_test_driver = files('index/merged_index_test.cpp')
+
 print_page_store_driver = files('index/print_page_store.cpp')
 
 search_index_driver = files('search_index.cpp')

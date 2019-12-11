@@ -28,7 +28,7 @@ const char * read_EOD_posting_list(const char* current, std::vector<std::pair<ui
 	++current; 
 	current += (2 * sizeof(unsigned int));
 	int NUM_SKIP_TABLE_BITS = *((unsigned int *) current);
-	std::cout << "EOD skip table bits: " << NUM_SKIP_TABLE_BITS << std::endl;
+	//std::cout << "EOD skip table bits: " << NUM_SKIP_TABLE_BITS << std::endl;
 	current += getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
 
 	while(true){
@@ -79,7 +79,7 @@ void trans_file_to_offsets(const char* start, std::vector<std::vector<uint32_t>>
 			current += (2 * sizeof(unsigned int));
 			int NUM_SKIP_TABLE_BITS = *((int *) current);
 			current += getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
-			std::cout << words.back() << ":" << NUM_SKIP_TABLE_BITS << std::endl;
+			//std::cout << words.back() << ":" << NUM_SKIP_TABLE_BITS << std::endl;
 			std::vector<uint32_t> posting_list;
 			read_posting_list(current, posting_list);
 			all.push_back(posting_list);

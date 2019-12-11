@@ -55,6 +55,7 @@ public:
             if (!(doc_num % 5000))
                 log(logfile, "Built ", doc_num, " docs\n");
         }
+        log(logfile, "Flushing now\n");
         flushToDisk(chunk);
         log(logfile, "Flushed to disk\n");
     }
@@ -81,12 +82,12 @@ private:
     }
 
     fb::UnorderedSet<fb::String> unique_words;
+    fb::String word;
 
     void build_single_doc(uint8_t* doc_start,
                           uint8_t* des_start,
                           uint64_t docId) {
         unique_words.clear();
-        fb::String word;
         uint8_t word_info;
         char* current_word = (char *)doc_start;
         uint8_t* current_des = des_start;

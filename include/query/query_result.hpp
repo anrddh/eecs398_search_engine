@@ -15,7 +15,7 @@ struct QueryResult {
     fb::String Snippet;
 
     inline bool operator< ( const QueryResult& other ) const {
-      rank < other.rank;
+      return rank < other.rank;
     }
 };
 
@@ -30,12 +30,12 @@ public:
          return;
 
       fb::AutoLock l(mtx);
-      top.push( std::move( result ) );
+      top.push( std::move( v ) );
       if ( top.size() <= n )
          return;
 
       top.pop();
-      min_allowed_rank = topPair.top();
+      min_allowed_rank = top.top().rank;
    }
 
    inline bool empty() const {
@@ -72,17 +72,18 @@ private:
 // The rank will be increasing
 //
 class TopPages {
-   TopPages( int n ) : TopNQueue( n ) {};
+   TopPages( int n ) : top( n ) {};
    void addRankStats( QueryResult&& result ) {
       top.push( std::move( result ) );
    }
 
    ~TopPages() {
+      int sock; //TODO
       try {
-         send_int( topPair.size() );
-         while ( !topPair.empty() ) {
-            send_query_result( sock, topPair.top() );
-            topPair.pop();
+         send_int( top.size() );
+         while ( !top.empty() ) {
+            send_query_result( sock, top.top() );
+            top.pop();
          }
 
       } catch (SocketException& se) {

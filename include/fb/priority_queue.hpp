@@ -80,7 +80,7 @@ public:
 
    void push( T && value )
       {
-      data.push_back( std::move( value ) );
+      data.PushBack( std::move( value ) );
       push_heap();
       }
 
@@ -89,7 +89,7 @@ public:
       if ( !empty() )
          {
          data.front( ) = data.back( );
-         data.pop_back( );
+         data.popBack( );
          heapify(0);
          }
       else

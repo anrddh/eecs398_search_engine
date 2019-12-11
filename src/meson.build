@@ -16,9 +16,10 @@ server_source_files += files('bolt/bolt.cpp',
                              'bolt/html_page.cpp',
                              'bolt/http/http_connection_handler_factory.cpp',
                              'bolt/http/http_request.cpp',
-                             'bolt/http/socket_http_connection_handler.cpp')
+                             'bolt/http/socket_http_connection_handler.cpp',
+                             'empty_isr.cpp')
 
-query_worker_source_files += files('ranker.cpp', 'page_store.cpp')
+query_worker_source_files += files('query_handler.cpp', 'ranker.cpp', 'page_store.cpp')
 
 build_index_driver = files('build_index.cpp', 'logfile.cpp', 'debug.cpp')
 

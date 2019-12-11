@@ -133,7 +133,8 @@ static int m(struct stemmer * z)
    int j = z->j;
    while(TRUE)
    {  if (i > j) return n;
-      if (! cons(z, i)) break; i++;
+      if (! cons(z, i)) break;
+      i++;
    }
    i++;
    while(TRUE)
@@ -242,17 +243,17 @@ static void step1ab(struct stemmer * z)
 {
    char * b = z->b;
    if (b[z->k] == 's')
-   {  if (ends(z, "\04" "sses")) z->k -= 2; else
-      if (ends(z, "\03" "ies")) setto(z, "\01" "i"); else
-      if (b[z->k - 1] != 's') z->k--;
+   {  if (ends(z, "\04" "sses")) z->k -= 2;
+      else if (ends(z, "\03" "ies")) setto(z, "\01" "i");
+      else if (b[z->k - 1] != 's') z->k--;
    }
-   if (ends(z, "\03" "eed")) { if (m(z) > 0) z->k--; } else
-   if ((ends(z, "\02" "ed") || ends(z, "\03" "ing")) && vowelinstem(z))
+   if (ends(z, "\03" "eed")) { if (m(z) > 0) z->k--; }
+   else if ((ends(z, "\02" "ed") || ends(z, "\03" "ing")) && vowelinstem(z))
    {  z->k = z->j;
-      if (ends(z, "\02" "at")) setto(z, "\03" "ate"); else
-      if (ends(z, "\02" "bl")) setto(z, "\03" "ble"); else
-      if (ends(z, "\02" "iz")) setto(z, "\03" "ize"); else
-      if (doublec(z, z->k))
+      if (ends(z, "\02" "at")) setto(z, "\03" "ate");
+      else if (ends(z, "\02" "bl")) setto(z, "\03" "ble");
+      else if (ends(z, "\02" "iz")) setto(z, "\03" "ize");
+      else if (doublec(z, z->k))
       {  z->k--;
          {  int ch = b[z->k];
             if (ch == 'l' || ch == 's' || ch == 'z') z->k++;
@@ -334,27 +335,39 @@ static void step3(struct stemmer * z) { switch (z->b[z->k])
 
 static void step4(struct stemmer * z)
 {  switch (z->b[z->k-1])
-   {  case 'a': if (ends(z, "\02" "al")) break; return;
+   {  case 'a': if (ends(z, "\02" "al")) break;
+                return;
       case 'c': if (ends(z, "\04" "ance")) break;
-                if (ends(z, "\04" "ence")) break; return;
-      case 'e': if (ends(z, "\02" "er")) break; return;
-      case 'i': if (ends(z, "\02" "ic")) break; return;
+                if (ends(z, "\04" "ence")) break;
+                return;
+      case 'e': if (ends(z, "\02" "er")) break;
+                return;
+      case 'i': if (ends(z, "\02" "ic")) break;
+                return;
       case 'l': if (ends(z, "\04" "able")) break;
-                if (ends(z, "\04" "ible")) break; return;
+                if (ends(z, "\04" "ible")) break;
+                return;
       case 'n': if (ends(z, "\03" "ant")) break;
                 if (ends(z, "\05" "ement")) break;
                 if (ends(z, "\04" "ment")) break;
-                if (ends(z, "\03" "ent")) break; return;
+                if (ends(z, "\03" "ent")) break;
+                return;
       case 'o': if (ends(z, "\03" "ion") && z->j >= 0 && (z->b[z->j] == 's' || z->b[z->j] == 't')) break;
-                if (ends(z, "\02" "ou")) break; return;
+                if (ends(z, "\02" "ou")) break;
+                return;
                 /* takes care of -ous */
-      case 's': if (ends(z, "\03" "ism")) break; return;
+      case 's': if (ends(z, "\03" "ism")) break;
+                return;
       case 't': if (ends(z, "\03" "ate")) break;
-                if (ends(z, "\03" "iti")) break; return;
-      case 'u': if (ends(z, "\03" "ous")) break; return;
-      case 'v': if (ends(z, "\03" "ive")) break; return;
-      case 'z': if (ends(z, "\03" "ize")) break; return;
-      default: return;
+                if (ends(z, "\03" "iti")) break;
+                return;
+      case 'u': if (ends(z, "\03" "ous")) break;
+                return;
+      case 'v': if (ends(z, "\03" "ive")) break;
+                return;
+      case 'z': if (ends(z, "\03" "ize")) break;
+                return;
+      default:  return;
    }
    if (m(z) > 1) z->k = z->j;
 }

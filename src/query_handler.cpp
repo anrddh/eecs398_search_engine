@@ -19,6 +19,12 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>> &occur
     return vec;
 }
 
+// to be used as arguments to a thread
+struct IndexInfoArg {
+    fb::UniquePtr<Expression> e;
+    fb::UniquePtr<IndexReader> reader;
+};
+
 void* RankPages( void *info ) {
    // Just keep calling add to top pages
    IndexInfoArg &arg = *(IndexInfoArg *) info;

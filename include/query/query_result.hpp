@@ -7,12 +7,11 @@
 #include <tcp/url_tcp.hpp>
 #include <atomic>
 
-// TODO add ranking info
 struct QueryResult {
     fb::SizeT UrlId;
-    double rank;
     fb::String Title;
     fb::String Snippet;
+    double rank;
 
     inline bool operator< ( const QueryResult& other ) const {
       return rank < other.rank;
@@ -24,7 +23,7 @@ struct QueryResult {
 template <typename T>
 class TopNQueue {
 public:
-   TopNQueue( int n_ ) : n( n_ ) {}
+   TopNQueue( fb::SizeT n_ ) : n( n_ ) {}
    void push( T&& v ) {
       if ( v.rank < min_allowed_rank )
          return;
@@ -55,10 +54,10 @@ public:
    }
 
 private:
-   fb::PriorityQueue<QueryResult> topQueue;
+   fb::PriorityQueue<T> topQueue;
    fb::Mutex mtx;
    std::atomic<double> min_allowed_rank = 0;
-   int n;
+   fb::SizeT n;
 };
 
 
@@ -70,7 +69,7 @@ private:
 //
 // TCP protocol method:
 // worker to master:
-// num (int), [ UrlId (uint64_t), rank (double), Title (string), Snippet (string) ] x num
+// num (int), [ UrlId (uint64_t), Title (string), Snippet (string), rank (double) ] x num
 // The rank will be increasing
 //
 class TopPages {
@@ -112,9 +111,9 @@ private:
    // Destructor helper
    inline void send_query_result( int sock, const QueryResult& qr ) {
       send_uint64_t( sock, qr.UrlId );
-      send_double( sock, qr.rank );
       send_str( sock, qr.Title );
       send_str( sock, qr.Snippet );
+      send_double( sock, qr.rank );
    }
 
    TopNQueue<QueryResult> top;

@@ -19,17 +19,19 @@ server_source_files += files('bolt/bolt.cpp',
                              'bolt/http/http_connection_handler_factory.cpp',
                              'bolt/http/http_request.cpp',
                              'bolt/http/socket_http_connection_handler.cpp',
-                             'empty_isr.cpp')
+                             'empty_isr.cpp',
+                             'document_isr.cpp')
 
 query_worker_source_files += files('query_handler.cpp', 'ranker.cpp', 'page_store.cpp')
 
 page_store_check_files += files('page_store.cpp')
+build_index_driver = files('document_isr.cpp', 'build_index.cpp', 'logfile.cpp', 'debug.cpp')
 
-build_index_driver = files('build_index.cpp', 'logfile.cpp', 'debug.cpp')
+build_index_chunk_driver = files('document_isr.cpp', 'build_index_chunk.cpp', 
+        'logfile.cpp', 'debug.cpp')
 
-build_index_chunk_driver = files('build_index_chunk.cpp', 'logfile.cpp', 'debug.cpp')
-
-build_index_test_driver = files('index/index_test.cpp', 'logfile.cpp', 'debug.cpp')
+build_index_test_driver = files('document_isr.cpp', 'index/index_test.cpp', 
+        'logfile.cpp', 'debug.cpp')
 
 merged_index_test_driver = files('index/merged_index_test.cpp')
 
@@ -40,4 +42,5 @@ search_index_driver = files('search_index.cpp')
 #ranker_test_driver = files('ranker_test.cpp')
 
 query_worker_driver = files('query_worker_driver.cpp')
+query_server_driver = files('query_server_driver.cpp', 'url_tcp.cpp', 'url_store.cpp')
 page_store_merge_files += files('page_store.cpp')

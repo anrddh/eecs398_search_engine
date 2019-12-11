@@ -78,12 +78,11 @@ executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
 
-<<<<<<< HEAD
 executable('page_store_check',
             page_store_check_driver, page_store_check_files,
             include_directories: inc,
             dependencies: [threads_dep])
-=======
+
 executable('query_worker',
             query_worker_driver,
             include_directories: inc,
@@ -95,4 +94,3 @@ executable('page_store_merge',
             include_directories: inc,
             dependencies: [threads_dep],
             include_directories: inc)
->>>>>>> isr

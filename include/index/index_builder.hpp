@@ -30,144 +30,54 @@
  * inline char* add_num( char* curr, size_t num, uint8_t header = 0 )
  */
 
-struct LOG_ERROR{};
-
 class IndexBuilder {
 public:
-   // root must contain a trailing '/'
-   IndexBuilder(fb::String path)
-       : root(path), tokenCount(1), porterStemmer(create_stemmer()) {}
+    // root must contain a trailing '/'
+    IndexBuilder(fb::String path)
+        : root(path), tokenCount(1), porterStemmer(create_stemmer()) {}
 
-   ~IndexBuilder() { free_stemmer(porterStemmer); }
+    ~IndexBuilder() { free_stemmer(porterStemmer); }
 
-   void build_chunk(uint64_t* start_of_file, int chunk) {
-      // move past first 16 bytes
-      // the page headers end where the first page starts
-      uint64_t* current_doc_offset = start_of_file + 2;
-      uint64_t* current_des_offset = start_of_file + 3;
-      unsigned int num_pages = start_of_file[1];
-      uint64_t* end_page_headers = start_of_file + 2 + (num_pages * 3);
-      uint64_t doc_num = 0;
-      uint8_t * start = (uint8_t *) start_of_file;
-      while(current_doc_offset != end_page_headers){
-         build_single_doc(start + *current_doc_offset, start + *current_des_offset, doc_num);
-         current_doc_offset += 3;
-         current_des_offset += 3;
-         ++doc_num;
-         if(doc_num%5000 == 0){
-            log(logfile, "Built 5000 docs\n");
-         }
-      }
-      flushToDisk(chunk);
-      log(logfile, "Flushed to disk\n");
-   }
-private:
-
-   char to_lower(char letter){
-      if(letter >= 65 && letter <= 90){
-         return letter + 32;
-      }
-      return letter;
-   }
-   // reads a single space terminated word
-   // returns pointer to the beginning of the next word
-   // increments tokenCount
-   char* read_word(char* &word_begin, fb::String &word){
-      word = "";
-      while(*word_begin != ' ' && *word_begin != '\0'){
-         word += to_lower(*word_begin); //Event count from perf: 157848185238 (wowza)
-         ++word_begin;
-      }
-      // check to see if we are at the end of a document
-      if(*word_begin == '\0'){
-         return word_begin;
-      }
-      // otherwise move past the space and return the start
-      // of the next word
-      ++word_begin;
-
-      int size = stem( porterStemmer, word.data( ), word.size( ) - 1 ) + 1; // returns the last position of the resulting word
-      word.resize( size );
-      return word_begin;
-   }
-
-   void build_single_doc(uint8_t* doc_start, uint8_t* des_start, uint64_t docId){
-      fb::UnorderedSet<fb::StringView> unique_words;
-      fb::String word;
-      uint8_t word_info;
-      char* current_word = (char *)doc_start;
-      uint8_t* current_des = des_start;
-      while(*current_word != '\0'){
-         current_word = read_word(current_word, word);
-         word_info = *current_des;
-         AbsoluteWordInfo absWord = {tokenCount, word_info};
-         ++tokenCount;
-
-         // wordPositions[word].pushBack(absWord);
-
-         auto iter = wordCountsPositions.insert( word, {} );
-         iter->second.pushBack( absWord );
-
-         if(unique_words.insert(iter.key()))
-            ++(iter->first);
-
-      while (current_doc_offset != end_page_headers) {
-          build_single_doc(start + *current_doc_offset,
-                           start + *current_des_offset,
-                           doc_num);
-          current_doc_offset += 3;
-          current_des_offset += 3;
-          ++doc_num;
-          if (!(doc_num % 5000))
-              log(logfile, "Built ", doc_num, " docs\n");
-      }
-
-      log(logfile, "Beginning flush\n");
-      flushToDisk(chunk);
-      log(logfile, "Flushed to disk\n");
-   }
-
-   void flushToDisk(int chunk)
-      {
-      fb::String filename = (root + "Index" + fb::toString(chunk));
-      // change this to use atomics
-
-      IndexChunkBuilder<fb::Hash<fb::String>> indexChunkBuilder(filename, wordCountsPositions.bucket_count(), documents, tokenCount);
-
-      // for(auto iter = wordPositions.begin(); iter != wordPositions.end(); ++iter)
-      //    {
-      //    indexChunkBuilder.addWord(iter.key(), *iter, wordDocCounts[iter.key()]);
-      //    }
-
-      for(auto iter = wordCountsPositions.begin(); iter != wordCountsPositions.end(); ++iter)
-         indexChunkBuilder.addWord(iter.key(), iter->second, iter->first);
-
-      tokenCount = 1;
-      }
-
-   // folder for each index chunk, store root directory
-   fb::String root;
-
+    void build_chunk(uint64_t* start_of_file, int chunk) {
+        // move past first 16 bytes
+        // the page headers end where the first page starts
+        uint64_t* current_doc_offset = start_of_file + 2;
+        uint64_t* current_des_offset = start_of_file + 3;
+        unsigned int num_pages = start_of_file[1];
+        uint64_t* end_page_headers = start_of_file + 2 + (num_pages * 3);
+        uint64_t doc_num = 0;
+        uint8_t * start = (uint8_t *) start_of_file;
+        while(current_doc_offset != end_page_headers){
+            build_single_doc(start + *current_doc_offset, start + *current_des_offset, doc_num);
+            current_doc_offset += 3;
+            current_des_offset += 3;
+            ++doc_num;
+            if (!(doc_num % 5000))
+                log(logfile, "Built ", doc_num, " docs\n");
+        }
+        flushToDisk(chunk);
+        log(logfile, "Flushed to disk\n");
+    }
 private:
     // reads a single space terminated word
     // returns pointer to the beginning of the next word
     // increments tokenCount
     char* read_word(char* &word_begin, fb::String &word) {
-        word.clear();
-        while (*word_begin && *word_begin != ' ')
-            word += tolower(*word_begin++);
+       word = "";
+       while (*word_begin && *word_begin != ' ')
+           word += tolower(*word_begin++);
 
-        // check to see if we are at the end of a document
-        if (!*word_begin)
-            return word_begin;
+       // check to see if we are at the end of a document
+       if(!*word_begin)
+           return word_begin;
 
-        // otherwise move past the space and return the start
-        // of the next word
-        ++word_begin;
+       // otherwise move past the space and return the start
+       // of the next word
+       ++word_begin;
 
-        // returns the last position of the resulting word
-        word.resize(stem(porterStemmer, word.data(), word.size() - 1) + 1);
-        return word_begin;
+       // returns the last position of the resulting word
+       word.resize(stem(porterStemmer, word.data(), word.size() - 1) + 1);
+       return word_begin;
     }
 
     void build_single_doc(uint8_t* doc_start,
@@ -178,6 +88,7 @@ private:
         uint8_t word_info;
         char* current_word = (char *)doc_start;
         uint8_t* current_des = des_start;
+
         while (*current_word) {
             current_word = read_word(current_word, word);
             word_info = *current_des;
@@ -189,18 +100,17 @@ private:
             auto iter = wordCountsPositions.insert( word, {} );
             iter->second.pushBack( absWord );
 
-            if (unique_words.insert(iter.key()))
+            if(unique_words.insert(iter.key()))
                 ++(iter->first);
         }
 
         // increment for EOD
-        DocIdInfo doc_info = {tokenCount, docId};
-        ++tokenCount;
+        DocIdInfo doc_info = {tokenCount++, docId};
         documents.pushBack(doc_info);
     }
 
     void flushToDisk(int chunk) {
-        fb::String filename (root + "Index" + fb::toString(chunk));
+        fb::String filename(root + "Index" + fb::toString(chunk));
         // change this to use atomics
 
         IndexChunkBuilder<fb::Hash<fb::String>>

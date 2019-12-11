@@ -22,10 +22,8 @@ int main( int argc, char ** argv ) {
     }
 
     logfile.open("index_building_log.txt");
-    if (!logfile.is_open()) {
+    if (!logfile.is_open())
         cerr << "Could not open logfile" << endl;
-        throw LOG_ERROR();
-    }
 
     String path(argv[1]);
     if (path.back() != '/')

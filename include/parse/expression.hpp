@@ -23,6 +23,15 @@ public:
     virtual ~Expression() = default;
 
     virtual fb::UniquePtr<ISR> Eval(IndexReader &) const = 0;
+    virtual ConstraintSolver Constraints(IndexReader &reader) const {
+        return {
+            Eval(reader),
+            reader.OpenDocumentISR(),
+            Words(reader),
+            reader.getIndex()
+        };
+    }
+    virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &) const = 0;
     virtual void Print() const = 0;
 };
 
@@ -41,6 +50,12 @@ public:
 
     virtual fb::UniquePtr<ISR> Eval(IndexReader &reader) const override {
         return WordEval(reader);
+    }
+
+    virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &reader) const override {
+        fb::Vector<fb::UniquePtr<WordISR>> words;
+        words.pushBack(WordEval(reader));
+        return words;
     }
 
     virtual void Print() const override {
@@ -73,6 +88,17 @@ public:
 
         std::cout << ' ' << ')';
     }
+
+    virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &reader) const override {
+        fb::Vector<fb::UniquePtr<WordISR>> isrs;
+
+        for (auto &term : terms)
+            for (auto &wordIsr : term->Words(reader))
+                isrs.pushBack(std::move(wordIsr));
+
+        return isrs;
+    }
+
 };
 
 class OrExpression : public Expression {
@@ -99,6 +125,16 @@ public:
         }
 
         std::cout << ' ' << ')';
+    }
+
+    virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &reader) const override {
+        fb::Vector<fb::UniquePtr<WordISR>> isrs;
+
+        for (auto &term : terms)
+            for (auto &wordIsr : term->Words(reader))
+                isrs.pushBack(std::move(wordIsr));
+
+        return isrs;
     }
 };
 
@@ -130,6 +166,16 @@ public:
 
         std::cout << '"';
     }
+
+    virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &reader) const override {
+        fb::Vector<fb::UniquePtr<WordISR>> isrs;
+
+        for (auto &term : terms)
+            for (auto &wordIsr : term->Words(reader))
+                isrs.pushBack(std::move(wordIsr));
+
+        return isrs;
+    }
 };
 
 class SMExpression : public Expression {
@@ -154,5 +200,15 @@ public:
         if (notToReturn)
             notToReturn->Print();
         std::cout << ' ' << ')';
+    }
+
+    virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &reader) const override {
+        auto isrs = toReturn->Words(reader);
+
+        if (notToReturn)
+            for (auto &wordIsr : notToReturn->Words(reader))
+                isrs.pushBack(std::move(wordIsr));
+
+        return isrs;
     }
 };

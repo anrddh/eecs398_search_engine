@@ -2,6 +2,7 @@ master_driver = files('master_driver.cpp')
 worker_driver = files('worker_driver.cpp')
 server_driver = files('server.cpp')
 page_store_total_driver = files('page_store_total.cpp')
+page_store_merge_driver = files('page_store_merge.cpp')
 master_source_files += files('adj_store.cpp', 'anchor_store.cpp', 'frontier.cpp',
                              'handle_socket.cpp', 'url_tcp.cpp', 'master_url_tcp.cpp',
                              'url_store.cpp', 'url_tables.cpp', 'debug.cpp',
@@ -34,3 +35,4 @@ search_index_driver = files('search_index.cpp')
 #ranker_test_driver = files('ranker_test.cpp')
 
 query_worker_driver = files('query_worker_driver.cpp')
+page_store_merge_files += files('page_store.cpp')

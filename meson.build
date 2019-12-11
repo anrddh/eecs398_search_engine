@@ -78,6 +78,11 @@ executable('query_worker',
             include_directories: inc,
             dependencies: [threads_dep])
 
+executable('query_server',
+            query_server_driver,
+            include_directories: inc,
+            dependencies: [threads_dep])
+
 executable('page_store_merge',
             page_store_merge_driver,
             page_store_merge_files,

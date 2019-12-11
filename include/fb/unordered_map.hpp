@@ -265,7 +265,7 @@ public:
                 num_elements--;
                 num_ghosts++;
                 return 1;
-            }else{
+            } else {
                 //search until an empty bucket
                 while(buckets[desired_bucket].status != Status::Empty){
                     //if a bucket has the key, remove and return

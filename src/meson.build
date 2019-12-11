@@ -38,4 +38,5 @@ search_index_driver = files('search_index.cpp')
 #ranker_test_driver = files('ranker_test.cpp')
 
 query_worker_driver = files('query_worker_driver.cpp')
+query_server_driver = files('query_server_driver.cpp', 'url_tcp.cpp', 'url_store.cpp')
 page_store_merge_files += files('page_store.cpp')

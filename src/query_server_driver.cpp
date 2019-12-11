@@ -5,12 +5,15 @@
 #include <query/query_result.hpp>
 
 #include <disk/page_store.hpp>
+#include <disk/url_store.hpp>
+#include <disk/UrlInfo.hpp>
 #include <disk/constants.hpp>
 
 #include <fb/thread.hpp>
 #include <fb/cv.hpp>
 #include <fb/mutex.hpp>
 #include <fb/shared_mutex.hpp>
+#include <fb/unordered_set.hpp>
 
 #include <debug.hpp>
 
@@ -20,14 +23,15 @@
 #include <getopt.h>
 
 using std::cout;
+using std::cerr;
 using std::endl;
 
-using fb;
+using namespace fb;
 
 constexpr int MAX_NUM_PAGES = 100; // Number of pages sent back to front end server per query
 static_assert( MAX_NUM_PAGES > 0 );
 
-constexpr int TCP_TIMEOUT_LIMT = 5; // Number of seconds before timeout (only applies to talking to workers)
+constexpr int TCP_TIMEOUT_LIMIT = 5; // Number of seconds before timeout (only applies to talking to workers)
 
 // The value we scale the ranking based on url
 constexpr double urlWeight = 0.01; 
@@ -39,56 +43,77 @@ constexpr double urlWeight = 0.01;
 constexpr char queryMessageType = 'Q';
 constexpr char workerMessageType = 'W';
 
-Mutex socketsMtx;
-unordered_set<FileDesc> socketsToWorkers;
 
 FileDesc parseArguments(int argc, char **argv);
 
+// The thing we send back to master!
 struct PageResult {
-    fb::String Url;
-    fb::String Title;
-    fb::String Snippet;
+    fb::StringView Url;
+    fb::StringView Title;
+    fb::StringView Snippet;
     double rank;
 
-    inline bool operator< ( const QueryResult& other ) const {
+    inline bool operator< ( const PageResult& other ) const {
       return rank < other.rank;
     }
 };
 
+//Hash instance for PageResult
+template <>
+struct fb::Hash<FileDesc> {
+    // Jin Soo removed constexpr
+    SizeT operator() ( const FileDesc& data ) const noexcept {
+        return fnvHash( (char *) &data, sizeof(data) );
+    }
+};
+
+Mutex socketsMtx;
+UnorderedSet<FileDesc> socketsToWorkers;
+
 struct WorkerArg {
     FileDesc* sock;
     StringView query;
-    TopNQueue<pageResult>* topPages;
+    TopNQueue<PageResult>* topPages;
 };
+
+// TODO this is duplicated in worker driver
+struct ArgError : std::exception
+   {
+   };
 
 // If this is a querry, we do not return until the query is completed
 // Closes sockets if necessary
 void handle_connections( FileDesc&& sock );
 void handle_query( FileDesc&& sock );
-void send_page_result( const PageResult& );
+void send_page_result( int sock, const PageResult& );
 // Takes a dynamically allocated Worker arg
 // this function deletes the pointer
 // returns nullptr
 void* ask_workers(void* );
 QueryResult recv_query_result( int sock );
-
 void handle_new_worker( FileDesc&& sock );
 
-
 int main( int argc, char **argv ) {
-    FileDesc server_fd = parseArguments( int argc, char **argv );
+    FileDesc server_fd = parseArguments( argc, argv );
+    cout << "got socket " << server_fd.fd << endl;
+    cout << 1 << endl;
 
     while ( true ) {
         // Do not use FileDesc!
         // handle_connection will close sockets
-        FileDesc sock;
-        if ((sock = accept(server_fd, nullptr, nullptr)) < 0)
-        {
-            perror("accept");
-            exit(EXIT_FAILURE);
+        cout << 2 << endl;
+        try {
+            int sock = accept(server_fd, nullptr, nullptr);
+            perror("Error printed by perror");
+            cout << "got socket from accept " << sock << endl;
+            return 0;
+            //handle_connections( std::move( sock ) );
+        } catch (...) {
+            cout << "failed in accept!" << endl;
+            throw;
         }
+        cout << 3 << endl;
 
-        handle_connections( sock );
     }
 }
 
@@ -102,24 +127,23 @@ void handle_connections( FileDesc&& sock ) {
 
     switch ( messageType ) {
         case queryMessageType:
-            handle_query( sock );
+            handle_query( std::move( sock ) );
             return;
         case workerMessageType:
-            handle_new_worker( sock );
+            handle_new_worker( std::move( sock ) );
             return;
         default:
             return;
     }
 }
 
-
 void handle_query( FileDesc&& sock ) {
     String query = recv_str( sock );
     Vector<Thread> threads;
-    TopNQueue<pageResult> topPages( MAX_NUM_PAGES );
+    TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
 
     for ( auto it = socketsToWorkers.begin(); it != socketsToWorkers.end(); ++it ) {
-        threads.emplaceBack( new WorkerArg( &*it, query, &topPages );
+        threads.emplaceBack( ask_workers, new WorkerArg{ &*it, query, &topPages } );
     }
 
     for ( Thread& t : threads ) {
@@ -142,11 +166,11 @@ void send_page_result( int sock, const PageResult& pr ) {
 
 void* ask_workers( void* worker_query ) {
     WorkerArg arg = * ( WorkerArg* ) worker_query; // copy
-    delete worker_query;
+    delete (WorkerArg*) worker_query;
 
     try {
         send_str( *arg.sock, arg.query );
-        int numPages = recv_int( *arg.sock, arg.query );
+        int numPages = recv_int( *arg.sock );
         for ( int i = 0; i < numPages; ++i ) {
             PageResult pr;
             pr.Url = UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) );
@@ -168,16 +192,16 @@ void* ask_workers( void* worker_query ) {
 
 void handle_new_worker( FileDesc&& sock ) {
     int set = 1;
-    setsockopt(socketFD, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
+    setsockopt(sock, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
     struct timeval timeout;
     timeout.tv_sec = TCP_TIMEOUT_LIMIT;
     timeout.tv_usec = 0;
 
-    if (setsockopt (socketFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+    if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
             sizeof(timeout)) < 0)
         std::cerr << "failed at setsockopt recv" << std::endl;
 
-    if (setsockopt (socketFD, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+    if (setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
             sizeof(timeout)) < 0)
         std::cerr << "failed at setsockopt send" << std::endl;
 
@@ -212,6 +236,8 @@ FileDesc parseArguments( int argc, char **argv ) {
            }
         }
 
+
+        cout << "got port" <<  (port.empty() ? DefaultPort : port.data()) << endl;
         AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
         return info.getBoundSocket();
     } catch( const SocketException& ) {

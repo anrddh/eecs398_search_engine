@@ -23,7 +23,7 @@ struct QueryResult {
 template <typename T>
 class TopNQueue {
 public:
-   TopNQueue( int n_ ) : n( n_ ) {}
+   TopNQueue( fb::SizeT n_ ) : n( n_ ) {}
    void push( T&& v ) {
       if ( v.rank < min_allowed_rank )
          return;
@@ -54,10 +54,10 @@ public:
    }
 
 private:
-   fb::PriorityQueue<QueryResult> topQueue;
+   fb::PriorityQueue<T> topQueue;
    fb::Mutex mtx;
    std::atomic<double> min_allowed_rank = 0;
-   int n;
+   fb::SizeT n;
 };
 
 

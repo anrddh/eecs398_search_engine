@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fb/string.hpp>
+
 #include <stdio.h> // perror
 
 #include "isr.hpp"

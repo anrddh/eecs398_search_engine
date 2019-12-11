@@ -25,7 +25,7 @@
 #include <fb/vector.hpp>
 #include <fb/string.hpp>
 
-#include "query_result.hpp" //move this to whatever appropriate location
+#include <query/query_result.hpp> //move this to whatever appropriate location
 
 // TCP protocol
 // worker establishes socket to master (sends a verfication code)
@@ -42,13 +42,13 @@ Vector<fb::UniquePtr<IndexReader>> Readers;
 struct IndexInfoArg {
     fb::UniquePtr<Expression> e;
     fb::UniquePtr<IndexReader> reader;
-}
+};
 
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    IndexInfoArg &arg = *(IndexInfoArg *) void;
-    ConstraintSolver cSolver = arg.e->eval(info.reader);
+    IndexInfoArg &arg = *(IndexInfoArg *) info;
+    ConstraintSolver cSolver = arg.e->Eval(arg.reader);
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank();
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies();
     tfidf_rank(docsToRank, docFreqs);
@@ -115,46 +115,4 @@ int main( int argc, char **argv ) {
         pthread_create(&pt, NULL, RankPages, (void *)&reader);
     }
 
-}
-
-Vector<String> GenerateSnippets( Vector<SnippetStats> Stats ){
-
-    Vector<String> snippets;
-    for(auto& stat : Stats ){
-        FILE *fptr = fopen(stat.filename.data(), "rb");
-        if (fptr == NULL){
-            std::cout << "error opening " << filename << " when generating snippets " << std::endl;
-            snippets.PushBack(""); //if the file fails to open, just give empty string for snippet rather than crash
-            continue;
-        }
-        fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
-        fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_CUR); //skip the counter
-        fseek(fptr, sizeof(PageHeader) * stat.DocIndex, SEEK_CUR); //skip ahead in the vector of PageHeaders
-        fb::SizeT PageOffset;
-        fread(&PageOffset, fb::SizeT, 1, fptr); //read in the page offset
-
-        String snippet;
-        char dummy[80]; //TODO: THIS IS SCARY!! do we have a max word size??
-        fseek(fptr, PageOffset, SEEK_SET); //jump to that offset to begin reading the page
-        for (int i = 0; i < stat.Offsets.begin; ++i){
-            fscanf(fptr, "%s", dummy); //scan past all the words before begin offset
-        }
-
-        for (int j = stat.Offsets.begin; j < stat.Offsets.end; ++j){
-            fscanf(fptr, "%s", dummy); //add all the words between begin offset and end offset
-            snippet += dummy;
-            snippet += " "; //dont forget to put a space between the words!
-        }
-
-        fclose(fptr); //don't forget this!
-        snippets.PushBack(snippet); //add the generated snippet to vector
-    }
-    return snippets;
-}
-
-fb::UniquePtr<Expression> ParseQuery( fb::String query ){
-
-    // First: we send the query to the query compiler
-    Parser p(query);
-    //TODO
 }

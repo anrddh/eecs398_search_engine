@@ -54,3 +54,5 @@ void send_uint64_t(int sock, uint64_t num);
 uint64_t recv_uint64_t(int sock);
 void send_str(int sock, const fb::StringView str);
 fb::String recv_str(int sock);
+void send_double(int sock, double d);
+double recv_double(int sock);

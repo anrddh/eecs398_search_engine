@@ -9,7 +9,7 @@
 /**
  * The actual expression parser
  */
-class Parser {
+class QueryParser {
 public:
     // Stream of tokens to consume input from
     TokenStream stream;
@@ -120,7 +120,7 @@ public:
    /**
     * Construct parser based on given input
     */
-    Parser( fb::String &in ) : stream(in) {}
+    QueryParser( fb::String &in ) : stream(in) {}
 
    /**
     * The public interface of the parser. Call this function,
@@ -134,4 +134,4 @@ public:
             return result;
     }
 };
-// class Parser
+// class QueryParser

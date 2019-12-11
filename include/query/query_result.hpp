@@ -31,29 +31,31 @@ public:
 
       fb::AutoLock l(mtx);
       top.push( std::move( v ) );
-      if ( top.size() <= n )
+      if ( topQueue.size() <= n )
          return;
 
-      top.pop();
-      min_allowed_rank = top.top().rank;
+      topQueue.pop();
+      min_allowed_rank = topQueue.top().rank;
    }
 
    inline bool empty() const {
-      return top.empty();
+      return topQueue.empty();
    }
 
    inline fb::SizeT size() const {
-      return top.size();
+      return topQueue.size();
    }
 
-   inline T&& pop() {
-      T temp = std::move( top.top() );
-      top.pop();
-      return std::move( temp );
+   inline void pop() {
+      topQueue.pop();
+   }
+
+   inline const T& top() {
+      return topQueue.top();
    }
 
 private:
-   fb::PriorityQueue<QueryResult> top;
+   fb::PriorityQueue<QueryResult> topQueue;
    fb::Mutex mtx;
    std::atomic<double> min_allowed_rank = 0;
    int n;
@@ -108,7 +110,7 @@ class TopPages {
 
 private:
    // Destructor helper
-   inline void send_query_result( int sock, QueryResult& qr ) {
+   inline void send_query_result( int sock, const QueryResult& qr ) {
       send_uint64_t( sock, qr.UrlId );
       send_double( sock, qr.rank );
       send_str( sock, qr.Title );

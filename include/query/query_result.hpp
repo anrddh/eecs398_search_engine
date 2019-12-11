@@ -4,57 +4,25 @@
 #include <fb/mutex.hpp>
 #include <fb/string.hpp>
 #include <fb/stddef.hpp>
+#include <tcp/url_tcp.hpp>
 #include <atomic>
 
 // TODO add ranking info
-struct QueryResult{
+struct QueryResult {
     fb::SizeT UrlId;
     double rank;
     fb::String Title;
     fb::String Snippet;
-}
 
-// Stores top n pages
-// Thread safe ( highly concurrent )
-class TopPages {
-   TopPages( int n_ ) : n(n_) {};
-   void addRankStats( QueryResult& result ) {
-      if ( result.rank < min_allowed_rank )
-         return;
-
-      fb::AutoLock l(mtx);
-      // TODO make rank pair
-      top.push( result );
-      if ( top.size() <= n )
-         return;
-
-      topPair.pop();
-      min_allowed_rank = topPair.top();
-   }
-
-   fb::Vector<QueryResult> GetTopResults( )
-      {
-      fb::Vector<QueryResult> results;
-      while( topPair.size( ) )
-         {
-         results.pushBack(topPair.top( ) );
-         topPair.pop( );
-         }
-
-      return results;
-      } 
-private:
-
-   fb::PriorityQueue<QueryResult> topPair;
-   fb::Mutex mtx;
-   std::atomic<double> min_allowed_rank;
-   int n;
+    inline bool operator< ( const QueryResult& other ) const {
+      rank < other.rank;
+    }
 };
 
-struct SnippetOffsets{
+struct SnippetOffsets {
     fb::SizeT begin;
     fb::SizeT end;
-}
+};
 
 struct SnippetStats {
     //since we currently think each worker computer will only have one merged
@@ -64,9 +32,101 @@ struct SnippetStats {
     SnippetOffsets Offsets; //gives the begin and end word number within that document
 };
 
-struct QueryResult{
-    fb::SizeT UrlId;
-    double rank;
-    fb::String Title;
-    fb::String Snippet;
-}
+
+// T needs to have a double named rank with non-negative values
+// And define operator< based on rank
+template <typename T>
+class TopNQueue {
+public:
+   TopNQueue( int n_ ) : n( n_ ) {}
+   void push( T&& v ) {
+      if ( v.rank < min_allowed_rank )
+         return;
+
+      fb::AutoLock l(mtx);
+      top.push( std::move( result ) );
+      if ( top.size() <= n )
+         return;
+
+      top.pop();
+      min_allowed_rank = topPair.top();
+   }
+
+   inline bool empty() const {
+      return top.empty();
+   }
+
+   inline fb::SizeT size() const {
+      return top.size();
+   }
+
+   inline T& pop() {
+      T& temp = top.top();
+      top.pop();
+      return temp;
+   }
+
+private:
+   fb::PriorityQueue<QueryResult> top;
+   fb::Mutex mtx;
+   std::atomic<double> min_allowed_rank = 0;
+   int n;
+};
+
+
+// Stores top n pages
+// Thread safe ( highly concurrent )
+// Just keep adding pages
+// When done, delete it (or just let it go out of scope)
+// In the destructor, will send the top pages to master (in order)
+//
+// TCP protocol method:
+// worker to master:
+// num (int), [ UrlId (uint64_t), rank (double), Title (string), Snippet (string) ] x num
+// The rank will be increasing
+//
+class TopPages {
+   TopPages( int n ) : TopNQueue( n ) {};
+   void addRankStats( QueryResult&& result ) {
+      top.push( std::move( result ) );
+   }
+
+   ~TopPages() {
+      try {
+         send_int( topPair.size() );
+         while ( !topPair.empty() ) {
+            send_query_result( sock, topPair.top() );
+            topPair.pop();
+         }
+
+      } catch (SocketException& se) {
+         // If we can't send, just don't do anything
+      }
+   }
+
+   // TODO I don't think this every needs to be called?
+   /*
+   fb::Vector<QueryResult> GetTopResults( )
+      {
+      fb::Vector<QueryResult> results;
+      while( topPair.size( ) )
+         {
+         results.pushBack( topPair.top( ) );
+         topPair.pop( );
+         }
+
+      return results;
+      } 
+      */
+
+private:
+   // Destructor helper
+   inline void send_query_result( int sock, QueryResult& qr ) {
+      send_uint64_t( sock, qr.UrlId );
+      send_double( sock, qr.rank );
+      send_str( sock, qr.Title );
+      send_str( sock, qr.Snippet );
+   }
+
+   TopNQueue top;
+};

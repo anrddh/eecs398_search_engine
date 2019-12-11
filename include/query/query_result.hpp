@@ -12,7 +12,7 @@ struct QueryResult{
     double rank;
     fb::String Title;
     fb::String Snippet;
-}
+};
 
 // Stores top n pages
 // Thread safe ( highly concurrent )
@@ -42,7 +42,7 @@ class TopPages {
          }
 
       return results;
-      } 
+      }
 private:
 
    fb::PriorityQueue<QueryResult> topPair;
@@ -54,7 +54,7 @@ private:
 struct SnippetOffsets{
     fb::SizeT begin;
     fb::SizeT end;
-}
+};
 
 struct SnippetStats {
     //since we currently think each worker computer will only have one merged
@@ -69,4 +69,4 @@ struct QueryResult{
     double rank;
     fb::String Title;
     fb::String Snippet;
-}
+};

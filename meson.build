@@ -28,6 +28,7 @@ worker_source_files = []
 server_source_files = []
 page_store_total_files = []
 project_header_files = []
+query_worker_source_files = []
 
 
 inc = [include_directories('include'), include_directories('external')]
@@ -76,10 +77,15 @@ executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
 
-executable('isr_example',
-            isr_example_driver,
-            include_directories: inc)
+#executable('isr_example',
+#            isr_example_driver,
+#            include_directories: inc)
 
 executable('ranker_test',
             ranker_test_driver,
             include_directories: inc)
+
+executable('query_worker',
+            query_worker_driver,
+            include_directories: inc,
+            dependencies: [threads_dep])

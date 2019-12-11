@@ -18,6 +18,8 @@ server_source_files += files('bolt/bolt.cpp',
                              'bolt/http/http_request.cpp',
                              'bolt/http/socket_http_connection_handler.cpp')
 
+query_worker_source_files += files('query_handler.cpp', 'ranker.cpp', 'page_store.cpp')
+
 build_index_driver = files('build_index.cpp', 'logfile.cpp', 'debug.cpp')
 
 build_index_chunk_driver = files('build_index_chunk.cpp', 'logfile.cpp', 'debug.cpp')
@@ -29,3 +31,5 @@ print_page_store_driver = files('index/print_page_store.cpp')
 search_index_driver = files('search_index.cpp')
 
 ranker_test_driver = files('ranker_test.cpp')
+
+query_worker_driver = files('query_worker_driver.cpp')

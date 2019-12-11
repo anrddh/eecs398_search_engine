@@ -30,7 +30,7 @@ public:
          return;
 
       fb::AutoLock l(mtx);
-      top.push( std::move( v ) );
+      topQueue.push( std::move( v ) );
       if ( topQueue.size() <= n )
          return;
 

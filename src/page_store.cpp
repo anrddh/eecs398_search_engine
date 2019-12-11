@@ -47,10 +47,10 @@ void page_store_shutdown() {
    numThreadsMtx.unlock();
 }
 
-PageBin::PageBin(fb::StringView filename) : PageCount(0), PageCountOffset(0),
+PageBin::PageBin(fb::StringView filename, fb::SizeT number_of_pages) : PageCount(0), PageCountOffset(0),
                 PageHeadersOffset(0), PagesBeginOffset(0), Pages(filename) {
     PageCountOffset = Pages.reserve(sizeof(fb::SizeT));
-    PageHeadersOffset = Pages.reserve(numPages * sizeof(PageHeader));
+    PageHeadersOffset = Pages.reserve(number_of_pages * sizeof(PageHeader));
     PagesBeginOffset = Pages.size();
 }
 

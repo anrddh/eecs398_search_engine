@@ -16,7 +16,7 @@ namespace fbImpl {
 // Rest of the bits are for numerical values
 
 
-struct oneBytePost 
+struct oneBytePost
    {
    static constexpr int sizeEncoding = 0;
    uint8_t size: 2;
@@ -25,7 +25,7 @@ struct oneBytePost
 
 static_assert( sizeof( oneBytePost ) == 1 );
 
-struct twoBytePost 
+struct twoBytePost
    {
    static constexpr int sizeEncoding = 1;
    uint8_t size: 2;
@@ -34,7 +34,7 @@ struct twoBytePost
 
 static_assert( sizeof( twoBytePost ) == 2 );
 
-struct fourBytePost 
+struct fourBytePost
    {
    static constexpr int sizeEncoding = 2;
    uint8_t size: 2;
@@ -43,7 +43,7 @@ struct fourBytePost
 
 static_assert( sizeof( fourBytePost ) == 4 );
 
-struct eightBytePost 
+struct eightBytePost
    {
    static constexpr int sizeEncoding = 3;
    uint8_t size: 2;
@@ -58,7 +58,7 @@ constexpr uint64_t fourBytePostMaxVal = 0x3fffffff;
 constexpr uint64_t eightBytePostMaxVal = 0x3fffffffffffffff;
 
 template <typename castType>
-inline char* write_num( char* curr, uint32_t num ) 
+inline char* write_num( char* curr, uint32_t num )
    {
    ( ( castType* ) curr )->size = castType::sizeEncoding;
    ( ( castType* ) curr )->value = num;
@@ -66,11 +66,11 @@ inline char* write_num( char* curr, uint32_t num )
    }
 
 template < typename castType >
-inline const char* read_number( const char* curr, uint32_t &num ) 
+inline const char* read_number( const char* curr, uint32_t &num )
    {
    num = ( ( castType* ) curr )->value;
    return curr + sizeof( castType );
    }
 
-}; // Namespace fbImpl
-}; // Namespace fb
+} // Namespace fbImpl
+} // Namespace fb

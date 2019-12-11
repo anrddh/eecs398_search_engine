@@ -62,6 +62,14 @@ namespace fb {
         operator int() const noexcept {
             return fd;
         }
+
+        bool operator<( const FileDesc&& other ) const noexcept {
+            return fd < other.fd;
+        }
+
+        bool operator==( const FileDesc&& other ) const noexcept {
+            return fd == other.fd;
+        }
     };
 
 }

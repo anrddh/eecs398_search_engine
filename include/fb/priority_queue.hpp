@@ -67,7 +67,7 @@ public:
       return data.empty();
       }
 
-   size_type size() const
+   SizeType size() const
       {
       return data.size();
       }
@@ -80,7 +80,7 @@ public:
 
    void push( T && value )
       {
-      data.push_back( std::move( value ) );
+      data.pushBack( std::move( value ) );
       push_heap();
       }
 
@@ -89,7 +89,7 @@ public:
       if ( !empty() )
          {
          data.front( ) = data.back( );
-         data.pop_back( );
+         data.popBack( );
          heapify(0);
          }
       else
@@ -104,4 +104,4 @@ public:
       std::swap( compare, other.compare );
       }
 };
-};
+}

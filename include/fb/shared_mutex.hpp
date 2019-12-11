@@ -45,4 +45,4 @@ namespace fb {
         pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
     };
 
-};
+}

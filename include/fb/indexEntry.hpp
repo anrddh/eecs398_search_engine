@@ -107,4 +107,4 @@ inline bool is_document_sentinel( const char * curr )
    return delta == 0;
    }
 
-}; // Namespace fb
+} // Namespace fb

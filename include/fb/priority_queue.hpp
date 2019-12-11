@@ -104,4 +104,4 @@ public:
       std::swap( compare, other.compare );
       }
 };
-};
+}

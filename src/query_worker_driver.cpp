@@ -42,13 +42,13 @@ Vector<fb::UniquePtr<IndexReader>> Readers;
 struct IndexInfoArg {
     fb::UniquePtr<Expression> e;
     fb::UniquePtr<IndexReader> reader;
-}
+};
 
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    IndexInfoArg &arg = *(IndexInfoArg *) void;
-    ConstraintSolver cSolver = arg.e->eval(info.reader);
+    IndexInfoArg &arg = *(IndexInfoArg *) info;
+    ConstraintSolver cSolver = arg.e->Eval(arg.reader);
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank();
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies();
     tfidf_rank(docsToRank, docFreqs);

@@ -47,11 +47,12 @@ struct IndexInfoArg {
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    IndexInfoArg &arg = *(IndexInfoArg *) info;
-    ConstraintSolver cSolver = arg.e->Eval(arg.reader);
-    Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank();
-    Vector<SizeT> docFreqs = cSolver.GetDocFrequencies();
-    tfidf_rank(docsToRank, docFreqs);
+    IndexInfoArg &arg = *(IndexInfoArg *) info; //get the args
+    ConstraintSolver cSolver = arg.e->Eval(arg.reader); //make the constraint solver
+    Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
+    Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
+    tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
+    
     //TODO
 }
 

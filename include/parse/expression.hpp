@@ -45,7 +45,8 @@ public:
     WordExpression(fb::StringView wordIn) : word(wordIn) {}
 
     fb::UniquePtr<WordISR> WordEval(IndexReader &reader) const {
-        return reader.OpenWordISR({word.data(),word.size()});
+	fb::String word_str(word.data(), word.size());
+        return reader.OpenWordISR(word_str);
     }
 
     virtual fb::UniquePtr<ISR> Eval(IndexReader &reader) const override {

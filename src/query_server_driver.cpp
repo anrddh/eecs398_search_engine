@@ -95,24 +95,24 @@ void handle_new_worker( FileDesc&& sock );
 
 int main( int argc, char **argv ) {
     FileDesc server_fd = parseArguments( argc, argv );
-    cout << "got socket " << server_fd.fd << endl;
-    cout << 1 << endl;
+
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
 
     while ( true ) {
         // Do not use FileDesc!
         // handle_connection will close sockets
-        cout << 2 << endl;
         try {
             int sock = accept(server_fd, nullptr, nullptr);
             perror("Error printed by perror");
-            cout << "got socket from accept " << sock << endl;
             return 0;
             //handle_connections( std::move( sock ) );
         } catch (...) {
             cout << "failed in accept!" << endl;
             throw;
         }
-        cout << 3 << endl;
 
     }
 }
@@ -151,6 +151,7 @@ void handle_query( FileDesc&& sock ) {
     }
 
     send_int( sock, topPages.size() );
+
     while ( !topPages.empty() ) {
         send_page_result( sock, topPages.top() );
         topPages.pop();
@@ -237,7 +238,6 @@ FileDesc parseArguments( int argc, char **argv ) {
         }
 
 
-        cout << "got port" <<  (port.empty() ? DefaultPort : port.data()) << endl;
         AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
         return info.getBoundSocket();
     } catch( const SocketException& ) {

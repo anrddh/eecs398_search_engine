@@ -39,10 +39,10 @@ subdir('src')
 subdir('test')
 subdir('external')
 
-#executable('master',
-#           master_driver, master_source_files,
-#           include_directories: inc,
-#           dependencies: [readline_dep, threads_dep])
+executable('master',
+           master_driver, master_source_files,
+           include_directories: inc,
+           dependencies: [readline_dep, threads_dep])
 
 executable('server',
            server_driver, server_source_files,

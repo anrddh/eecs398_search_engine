@@ -5,7 +5,7 @@
 #include <fb/vector.hpp>
 #include <iostream>
 
-#define INITIAL_SIZE 65536
+#define USET_INITIAL_SIZE 65536
 
 namespace fb {
 
@@ -89,7 +89,7 @@ public:
 
     //Default constructor
     UnorderedSet() {
-        buckets.resize(INITIAL_SIZE);
+        buckets.resize(USET_INITIAL_SIZE);
     }
 
     //Constructor that takes custom size, hash, and predicate

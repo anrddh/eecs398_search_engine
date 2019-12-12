@@ -28,6 +28,7 @@
 #include <query/query_result.hpp>
 
 #define MAX_SNIP_WINDOW 150
+#define NUM_QUERY_RESULTS 100
 
 // TCP protocol
 // worker establishes socket to master (sends a verfication code)
@@ -39,28 +40,28 @@ using namespace fb;
 
 Vector<Thread> threads;
 Vector<fb::UniquePtr<IndexReader>> Readers;
-TopNQueue<QueryResult> Results;
+TopNQueue<QueryResult> Results(NUM_QUERY_RESULTS);
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
-    fb::UniquePtr<Expression> e;
-    fb::UniquePtr<IndexReader> reader;
+    fb::UniquePtr<Expression>& e;
+    fb::UniquePtr<IndexReader>& reader;
 };
 
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
     IndexInfoArg &arg = *(IndexInfoArg *) info; //get the args
-    ConstraintSolver cSolver = arg.e->Eval(arg.reader); //make the constraint solver
+    ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
     for( rank_stats& doc : docsToRank ){
-        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences, MAX_SNIP_WINDOW)); //setting max_snip_window to 150
-        SnippetStats stats = { PageStoreFile + fb::toString(doc.page_store_number), doc.page_store_index, window };
+        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), MAX_SNIP_WINDOW); //setting max_snip_window to 150
+        SnippetStats stats = { fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
         fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
-        Result.push(result);
+        Results.push(std::move(result));
     }
     return nullptr;
 }
@@ -113,17 +114,18 @@ int main( int argc, char **argv ) {
     }
 
     /* while(true){*/
-        //TODO: GET QUERIES
+        //TODO: GET QUERIES FROM MASTER
         fb::String query;
 
-        fb::UniquePtr<Expression> e = ParseQuery(query);
+        QueryParser QuePasa(query);
+        auto e = QuePasa.Parse();
         //now we spawn a thread for each index, and give it e
         for (auto& reader : Readers){
             pthread_t pt;
-            IndexInfo info = { e, reader };
-            pthread_create(&pt, NULL, RankPages, (void *)&reader);
+            IndexInfoArg info = { e, reader };
+            pthread_create(&pt, NULL, RankPages, (void *)&info);
         }
 
         //TODO: Send TopNQueue to master
-    }
+    /* } */
 }

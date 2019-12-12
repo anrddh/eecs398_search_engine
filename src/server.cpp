@@ -188,6 +188,7 @@ HtmlPage pageNotFound( fb::String msg ) {
     HtmlPage page;
     page.loadFromFile("frontend/page_not_found.html");
     page.setValue("msg", msg);
+    return page;
 }
 
 HtmlPage next( fb::UnorderedMap<fb::String, fb::String> formOptions ) {

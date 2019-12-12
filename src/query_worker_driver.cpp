@@ -69,18 +69,6 @@ void* RankPages( void *info ) {
 void* listen_to_master(void *) {
 }
 
-Vector<String> GenerateSnippets( Vector<SnippetStats> Stats );
-
-Vector<QueryResult> SearchQuery( String query );
-
-// struct IndexInfo {
-//    String idxFileName;
-//    int idxSockFd;
-//    String pageStoreFileName;
-//    int pageStoreFd;
-//    void* mmapAddr;
-// };
-
 // We will create an thread for each index
 int main( int argc, char **argv ) {
 
@@ -93,10 +81,7 @@ int main( int argc, char **argv ) {
     fb::String dirname(argv[1]);
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
-    // DIR *dirp = opendir(dirname.data());
-    //
-    // struct dirent *dir;
-    // while( dir = readdir(dirp), dir != NULL ){
+    
     for (int i = 0; i < num_index_files; ++i) {
         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
         int f = open(filename.data(), O_RDWR);

@@ -200,7 +200,7 @@ HtmlPage next( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
 
 HtmlPage previous( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
     if( resultCounter <= 0 )
-        return pageNotFound("You cannot press previous there");
+        return pageNotFound("You cannot press previous there!");
     --resultCounter;
     return kthResults();
 }

@@ -65,7 +65,6 @@ void parseArguments( int argc, char **argv )
 				break;
    		case 'o':
 				hostname = optarg;
-				std::cerr << hostname << '\n';
 				break;
    		case 'h':
    		default:
@@ -94,6 +93,7 @@ fb::Vector<PageResult> ask_query( fb::String query ) {
     fb::AutoLock l( sockMtx );
     try {
         fb::FileDesc sock = open_socket_to_master();
+        send_char( sock, 'Q' ); // indicate its a query
         send_str( sock, query );
         
         int num = recv_int( sock );
@@ -218,6 +218,8 @@ HtmlPage previous( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
 
 int main( int argc, char **argv ) {
     parseArguments( argc, argv );
+    auto pages = ask_query( "hi" );
+
     Bolt bolt;
     bolt.registerHandler("/", home);
     bolt.registerHandler("/results", results);

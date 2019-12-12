@@ -75,3 +75,11 @@ executable('print_page_store',
 executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
+
+executable('ranker_test',
+            ranker_test_driver,
+            include_directories: inc)
+
+executable('merge_index',
+            merge_index_driver, merge_index_source_files, 
+            include_directories: inc)

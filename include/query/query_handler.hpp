@@ -28,7 +28,7 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>> &occur
 void* RankPages( void *info ) {
    // Just keep calling add to top pages
    IndexInfoArg &arg = *(IndexInfoArg *) info;
-   ConstraintSolver cSolver = arg.e->eval(sarg.reader);
+   ConstraintSolver cSolver = arg.e->Constraints(arg.reader);
    Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank();
    Vector<SizeT> docFreqs = cSolver.GetDocFrequencies();
    tfidf_rank(docsToRank, docFreqs);

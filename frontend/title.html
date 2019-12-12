@@ -425,6 +425,14 @@
       $('#search').click();
     }
   </script>
+
+  <script>
+    $('#search_form').submit(function(){
+      $(this).find('input:text').each(function(){
+        $(this).val($.trim($(this).val()));
+      });
+    });
+  </script>
 </head>
 
 <body>
@@ -437,7 +445,7 @@
         <br>
         <br>
         <div class="col-md-10" style="z-index:2;">
-          <form action="/results">
+          <form action="/results" id="search_form">
             <div class="input-group input-group-lg mb-2">
               <div class="input-group-prepend">
                 <button class="btn btn-light btn-outline-secondary border-right-0" type="submit" id="search">

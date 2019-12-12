@@ -6,7 +6,7 @@
 #include <cmath>
 #include <algorithm> //std::sort
 #include <isr/constraint_solver.hpp>
-#include <parser/parser.hpp>
+#include <parse/parser.hpp>
 #include <ranker/ranker.hpp>
 
 double TOTAL_DOCUMENTS = 10000;
@@ -78,37 +78,37 @@ snip_window snippet_window_rank(const fb::Vector<fb::SizeT> positions_weights, c
 
 fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, rank_stats &doc ){
 
-    FILE *fptr = fopen(stat.filename.data(), "rb");
+    FILE *fptr = fopen(stat.FileName.data(), "rb");
     if (fptr == NULL){
-        std::cout << "error opening " << filename << " when generating snippets and title " << std::endl;
-        return { ""_sv, ""_sv }; //if the file fails to open, just give empty strings rather than crash
+        std::cout << "error opening " << stat.FileName << " when generating snippets and title " << std::endl;
+        return { "", "" }; //if the file fails to open, just give empty strings rather than crash
     }
     fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
     fb::SizeT NumPageStoreDocs;
-    fread(&NumPageStoreDocs, fb::SizeT, 1, fptr); //read in the num of documents
+    fread(&NumPageStoreDocs, sizeof(fb::SizeT), 1, fptr); //read in the num of documents
     fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_CUR); //skip the counter
     fseek(fptr, sizeof(PageHeader) * stat.DocIndex, SEEK_CUR); //skip ahead in the vector of PageHeaders
     fb::SizeT PageOffset;
-    fread(&PageOffset, fb::SizeT, 1, fptr); //read in the page offset
+    fread(&PageOffset, sizeof(fb::SizeT), 1, fptr); //read in the page offset
     fb::SizeT VectorOffset;
-    fread(&VectorOffset, fb::SizeT, 1, fptr); //read in the vector offset
+    fread(&VectorOffset, sizeof(fb::SizeT), 1, fptr); //read in the vector offset
     fb::SizeT UrlId;
-    fread(&UrlId, fb::SizeT, 1, fptr); //read in the UrlID
+    fread(&UrlId, sizeof(fb::SizeT), 1, fptr); //read in the UrlID
     fb::SizeT NextPageOffset;
-    fread(&NextPageOffset, fb::SizeT, 1, fptr); //read in the next page offset, but be careful with next line!
+    fread(&NextPageOffset, sizeof(fb::SizeT), 1, fptr); //read in the next page offset, but be careful with next line!
     if (stat.DocIndex = NumPageStoreDocs - 1){
         NextPageOffset = VectorOffset + 100;
     }
     doc.UrlId = UrlId; //set the UrlID in the rank_stats
 
     //this is the snippet code
-    String snippet;
+    fb::String snippet;
     char dummy[80]; //TODO: THIS IS SCARY!! do we have a max word size??
     fseek(fptr, PageOffset, SEEK_SET); //jump to that offset to begin reading the page
-    for (int i = 0; i < stat.Offsets.begin; ++i){
+    for (int i = 0; i < stat.Offsets.start_word_index; ++i){
         fscanf(fptr, "%s", dummy); //scan past all the words before begin offset
     }
-    for (int j = stat.Offsets.begin; j < stat.Offsets.end; ++j){
+    for (int j = stat.Offsets.start_word_index; j < stat.Offsets.end_word_index; ++j){
         fscanf(fptr, "%s", dummy); //add all the words between begin offset and end offset
         snippet += dummy;
         snippet += " "; //dont forget to put a space between the words!
@@ -121,7 +121,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     uint8_t descriptor = 0;
     fseek(fptr, VectorOffset, SEEK_SET); //jump back to beginning of page
     for( int i = 0; i < 50 && i + VectorOffset < NextPageOffset; ++i){
-        fread(&descriptor, uint8_t, 1, fptr);
+        fread(&descriptor, 1, 1, fptr);
         if (descriptor & INDEX_WORD_TITLE){
             if (!title_began){
                 title_begin = i;
@@ -133,7 +133,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
 
     fb::String title;
     if (!title_end){
-        return fb::make_pair<snippet, title>
+        return fb::make_pair<fb::String, fb::String>(std::move(snippet), std::move(title));
     }
     char dummy2[80]; //TODO: THIS IS SCARY!! do we have a max word size??
     fseek(fptr, PageOffset, SEEK_SET); //jump to that offset to begin reading the page
@@ -147,5 +147,5 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     }
 
     fclose(fptr); //don't forget this!
-    return fb::make_pair<snippet, title>; //return the generated snippet
+    return fb::make_pair<fb::String, fb::String>(std::move(snippet), std::move(title)); //return the generated snippet
 }

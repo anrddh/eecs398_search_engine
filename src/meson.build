@@ -28,10 +28,10 @@ query_worker_source_files += files('query_handler.cpp', 'ranker.cpp', 'page_stor
 page_store_check_files += files('page_store.cpp')
 build_index_driver = files('document_isr.cpp', 'build_index.cpp', 'logfile.cpp', 'debug.cpp')
 
-build_index_chunk_driver = files('document_isr.cpp', 'build_index_chunk.cpp', 
+build_index_chunk_driver = files('document_isr.cpp', 'build_index_chunk.cpp',
         'logfile.cpp', 'debug.cpp')
 
-build_index_test_driver = files('document_isr.cpp', 'index/index_test.cpp', 
+build_index_test_driver = files('document_isr.cpp', 'index/index_test.cpp',
         'logfile.cpp', 'debug.cpp')
 
 merged_index_test_driver = files('index/merged_index_test.cpp')
@@ -47,6 +47,6 @@ merge_index_driver = files('merge_index.cpp')
 merge_index_source_files = files('document_isr.cpp', 'word_impl_isr.cpp', 'index_reader.cpp', 'empty_isr.cpp')
 #ranker_test_driver = files('ranker_test.cpp')
 
-query_worker_driver = files('query_worker_driver.cpp')
+query_worker_driver = files('query_worker_driver.cpp', 'ranker.cpp')
 query_server_driver = files('query_server_driver.cpp', 'url_tcp.cpp', 'url_store.cpp')
 page_store_merge_files += files('page_store.cpp')

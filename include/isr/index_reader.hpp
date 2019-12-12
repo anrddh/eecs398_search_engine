@@ -2,15 +2,16 @@
 
 #include <string.h>
 
-#include "fb/memory.hpp"
-#include "fb/functional.hpp"
-#include "fb/string.hpp"
-#include "fb/stddef.hpp"
+#include <fb/memory.hpp>
+#include <fb/functional.hpp>
+#include <fb/string.hpp>
+#include <fb/stddef.hpp>
 
-#include "word_impl_isr.hpp"
-#include "index_reader_helpers.hpp"
-#include "word_isr.hpp"
-#include "empty_isr.hpp"
+#include <isr/word_impl_isr.hpp>
+#include <isr/index_reader_helpers.hpp>
+#include <isr/word_isr.hpp>
+#include <isr/empty_isr.hpp>
+#include <isr/document_isr.hpp>
 
 #include "porter_stemmer.hpp"
 
@@ -33,12 +34,13 @@ public:
 
    ~IndexReader( ) { free_stemmer( porterStemmer ); }
 
+   fb::SizeT getIndex( ) { return index; }
+
    fb::UniquePtr<WordISR> OpenWordISR( fb::String &word );
    fb::UniquePtr<WordISR> OpenPlainWordISR( fb::String &word );
    fb::UniquePtr<WordISR> GetEmptyISR( );
    fb::UniquePtr<DocumentISR> OpenDocumentISR( );
    bool WordExists( fb::String &word );
-   fb::SizeT getIndex( );
    bool deleteWord( fb::String &word );
    unsigned int GetSizeOfTable( );
    fb::Pair<int, fb::String> GetNextWord( int index );

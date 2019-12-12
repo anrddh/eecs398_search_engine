@@ -47,6 +47,7 @@ merge_index_driver = files('merge_index.cpp')
 merge_index_source_files = files('document_isr.cpp', 'word_impl_isr.cpp', 'index_reader.cpp', 'empty_isr.cpp')
 #ranker_test_driver = files('ranker_test.cpp')
 
-query_worker_driver = files('query_worker_driver.cpp', 'ranker.cpp')
+query_worker_driver = files('query_worker_driver.cpp', 'ranker.cpp', 'document_isr.cpp',
+                            'index_reader.cpp', 'empty_isr.cpp', 'word_impl_isr.cpp')
 query_server_driver = files('query_server_driver.cpp', 'url_tcp.cpp', 'url_store.cpp')
 page_store_merge_files += files('page_store.cpp')

@@ -38,7 +38,7 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occur
 //positions_weights is a fb::Vector of indices corresponding to the words in the our query
 //and their tfidf
 //im getting rid of weights for now
-snip_window snippet_window_rank(const fb::Vector<fb::SizeT> positions_weights, const fb::SizeT max_window_size){
+snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT max_window_size){
 	snip_window result;
 	if(positions_weights.size() < 2){
 		result.start_word_index = positions_weights[0];
@@ -96,7 +96,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     fread(&UrlId, sizeof(fb::SizeT), 1, fptr); //read in the UrlID
     fb::SizeT NextPageOffset;
     fread(&NextPageOffset, sizeof(fb::SizeT), 1, fptr); //read in the next page offset, but be careful with next line!
-    if (stat.DocIndex = NumPageStoreDocs - 1){
+    if (stat.DocIndex == (NumPageStoreDocs - 1)){
         NextPageOffset = VectorOffset + 100;
     }
     doc.UrlId = UrlId; //set the UrlID in the rank_stats
@@ -105,10 +105,10 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     fb::String snippet;
     char dummy[80]; //TODO: THIS IS SCARY!! do we have a max word size??
     fseek(fptr, PageOffset, SEEK_SET); //jump to that offset to begin reading the page
-    for (int i = 0; i < stat.Offsets.start_word_index; ++i){
+    for (fb::SizeT i = 0; i < stat.Offsets.start_word_index; ++i){
         fscanf(fptr, "%s", dummy); //scan past all the words before begin offset
     }
-    for (int j = stat.Offsets.start_word_index; j < stat.Offsets.end_word_index; ++j){
+    for (fb::SizeT j = stat.Offsets.start_word_index; j < stat.Offsets.end_word_index; ++j){
         fscanf(fptr, "%s", dummy); //add all the words between begin offset and end offset
         snippet += dummy;
         snippet += " "; //dont forget to put a space between the words!
@@ -120,7 +120,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     fb::SizeT title_end = 0;
     uint8_t descriptor = 0;
     fseek(fptr, VectorOffset, SEEK_SET); //jump back to beginning of page
-    for( int i = 0; i < 50 && i + VectorOffset < NextPageOffset; ++i){
+    for(fb::SizeT i = 0; i < 50 && i + VectorOffset < NextPageOffset; ++i){
         fread(&descriptor, 1, 1, fptr);
         if (descriptor & INDEX_WORD_TITLE){
             if (!title_began){
@@ -137,12 +137,12 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     }
     char dummy2[80]; //TODO: THIS IS SCARY!! do we have a max word size??
     fseek(fptr, PageOffset, SEEK_SET); //jump to that offset to begin reading the page
-    for (int i = 0; i < title_begin; ++i){
-        fscanf(fptr, "%s", dummy); //scan past all the words before begin offset
+    for (fb::SizeT i = 0; i < title_begin; ++i){
+        fscanf(fptr, "%s", dummy2); //scan past all the words before begin offset
     }
-    for (int j = title_begin; j < title_end; ++j){
-        fscanf(fptr, "%s", dummy); //add all the words between begin offset and end offset
-        title += dummy;
+    for (fb::SizeT j = title_begin; j < title_end; ++j){
+        fscanf(fptr, "%s", dummy2); //add all the words between begin offset and end offset
+        title += dummy2;
         title += " "; //dont forget to put a space between the words!
     }
 

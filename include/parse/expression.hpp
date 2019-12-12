@@ -6,6 +6,9 @@
 #include <isr/container_isr.hpp>
 #include <isr/empty_isr.hpp>
 #include <isr/phrase_isr.hpp>
+#include <isr/document_isr.hpp>
+
+#include <isr/index_reader.hpp>
 
 #include <fb/vector.hpp>
 #include <fb/string_view.hpp>

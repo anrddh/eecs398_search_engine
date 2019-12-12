@@ -139,6 +139,7 @@ HtmlPage home( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
 int resultCounter = -1;
 fb::UnorderedMap<fb::String, fb::String> resultOptions;
 fb::Vector<PageResult> queryResult;
+HtmlPage pageNotFound( fb::String msg );
 
 fb::String cleanedQuery( fb::String q )
 {
@@ -157,8 +158,10 @@ HtmlPage kthResults() {
 
     fb::SizeT numResults = 10;
     fb::SizeT numShow = 0;
-    if ( queryResult.size() >= resultCounter * numResults )
+    if ( queryResult.size() > resultCounter * numResults )
         numShow = fb::min(numResults, queryResult.size() - resultCounter * numResults);
+    else
+        return pageNotFound("No more results to show.");
 
     for ( int i = 0; i < numShow; ++i )
     {

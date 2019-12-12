@@ -156,7 +156,9 @@ HtmlPage kthResults() {
     page.setValue("query", cleanedQuery(resultOptions["query"]));
 
     fb::SizeT numResults = 10;
-    fb::SizeT numShow = fb::min(numResults, queryResult.size() - resultCounter * numResults);
+    fb::SizeT numShow = 0;
+    if ( queryResult.size() >= resultCounter * numResults )
+        numShow = fb::min(numResults, queryResult.size() - resultCounter * numResults);
 
     for ( int i = 0; i < numShow; ++i )
     {

@@ -1,4 +1,5 @@
 #pragma once
+#include <sys/mman.h>
 
 int getSizeOfSkipTable(int NUM_SKIP_TABLE_BITS) {
     return ( ( ( ( 1 << NUM_SKIP_TABLE_BITS ) * 2 ) + 1 ) * sizeof(unsigned int));

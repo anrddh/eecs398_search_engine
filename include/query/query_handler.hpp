@@ -17,7 +17,6 @@ struct IndexInfoArg {
 //im literally just going to sort it for now lol
 fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>> &occurrences);
 
-<<<<<<< HEAD
 void* RankPages( void *info ) {
    // Just keep calling add to top pages
    IndexInfoArg &arg = *(IndexInfoArg *) info;
@@ -36,9 +35,6 @@ void* RankPages( void *info ) {
 
 class QueryHandler
    {
-=======
-class QueryHandler {
->>>>>>> db069194cd98dd5585f52599a831bb1a83949fac
 public:
    QueryHandler( fb::String path , fb::String prefix, int num_indices );
 

@@ -39,9 +39,11 @@ print_page_store_driver = files('index/print_page_store.cpp')
 
 search_index_driver = files('search_index.cpp')
 
+search_index_files = files('document_isr.cpp', 'word_impl_isr.cpp', 'index_reader.cpp', 'empty_isr.cpp')
+
 merge_index_driver = files('merge_index.cpp')
 
-merge_index_source_files = files('document_isr.cpp')
+merge_index_source_files = files('document_isr.cpp', 'word_impl_isr.cpp', 'index_reader.cpp', 'empty_isr.cpp')
 #ranker_test_driver = files('ranker_test.cpp')
 
 query_worker_driver = files('query_worker_driver.cpp')

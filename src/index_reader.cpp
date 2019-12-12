@@ -2,28 +2,99 @@
 #include <isr/word_impl_isr.hpp>
 #include <isr/document_isr.hpp>
 
-IndexReader::IndexReader(const char * startOfIndex, uint32_t index)
+
+IndexReader::IndexReader( )
+: start( nullptr ),
+MAX_TOKEN_BITS( 0 ),
+DICTIONARY_SIZE( 0 ),
+dictionary( nullptr ),
+index( 0 ),
+porterStemmer( create_stemmer( ) ) { }
+
+IndexReader::IndexReader( IndexReader &other )
+: start(other.start),
+MAX_TOKEN_BITS( other.MAX_TOKEN_BITS),
+DICTIONARY_SIZE( other.DICTIONARY_SIZE ),
+dictionary( other.dictionary ),
+index( other.index ),
+porterStemmer( create_stemmer( ) ) { }
+
+IndexReader::IndexReader( IndexReader &&other )
+: start(other.start),
+MAX_TOKEN_BITS( other.MAX_TOKEN_BITS),
+DICTIONARY_SIZE( other.DICTIONARY_SIZE ),
+dictionary( other.dictionary ),
+index( other.index ),
+porterStemmer( create_stemmer( ) ) { }
+
+IndexReader::IndexReader(const char * startOfIndex, uint32_t index_)
     : start(startOfIndex),
       MAX_TOKEN_BITS( getHighestBit( *( ( ( unsigned int * ) start ) + 1 ) ) ),
       DICTIONARY_SIZE( *( ( ( unsigned int * ) start ) + 2 ) ),
       dictionary( ( ( unsigned int * ) start ) + 3 ),
-      index(index),
+      index(index_),
       porterStemmer( create_stemmer( ) ) { }
 
-fb::UniquePtr<WordISR> IndexReader::OpenWordISR(fb::String word) {
-    int new_size = stem(porterStemmer, word.data(), word.size() - 1) + 1;
-    word.resize(new_size);
-    fb::Hash<fb::String> hash;
-    uint64_t bucket = hash(word) % DICTIONARY_SIZE;
+IndexReader& IndexReader::operator=( IndexReader &other)
+    {
+    if(this == &other)
+        {
+        return *this;
+        }
+    else
+        {
+        start = other.start;
+        MAX_TOKEN_BITS = other.MAX_TOKEN_BITS;
+        DICTIONARY_SIZE = other.DICTIONARY_SIZE;
+        dictionary = other.dictionary;
+        index = other.index;
+        return *this;
+        }
+    }
+
+IndexReader& IndexReader::operator=( IndexReader &&other)
+    {
+    if(this == &other)
+        {
+        return *this;
+        }
+    else  
+        {
+        start = other.start;
+        MAX_TOKEN_BITS = other.MAX_TOKEN_BITS;
+        DICTIONARY_SIZE = other.DICTIONARY_SIZE;
+        dictionary = other.dictionary;
+        index = other.index;
+        return *this;
+        }
+    }
+
+fb::UniquePtr<WordISR> IndexReader::OpenPlainWordISR(fb::String &word)
+   {
+   fb::Hash<fb::String> hash;
+   uint64_t bucket = hash(word) % DICTIONARY_SIZE;
 
     while (dictionary[bucket] && word.compare(start + dictionary[bucket]))
-        bucket = (bucket + 1) % DICTIONARY_SIZE;
+      {
+      bucket = (bucket + 1) % DICTIONARY_SIZE;
+      }
 
-    if (dictionary[bucket])
-        return fb::makeUnique<WordImplISR>(start + dictionary[bucket],
+   if (dictionary[bucket])
+      {
+      return fb::makeUnique<WordImplISR>(start + dictionary[bucket],
                                            OpenDocumentISR(), MAX_TOKEN_BITS);
-    else
-        return fb::makeUnique<EmptyISR>();
+      }
+   else
+      {
+      return fb::makeUnique<EmptyISR>();
+      }
+
+   }
+
+fb::UniquePtr<WordISR> IndexReader::OpenWordISR(fb::String &word) {
+   int new_size = stem(porterStemmer, word.data(), word.size() - 1) + 1;
+   word.resize(new_size);
+   return OpenPlainWordISR( word );
 }
 
 fb::UniquePtr<WordISR> IndexReader::GetEmptyISR() {
@@ -35,12 +106,71 @@ fb::UniquePtr<DocumentISR> IndexReader::OpenDocumentISR() {
                                        MAX_TOKEN_BITS);
 }
 
-bool IndexReader::WordExists(fb::String word) {
-    fb::Hash<fb::String> hash;
-    uint64_t bucket = hash(word) % DICTIONARY_SIZE;
+bool IndexReader::WordExists( fb::String &word )
+   {
+   return getBucket( word ) != -1; 
+   }
 
-    while(dictionary[bucket] && strcmp(start + dictionary[bucket], word.data()))
-        bucket = (bucket + 1) % DICTIONARY_SIZE;
+bool IndexReader::deleteWord( fb::String &word )
+   {
+   int bucket = getBucket( word );
+   if(bucket == -1)
+      {
+      return false;
+      }
+   else
+      {
+      dictionary[bucket] = 0;
+      return true;
+      }
+   }
 
-    return dictionary[bucket];
-}
+// returns the bucket that contains word or -1
+int IndexReader::getBucket( fb::String &word )
+   {
+   fb::Hash<fb::String> hash;
+   uint64_t bucket = hash(word) % DICTIONARY_SIZE;
+   uint64_t beg = bucket;
+   bool pastStart = false;
+   
+   while( dictionary[bucket] && strcmp(start + dictionary[bucket], word.data()) && ( bucket != beg || !pastStart ) )
+      {
+      pastStart = true;
+      bucket = (bucket + 1) % DICTIONARY_SIZE;
+      }
+
+   if(dictionary[bucket])
+      {
+      return bucket;
+      }
+   else
+      {
+      return -1;
+      }
+   }
+
+unsigned int IndexReader::GetSizeOfTable( )
+   {
+   return DICTIONARY_SIZE;
+   }
+
+fb::Pair<int, fb::String> IndexReader::GetNextWord( int beg )
+   {
+   int bucket = beg;
+   bool pastStart = false;
+
+   while( !dictionary[bucket] && ( bucket != beg || !pastStart ) )
+      {
+      pastStart = true;
+      bucket = (bucket + 1) % DICTIONARY_SIZE;
+      }
+
+   if(!dictionary[bucket])
+      {
+      return fb::make_pair(-1, fb::String(""));
+      }
+   else
+      {
+      return fb::make_pair( int((bucket + 1) % DICTIONARY_SIZE), fb::String(start + dictionary[bucket]));
+      }
+   }

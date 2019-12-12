@@ -15,7 +15,7 @@
 class IndexMerger 
    {
 public:
-   IndexMerger(fb::Vector<fb::String> inputFiles, fb::String outputFile) 
+   IndexMerger(fb::Vector<fb::String> inputFiles, fb::String outputFile) : words_written(0)
       {
       // open files
       for(fb::String name : inputFiles)
@@ -30,7 +30,7 @@ public:
             {
             struct stat details;
             fstat(f, &details);
-            const char * start = (const char *) mmap(nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, f, 0);
+            const char * start = (const char *) mmap(nullptr, details.st_size, PROT_READ, MAP_PRIVATE, f, 0);
             close(f);
             IndexReaders.emplaceBack(start, 0);
             }
@@ -62,7 +62,6 @@ public:
 
       start = (char *) mmap(nullptr, 400000000000, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, MergedIndexFile, 0);
    
-      munmap(start, 400000000000);
 
       ((unsigned int*)start)[0] = 1;
       ((unsigned int*)start)[1] = IndexOffsetStarts.back( );
@@ -78,6 +77,8 @@ public:
          {
          bucket = processNextWord( bucket );
          }
+
+      munmap(start, 400000000000);
       }
 
 private:
@@ -100,7 +101,7 @@ private:
       uint64_t docNum = 0;
       for(fb::SizeT j = 0; j < IndexReaders.size( ); ++j)
          {
-         fb::UniquePtr<DocumentISR> docIsr = IndexReaders[j].OpenDocumentISR( )->GetDocumentCount( );
+         fb::UniquePtr<DocumentISR> docIsr = IndexReaders[j].OpenDocumentISR( );
          fb::UniquePtr<IndexInfo> info = docIsr->GetCurrentInfo( );
          while(info)
             {
@@ -121,20 +122,23 @@ private:
       int num_docs = 0;
       for(IndexReader &ir : IndexReaders)
          {
-         fb::UniquePtr<WordISR> wordISR = ir.OpenWordISR( word );
+         fb::UniquePtr<WordISR> wordISR = ir.OpenPlainWordISR( word );
          num_occurences += wordISR->GetNumberOfOccurrences( );
          num_docs += wordISR->GetDocumentCount( );
          }
 
       int num_skip_table_bits = std::min( 10, std::max(1, getHighestBit( num_occurences ) - 6) );
       PostingListBuilder builder(word, postingListLocation, num_docs, num_occurences, MAX_TOKEN_BITS, num_skip_table_bits);
+      uint64_t last = 0;
       for(fb::SizeT j = 0; j < IndexReaders.size( ); ++j)
          {
-         fb::UniquePtr<WordISR> wordIsr= IndexReaders[j].OpenWordISR( word );
+         fb::UniquePtr<WordISR> wordIsr= IndexReaders[j].OpenPlainWordISR( word );
          fb::UniquePtr<IndexInfo> info = wordIsr->GetCurrentInfo( );
          while(info)
             {
-            builder.addPost( AbsoluteWordInfo{ info->GetStartLocation( ) + IndexOffsetStarts[j], 0 } );
+            uint64_t position = info->GetStartLocation( ) + IndexOffsetStarts[j];
+            builder.addPost( AbsoluteWordInfo{ position - last, 0 } );
+            last = position;
             info = wordIsr->Next( );
             }
          IndexReaders[j].deleteWord( word );
@@ -159,10 +163,10 @@ private:
       else
          {
          nextAvailableLocation += writeWordList( p.second );
+         ++words_written;
          return p.first + 1;
          }
 
-      return true;
       }
 
    unsigned int table_size;
@@ -172,5 +176,6 @@ private:
    fb::Vector<uint64_t> IndexOffsetStarts;
    int num_buckets;
    char * start;
+   int words_written;
 
    };

@@ -3,7 +3,7 @@
 
 int main(int argc, char ** argv)
    {
-   if(argc > 3)
+   if(argc < 3)
       {
          fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [files to merge ...] [output file]");
          std::cout << ErrorMessage << std::endl;
@@ -11,7 +11,7 @@ int main(int argc, char ** argv)
       }
 
    fb::Vector<fb::String> inputFiles;
-   for(int i = 2; i < argc - 1; ++i)
+   for(int i = 1; i < argc - 1; ++i)
       {
       inputFiles.emplaceBack(argv[i]);
       }

@@ -36,7 +36,7 @@ int main(int argc, char ** argv )
 
    const char * startOfIndex = ( const char * ) mmap( nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, file, 0 );
 
-   IndexReader reader(startOfIndex);
+   IndexReader reader(startOfIndex, 0);
 
    if(argc > 3)
       {
@@ -101,7 +101,8 @@ int main(int argc, char ** argv )
       }
    else
       {
-      fb::UniquePtr<WordISR> wordISR = reader.OpenWordISR( fb::String( argv[2] ) );
+      fb::String word(argv[2]);
+      fb::UniquePtr<WordISR> wordISR = reader.OpenWordISR( word );
       if(!wordISR)
          {
          std::cout << "Word Not Found!" << std::endl;

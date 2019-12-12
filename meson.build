@@ -78,15 +78,10 @@ executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
 
-<<<<<<< HEAD
-executable('ranker_test',
-            ranker_test_driver,
-            include_directories: inc)
-
 executable('merge_index',
             merge_index_driver, merge_index_source_files, 
             include_directories: inc)
-=======
+
 executable('page_store_check',
             page_store_check_driver, page_store_check_files,
             include_directories: inc,
@@ -106,6 +101,10 @@ executable('page_store_merge',
             page_store_merge_driver,
             page_store_merge_files,
             include_directories: inc,
-            dependencies: [threads_dep],
-            include_directories: inc)
->>>>>>> db069194cd98dd5585f52599a831bb1a83949fac
+            dependencies: [threads_dep])
+
+executable('search_index',
+            search_index_driver,
+            search_index_files,
+            include_directories: inc
+)

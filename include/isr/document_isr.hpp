@@ -1,8 +1,8 @@
 #pragma once
 
-#include "index_reader.hpp"
-#include "index_reader_helpers.hpp"
-#include "isr.hpp"
+#include "isr/index_reader.hpp"
+#include "isr/index_reader_helpers.hpp"
+#include "isr/isr.hpp"
 
 class DocumentInfo : public IndexInfo
    {
@@ -37,7 +37,6 @@ public:
    virtual fb::UniquePtr<IndexInfo> NextDocument( );
    virtual fb::UniquePtr<IndexInfo> Seek( Location target );
    virtual bool AtEnd( );
-
 
 private:
    const int NUM_SKIP_TABLE_BITS, MAX_TOKEN_BITS;

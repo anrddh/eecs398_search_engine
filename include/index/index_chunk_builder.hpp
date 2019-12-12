@@ -15,7 +15,7 @@ inline int getHighestBit(int num)
    return val;
    }
 
-constexpr long MAX_FILE_SIZE = 4000000000;
+constexpr long MAX_FILE_SIZE = 400000000000;
 
 template<typename Hash>
 class IndexChunkBuilder {

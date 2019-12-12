@@ -41,6 +41,10 @@
 fb::Mutex sockMtx;
 AddrInfo masterLoc;
 
+using std::cout;
+using std::endl;
+
+
 void parseArguments( int argc, char **argv )
    {
     fb::AutoLock l( sockMtx );
@@ -93,12 +97,18 @@ fb::FileDesc open_socket_to_master() {
 fb::Vector<PageResult> ask_query( fb::String query ) {
     fb::AutoLock l( sockMtx );
     try {
+        cout << 1 << endl;
         fb::FileDesc sock = open_socket_to_master();
+        cout << 2 << endl;
         send_char( sock, 'Q' ); // indicate its a query
+        cout << 3 << endl;
         send_str( sock, query );
+        cout << 4 << endl;
         
         int num = recv_int( sock );
+        cout << 5 << endl;
         fb::Vector<PageResult> results;
+        cout << 6 << endl;
         for ( int i = 0; i < num; ++i ) {
             PageResult pr;
             pr.Url = recv_str( sock );
@@ -107,11 +117,12 @@ fb::Vector<PageResult> ask_query( fb::String query ) {
             pr.rank = recv_double( sock );
             results.pushBack( std::move( pr ) );
         }
+        cout << 7 << endl;
 
         return results;
     } catch ( SocketException& se ) {
         // Failed to get 
-        std::cerr << "Socket failed in ask_query" << std::endl;
+        std::cerr << "Socket failed in ask_query " << se.what() << std::endl;
         return {};
     }
 }
@@ -234,7 +245,6 @@ HtmlPage previous( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
 
 int main( int argc, char **argv ) {
     parseArguments( argc, argv );
-    auto pages = ask_query( "hi" );
 
     Bolt bolt;
     bolt.registerHandler("/", home);

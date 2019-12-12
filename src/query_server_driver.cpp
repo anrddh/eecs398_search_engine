@@ -3,6 +3,7 @@
 #include <tcp/addr_info.hpp>
 #include <tcp/constants.hpp>
 #include <query/query_result.hpp>
+#include <query/page_result.hpp>
 
 #include <disk/page_store.hpp>
 #include <disk/url_store.hpp>
@@ -43,20 +44,7 @@ constexpr double urlWeight = 0.01;
 constexpr char queryMessageType = 'Q';
 constexpr char workerMessageType = 'W';
 
-
 FileDesc parseArguments(int argc, char **argv);
-
-// The thing we send back to master!
-struct PageResult {
-    fb::StringView Url;
-    fb::StringView Title;
-    fb::StringView Snippet;
-    double rank;
-
-    inline bool operator< ( const PageResult& other ) const {
-      return rank < other.rank;
-    }
-};
 
 //Hash instance for PageResult
 template <>
@@ -106,9 +94,11 @@ int main( int argc, char **argv ) {
         // handle_connection will close sockets
         try {
             int sock = accept(server_fd, nullptr, nullptr);
-            perror("Error printed by perror");
-            return 0;
-            //handle_connections( std::move( sock ) );
+            std::cout << "got new socket!" << std::endl;
+            handle_connections( std::move( sock ) );
+        } catch (SocketException& se) {
+            cout << se.what() << endl;
+
         } catch (...) {
             cout << "failed in accept!" << endl;
             throw;
@@ -138,16 +128,37 @@ void handle_connections( FileDesc&& sock ) {
 }
 
 void handle_query( FileDesc&& sock ) {
+    static int n = 0;
     String query = recv_str( sock );
     Vector<Thread> threads;
     TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
+    std::cout << "got new query!" << std::endl;
 
+    // TODO handle exceptions
+
+    /* // TODO uncomment this
     for ( auto it = socketsToWorkers.begin(); it != socketsToWorkers.end(); ++it ) {
         threads.emplaceBack( ask_workers, new WorkerArg{ &*it, query, &topPages } );
     }
 
     for ( Thread& t : threads ) {
         t.join();
+    }
+    */
+
+    // testing code. TODO delete below
+
+    String urlStr = "https://test_url";
+    String titleStr = "Some good title ";
+    String snippetStr = "blah blah blah ";
+    for (int i = 0; i < 100; ++i ) {
+        PageResult pr;
+        String val = toString( ++n );
+        pr.Url = urlStr + val;
+        pr.Title = titleStr + val;
+        pr.Snippet = snippetStr + val;
+        pr.rank = n;
+        topPages.push( std::move( pr ) );
     }
 
     send_int( sock, topPages.size() );
@@ -174,7 +185,7 @@ void* ask_workers( void* worker_query ) {
         int numPages = recv_int( *arg.sock );
         for ( int i = 0; i < numPages; ++i ) {
             PageResult pr;
-            pr.Url = UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) );
+            pr.Url += UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) ); // TODO check this works
             pr.Title = recv_str( *arg.sock );
             pr.Snippet = recv_str( *arg.sock );
             pr.rank = recv_double( *arg.sock );

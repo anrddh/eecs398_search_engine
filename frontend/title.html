@@ -76,7 +76,7 @@
       $("#image").imagesLoaded( function() {
         $(".img").sparkleh({
           count: 200,
-          color: ["rainbow"],
+          color: ["grey", "skyblue"],
         speed: 0.8
         });
       });
@@ -336,14 +336,30 @@
 
     $(document).ready(function(){
       $('#query').keypress(function(e){
-        if(e.keyCode==13)
-          $('#search').click();
+        if(e.keyCode==13) {
+          var value=$.trim($("#query").val());
+          if(value.length > 0) 
+            {
+            $("#query").val(value)
+            $('#search').click();
+            }
+        }
       });
     });
   </script>
 
   <!-- https://www.html5canvastutorials.com/advanced/html5-canvas-rain-effect/ -->
-  <script type="text/javascript">
+  <script>
+    var lineLength = 1;
+    var speed = 1;
+    var lineWidth = 1;
+    if ( Math.random() > 0.5 )
+    {
+      lineLength = 0.01;
+      speed = 0.1;
+      lineWidth = 5;
+    }
+
     $(document).ready(function() {
       var canvas = $('#canvas')[0];
       canvas.width = window.innerWidth;
@@ -354,7 +370,7 @@
         var w = canvas.width;
         var h = canvas.height;
         ctx.strokeStyle = 'rgba(174,194,224,0.5)';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
 
 
@@ -364,7 +380,7 @@
           init.push({
             x: Math.random() * w,
             y: Math.random() * h,
-            l: Math.random() * 1,
+            l: Math.random() * lineLength,
             xs: -4 + Math.random() * 4 + 2,
             ys: Math.random() * 10 + 10
           })
@@ -391,7 +407,7 @@
           for (var b = 0; b < particles.length; b++) {
             var p = particles[b];
             p.x += p.xs;
-            p.y += p.ys;
+            p.y += p.ys * speed;
             if (p.x > w || p.y > h) {
               p.x = Math.random() * w;
               p.y = -20;
@@ -402,6 +418,21 @@
       }
     });
   </script>
+
+  <script>
+    function ani_fantastic() {
+      $('#query').val("aniruddh");
+      $('#search').click();
+    }
+  </script>
+
+  <script>
+    $('#search_form').submit(function(){
+      $(this).find('input:text').each(function(){
+        $(this).val($.trim($(this).val()));
+      });
+    });
+  </script>
 </head>
 
 <body>
@@ -410,18 +441,18 @@
   <div class="container text-center">
     <div class="search-container p-2">
       <center>
-        <h1><font color="white">Fantastic Bugs Search Engine</font></h1>
+        <h1><font color="white">Fantastic Search Engine</font></h1>
         <br>
         <br>
         <div class="col-md-10" style="z-index:2;">
-          <form action="/results">
+          <form action="/results" id="search_form">
             <div class="input-group input-group-lg mb-2">
               <div class="input-group-prepend">
                 <button class="btn btn-light btn-outline-secondary border-right-0" type="submit" id="search">
                   <img class="glass" src="https://cdn3.iconfinder.com/data/icons/gray-toolbar/512/find-512.png" style="width:25px;height:25px;"> 
                 </button>
               </div>
-              <input id="query" name="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
+              <input id="query" name="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="Type here to find fantastic bugs" aria-label="" aria-describedby="basic-addon1">
             </div>
           </form>
         </div>
@@ -429,7 +460,7 @@
           <img id="image" src="frontend/wwandd.png" class="rotateimg6" style="position: float; z-index:0;" width="60%" height="60%">
         </div>
         <div class="butttton">
-          <button class="btn btn-primary border-0">Ani is feeling fantastic!</button>
+          <button class="btn btn-primary border-0" onclick="ani_fantastic()">Ani is feeling fantastic!</button>
         </div>
       </center>
     </div>    

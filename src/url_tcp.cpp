@@ -107,12 +107,20 @@ String recv_str(int sock) {
    url.resize( size ); // resize to length of string (not counting null character)
 
    // Need to write null character as well
-   if (recv(sock, url.data(), size + 1, MSG_WAITALL) <= 0) {
+   if (recv(sock, url.data(), size, MSG_WAITALL) <= 0) {
       throw SocketException("TCP Utility: recv_str failed");
    }
 
+   char c;
+   if (recv(sock, &c, sizeof(c), MSG_WAITALL) <= 0) {
+      throw SocketException("TCP Utility: recv_str failed");
+   }
+
+   // TODO throw!
    // Make sure the string is null terminiated
-   assert( url.data()[size] == '\0' );
+   if ( c != '\0' ) {
+      throw SocketException("TCP Utility: recv_str got non-null terminating string!");
+   }
 
    return url;
 }
@@ -122,5 +130,5 @@ void send_double(int sock, double d) {
 }
 
 double recv_double(int sock) {
-    atof( recv_str( sock ).data() );
+    return atof( recv_str( sock ).data() );
 }

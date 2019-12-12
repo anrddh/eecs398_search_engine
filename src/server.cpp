@@ -171,15 +171,6 @@ HtmlPage kthResults() {
     return page;
 }
 
-HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
-    resultCounter = 0;
-    resultOptions = formOptions;
-    if( formOptions["query"].empty() )
-        return pageNotFound( "You should type something!" );
-    queryResult = ask_query( formOptions["query"] );
-    return kthResults();
-}
-
 HtmlPage defaultPath() {
     HtmlPage page;
     page.loadFromString("<h1>Page not found.</h1>");
@@ -193,9 +184,19 @@ HtmlPage pageNotFound( fb::String msg ) {
     return page;
 }
 
+
+HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+    resultCounter = 0;
+    resultOptions = formOptions;
+    if( formOptions["query"].empty() )
+        return pageNotFound( "You should type something!" );
+    queryResult = ask_query( formOptions["query"] );
+    return kthResults();
+}
+
 HtmlPage next( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
     if( resultCounter == -1 )
-        return defaultPath();
+        return pageNotFound( "This should not happen..." );
     ++resultCounter;
     return kthResults();
 }

@@ -336,8 +336,14 @@
 
     $(document).ready(function(){
       $('#query').keypress(function(e){
-        if(e.keyCode==13)
-          $('#search').click();
+        if(e.keyCode==13) {
+          var value=$.trim($("#query").val());
+          if(value.length > 0) 
+            {
+            $("#query").val(value)
+            $('#search').click();
+            }
+        }
       });
     });
   </script>

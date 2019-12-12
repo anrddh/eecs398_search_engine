@@ -174,6 +174,8 @@ HtmlPage kthResults() {
 HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
     resultCounter = 0;
     resultOptions = formOptions;
+    if( formOptions["query"].empty() )
+        return pageNotFound( "You should type something!" );
     queryResult = ask_query( formOptions["query"] );
     return kthResults();
 }

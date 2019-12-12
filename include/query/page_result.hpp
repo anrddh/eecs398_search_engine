@@ -2,9 +2,9 @@
 
 // The thing we send back to master!
 struct PageResult {
-    fb::StringView Url;
-    fb::StringView Title;
-    fb::StringView Snippet;
+    fb::String Url;
+    fb::String Title;
+    fb::String Snippet;
     double rank;
 
     inline bool operator< ( const PageResult& other ) const {

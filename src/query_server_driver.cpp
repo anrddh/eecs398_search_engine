@@ -3,6 +3,7 @@
 #include <tcp/addr_info.hpp>
 #include <tcp/constants.hpp>
 #include <query/query_result.hpp>
+#include <query/page_result.hpp>
 
 #include <disk/page_store.hpp>
 #include <disk/url_store.hpp>
@@ -43,20 +44,7 @@ constexpr double urlWeight = 0.01;
 constexpr char queryMessageType = 'Q';
 constexpr char workerMessageType = 'W';
 
-
 FileDesc parseArguments(int argc, char **argv);
-
-// The thing we send back to master!
-struct PageResult {
-    fb::StringView Url;
-    fb::StringView Title;
-    fb::StringView Snippet;
-    double rank;
-
-    inline bool operator< ( const PageResult& other ) const {
-      return rank < other.rank;
-    }
-};
 
 //Hash instance for PageResult
 template <>
@@ -138,10 +126,12 @@ void handle_connections( FileDesc&& sock ) {
 }
 
 void handle_query( FileDesc&& sock ) {
+    static int n = 0;
     String query = recv_str( sock );
     Vector<Thread> threads;
     TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
 
+    /* // TODO uncomment this
     for ( auto it = socketsToWorkers.begin(); it != socketsToWorkers.end(); ++it ) {
         threads.emplaceBack( ask_workers, new WorkerArg{ &*it, query, &topPages } );
     }
@@ -149,7 +139,21 @@ void handle_query( FileDesc&& sock ) {
     for ( Thread& t : threads ) {
         t.join();
     }
+    */
 
+    // testing code. TODO delete below
+
+    String urlStr = "https://test_url";
+    String titleStr = "Some good title ";
+    String snippetStr = "blah blah blah ";
+    for (int i = 0; i < 100; ++i ) {
+        PageResult pr;
+        String val = toString( ++n );
+        pr.Url = urlStr + val;
+        pr.Title = titleStr + val;
+        pr.Snippet = snippetStr + val;
+        pr.rank = n;
+    }
     send_int( sock, topPages.size() );
 
     while ( !topPages.empty() ) {

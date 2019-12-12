@@ -20,7 +20,8 @@ server_source_files += files('bolt/bolt.cpp',
                              'bolt/http/http_request.cpp',
                              'bolt/http/socket_http_connection_handler.cpp',
                              'empty_isr.cpp',
-                             'document_isr.cpp')
+                             'document_isr.cpp',
+                             'url_tcp.cpp')
 
 query_worker_source_files += files('query_handler.cpp', 'ranker.cpp', 'page_store.cpp')
 

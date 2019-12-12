@@ -122,5 +122,5 @@ void send_double(int sock, double d) {
 }
 
 double recv_double(int sock) {
-    atof( recv_str( sock ).data() );
+    return atof( recv_str( sock ).data() );
 }

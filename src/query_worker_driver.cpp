@@ -25,7 +25,9 @@
 #include <fb/vector.hpp>
 #include <fb/string.hpp>
 
-#include <query/query_result.hpp> //move this to whatever appropriate location
+#include <query/query_result.hpp>
+
+#define MAX_SNIP_WINDOW 150
 
 // TCP protocol
 // worker establishes socket to master (sends a verfication code)
@@ -37,6 +39,7 @@ using namespace fb;
 
 Vector<Thread> threads;
 Vector<fb::UniquePtr<IndexReader>> Readers;
+TopNQueue<QueryResult> Results;
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
@@ -52,8 +55,14 @@ void* RankPages( void *info ) {
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
-    
-    //TODO
+    for( rank_stats& doc : docsToRank ){
+        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences, MAX_SNIP_WINDOW)); //setting max_snip_window to 150
+        SnippetStats stats = { PageStoreFile + fb::toString(doc.page_store_number), doc.page_store_index, window };
+        fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
+        QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
+        Result.push(result);
+    }
+    return nullptr;
 }
 
 void* listen_to_master(void *) {
@@ -103,15 +112,18 @@ int main( int argc, char **argv ) {
         Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 
-    //TODO: GET QUERIES
-    fb::String query;
+    /* while(true){*/
+        //TODO: GET QUERIES
+        fb::String query;
 
-    fb::UniquePtr<Expression> e = ParseQuery(query);
-    //now we spawn a thread for each index, and give it e
-    for (auto& reader : Readers){
-        pthread_t pt;
-        IndexInfo info = { e, reader };
-        pthread_create(&pt, NULL, RankPages, (void *)&reader);
+        fb::UniquePtr<Expression> e = ParseQuery(query);
+        //now we spawn a thread for each index, and give it e
+        for (auto& reader : Readers){
+            pthread_t pt;
+            IndexInfo info = { e, reader };
+            pthread_create(&pt, NULL, RankPages, (void *)&reader);
+        }
+
+        //TODO: Send TopNQueue to master
     }
-
 }

@@ -43,11 +43,16 @@ struct SnippetStats {
 
 //TODO: incorporate bold, italic, header, etc. into ranking
 
+// Merges all the occurence vectors together for snippet rank
+// Ditching the weights for now for time's sake
+// Also just using std::sort right now, hopefully not a bottleneck
+fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occurrences);
+
 //positions_weights is a fb::Vector of indices corresponding to the words in the our query
 //and their tfidf
 //im getting rid of weights for now
-snip_window snippet_window_rank(fb::Vector<fb::SizeT> &positions_weights, fb::SizeT max_window_size);
+snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT max_window_size);
 
-fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &Stats, fb::Vector<rank_stats> &documents_to_rank );
+fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, rank_stats &doc );
 
 #endif

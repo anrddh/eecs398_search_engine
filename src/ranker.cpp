@@ -4,6 +4,7 @@
 #include <fb/stddef.hpp>
 #include <fb/utility.hpp>
 #include <cmath>
+#include <algorithm> //std::sort
 #include <isr/constraint_solver.hpp>
 #include <parser/parser.hpp>
 #include <ranker/ranker.hpp>
@@ -20,10 +21,24 @@ void tfidf_rank(fb::Vector<rank_stats> &documents_to_rank, const fb::Vector<fb::
 	}
 }
 
+// Merges all the occurence vectors together for snippet rank
+// Ditching the weights for now for time's sake
+// Also just using std::sort right now, hopefully not a bottleneck
+fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occurrences){
+    fb::Vector<fb::SizeT> merged;
+    for (auto& v : occurrences){
+        for (auto slot : v){
+            merged.pushBack(slot);
+        }
+    }
+    std::sort(merged.begin(), merged.end());
+    return merged;
+}
+
 //positions_weights is a fb::Vector of indices corresponding to the words in the our query
 //and their tfidf
 //im getting rid of weights for now
-snip_window snippet_window_rank(fb::Vector<fb::SizeT> &positions_weights, fb::SizeT max_window_size){
+snip_window snippet_window_rank(const fb::Vector<fb::SizeT> positions_weights, const fb::SizeT max_window_size){
 	snip_window result;
 	if(positions_weights.size() < 2){
 		result.start_word_index = positions_weights[0];
@@ -61,14 +76,12 @@ snip_window snippet_window_rank(fb::Vector<fb::SizeT> &positions_weights, fb::Si
 	return result;
 }
 
-fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &Stats, fb::Vector<rank_stats> &documents_to_rank ){
+fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, rank_stats &doc ){
 
-    SnippetStats &stat = Stats[i];
     FILE *fptr = fopen(stat.filename.data(), "rb");
     if (fptr == NULL){
-        std::cout << "error opening " << filename << " when generating snippets " << std::endl;
-        snippets.PushBack(""); //if the file fails to open, just give empty string for snippet rather than crash
-        continue;
+        std::cout << "error opening " << filename << " when generating snippets and title " << std::endl;
+        return { ""_sv, ""_sv }; //if the file fails to open, just give empty strings rather than crash
     }
     fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
     fb::SizeT NumPageStoreDocs;
@@ -86,7 +99,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &Stats, 
     if (stat.DocIndex = NumPageStoreDocs - 1){
         NextPageOffset = VectorOffset + 100;
     }
-    documents_to_rank[i].UrlId = UrlId; //set the UrlID in the rank_stats
+    doc.UrlId = UrlId; //set the UrlID in the rank_stats
 
     //this is the snippet code
     String snippet;

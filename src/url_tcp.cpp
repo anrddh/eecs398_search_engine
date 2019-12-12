@@ -116,3 +116,11 @@ String recv_str(int sock) {
 
    return url;
 }
+
+void send_double(int sock, double d) {
+    send_str( sock, toString(d) );
+}
+
+double recv_double(int sock) {
+    atof( recv_str( sock ).data() );
+}

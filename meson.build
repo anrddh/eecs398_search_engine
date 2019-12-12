@@ -27,7 +27,10 @@ master_source_files = []
 worker_source_files = []
 server_source_files = []
 page_store_total_files = []
+page_store_check_files = []
+page_store_merge_files = []
 project_header_files = []
+query_worker_source_files = []
 
 
 inc = [include_directories('include'), include_directories('external')]
@@ -36,10 +39,10 @@ subdir('src')
 subdir('test')
 subdir('external')
 
-#executable('master',
-#           master_driver, master_source_files,
-#           include_directories: inc,
-#           dependencies: [readline_dep, threads_dep])
+executable('master',
+           master_driver, master_source_files,
+           include_directories: inc,
+           dependencies: [readline_dep, threads_dep])
 
 executable('server',
            server_driver, server_source_files,
@@ -63,19 +66,19 @@ executable('build_index_test',
             build_index_test_driver,
             include_directories: inc)
 
+executable('merged_index_test',
+            merged_index_test_driver,
+            include_directories: inc)
+
 executable('print_page_store',
             print_page_store_driver,
             include_directories: inc)
-
-#executable('search_index',
-#           search_index_driver,
-#           ['src/index_reader.cpp'],
-#            include_directories: inc)
 
 executable('page_store_total',
             page_store_total_driver, page_store_total_files,
             include_directories: inc)
 
+<<<<<<< HEAD
 executable('ranker_test',
             ranker_test_driver,
             include_directories: inc)
@@ -83,3 +86,26 @@ executable('ranker_test',
 executable('merge_index',
             merge_index_driver, merge_index_source_files, 
             include_directories: inc)
+=======
+executable('page_store_check',
+            page_store_check_driver, page_store_check_files,
+            include_directories: inc,
+            dependencies: [threads_dep])
+
+executable('query_worker',
+            query_worker_driver,
+            include_directories: inc,
+            dependencies: [threads_dep])
+
+executable('query_server',
+            query_server_driver,
+            include_directories: inc,
+            dependencies: [threads_dep])
+
+executable('page_store_merge',
+            page_store_merge_driver,
+            page_store_merge_files,
+            include_directories: inc,
+            dependencies: [threads_dep],
+            include_directories: inc)
+>>>>>>> db069194cd98dd5585f52599a831bb1a83949fac

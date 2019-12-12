@@ -11,11 +11,12 @@
 
 #include "porter_stemmer.hpp"
 
+class WordImplISR;
 class DocumentISR;
 
-class IndexReader
-   {
+class IndexReader {
 public:
+<<<<<<< HEAD
    IndexReader(const char * startOfIndex, fb::SizeT index);
    IndexReader( IndexReader &other);
    ~IndexReader( ) { free_stemmer( porterStemmer ); }
@@ -121,3 +122,21 @@ int IndexReader::getBucket( fb::String &word )
       return -1;
       }
    }
+=======
+    IndexReader(const char * startOfIndex, uint32_t index);
+    ~IndexReader( ) { free_stemmer( porterStemmer ); }
+
+    fb::UniquePtr<WordISR> OpenWordISR( fb::String word );
+    fb::UniquePtr<DocumentISR> OpenDocumentISR( );
+    bool WordExists( fb::String word );
+    fb::UniquePtr<WordISR> GetEmptyISR( );
+    uint32_t getIndex( ) { return index; }
+
+private:
+    const char * start;
+    const unsigned int MAX_TOKEN_BITS, DICTIONARY_SIZE;
+    unsigned int * dictionary;
+    uint32_t index;
+    stemmer * porterStemmer;
+};
+>>>>>>> db069194cd98dd5585f52599a831bb1a83949fac

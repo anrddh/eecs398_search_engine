@@ -87,7 +87,7 @@ private:
             }
          }
 
-      documents_to_rank.emplaceBack( rank_stats{ page_store_num, mainIsr->GetDocumentId( ), docLength, std::move( occurrences ) } );
+      documents_to_rank.emplaceBack( rank_stats{ page_store_num, mainIsr->GetDocumentId( ), docLength, 0, std::move( occurrences ) } );
       }
 
    };

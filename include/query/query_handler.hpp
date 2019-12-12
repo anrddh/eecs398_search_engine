@@ -1,7 +1,8 @@
 #pragma once
 
-#include <query_result.hpp>
+#include <query/query_result.hpp>
 #include <fb/thread.hpp>
+#include <disk/constants.hpp>
 #include <algorithm>
 
 struct IndexInfoArg {
@@ -14,17 +15,9 @@ struct IndexInfoArg {
 //for now, assuming the weight of each word is 1
 //just to get something working quickly
 //im literally just going to sort it for now lol
-fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>> &occurrences):{
-    fb::Vector<fb::SizeT> vec;
-    for (auto& v : occurrences){
-        for (uint32_t i : v){
-            vec.PushBack(i);
-        }
-    }
-    std::sort(vec.begin(), vec.end());
-    return vec;
-}
+fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>> &occurrences);
 
+<<<<<<< HEAD
 void* RankPages( void *info ) {
    // Just keep calling add to top pages
    IndexInfoArg &arg = *(IndexInfoArg *) info;
@@ -43,54 +36,17 @@ void* RankPages( void *info ) {
 
 class QueryHandler
    {
+=======
+class QueryHandler {
+>>>>>>> db069194cd98dd5585f52599a831bb1a83949fac
 public:
-   QueryHandler( fb::String path , fb::String prefix, int num_indices )
-      {
-      fb::String dirname(argv[1]);
-      fb::String Prefix(argv[2]);
-      int num_index_files = atoi(argv[3]);
-      for (int i = 0; i < num_index_files; ++i)
-         {
-         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
-         int f = open(filename.data(), O_RDWR);
-         if(f < 0)
-            {
-            // write debug message
-            std::cout << "ERROR OPENING FILE: " << filename << std::endl;
-            exit(1);
-            }
+   QueryHandler( fb::String path , fb::String prefix, int num_indices );
 
-         struct stat details;
-         fstat(f, &details);
-
-         char *IndexPtr = (char *)mmap(nullptr, details.st_size, PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, f, 0);
-         Readers.PushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
-         }
-
-
-      }
    ~QueryHandler( )
 
-   fb::Vector<QueryResult> Query( fb::String q )
-      {
-      TopPages pages(100);
-      fb::UniquePtr<Expression> e = ParseQuery(q);
-      fb::Vector<Thread> threads;
-      for (auto& reader : Readers)
-         {
-         IndexInfoArg * info =  new IndexInfoArg{ e, reader, pages};
-         threads.emplaceBack(RankPages, (void *)info);
-         }
-
-      for(auto& thread : threads)
-         {
-         thread.join( );
-         }
-
-      return pages.GetTopResults( );
-      }
+   fb::Vector<QueryResult> Query( fb::String q );
 
 private:
    Vector<fb::UniquePtr<IndexReader>> Readers;
 
-   }
+};

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "isr.hpp"
-#include "document_isr.hpp"
+#include <isr/isr.hpp>
+#include <isr/document_isr.hpp>
 
 class AndInfo : public IndexInfo
    {
@@ -47,7 +47,7 @@ private:
    };
 
 
-AndISR::AndISR( fb::Vector<fb::UniquePtr<ISR>> ISRs, fb::UniquePtr<DocumentISR> documentISR ) 
+AndISR::AndISR( fb::Vector<fb::UniquePtr<ISR>> ISRs, fb::UniquePtr<DocumentISR> documentISR )
 : Terms( std::move( ISRs ) ), DocIsr( std::move( documentISR ) ), isAtEnd(false)
    {
    updateLocationInfo( );
@@ -61,7 +61,7 @@ AndISR::AndISR( fb::Vector<fb::UniquePtr<ISR>> ISRs, fb::UniquePtr<DocumentISR> 
       {
       Seek( 1 );
       }
-   } 
+   }
 
 fb::UniquePtr<IndexInfo> AndISR::Seek( Location target )
    {
@@ -72,7 +72,7 @@ fb::UniquePtr<IndexInfo> AndISR::Seek( Location target )
 
    fb::UniquePtr<IndexInfo> docLoc = DocIsr->GetCurrentInfo( );
    Location docStart = 0;
-   while (!isAtEnd && farthestEndLocation > docLoc->GetEndLocation()) 
+   while (!isAtEnd && farthestEndLocation > docLoc->GetEndLocation())
       {
       // 2. Move the document end ISR to just past the farthest
       // word, then calculate the document begin location.
@@ -96,7 +96,7 @@ fb::UniquePtr<IndexInfo> AndISR::Seek( Location target )
       {
       return fb::makeUnique<AndInfo>(nearestStartLocation, farthestEndLocation);
       }
-   
+
    }
 
 fb::UniquePtr<IndexInfo> AndISR::Next( )
@@ -137,15 +137,15 @@ void AndISR::seekAllPast(Location target)
       {
       fb::UniquePtr<IndexInfo> info = Terms[i]->Seek(target);
 
-      if(!info) 
+      if(!info)
          {
          isAtEnd = true;
          return;
          }
-      
+
       }
       updateLocationInfo();
-      
+
    }
 
 void AndISR::updateLocationInfo( )

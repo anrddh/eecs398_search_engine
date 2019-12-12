@@ -10,7 +10,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 
   <style>
-    @font-face { font-family: Animales; src: url('Animales-Fantastic.otf'); } 
+    @font-face { font-family: Animales; src: url('frontend/Animales-Fantastic.otf'); } 
     h1 {
      font-family: Animales
     }
@@ -27,7 +27,7 @@
       margin: 0;
       overflow: auto;
       /*background: #061928;*/
-      background-image: url('hogwarts_lightning.gif');
+      background-image: url('frontend/hogwarts_lightning.gif');
       background-repeat: no-repeat;
       background-attachment: fixed;
       background-size: cover;
@@ -41,7 +41,75 @@
 
   <script src="search.js"></script>
   <!-- https://www.html5canvastutorials.com/advanced/html5-canvas-rain-effect/ -->
-  <script src="rain.js"></script>
+  <script>
+    var lineLength = 1;
+    var speed = 1;
+    var lineWidth = 1;
+    if ( Math.random() > 0.5 )
+    {
+      lineLength = 0.01;
+      speed = 0.1;
+      lineWidth = 5;
+    }
+
+    $(document).ready(function() {
+      var canvas = $('#canvas')[0];
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      if (canvas.getContext) {
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width;
+        var h = canvas.height;
+        ctx.strokeStyle = 'rgba(174,194,224,0.5)';
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+
+
+        var init = [];
+        var maxParts = 1000;
+        for (var a = 0; a < maxParts; a++) {
+          init.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            l: Math.random() * lineLength,
+            xs: -4 + Math.random() * 4 + 2,
+            ys: Math.random() * 10 + 10
+          })
+        }
+
+        var particles = [];
+        for (var b = 0; b < maxParts; b++) {
+          particles[b] = init[b];
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, w, h);
+          for (var c = 0; c < particles.length; c++) {
+            var p = particles[c];
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + p.l * p.xs, p.y + p.l * p.ys);
+            ctx.stroke();
+          }
+          move();
+        }
+
+        function move() {
+          for (var b = 0; b < particles.length; b++) {
+            var p = particles[b];
+            p.x += p.xs;
+            p.y += p.ys * speed;
+            if (p.x > w || p.y > h) {
+              p.x = Math.random() * w;
+              p.y = -20;
+            }
+          }
+        }
+        setInterval(draw, 30);
+      }
+    });
+  </script>
 
 </head>
 <body>
@@ -49,26 +117,25 @@
 <div class="container-fluid">
   <div class="search-container p-2">
       <center>
-        <h1><font color="white">Fantastic Bugs Search Engine</font></h1>
+        <a href="/"><h1><font color="white">Fantastic Search Engine</font></h1></a>
 
-        <form action="/results">
-          <div class="input-group input-group-lg mb-3">
-            <div class="input-group-prepend">
-              <button class="btn btn-light btn-outline-secondary border-right-0" type="button" id="search" onclick="search_query()">
-              <img src="https://cdn2.iconfinder.com/data/icons/large-svg-icons-part-3/512/zoom_search_find_magnifying_glass-512.png" style="width:25px;height:25px;"> </button>
+          <form action="/results">
+            <div class="input-group input-group-lg mb-2" style="width: 80rem; margin: 0 auto;">
+              <div class="input-group-prepend">
+                <button class="btn btn-light btn-outline-secondary border-right-0" type="submit" id="search">
+                  <img class="glass" src="https://cdn3.iconfinder.com/data/icons/gray-toolbar/512/find-512.png" style="width:25px;height:25px;"> 
+                </button>
+              </div>
+              <input id="query" name="query" type="text" class="form-control border-left-0 border-outline-secondary" placeholder="[% query %]" aria-label="" aria-describedby="basic-addon1">
             </div>
-            <input id="query" name="query" type="text" value="[% query %]" class="form-control border-left-0 border-outline-secondary" placeholder="QUERY" aria-label="" aria-describedby="basic-addon1">
-          </div>
-        </form>
+          </form>
       </center>
-    
-    <hr>
   </div>
   <hr>
 
-  <div class="pl-4 pt-4 pr-4">
+  <div class="pl-4 pt-4 pr-4 pb-4">
     <div class="pb-4">
-      <div class="card rounded border-danger">
+      <div class="card rounded border-danger" style="width: 80rem; margin: 0 auto;">
         <div class="card-body">
           <h4 class="card-title"> Powered by Hamilton Laboratories </h4>
           <a href="https://hamiltonlabs.com/" class="card-link">Link</a>
@@ -76,18 +143,148 @@
       </div>
     </div>
 
-    <div class="pb-4">
-      <div class="card rounded">
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
         <div class="card-body">
-          <a href="[% url %]">
-            <h4 class="card-title"> [% title %] </h4>
-            <p class="card-link text-success"> [% url %]</p>
+          <a href="[% url0 %]">
+            <h4 class="card-title"> [% title0 %] </h4>
+            <p class="card-link text-success"> [% url0 %]</p>
           </a>
-          <p class="card-text">[% snippet %]</p>
+          <p class="card-text">[% snippet0 %]</p>
         </div>
       </div>
     </div>
-</div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url1 %]">
+            <h4 class="card-title"> [% title1 %] </h4>
+            <p class="card-link text-success"> [% url1 %]</p>
+          </a>
+          <p class="card-text">[% snippet1 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url2 %]">
+            <h4 class="card-title"> [% title2 %] </h4>
+            <p class="card-link text-success"> [% url2 %]</p>
+          </a>
+          <p class="card-text">[% snippet2 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url3 %]">
+            <h4 class="card-title"> [% title3 %] </h4>
+            <p class="card-link text-success"> [% url3 %]</p>
+          </a>
+          <p class="card-text">[% snippet3 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url4 %]">
+            <h4 class="card-title"> [% title4 %] </h4>
+            <p class="card-link text-success"> [% url4 %]</p>
+          </a>
+          <p class="card-text">[% snippet4 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url5 %]">
+            <h4 class="card-title"> [% title5 %] </h4>
+            <p class="card-link text-success"> [% url5 %]</p>
+          </a>
+          <p class="card-text">[% snippet5 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url6 %]">
+            <h4 class="card-title"> [% title6 %] </h4>
+            <p class="card-link text-success"> [% url6 %]</p>
+          </a>
+          <p class="card-text">[% snippet6 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url7 %]">
+            <h4 class="card-title"> [% title7 %] </h4>
+            <p class="card-link text-success"> [% url7 %]</p>
+          </a>
+          <p class="card-text">[% snippet7 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url8 %]">
+            <h4 class="card-title"> [% title8 %] </h4>
+            <p class="card-link text-success"> [% url8 %]</p>
+          </a>
+          <p class="card-text">[% snippet8 %]</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-3 pt-3 pl-5 pr-5">
+      <div class="card rounded" style="width: 80rem; margin: 0 auto;">
+        <div class="card-body">
+          <a href="[% url9 %]">
+            <h4 class="card-title"> [% title9 %] </h4>
+            <p class="card-link text-success"> [% url9 %]</p>
+          </a>
+          <p class="card-text">[% snippet9 %]</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <div class="row pb-4">
+      <div class="col-5">
+      </div>
+  <div class="col-1">
+    <form action="/previous">
+      <button class="btn btn-primary btn-block" type="submit" id="previous">
+        Previous
+      </button>
+    </form>
+  </div>
+      <div class="col-1">
+    <form action="/next">
+      <button class="btn btn-primary btn-block" type="submit" id="next">
+        Next
+      </button>
+    </form>
+  </div>
+  <div class="col-5">
+      </div>
+  </div>
 
 </body>
 </html>

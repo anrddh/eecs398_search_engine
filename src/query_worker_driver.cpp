@@ -1,7 +1,7 @@
 #include <parse/parser.hpp>
 #include <parse/query_parser.hpp>
 #include <http/download_html.hpp>
-#include <tcp/worker_url_tcp.hpp>
+#include <tcp/url_tcp.hpp>
 #include <tcp/addr_info.hpp>
 #include <tcp/constants.hpp>
 #include <disk/page_store.hpp>
@@ -35,12 +35,12 @@
 // master to worker: query (string)
 // worker to master: num (int)
 //    [ urlOffset (SizeT), rank (double), snippet (string)] x num
-//    WARNING TO ANI - sending int and sizet are different tcp function calls
+// TODO    WARNING TO ANI - sending int and sizet are different tcp function calls
 using namespace fb;
 
 Vector<Thread> threads;
 Vector<fb::UniquePtr<IndexReader>> Readers;
-TopNQueue<QueryResult> Results(NUM_QUERY_RESULTS);
+TopPages Results(NUM_QUERY_RESULTS);
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
@@ -61,26 +61,49 @@ void* RankPages( void *info ) {
         SnippetStats stats = { fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
         fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
-        Results.push(std::move(result));
+        Results.add(std::move(result));
     }
     return nullptr;
 }
 
-void* listen_to_master(void *) {
+
+AddrInfo masterLoc;
+
+fb::FileDesc open_socket_to_master() {
+    while (true) {
+        try {
+            auto sock = masterLoc.getConnectedSocket();
+
+            // Finished establishing socket
+            // Send verfication message
+            send_int(sock, VERFICATION_CODE);
+
+            // Tell them we are workers
+            send_char(sock, 'W');
+            return sock;
+        } catch (SocketException &se) {
+            std::cerr << "failed establish connection with master. " 
+                << se.what() << std::endl;
+            std::cerr << "retrying" << std::endl;
+        }
+    }
 }
 
 // We will create an thread for each index
 int main( int argc, char **argv ) {
 
-    if(argc != 4){
-        fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES]");
+    if(argc != 6){
+        fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES] [SERVER_IP] [SERVER_IP]");
         std::cout << ErrorMessage << std::endl;
         exit(1);
     }
 
+
     fb::String dirname(argv[1]);
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
+    fb::String server_name(argv[4]);
+    fb::String server_port(argv[5]);
     
     for (int i = 0; i < num_index_files; ++i) {
         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
@@ -98,9 +121,22 @@ int main( int argc, char **argv ) {
         Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 
-    /* while(true){*/
-        //TODO: GET QUERIES FROM MASTER
+    masterLoc = AddrInfo(server_name.data(), server_port.data());
+
+    fb::FileDesc sock = open_socket_to_master();
+
+    while(true){
         fb::String query;
+        try {
+            // Finished establishing socket
+            // Send verfication message
+            send_int(sock, VERFICATION_CODE);
+
+            query = recv_str( sock );
+        } catch( SocketException& se ) {
+            std::cerr << "Got exception " << se.what() << std::endl;
+            sock = open_socket_to_master();
+        }
 
         QueryParser QuePasa(query);
         auto e = QuePasa.Parse();
@@ -111,6 +147,11 @@ int main( int argc, char **argv ) {
             pthread_create(&pt, NULL, RankPages, (void *)&info);
         }
 
-        //TODO: Send TopNQueue to master
-    /* } */
+        try {
+            Results.send_and_reset( sock );
+        } catch( SocketException& se ) {
+            std::cerr << "Got exception " << se.what() << std::endl;
+            sock = open_socket_to_master();
+        }
+    }
 }

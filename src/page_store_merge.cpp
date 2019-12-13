@@ -68,7 +68,11 @@ int main( int argc, char * argv[] ){
         }
         PageBin CurBin(fb::StringView(filename.data(), filename.size()));
         std::cout << "CurBin: " << fb::StringView(filename.data(), filename.size()) << std::endl;
-        fb::SizeT NumCur = CurBin.num_stored_pages();
+
+        fseek(fptr, sizeof(atomic<fb::SizeT>), SEEK_SET);
+        fb::SizeT NumCur;
+        fread(&NumCur, sizeof(atomic<fb::SizeT>), 1, fptr);
+
         std::cout << "NumCur: " << NumCur << std::endl;
         char *CurHeadersBegin = CurBin.data() + sizeof(NumCur);
 

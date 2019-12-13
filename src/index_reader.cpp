@@ -1,6 +1,8 @@
 #include <isr/index_reader.hpp>
 #include <isr/word_impl_isr.hpp>
 #include <isr/document_isr.hpp>
+#include <stdint.h>
+
 
 
 IndexReader::IndexReader( )
@@ -74,12 +76,12 @@ fb::UniquePtr<WordISR> IndexReader::OpenPlainWordISR(fb::String &word)
    fb::Hash<fb::String> hash;
    uint64_t bucket = hash(word) % DICTIONARY_SIZE;
 
-    while (dictionary[bucket] && word.compare(start + dictionary[bucket]))
+    while (dictionary[bucket] && (dictionary[bucket] == UINT32_MAX || word.compare(start + dictionary[bucket])))
       {
       bucket = (bucket + 1) % DICTIONARY_SIZE;
       }
 
-   if (dictionary[bucket])
+   if (dictionary[bucket] && dictionary[bucket] != UINT32_MAX)
       {
       return fb::makeUnique<WordImplISR>(start + dictionary[bucket],
                                            OpenDocumentISR(), MAX_TOKEN_BITS);
@@ -120,7 +122,7 @@ bool IndexReader::deleteWord( fb::String &word )
       }
    else
       {
-      dictionary[bucket] = 0;
+      dictionary[bucket] = UINT32_MAX;
       return true;
       }
    }
@@ -133,13 +135,13 @@ int IndexReader::getBucket( fb::String &word )
    uint64_t beg = bucket;
    bool pastStart = false;
    
-   while( dictionary[bucket] && strcmp(start + dictionary[bucket], word.data()) && ( bucket != beg || !pastStart ) )
+   while( dictionary[bucket] && (dictionary[bucket] == UINT32_MAX || strcmp(start + dictionary[bucket], word.data())) && ( bucket != beg || !pastStart ) )
       {
       pastStart = true;
       bucket = (bucket + 1) % DICTIONARY_SIZE;
       }
 
-   if(dictionary[bucket])
+   if(dictionary[bucket] && dictionary[bucket] != UINT32_MAX)
       {
       return bucket;
       }
@@ -156,16 +158,14 @@ unsigned int IndexReader::GetSizeOfTable( )
 
 fb::Pair<int, fb::String> IndexReader::GetNextWord( int beg )
    {
-   int bucket = beg;
-   bool pastStart = false;
+   unsigned int bucket = beg;
 
-   while( !dictionary[bucket] && ( bucket != beg || !pastStart ) )
+   while( ( !dictionary[bucket] || dictionary[bucket] == UINT32_MAX ) &&  bucket < DICTIONARY_SIZE )
       {
-      pastStart = true;
-      bucket = (bucket + 1) % DICTIONARY_SIZE;
+      ++bucket;
       }
 
-   if(!dictionary[bucket])
+   if(bucket >= DICTIONARY_SIZE || !dictionary[bucket] || dictionary[bucket] == UINT32_MAX)
       {
       return fb::make_pair(-1, fb::String(""));
       }

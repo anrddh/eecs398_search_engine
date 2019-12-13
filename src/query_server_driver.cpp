@@ -128,7 +128,6 @@ void handle_connections( FileDesc&& sock ) {
 }
 
 void handle_query( FileDesc&& sock ) {
-    static int n = 0;
     String query = recv_str( sock );
     Vector<Thread> threads;
     TopNQueue<PageResult> topPages( MAX_NUM_PAGES );

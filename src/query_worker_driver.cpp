@@ -51,7 +51,7 @@ struct IndexInfoArg {
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    IndexInfoArg &arg = *(IndexInfoArg *) info; //get the args
+    IndexInfoArg arg = *(IndexInfoArg *) info; //get the args
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies

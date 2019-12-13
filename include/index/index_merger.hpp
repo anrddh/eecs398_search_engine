@@ -179,7 +179,6 @@ private:
       
       int num_skip_table_bits = std::min( 10, std::max(1, getHighestBit( num_occurences ) - 6) );
       PostingListBuilder builder(word, postingListLocation, num_docs, num_occurences, MAX_TOKEN_BITS, num_skip_table_bits);
-      uint64_t last = 0;
       for(fb::SizeT j = 0; j < IndexReaders.size( ); ++j)
          {
          fb::UniquePtr<WordISR> wordIsr= IndexReaders[j].OpenPlainWordISR( word );
@@ -187,8 +186,7 @@ private:
          while(info)
             {
             uint64_t position = info->GetStartLocation( ) + IndexOffsetStarts[j];
-            builder.addPost( AbsoluteWordInfo{ position - last, 0 } );
-            last = position;
+            builder.addPost( AbsoluteWordInfo{ position, 0 } );
             info = wordIsr->Next( );
             }
          IndexReaders[j].deleteWord( word );

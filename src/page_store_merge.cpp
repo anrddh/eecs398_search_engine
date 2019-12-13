@@ -60,7 +60,8 @@ int main( int argc, char * argv[] ){
     while( dir = readdir(dirp), dir != NULL ){
 
         string filename = dirname + "/" + string(dir->d_name);
-        if ( filename.find(PageStoreFile.data()) == string::npos || filename.find(PageStoreCounterFile.data()) != string::npos ) continue;
+        if ( filename.find(PageStoreFile.data()) == string::npos || filename.find(PageStoreCounterFile.data()) != string::npos
+                    || filename.find(PageStoreMergedFile) != string::npos ) continue;
         FILE *fptr = fopen(filename.c_str(), "rb");
         if (fptr == NULL){
             std::cout << "error opening " << filename << " on the second go round" << std::endl;

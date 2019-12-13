@@ -106,10 +106,10 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     char dummy[80]; //TODO: THIS IS SCARY!! do we have a max word size??
     fseek(fptr, PageOffset, SEEK_SET); //jump to that offset to begin reading the page
     for (fb::SizeT i = 0; i < stat.Offsets.start_word_index; ++i){
-        fscanf(fptr, "%s", dummy); //scan past all the words before begin offset
+        fscanf(fptr, "%80s", dummy); //scan past all the words before begin offset
     }
     for (fb::SizeT j = stat.Offsets.start_word_index; j < stat.Offsets.end_word_index; ++j){
-        fscanf(fptr, "%s", dummy); //add all the words between begin offset and end offset
+        fscanf(fptr, "%80s", dummy); //add all the words between begin offset and end offset
         snippet += dummy;
         snippet += " "; //dont forget to put a space between the words!
     }
@@ -138,10 +138,10 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     char dummy2[80]; //TODO: THIS IS SCARY!! do we have a max word size??
     fseek(fptr, PageOffset, SEEK_SET); //jump to that offset to begin reading the page
     for (fb::SizeT i = 0; i < title_begin; ++i){
-        fscanf(fptr, "%s", dummy2); //scan past all the words before begin offset
+        fscanf(fptr, "%80s", dummy2); //scan past all the words before begin offset
     }
     for (fb::SizeT j = title_begin; j < title_end; ++j){
-        fscanf(fptr, "%s", dummy2); //add all the words between begin offset and end offset
+        fscanf(fptr, "%80s", dummy2); //add all the words between begin offset and end offset
         title += dummy2;
         title += " "; //dont forget to put a space between the words!
     }

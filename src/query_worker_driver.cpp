@@ -41,24 +41,25 @@ using namespace fb;
 Vector<Thread> threads;
 Vector<fb::UniquePtr<IndexReader>> Readers;
 TopPages Results(NUM_QUERY_RESULTS);
+fb::String dirname;
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
-    fb::UniquePtr<Expression>& e;
-    fb::UniquePtr<IndexReader>& reader;
+    Expression* e;
+    IndexReader* reader;
 };
 
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    IndexInfoArg &arg = *(IndexInfoArg *) info; //get the args
+    IndexInfoArg arg = *(IndexInfoArg *) info; //get the args
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
     for( rank_stats& doc : docsToRank ){
         snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), MAX_SNIP_WINDOW); //setting max_snip_window to 150
-        SnippetStats stats = { fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
+        SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
         fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
         Results.add(std::move(result));
@@ -82,7 +83,7 @@ fb::FileDesc open_socket_to_master() {
             send_char(sock, 'W');
             return sock;
         } catch (SocketException &se) {
-            std::cerr << "failed establish connection with master. " 
+            std::cerr << "failed establish connection with master. "
                 << se.what() << std::endl;
             std::cerr << "retrying" << std::endl;
         }
@@ -99,13 +100,13 @@ int main( int argc, char **argv ) {
         }
     else if(argc != 6)
         {
-        fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES] [SERVER_IP] [SERVER_IP]");
+        fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES] [SERVER_IP] [SERVER_PORT]");
         std::cout << ErrorMessage << std::endl;
         exit(1);
         }
 
 
-    fb::String dirname(argv[1]);
+    dirname = fb::String(argv[1]);
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
     fb::String server_name, server_port;
@@ -137,7 +138,7 @@ int main( int argc, char **argv ) {
         sock = open_socket_to_master();
     }
 
-    while(true){
+    while(true) {
         fb::String query;
         if(local_mode)
             {
@@ -159,10 +160,14 @@ int main( int argc, char **argv ) {
         QueryParser QuePasa(query);
         auto e = QuePasa.Parse();
         //now we spawn a thread for each index, and give it e
-        for (auto& reader : Readers){
-            pthread_t pt;
-            IndexInfoArg info = { e, reader };
-            pthread_create(&pt, NULL, RankPages, (void *)&info);
+        Vector<Thread> threads;
+        for ( auto& reader : Readers ) {
+            IndexInfoArg* info = new IndexInfoArg( {e.get(), reader.get()} );
+            threads.emplaceBack(RankPages, info);
+        }
+
+        for ( auto& thread : threads ) {
+            thread.join();
         }
 
         if(local_mode)

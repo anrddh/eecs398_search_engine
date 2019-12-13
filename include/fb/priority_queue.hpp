@@ -84,6 +84,11 @@ public:
       push_heap();
       }
 
+   void clear( )
+      {
+      data.clear( );
+      }
+
    void pop()
       {
       if ( !empty() )

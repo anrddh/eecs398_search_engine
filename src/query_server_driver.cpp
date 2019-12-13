@@ -128,7 +128,6 @@ void handle_connections( FileDesc&& sock ) {
 }
 
 void handle_query( FileDesc&& sock ) {
-    static int n = 0;
     String query = recv_str( sock );
     Vector<Thread> threads;
     TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
@@ -136,7 +135,6 @@ void handle_query( FileDesc&& sock ) {
 
     // TODO handle exceptions
 
-    /* // TODO uncomment this
     for ( auto it = socketsToWorkers.begin(); it != socketsToWorkers.end(); ++it ) {
         threads.emplaceBack( ask_workers, new WorkerArg{ &*it, query, &topPages } );
     }
@@ -144,9 +142,9 @@ void handle_query( FileDesc&& sock ) {
     for ( Thread& t : threads ) {
         t.join();
     }
-    */
 
     // testing code. TODO delete below
+    /*
 
     String urlStr = "https://test_url";
     String titleStr = "Some good title ";
@@ -162,6 +160,7 @@ void handle_query( FileDesc&& sock ) {
     }
 
     send_int( sock, topPages.size() );
+    */
 
     while ( !topPages.empty() ) {
         send_page_result( sock, topPages.top() );

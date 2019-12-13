@@ -11,7 +11,7 @@ goal_size = 30000
 def get_size(filename):
     with open(filename, 'rb') as f:
         f.seek(8)
-        sizebits = f.read(2)
+        sizebits = f.read(8)
         size = int.from_bytes(sizebits, 'little')
         return size
 

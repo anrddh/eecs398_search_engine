@@ -42,7 +42,7 @@ int main( int argc, char ** argv ) {
         int PageStoreFile = open(PageStoreFileName.data(), O_RDWR);
 
         if(PageStoreFile < 0)
-            cout << "ERROR: PageStore" << i << " not found" << endl;
+            cout << "ERROR: " << PageStoreFileName << " could not be opened" << endl;
         else {
             struct stat details;
             fstat(PageStoreFile, &details);

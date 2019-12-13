@@ -174,3 +174,9 @@ fb::Pair<int, fb::String> IndexReader::GetNextWord( int beg )
       return fb::make_pair( int((bucket) % DICTIONARY_SIZE), fb::String(start + dictionary[bucket]));
       }
    }
+
+fb::SizeT IndexReader::GetNumTokens( )
+   {
+   unsigned int * stats = (unsigned int *) start;
+   return stats[1];
+   }

@@ -44,6 +44,7 @@ public:
    bool deleteWord( fb::String &word );
    unsigned int GetSizeOfTable( );
    fb::Pair<int, fb::String> GetNextWord( int index );
+   fb::SizeT GetNumTokens( );
 
 private:
    int getBucket( fb::String &word );

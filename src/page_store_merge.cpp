@@ -29,6 +29,10 @@ int main( int argc, char * argv[] ){
 
     fb::SizeT total = 0;
     string dirname = string(argv[1]);
+    if ( dirname.find(PageStoreFile.data()) != string::npos ){
+        std::cout << "Please do not include \"" << PageStoreFile.data() << "\" in the directory name" << std::endl;
+        return 1;
+    }
     std::cout << "dirname: " << dirname << std::endl;
     DIR *dirp = opendir(dirname.c_str());
 
@@ -67,12 +71,14 @@ int main( int argc, char * argv[] ){
             std::cout << "error opening " << filename << " on the second go round" << std::endl;
             return 1;
         }
+        std::cout << "attempting to open PageBin with name: " << fb::StringView(filename.data(), filename.size()) << std::endl;
         PageBin CurBin(fb::StringView(filename.data(), filename.size()));
         std::cout << "CurBin: " << fb::StringView(filename.data(), filename.size()) << std::endl;
 
         fseek(fptr, sizeof(atomic<fb::SizeT>), SEEK_SET);
         fb::SizeT NumCur;
         fread(&NumCur, sizeof(atomic<fb::SizeT>), 1, fptr);
+        fclose(fptr);
 
         std::cout << "NumCur: " << NumCur << std::endl;
         char *CurHeadersBegin = CurBin.data() + sizeof(NumCur);
@@ -92,7 +98,10 @@ int main( int argc, char * argv[] ){
             for (fb::SizeT j = header.VecOffset; j < nHeader.beginOffset; ++j){
                 p.word_headers.pushBack(*(WordDescriptors *)(CurBin.data() + j - sizeof(std::atomic<fb::SizeT>)));
             }
+            //std::cout << "here! " << std::endl;
             MergedBin.addPage(std::move(p));
+            //std::cout << "here 2! " << std::endl;
+            //std::cout << i << " " << NumCur - 1 << std::endl;
         }
     }
 

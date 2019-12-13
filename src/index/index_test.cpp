@@ -46,10 +46,11 @@ int main(int argc, char* argv[]) {
 	}
 	std::cout << "EOD size: " << EOD_posting_list.size() << std::endl;
 	std::cout << "total word count: " << count << std::endl;
-	std::vector<std::string> original(count + EOD_posting_list.size() + 1, "");
+	fb::Vector<std::string> original(count + EOD_posting_list.size() + 1, "");
 	reconstruct(all, words, original);
-	//print_stats(all, words);
-	//print_recon(original);
+	print_recon(original);
 	std::cout << "unique word count: " << words.size() << std::endl;
 	std::cout << "DONE" << std::endl;
+	fb::Hash<fb::String> hash;
+	std::cout << "strng2 hashes to " << hash(fb::String("string2")) % 1024 << std::endl;
 }

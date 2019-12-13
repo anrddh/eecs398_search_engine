@@ -171,6 +171,6 @@ fb::Pair<int, fb::String> IndexReader::GetNextWord( int beg )
       }
    else
       {
-      return fb::make_pair( int((bucket + 1) % DICTIONARY_SIZE), fb::String(start + dictionary[bucket]));
+      return fb::make_pair( int((bucket) % DICTIONARY_SIZE), fb::String(start + dictionary[bucket]));
       }
    }

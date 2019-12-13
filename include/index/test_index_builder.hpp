@@ -79,7 +79,6 @@ void trans_file_to_offsets(const char* start, std::vector<std::vector<uint32_t>>
 			current += (2 * sizeof(unsigned int));
 			int NUM_SKIP_TABLE_BITS = *((int *) current);
 			current += getSizeOfSkipTable(NUM_SKIP_TABLE_BITS);
-			//std::cout << words.back() << ":" << NUM_SKIP_TABLE_BITS << std::endl;
 			std::vector<uint32_t> posting_list;
 			read_posting_list(current, posting_list);
 			all.push_back(posting_list);
@@ -88,7 +87,7 @@ void trans_file_to_offsets(const char* start, std::vector<std::vector<uint32_t>>
    }
 
 //given words and all the offsets, reconstruct original vector
-void reconstruct(std::vector<std::vector<uint32_t>> &all, std::vector<std::string> &words, std::vector<std::string> &original){
+void reconstruct(std::vector<std::vector<uint32_t>> &all, std::vector<std::string> &words, fb::Vector<std::string> &original){
 	//index i keeps track of word
 	for(size_t i = 0; i < words.size(); ++i){
 		std::string current_word = words[i];
@@ -100,28 +99,9 @@ void reconstruct(std::vector<std::vector<uint32_t>> &all, std::vector<std::strin
 	}
 }
 
-void print_stats(std::vector<std::vector<uint32_t>> &all, std::vector<std::string> &words){
-	std::ofstream output;
-	output.open("posting_list_lengths.txt");
-	std::ofstream output2;
-	output2.open("posting_list_offsets.txt");
-	size_t largest_offset = 0;
-	for(size_t i = 0; i < all.size(); ++i){
-		output << words[i] << ":" <<all[i].size() << "\n";
-		size_t list_largest = *std::max_element(all[i].begin(), all[i].end());
-		if(list_largest > largest_offset){
-			largest_offset = list_largest;
-		}
-		for(size_t j = 0; j < all[i].size(); ++j){
-			output2 << all[i][j] << "\n";
-		}
-	}
-	std::cout << "largest offset: " << largest_offset << std::endl;
-}
-
 //basic print function
-void print_recon(std::vector<std::string> &original){
-	for(std::string word : original){
+void print_recon(fb::Vector<std::string> &original){
+	for(std::string &word : original){
 		std::cout << word << "\n";
 	}
 	std::cout << std::endl;

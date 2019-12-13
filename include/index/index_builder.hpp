@@ -107,7 +107,7 @@ private:
         }
 
         // increment for EOD
-        DocIdInfo doc_info = {tokenCount++, docId};
+        DocIdInfo doc_info = {++tokenCount, docId};
         documents.pushBack(doc_info);
     }
 

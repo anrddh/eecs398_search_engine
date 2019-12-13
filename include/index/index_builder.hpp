@@ -34,7 +34,7 @@ class IndexBuilder {
 public:
     // root must contain a trailing '/'
     IndexBuilder(fb::String path)
-        : root(path), tokenCount(1), porterStemmer(create_stemmer()) {}
+        : root(path), tokenCount(0), porterStemmer(create_stemmer()) {}
 
     ~IndexBuilder() { free_stemmer(porterStemmer); }
 
@@ -94,8 +94,8 @@ private:
         while (*current_word) {
             current_word = read_word(current_word, word);
             word_info = *current_des;
-            AbsoluteWordInfo absWord = {tokenCount, word_info};
             ++tokenCount;
+            AbsoluteWordInfo absWord = {tokenCount, word_info};
 
             // wordPositions[word].pushBack(absWord);
 

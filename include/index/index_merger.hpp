@@ -82,6 +82,7 @@ public:
          }
 
       munmap(start, 4000000000);
+      ftruncate(MergedIndexFile, nextAvailableLocation);
       }
 
 private:

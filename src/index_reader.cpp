@@ -141,7 +141,7 @@ int IndexReader::getBucket( fb::String &word )
       bucket = (bucket + 1) % DICTIONARY_SIZE;
       }
 
-   if(dictionary[bucket])
+   if(dictionary[bucket] && dictionary[bucket] != UINT32_MAX)
       {
       return bucket;
       }

@@ -41,6 +41,7 @@ using namespace fb;
 Vector<Thread> threads;
 Vector<fb::UniquePtr<IndexReader>> Readers;
 TopPages Results(NUM_QUERY_RESULTS);
+fb::String dirname;
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
@@ -58,7 +59,7 @@ void* RankPages( void *info ) {
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
     for( rank_stats& doc : docsToRank ){
         snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), MAX_SNIP_WINDOW); //setting max_snip_window to 150
-        SnippetStats stats = { fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
+        SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
         fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
         Results.add(std::move(result));
@@ -82,7 +83,7 @@ fb::FileDesc open_socket_to_master() {
             send_char(sock, 'W');
             return sock;
         } catch (SocketException &se) {
-            std::cerr << "failed establish connection with master. " 
+            std::cerr << "failed establish connection with master. "
                 << se.what() << std::endl;
             std::cerr << "retrying" << std::endl;
         }
@@ -99,12 +100,12 @@ int main( int argc, char **argv ) {
     }
 
 
-    fb::String dirname(argv[1]);
+    dirname = fb::String(argv[1]);
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
     fb::String server_name(argv[4]);
     fb::String server_port(argv[5]);
-    
+
     for (int i = 0; i < num_index_files; ++i) {
         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
         int f = open(filename.data(), O_RDWR);

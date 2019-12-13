@@ -45,14 +45,14 @@ fb::String dirname;
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
-    fb::UniquePtr<Expression>& e;
-    fb::UniquePtr<IndexReader>& reader;
+    Expression* e;
+    IndexReader* reader;
 };
 
 // gets an index info
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
-    IndexInfoArg &arg = *(IndexInfoArg *) info; //get the args
+    IndexInfoArg arg = *(IndexInfoArg *) info; //get the args
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
@@ -94,7 +94,7 @@ fb::FileDesc open_socket_to_master() {
 int main( int argc, char **argv ) {
 
     if(argc != 6){
-        fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES] [SERVER_IP] [SERVER_IP]");
+        fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES] [SERVER_IP] [SERVER_PORT]");
         std::cout << ErrorMessage << std::endl;
         exit(1);
     }
@@ -126,7 +126,7 @@ int main( int argc, char **argv ) {
 
     fb::FileDesc sock = open_socket_to_master();
 
-    while(true){
+    while(true) {
         fb::String query;
         try {
             // Finished establishing socket
@@ -142,10 +142,14 @@ int main( int argc, char **argv ) {
         QueryParser QuePasa(query);
         auto e = QuePasa.Parse();
         //now we spawn a thread for each index, and give it e
-        for (auto& reader : Readers){
-            pthread_t pt;
-            IndexInfoArg info = { e, reader };
-            pthread_create(&pt, NULL, RankPages, (void *)&info);
+        Vector<Thread> threads;
+        for ( auto& reader : Readers ) {
+            IndexInfoArg* info = new IndexInfoArg( {e.get(), reader.get()} );
+            threads.emplaceBack(RankPages, info);
+        }
+
+        for ( auto& thread : threads ) {
+            thread.join();
         }
 
         try {

@@ -247,6 +247,9 @@ FileDesc parseArguments( int argc, char **argv ) {
            }
         }
 
+       auto rootDir = getRootDir();
+       auto urlstoreloc = rootDir + UrlStoreFile;
+       UrlStore::init(urlstoreloc);
 
         AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
         return info.getBoundSocket();

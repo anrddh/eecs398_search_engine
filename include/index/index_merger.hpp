@@ -18,6 +18,7 @@ public:
    IndexMerger(fb::Vector<fb::String> inputFiles, fb::String outputFile) : words_written(0)
       {
       // open files
+      int counter = 0;
       for(fb::String name : inputFiles)
          {
          int f = open((name).data(), O_RDWR);
@@ -30,9 +31,10 @@ public:
             {
             struct stat details;
             fstat(f, &details);
-            const char * start = (const char *) mmap(nullptr, details.st_size, PROT_READ, MAP_PRIVATE, f, 0);
+            const char * start = (const char *) mmap(nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, f, 0);
             close(f);
-            IndexReaders.emplaceBack(start, 0);
+            IndexReaders.emplaceBack(start, counter);
+            ++counter;
             }
          }
 
@@ -42,7 +44,7 @@ public:
 
       for(IndexReader &ir : IndexReaders)
          {
-         num_buckets += ir.GetSizeOfTable( );
+         table_size += ir.GetSizeOfTable( );
          fb::UniquePtr<DocumentISR> doc = ir.OpenDocumentISR( );
          fb::UniquePtr<IndexInfo> oldInfo = doc->GetCurrentInfo( );
          fb::UniquePtr<IndexInfo> info = doc->Next( );
@@ -58,16 +60,16 @@ public:
       
       // open MergedIndexFile
       int MergedIndexFile = open(outputFile.data( ), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
-      ftruncate(MergedIndexFile, 400000000000);
+      ftruncate(MergedIndexFile, 4000000000);
 
-      start = (char *) mmap(nullptr, 400000000000, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, MergedIndexFile, 0);
+      start = (char *) mmap(nullptr, 4000000000, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, MergedIndexFile, 0);
    
 
       ((unsigned int*)start)[0] = 1;
       ((unsigned int*)start)[1] = IndexOffsetStarts.back( );
-      ((unsigned int*)start)[2] = num_buckets;
+      ((unsigned int*)start)[2] = table_size;
 
-      unsigned int * dictionary = ((unsigned int*)start) + 3;
+      dictionary = ((unsigned int*)start) + 3;
       memset(dictionary, 0, table_size * 2 * sizeof(unsigned int));
 
       nextAvailableLocation = (table_size + 3) * sizeof(unsigned int);
@@ -76,9 +78,11 @@ public:
       while(bucket != -1)
          {
          bucket = processNextWord( bucket );
+         assert(nextAvailableLocation >= (table_size + 3) * sizeof(unsigned int));
          }
 
-      munmap(start, 400000000000);
+      munmap(start, 4000000000);
+      ftruncate(MergedIndexFile, nextAvailableLocation);
       }
 
 private:
@@ -115,8 +119,54 @@ private:
       return builder.getLength( ); 
       }
 
+   bool writePostingListLocation( fb::String &word )
+      {
+      fb::Hash<fb::String> hash;
+      fb::SizeT bucket = hash(word) % table_size;
+      fb::SizeT originalBucket = bucket;
+      if(dictionary[bucket] != 0)
+         {
+         bucket = (bucket + 1) % table_size;
+         while(dictionary[bucket] != 0)
+            {
+            bucket = (bucket + 1) % table_size;
+            if(bucket == originalBucket)
+               {
+               perror("error empty bucket never found");
+               }
+            }
+         }
+
+      dictionary[bucket] = nextAvailableLocation;
+
+      return true;
+      }
+   
+   bool wordExists( fb::String &word )
+      {
+      fb::Hash<fb::String> hash;
+      fb::SizeT bucket = hash(word) % table_size;
+      fb::SizeT originalBucket = bucket;
+      if(dictionary[bucket] == 0 || strcmp(start + dictionary[bucket], word.data() ) )
+         {
+         bucket = (bucket + 1) % table_size;
+         while( originalBucket != bucket && dictionary[bucket] != 0 && strcmp( start + dictionary[bucket], word.data( ) ) )
+            {
+            bucket = (bucket + 1) % table_size;
+            }
+         }
+
+         return dictionary[bucket] && !strcmp( start + dictionary[bucket], word.data( ) );
+      }
+
    unsigned int writeWordList( fb::String &word )
       {
+      if( wordExists( word ) ) 
+         {
+         std::cout << "duplicate word" << std::endl;
+         exit(1);
+         }
+      writePostingListLocation(word);
       char * postingListLocation = start + nextAvailableLocation;
       int num_occurences = 0;
       int num_docs = 0;
@@ -126,7 +176,7 @@ private:
          num_occurences += wordISR->GetNumberOfOccurrences( );
          num_docs += wordISR->GetDocumentCount( );
          }
-
+      
       int num_skip_table_bits = std::min( 10, std::max(1, getHighestBit( num_occurences ) - 6) );
       PostingListBuilder builder(word, postingListLocation, num_docs, num_occurences, MAX_TOKEN_BITS, num_skip_table_bits);
       uint64_t last = 0;
@@ -142,6 +192,7 @@ private:
             info = wordIsr->Next( );
             }
          IndexReaders[j].deleteWord( word );
+         assert( !IndexReaders[j].WordExists( word ) );
          }
 
       builder.endList();
@@ -171,9 +222,10 @@ private:
 
    unsigned int table_size;
    int MAX_TOKEN_BITS;
-   unsigned int nextAvailableLocation;
+   uint64_t nextAvailableLocation;
    fb::Vector<IndexReader> IndexReaders;
    fb::Vector<uint64_t> IndexOffsetStarts;
+   unsigned int * dictionary;
    int num_buckets;
    char * start;
    int words_written;

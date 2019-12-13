@@ -1,4 +1,4 @@
-//  Created by Jaeyoon Kim on 11/10/19.
+//  Created by Jaeyoon Kim on 12/10/19.
 #pragma once
 #include <fb/priority_queue.hpp>
 #include <fb/mutex.hpp>
@@ -23,35 +23,41 @@ struct QueryResult {
 template <typename T>
 class TopNQueue {
 public:
-   TopNQueue( fb::SizeT n_ ) : n( n_ ) {}
-   void push( T&& v ) {
-      if ( v.rank < min_allowed_rank )
-         return;
+    TopNQueue( fb::SizeT n_ ) : n( n_ ) {}
+    void push( T&& v ) {
+        if ( v.rank < min_allowed_rank )
+            return;
 
-      fb::AutoLock l(mtx);
-      topQueue.push( std::move( v ) );
-      if ( topQueue.size() <= n )
-         return;
+        fb::AutoLock l(mtx);
+        topQueue.push( std::move( v ) );
+        if ( topQueue.size() <= n )
+            return;
 
-      topQueue.pop();
-      min_allowed_rank = topQueue.top().rank;
-   }
+        topQueue.pop();
+        min_allowed_rank = topQueue.top().rank;
+    }
 
-   inline bool empty() const {
-      return topQueue.empty();
-   }
+    inline bool empty() const {
+        return topQueue.empty();
+    }
 
-   inline fb::SizeT size() const {
-      return topQueue.size();
-   }
+    inline fb::SizeT size() const {
+        return topQueue.size();
+    }
 
-   inline void pop() {
-      topQueue.pop();
-   }
+    inline void pop() {
+        topQueue.pop();
+    }
 
-   inline const T& top() {
-      return topQueue.top();
-   }
+    inline const T& top() {
+        return topQueue.top();
+    }
+
+    inline void reset() {
+        fb::AutoLock l(mtx);
+        min_allowed_rank = 0;
+        topQueue.clear();
+    }
 
 private:
    fb::PriorityQueue<T> topQueue;
@@ -73,24 +79,25 @@ private:
 // The rank will be increasing
 //
 class TopPages {
-   TopPages( int n ) : top( n ) {};
-   void addRankStats( QueryResult&& result ) {
-      top.push( std::move( result ) );
-   }
+public:
+    TopPages( int n ) : top( n ) {};
+    void add( QueryResult&& result ) {
+        top.push( std::move( result ) );
+    }
 
-   ~TopPages() {
-      int sock; //TODO
-      try {
-         send_int( sock, top.size() );
-         while ( !top.empty() ) {
-            send_query_result( sock, top.top() );
-            top.pop();
-         }
-
-      } catch (SocketException& se) {
-         // If we can't send, just don't do anything
-      }
-   }
+    void send_and_reset( int sock ) {
+        try {
+            send_int( sock, top.size() );
+            while ( !top.empty() ) {
+                send_query_result( sock, top.top() );
+                top.pop();
+            }
+        } catch(...) {
+            top.reset();
+            throw;
+        }
+        top.reset();
+    }
 
    // TODO I don't think this every needs to be called?
    /*

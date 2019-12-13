@@ -34,7 +34,13 @@ int main(int argc, char ** argv )
    struct stat details;
    fstat(file, &details);
 
-   const char * startOfIndex = ( const char * ) mmap( nullptr, details.st_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, file, 0 );
+   const char * startOfIndex = ( const char * ) mmap( nullptr, details.st_size, PROT_READ, MAP_PRIVATE, file, 0 );
+
+   /*if(!startOfIndex)
+      {
+      std::cout << explain_mmap(nullptr, details.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, file, 0) << std::endl;
+      }
+      */
 
    IndexReader reader(startOfIndex, 0);
 

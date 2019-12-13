@@ -75,7 +75,7 @@ void IndexChunkBuilder<Hash>::addWord
    fb::SizeT originalBucket = bucket;
    if(dictionary[bucket] != 0)
       {
-      ++bucket;
+      bucket = (bucket + 1) %tableSize;
       while(dictionary[bucket] != 0)
          {
          bucket = (bucket + 1) % tableSize;

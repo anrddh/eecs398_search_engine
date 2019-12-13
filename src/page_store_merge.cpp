@@ -60,11 +60,20 @@ int main( int argc, char * argv[] ){
     while( dir = readdir(dirp), dir != NULL ){
 
         string filename = dirname + "/" + string(dir->d_name);
-        if ( filename.find(PageStoreFile.data()) == string::npos || filename.find(PageStoreCounterFile.data()) != string::npos ) continue;
-
+        if ( filename.find(PageStoreFile.data()) == string::npos || filename.find(PageStoreCounterFile.data()) != string::npos
+                    || filename.find(PageStoreMergedFile.data()) != string::npos ) continue;
+        FILE *fptr = fopen(filename.c_str(), "rb");
+        if (fptr == NULL){
+            std::cout << "error opening " << filename << " on the second go round" << std::endl;
+            return 1;
+        }
         PageBin CurBin(fb::StringView(filename.data(), filename.size()));
         std::cout << "CurBin: " << fb::StringView(filename.data(), filename.size()) << std::endl;
-        fb::SizeT NumCur = CurBin.num_stored_pages();
+
+        fseek(fptr, sizeof(atomic<fb::SizeT>), SEEK_SET);
+        fb::SizeT NumCur;
+        fread(&NumCur, sizeof(atomic<fb::SizeT>), 1, fptr);
+
         std::cout << "NumCur: " << NumCur << std::endl;
         char *CurHeadersBegin = CurBin.data() + sizeof(NumCur);
 

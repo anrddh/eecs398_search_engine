@@ -42,19 +42,28 @@ int main( int argc, char ** argv ) {
         int PageStoreFile = open(PageStoreFileName.data(), O_RDWR);
 
         if(PageStoreFile < 0)
-            cout << "ERROR: PageStore" << i << " not found" << endl;
+            cout << "ERROR: " << PageStoreFileName << " could not be opened" << endl;
         else {
             struct stat details;
-            fstat(PageStoreFile, &details);
+            if (fstat(PageStoreFile, &details)) {
+                std::cerr << "fstat failed.\n";
+                perror("");
+            }
+
             uint64_t * start = (uint64_t *) mmap(nullptr, details.st_size,
                                                  PROT_READ,
                                                  MAP_PRIVATE,
                                                  PageStoreFile, 0);
+            if (start == (uint64_t*) -1) {
+                std::cerr << "mmaping failed.\n";
+                perror("");
+            }
             builder.build_chunk(start, i);
+            munmap(start, details.st_size);
         }
 
         log(logfile,
-            "Finished parsing ", i, ". ", num_page_store_files - i,
+            "Finished parsing ", i, ". ", num_page_store_files - i - 1,
             " left to go.\n");
     }
 }

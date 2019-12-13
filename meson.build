@@ -108,3 +108,8 @@ executable('search_index',
             search_index_files,
             include_directories: inc
 )
+
+executable('index_stats',
+            index_stats_driver,
+            index_stats_source_files,
+            include_directories: inc)

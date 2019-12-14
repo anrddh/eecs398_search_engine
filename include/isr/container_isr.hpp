@@ -45,7 +45,7 @@ private:
    };
 
 ContainerISR::ContainerISR(fb::UniquePtr<ISR> IncludeISR, fb::UniquePtr<ISR> ExcludeISR, fb::UniquePtr<DocumentISR> documentISR)
-: IncludeIsr( std::move( IncludeISR ) ), ExcludeIsr( std::move( ExcludeISR ) ), DocIsr( std::move( documentISR ) )
+: IncludeIsr( std::move( IncludeISR ) ), ExcludeIsr( std::move( ExcludeISR ) ), DocIsr( std::move( documentISR ) ), isAtEnd(false)
    {
    Seek( 1 );
    }
@@ -109,6 +109,7 @@ fb::UniquePtr<IndexInfo> ContainerISR::GetCurrentInfo( )
    {
    if( isAtEnd )
       {
+      std::cout << "isAtEnd: " << isAtEnd << std::endl;
       return fb::UniquePtr<IndexInfo>( );
       }
    else

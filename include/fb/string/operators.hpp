@@ -55,12 +55,8 @@ namespace fb {
         while (is && (c = is.peek()) && isspace(c))
             is.get();
 
-        std::cout << "Skipped whitespace\n";
-
         while (is && (c = is.peek()) && !isspace(c))
             str += is.get();
-
-        std::cout << str;
 
         return is;
     }

@@ -26,7 +26,10 @@ public:
      docIsr( std::move( docIsrIn ) ),
      wordIsrs( std::move( wordIsrsIn ) ),
      page_store_num( page_store_number ),
-     doc_frequencies(wordIsrs.size( ), 0) {
+     doc_frequencies(wordIsrs.size( ), 0) { }
+   
+   void solve( )
+      {
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
          {
          doc_frequencies[i] = wordIsrs[i]->GetDocumentCount( );

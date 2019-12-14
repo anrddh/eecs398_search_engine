@@ -6,7 +6,7 @@ import subprocess
 
 filename_start = "pagestore"
 
-goal_size = 30000
+num_partitions = 16
 
 def get_size(filename):
     with open(filename, 'rb') as f:
@@ -17,11 +17,12 @@ def get_size(filename):
 
 src_directory = sys.argv[1]
 chandlers_program = sys.argv[2]
-# dest_directory = sys.argv[4]
 
 onlyfiles = [f for f in os.listdir(src_directory) if os.path.isfile(os.path.join(src_directory, f)) and f[:len(filename_start)] == filename_start]
-partitions = [ [] ]
-partition_sizes = [0]
+
+partitions = [ [] for i in range(num_partitions) ]
+partition_sizes = [0] * num_partitions
+
 for f in onlyfiles:
     probably_numbers = f[len(filename_start):]
 
@@ -32,11 +33,10 @@ for f in onlyfiles:
 
     actual_filename = os.path.join(src_directory, f)
 
-    partitions[-1].append(actual_filename)
-    partition_sizes[-1] += get_size(actual_filename)
-    if partition_sizes[-1] >= goal_size:
-        partitions.append([])
-        partition_sizes.append(0)
+    min_index = partition_sizes.index(min(partition_sizes))
+
+    partitions[min_index].append(actual_filename)
+    partition_sizes[min_index] += get_size(actual_filename)
 
 partition_dirs = []
 

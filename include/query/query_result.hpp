@@ -99,20 +99,18 @@ public:
         top.reset();
     }
 
-   // TODO I don't think this every needs to be called?
-   /*
+   // TODO I don't think this every needs to be called? Uncommenting this for local use of query server
    fb::Vector<QueryResult> GetTopResults( )
       {
       fb::Vector<QueryResult> results;
-      while( topPair.size( ) )
+      while( top.size( ) )
          {
-         results.pushBack( topPair.top( ) );
-         topPair.pop( );
+         results.pushBack( top.top( ) );
+         top.pop( );
          }
 
       return results;
       }
-      */
 
 private:
    // Destructor helper

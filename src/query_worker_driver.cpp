@@ -92,20 +92,25 @@ fb::FileDesc open_socket_to_master() {
 
 // We will create an thread for each index
 int main( int argc, char **argv ) {
+    bool local_mode = false;
 
-    if(argc != 6){
+    if(argc == 4)
+        {
+        local_mode = true;
+        }
+    else if(argc != 6)
+        {
         fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES] [SERVER_IP] [SERVER_PORT]");
         std::cout << ErrorMessage << std::endl;
         exit(1);
-    }
+        }
 
 
     dirname = fb::String(argv[1]);
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
-    fb::String server_name(argv[4]);
-    fb::String server_port(argv[5]);
-
+    fb::String server_name, server_port;
+    
     for (int i = 0; i < num_index_files; ++i) {
         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
         int f = open(filename.data(), O_RDWR);
@@ -122,23 +127,36 @@ int main( int argc, char **argv ) {
         Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 
-    masterLoc = AddrInfo(server_name.data(), server_port.data());
+    
+    fb::FileDesc sock;
+    if(!local_mode)
+        {
+        server_name = fb::String(argv[4]);
+        server_port = fb::String(argv[5]);
+        masterLoc = AddrInfo(server_name.data(), server_port.data());
 
-    fb::FileDesc sock = open_socket_to_master();
+        sock = open_socket_to_master();
+    }
 
     while(true) {
         fb::String query;
-        try {
-            // Finished establishing socket
-            // Send verfication message
-            send_int(sock, VERFICATION_CODE);
+        if(local_mode)
+            {
+            std::cin >> query;
+            }
+        else
+            {
+            try {
+                // Finished establishing socket
+                // Send verfication message
+                send_int(sock, VERFICATION_CODE);
 
-            query = recv_str( sock );
-        } catch( SocketException& se ) {
-            std::cerr << "Got exception " << se.what() << std::endl;
-            sock = open_socket_to_master();
+                query = recv_str( sock );
+            } catch( SocketException& se ) {
+                std::cerr << "Got exception " << se.what() << std::endl;
+                sock = open_socket_to_master();
+            }
         }
-
         QueryParser QuePasa(query);
         auto e = QuePasa.Parse();
         //now we spawn a thread for each index, and give it e
@@ -152,11 +170,23 @@ int main( int argc, char **argv ) {
             thread.join();
         }
 
-        try {
-            Results.send_and_reset( sock );
-        } catch( SocketException& se ) {
-            std::cerr << "Got exception " << se.what() << std::endl;
-            sock = open_socket_to_master();
-        }
+        if(local_mode)
+            {
+            fb::Vector<QueryResult> pages = Results.GetTopResults( );
+            std::cout << "results: " << std::endl;
+            for(QueryResult &res : pages)
+                {
+                std::cout << "Title: " << res.Title << std::endl << "UrlID: " << res.UrlId << std::endl << "Snippet: " << res.Snippet << std::endl << std::endl;
+                }
+            }
+        else
+            {
+            try {
+                Results.send_and_reset( sock );
+            } catch( SocketException& se ) {
+                std::cerr << "Got exception " << se.what() << std::endl;
+                sock = open_socket_to_master();
+            }
+            }
     }
 }

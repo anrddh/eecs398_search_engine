@@ -81,12 +81,10 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     FILE *fptr = fopen(stat.FileName.data(), "rb");
     if (fptr == NULL){
         std::cout << "error opening " << stat.FileName << " when generating snippets and title " << std::endl;
-        return { "", "" }; //if the file fails to open, just give empty strings rather than crash
+        return { " ", " " }; //if the file fails to open, just give empty strings rather than crash
     }
-    fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
-    fb::SizeT NumPageStoreDocs;
+    seek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
     fread(&NumPageStoreDocs, sizeof(fb::SizeT), 1, fptr); //read in the num of documents
-    fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_CUR); //skip the counter
     fseek(fptr, sizeof(PageHeader) * stat.DocIndex, SEEK_CUR); //skip ahead in the vector of PageHeaders
     fb::SizeT PageOffset;
     fread(&PageOffset, sizeof(fb::SizeT), 1, fptr); //read in the page offset
@@ -113,6 +111,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
         snippet += dummy;
         snippet += " "; //dont forget to put a space between the words!
     }
+    if (snippet.size() == 0) snippet += " ";
 
     //this is the title code
     bool title_began = false;
@@ -120,7 +119,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     fb::SizeT title_end = 0;
     uint8_t descriptor = 0;
     fseek(fptr, VectorOffset, SEEK_SET); //jump back to beginning of page
-    for(fb::SizeT i = 0; i < 50 && i + VectorOffset < NextPageOffset; ++i){
+    for(fb::SizeT i = 0; i < 50 && ((i + VectorOffset) < NextPageOffset); ++i){
         fread(&descriptor, 1, 1, fptr);
         if (descriptor & INDEX_WORD_TITLE){
             if (!title_began){
@@ -132,7 +131,8 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     }
 
     fb::String title;
-    if (!title_end){
+    if (!title_began){
+        title += " ";
         return fb::make_pair<fb::String, fb::String>(std::move(snippet), std::move(title));
     }
     char dummy2[80]; //TODO: THIS IS SCARY!! do we have a max word size??
@@ -145,6 +145,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
         title += dummy2;
         title += " "; //dont forget to put a space between the words!
     }
+    if (title.size() == 0) title += " ";
 
     fclose(fptr); //don't forget this!
     return fb::make_pair<fb::String, fb::String>(std::move(snippet), std::move(title)); //return the generated snippet

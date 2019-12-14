@@ -186,9 +186,12 @@ void* ask_workers( void* worker_query ) {
         for ( int i = 0; i < numPages; ++i ) {
             std::cout << "adding" << i << std::endl;
             PageResult pr;
-            pr.Url += UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) ); // TODO check this works
+            pr.Url += UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) );
+            std::cout << "got url " << pr.Url << " length " << pr.Url.size() << std::endl; // TODO delete this
             pr.Title = recv_str( *arg.sock );
+            std::cout << "got title " << pr.Title << " length " << pr.Title.size() << std::endl; // TODO delete this
             pr.Snippet = recv_str( *arg.sock );
+            std::cout << "got snippet " << pr.Snippet << " length " << pr.Snippet.size() << std::endl; // TODO delete this
             pr.rank = recv_double( *arg.sock );
             pr.rank += urlWeight * RankUrl( pr.Url );
             arg.topPages->push( std::move( pr ) );
@@ -196,6 +199,7 @@ void* ask_workers( void* worker_query ) {
 
     } catch ( SocketException& se ) {
         // Remove this socket from list of valid sockets!
+        std::cout << "error" << se.what() << std::endl;
         AutoLock l( socketsMtx );
         socketsToWorkers.erase( *arg.sock );
     }

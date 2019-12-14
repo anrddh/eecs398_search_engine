@@ -95,6 +95,9 @@ public:
             std::cout << "sent int in send and reset" << std::endl; // TODO delete
             while ( !top.empty() ) {
                 std::cout << "popping" << std::endl;
+                std::cout << top.top().UrlId << std::endl;
+                std::cout << top.top().Title<< std::endl;
+                std::cout << top.top().Snippet << std::endl;
                 send_query_result( sock, top.top() );
                 top.pop();
             }
@@ -108,6 +111,19 @@ public:
     fb::SizeT size() const {
         return top.size();
     }
+
+   // TODO I don't think this every needs to be called? Uncommenting this for local use of query server
+   fb::Vector<QueryResult> GetTopResults( )
+      {
+      fb::Vector<QueryResult> results;
+      while( top.size( ) )
+         {
+         results.pushBack( top.top( ) );
+         top.pop( );
+         }
+
+      return results;
+      }
 
 private:
    // Destructor helper

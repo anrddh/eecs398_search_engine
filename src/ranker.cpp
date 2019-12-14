@@ -86,7 +86,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
     fb::SizeT NumPageStoreDocs;
     fread(&NumPageStoreDocs, sizeof(fb::SizeT), 1, fptr); //read in the num of documents
-    fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_CUR); //skip the counter
+    //fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_CUR); //skip the counter
     fseek(fptr, sizeof(PageHeader) * stat.DocIndex, SEEK_CUR); //skip ahead in the vector of PageHeaders
     fb::SizeT PageOffset;
     fread(&PageOffset, sizeof(fb::SizeT), 1, fptr); //read in the page offset

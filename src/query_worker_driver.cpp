@@ -56,6 +56,8 @@ void* RankPages( void *info ) {
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
+    std::cout << "docsFreqs " << docFreqs.size() << std::endl;
+    std::cout << "docsToRank " << docsToRank.size() << std::endl;
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
     std::cout << "Will loop in rank pages" << std::endl;
     for( rank_stats& doc : docsToRank ){
@@ -95,20 +97,25 @@ fb::FileDesc open_socket_to_master() {
 
 // We will create an thread for each index
 int main( int argc, char **argv ) {
+    bool local_mode = false;
 
-    if(argc != 6){
+    if(argc == 4)
+        {
+        local_mode = true;
+        }
+    else if(argc != 6)
+        {
         fb::String ErrorMessage = fb::String("Usage: ") + fb::String(argv[0]) + fb::String(" [PATH TO INDEX FOLDER] [INDEX FILE PREFIX] [NUM_INDEX_FILES] [SERVER_IP] [SERVER_PORT]");
         std::cout << ErrorMessage << std::endl;
         exit(1);
-    }
+        }
 
 
     dirname = fb::String(argv[1]);
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
-    fb::String server_name(argv[4]);
-    fb::String server_port(argv[5]);
-
+    fb::String server_name, server_port;
+    
     for (int i = 0; i < num_index_files; ++i) {
         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
         int f = open(filename.data(), O_RDWR);
@@ -121,24 +128,37 @@ int main( int argc, char **argv ) {
         struct stat details;
         fstat(f, &details);
 
-        char *IndexPtr = (char *)mmap(nullptr, details.st_size, PROT_WRITE | PROT_READ | PROT_EXEC, MAP_SHARED, f, 0);
+        char *IndexPtr = (char *)mmap(nullptr, details.st_size, PROT_READ | PROT_EXEC, MAP_PRIVATE, f, 0);
         Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 
-    masterLoc = AddrInfo(server_name.data(), server_port.data());
+    
+    fb::FileDesc sock;
+    if(!local_mode)
+        {
+        server_name = fb::String(argv[4]);
+        server_port = fb::String(argv[5]);
+        masterLoc = AddrInfo(server_name.data(), server_port.data());
 
-    fb::FileDesc sock = open_socket_to_master();
+        sock = open_socket_to_master();
+    }
 
     while(true) {
         fb::String query;
-        try {
-            query = recv_str( sock );
-        } catch( SocketException& se ) {
-            std::cerr << "Got exception " << se.what() << std::endl;
-            sock = open_socket_to_master();
+        if(local_mode)
+            {
+            std::cin >> query;
+            }
+        else
+            {
+            try {
+                query = recv_str( sock );
+                std::cout << "Got query " << query << std::endl;
+            } catch( SocketException& se ) {
+                std::cerr << "Got exception " << se.what() << std::endl;
+                sock = open_socket_to_master();
+            }
         }
-        std::cout << query << std::endl;
-
         QueryParser QuePasa(query);
         auto e = QuePasa.Parse();
         //now we spawn a thread for each index, and give it e
@@ -153,13 +173,24 @@ int main( int argc, char **argv ) {
         }
         std::cout << "attached" << std::endl;
 
-        try {
-            std::cout << "sending " << Results.size() << std::endl;
-            Results.send_and_reset( sock );
-            std::cout << "sent" << std::endl;
-        } catch( SocketException& se ) {
-            std::cerr << "Got exception " << se.what() << std::endl;
-            sock = open_socket_to_master();
+        if(local_mode)
+            {
+            fb::Vector<QueryResult> pages = Results.GetTopResults( );
+            std::cout << "results: " << std::endl;
+            for(QueryResult &res : pages)
+                {
+                std::cout << "Title: " << res.Title << std::endl << "UrlID: " << res.UrlId << std::endl << "Snippet: " << res.Snippet << std::endl << std::endl;
+                }
+            }
+        else {
+            try {
+                std::cout << "sending " << Results.size() << std::endl;
+                Results.send_and_reset( sock );
+                std::cout << "sent" << std::endl;
+            } catch( SocketException& se ) {
+                std::cerr << "Got exception " << se.what() << std::endl;
+                sock = open_socket_to_master();
+            }
         }
     }
 }

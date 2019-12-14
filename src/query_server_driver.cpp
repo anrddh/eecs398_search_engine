@@ -158,10 +158,10 @@ void handle_query( FileDesc&& sock ) {
         pr.rank = n;
         topPages.push( std::move( pr ) );
     }
-
-    send_int( sock, topPages.size() );
     */
 
+    std::cout << "sending " << topPages.size() << " pages" << std::endl;
+    send_int( sock, topPages.size() );
     while ( !topPages.empty() ) {
         send_page_result( sock, topPages.top() );
         topPages.pop();
@@ -182,7 +182,9 @@ void* ask_workers( void* worker_query ) {
     try {
         send_str( *arg.sock, arg.query );
         int numPages = recv_int( *arg.sock );
+        std::cout << "received " << numPages << " many pages " << std::endl;
         for ( int i = 0; i < numPages; ++i ) {
+            std::cout << "adding" << i << std::endl;
             PageResult pr;
             pr.Url += UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) ); // TODO check this works
             pr.Title = recv_str( *arg.sock );

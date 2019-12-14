@@ -69,6 +69,7 @@ uint32_t recv_int(int sock) {
    uint32_t num;
 
    if (recv(sock, &num, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+      perror("error from recv int"); // TODO delete
       throw SocketException("TCP Utility: recv_int failed");
    }
    return ntohl(num);

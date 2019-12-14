@@ -28,7 +28,7 @@
 #include <query/query_result.hpp>
 
 #define MAX_SNIP_WINDOW 150
-#define NUM_QUERY_RESULTS 100
+constexpr int NUM_QUERY_RESULTS = 100;
 
 // TCP protocol
 // worker establishes socket to master (sends a verfication code)
@@ -57,6 +57,7 @@ void* RankPages( void *info ) {
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
+    std::cout << "Will loop in rank pages" << std::endl;
     for( rank_stats& doc : docsToRank ){
         snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), MAX_SNIP_WINDOW); //setting max_snip_window to 150
         SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
@@ -64,6 +65,8 @@ void* RankPages( void *info ) {
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
         Results.add(std::move(result));
     }
+    std::cout << "Finished loop in rank pages" << std::endl;
+
     return nullptr;
 }
 
@@ -129,15 +132,12 @@ int main( int argc, char **argv ) {
     while(true) {
         fb::String query;
         try {
-            // Finished establishing socket
-            // Send verfication message
-            send_int(sock, VERFICATION_CODE);
-
             query = recv_str( sock );
         } catch( SocketException& se ) {
             std::cerr << "Got exception " << se.what() << std::endl;
             sock = open_socket_to_master();
         }
+        std::cout << query << std::endl;
 
         QueryParser QuePasa(query);
         auto e = QuePasa.Parse();
@@ -151,9 +151,12 @@ int main( int argc, char **argv ) {
         for ( auto& thread : threads ) {
             thread.join();
         }
+        std::cout << "attached" << std::endl;
 
         try {
+            std::cout << "sending " << Results.size() << std::endl;
             Results.send_and_reset( sock );
+            std::cout << "sent" << std::endl;
         } catch( SocketException& se ) {
             std::cerr << "Got exception " << se.what() << std::endl;
             sock = open_socket_to_master();

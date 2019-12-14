@@ -119,6 +119,7 @@ fb::Vector<PageResult> ask_query( fb::String query ) {
             results.pushBack( std::move( pr ) );
         }
         cout << 7 << endl;
+        cout << "Got " << results.size() << endl;
 
         return results;
     } catch ( SocketException& se ) {

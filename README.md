@@ -8,10 +8,15 @@ These instructions will get you a copy of the project up and running on your loc
 The project generates a variety of executables, the most important of which are the following:
 
 master - This is the central host for the distributed crawling system.
+
 worker - This is a worker computer for the distributed crawling system. It asks the master for URLs to crawl, and produces files of downloaded pages.
+
 index_builder - This process takes the files of downloaded pages, and produces searchable index files.
+
 query_server - This server hosts index files in the distributed query system.
+
 query_worker - This process receives a query and generates meaningful search results from the index files, including snippets and titles.
+
 server - This server hosts the front end, which takes queries from the user and displays results.
 
 ### Prerequisites

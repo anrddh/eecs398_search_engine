@@ -53,7 +53,10 @@ struct IndexInfoArg {
 void* RankPages( void *info ) {
     // Just keep calling add to top pages
     IndexInfoArg arg = *(IndexInfoArg *) info; //get the args
+    delete (IndexInfoArg *) info;
+
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
+    std::cout << "GetWords size: " << cSolver.GetWords().size() << std::endl;
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
     std::cout << "docsFreqs " << docFreqs.size() << std::endl;
@@ -128,7 +131,7 @@ int main( int argc, char **argv ) {
         struct stat details;
         fstat(f, &details);
 
-        char *IndexPtr = (char *)mmap(nullptr, details.st_size, PROT_READ | PROT_EXEC, MAP_PRIVATE, f, 0);
+        char *IndexPtr = (char *)mmap(nullptr, details.st_size, PROT_READ, MAP_PRIVATE, f, 0);
         Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 

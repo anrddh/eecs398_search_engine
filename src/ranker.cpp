@@ -83,7 +83,8 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
         std::cout << "error opening " << stat.FileName << " when generating snippets and title " << std::endl;
         return { " ", " " }; //if the file fails to open, just give empty strings rather than crash
     }
-    seek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
+    fseek(fptr, sizeof(std::atomic<fb::SizeT>), SEEK_SET); //skip the cursor
+    fb::SizeT NumPageStoreDocs;
     fread(&NumPageStoreDocs, sizeof(fb::SizeT), 1, fptr); //read in the num of documents
     fseek(fptr, sizeof(PageHeader) * stat.DocIndex, SEEK_CUR); //skip ahead in the vector of PageHeaders
     fb::SizeT PageOffset;

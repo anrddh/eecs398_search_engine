@@ -34,10 +34,6 @@ to compile all executables.
 
 All executable come with a helpful usage message when running without the proper arguments.
 
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
 ## Authors
 
 * **Aniruddh Agarwal**

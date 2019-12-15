@@ -190,7 +190,10 @@ private:
             info = wordIsr->Next( );
             }
          IndexReaders[j].deleteWord( word );
-         assert( !IndexReaders[j].WordExists( word ) );
+         if(!IndexReaders[j].WordExists( word ) )
+            {
+            std::cout << "error: " << word << " appears multiple times in Index " j << std::endl;
+            }
          }
 
       builder.endList();

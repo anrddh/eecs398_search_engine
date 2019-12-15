@@ -56,6 +56,7 @@ void* RankPages( void *info ) {
     delete (IndexInfoArg *) info;
 
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
+    cSolver.solve( );
     std::cout << "GetWords size: " << cSolver.GetWords().size() << std::endl;
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
@@ -150,7 +151,10 @@ int main( int argc, char **argv ) {
         fb::String query;
         if(local_mode)
             {
-            std::cin >> query;
+            std::cout << "Search: ";
+            std::string qString;
+            std::getline(std::cin, qString);
+            query = fb::String( qString.c_str( ) );
             }
         else
             {
@@ -179,7 +183,7 @@ int main( int argc, char **argv ) {
         if(local_mode)
             {
             fb::Vector<QueryResult> pages = Results.GetTopResults( );
-            std::cout << "results: " << std::endl;
+            std::cout << "\n=====================\n||     results     || \n====================="<< std::endl;
             for(QueryResult &res : pages)
                 {
                 std::cout << "Title: " << res.Title << std::endl << "UrlID: " << res.UrlId << std::endl << "Snippet: " << res.Snippet << std::endl << std::endl;

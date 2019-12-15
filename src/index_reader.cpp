@@ -1,4 +1,4 @@
-#include <isr/index_reader.hpp>
+u#include <isr/index_reader.hpp>
 #include <isr/word_impl_isr.hpp>
 #include <isr/document_isr.hpp>
 #include <stdint.h>
@@ -93,7 +93,7 @@ fb::UniquePtr<WordISR> IndexReader::OpenPlainWordISR(fb::String &word)
 
    }
 
-fb::UniquePtr<WordISR> IndexReader::OpenWordISR(fb::String &word) {
+fb::UniquePtr<WordISR> IndexReader::OpenWordISR(fb::String word) {
    int new_size = stem(porterStemmer, word.data(), word.size() - 1) + 1;
    word.resize(new_size);
    return OpenPlainWordISR( word );
@@ -135,13 +135,15 @@ int IndexReader::getBucket( fb::String &word )
    uint64_t beg = bucket;
    bool pastStart = false;
    
-   while( dictionary[bucket] && (dictionary[bucket] == UINT32_MAX || strcmp(start + dictionary[bucket], word.data())) && ( bucket != beg || !pastStart ) )
+   while( dictionary[bucket] 
+          && (dictionary[bucket] == UINT32_MAX || strcmp(start + dictionary[bucket], word.data())) 
+          && ( bucket != beg || !pastStart ) )
       {
       pastStart = true;
       bucket = (bucket + 1) % DICTIONARY_SIZE;
       }
 
-   if(dictionary[bucket] && dictionary[bucket] != UINT32_MAX)
+   if(dictionary[bucket])
       {
       return bucket;
       }
@@ -165,7 +167,7 @@ fb::Pair<int, fb::String> IndexReader::GetNextWord( int beg )
       ++bucket;
       }
 
-   if(bucket >= DICTIONARY_SIZE || !dictionary[bucket] || dictionary[bucket] == UINT32_MAX)
+   if(bucket >= DICTIONARY_SIZE)
       {
       return fb::make_pair(-1, fb::String(""));
       }

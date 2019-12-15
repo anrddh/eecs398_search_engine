@@ -48,7 +48,7 @@ public:
     WordExpression(fb::StringView wordIn) : word(wordIn) {}
 
     fb::UniquePtr<WordISR> WordEval(IndexReader &reader) const {
-	fb::String word_str(word.data(), word.size());
+        fb::String word_str(word.data(), word.size());
         return reader.OpenWordISR(word_str);
     }
 
@@ -207,12 +207,6 @@ public:
     }
 
     virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &reader) const override {
-        auto isrs = toReturn->Words(reader);
-
-        if (notToReturn)
-            for (auto &wordIsr : notToReturn->Words(reader))
-                isrs.pushBack(std::move(wordIsr));
-
-        return isrs;
+        return toReturn->Words(reader);
     }
 };

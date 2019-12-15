@@ -15,6 +15,7 @@
 #include <sstream>
 
 #include <assert.h>
+#include <ctype.h>
 
 // #include "expression.h"
 
@@ -62,9 +63,11 @@ public:
     * that contains only characters relevant to math expressions
     */
    TokenStream(fb::String &in) {
-       for (auto &c : in)
+       for (auto &c : in) {
+           c = tolower(c);
            if (CharIsIrrelevant(c))
                c = ' ';
+       }
 
        std::istringstream stream(in.data());
 

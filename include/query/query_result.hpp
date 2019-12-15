@@ -116,7 +116,7 @@ public:
    fb::Vector<QueryResult> GetTopResults( )
       {
       fb::Vector<QueryResult> results;
-      while( top.size( ) )
+      while( !top.empty( ) )
          {
          results.pushBack( top.top( ) );
          top.pop( );

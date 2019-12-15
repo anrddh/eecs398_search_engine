@@ -93,7 +93,7 @@ fb::UniquePtr<WordISR> IndexReader::OpenPlainWordISR(fb::String &word)
 
    }
 
-fb::UniquePtr<WordISR> IndexReader::OpenWordISR(fb::String &word) {
+fb::UniquePtr<WordISR> IndexReader::OpenWordISR(fb::String word) {
    int new_size = stem(porterStemmer, word.data(), word.size() - 1) + 1;
    word.resize(new_size);
    return OpenPlainWordISR( word );

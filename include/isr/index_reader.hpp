@@ -36,7 +36,7 @@ public:
 
    fb::SizeT getIndex( ) { return index; }
 
-   fb::UniquePtr<WordISR> OpenWordISR( fb::String &word );
+   fb::UniquePtr<WordISR> OpenWordISR( fb::String word );
    fb::UniquePtr<WordISR> OpenPlainWordISR( fb::String &word );
    fb::UniquePtr<WordISR> GetEmptyISR( );
    fb::UniquePtr<DocumentISR> OpenDocumentISR( );

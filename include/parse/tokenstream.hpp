@@ -15,7 +15,7 @@
 #include <sstream>
 
 #include <assert.h>
-#include <tolower.h>
+#include <ctype.h>
 
 // #include "expression.h"
 

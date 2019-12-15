@@ -148,8 +148,8 @@ fb::String specialCharacter(fb::String encoding)
 	    return " ";
     else if(encoding == "%7C")
 	    return "|";
-    else if(encoding == "%2F")
-	    return "/";
+    else if(encoding == "%5C")
+	    return "\\";
 }
 
 fb::String cleanedQuery( fb::String q )

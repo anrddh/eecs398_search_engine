@@ -142,12 +142,30 @@ fb::UnorderedMap<fb::String, fb::String> resultOptions;
 fb::Vector<PageResult> queryResult;
 HtmlPage pageNotFound( fb::String msg );
 
+fb::String specialCharacter(fb::String encoding)
+{
+    if(encoding == "%26")
+	    return " ";
+    else if(encoding == "%7C")
+	    return "|";
+    else if(encoding == "%2F")
+	    return "/";
+}
+
 fb::String cleanedQuery( fb::String q )
 {
-    fb::String result = q;
-    for (auto &c : result)
-        if (CharIsIrrelevant(c))
-           c = ' ';
+    fb::String result;
+    for (int i = 0; i < q.size(); ++i) {
+	if (q[i] == '%')
+	{
+	    result += specialCharacter(q.substr(i, 3));
+	    i += 2;
+	}
+	else if (CharIsIrrelevant(q[i]))
+           result += ' ';
+	else
+	    result += q[i];
+    }
     return result;
 }
 
@@ -187,6 +205,7 @@ HtmlPage pageNotFound( fb::String msg ) {
     HtmlPage page;
     page.loadFromFile("frontend/page_not_found.html");
     page.setValue("msg", msg);
+    page.setValue("query", cleanedQuery(resultOptions["query"])); 
     return page;
 }
 

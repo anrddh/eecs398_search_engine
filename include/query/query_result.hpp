@@ -4,6 +4,7 @@
 #include <fb/mutex.hpp>
 #include <fb/string.hpp>
 #include <fb/stddef.hpp>
+#include <ranker/ranker.hpp>
 #include <tcp/url_tcp.hpp>
 #include <atomic>
 #include <iostream>

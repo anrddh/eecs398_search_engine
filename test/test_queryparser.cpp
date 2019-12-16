@@ -177,3 +177,13 @@ TEST_CASE( "QueryQueryParser Test 19" ) {
     expr->Print();
     std::cout << "\n\n\n\n";
 }
+
+TEST_CASE( "QueryQueryParser Test 20" ) {
+    fb::String stream = "(Nicole | Hamilton) & \"Human Parts\"";
+    QueryParser p(stream);
+    std::cout << "NEW QUERY: " << p.stream.input << '\n';
+    auto expr = p.Parse();
+    CHECK(static_cast<bool>(expr));
+    expr->Print();
+    std::cout << "\n\n\n\n";
+}

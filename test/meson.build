@@ -27,6 +27,7 @@ test_queryparser = executable('test_queryparser',
                                'test_queryparser.cpp',
                                '../src/index_reader.cpp',
                                '../src/empty_isr.cpp',
+                               '../src/word_impl_isr.cpp',
                                '../src/document_isr.cpp'],
                               include_directories : inc)
 

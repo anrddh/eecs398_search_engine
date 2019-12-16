@@ -144,9 +144,11 @@ void handle_query( FileDesc&& sock ) {
 
     // TODO handle exceptions
 
+    socketsMtx.lock();
     for ( auto it = socketsToWorkers.begin(); it != socketsToWorkers.end(); ++it ) {
         threads.emplaceBack( ask_workers, new WorkerArg{ &*it, query, &topPages } );
     }
+    socketsMtx.unlock();
 
     for ( Thread& t : threads ) {
         t.join();

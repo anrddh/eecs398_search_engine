@@ -193,7 +193,6 @@ void* ask_workers( void* worker_query ) {
         int numPages = recv_int( *arg.sock );
         std::cout << "received " << numPages << " many pages " << std::endl;
         for ( int i = 0; i < numPages; ++i ) {
-            std::cout << "adding" << i << std::endl;
             PageResult pr;
             pr.Url += UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) );
             pr.Title = recv_str( *arg.sock );

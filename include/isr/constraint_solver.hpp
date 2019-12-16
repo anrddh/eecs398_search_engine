@@ -25,7 +25,7 @@ public:
      page_store_num( page_store_number ),
      doc_frequencies(wordIsrs.size( ), 0) { }
 
-   void solve( )
+   void solve( fb::String dirname )
       {
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
          {
@@ -36,7 +36,7 @@ public:
 
       while( info )
          {
-         saveMatch( );
+         saveMatch( dirname );
          info = mainIsr->NextDocument( );
          }
       }
@@ -52,15 +52,15 @@ public:
       return words;
       }
 
-   fb::Vector<fb::SizeT> GetDocFrequencies( )
-      {
-      return std::move(doc_frequencies);
-      }
+   // fb::Vector<fb::SizeT> GetDocFrequencies( )
+   //    {
+   //    return std::move(doc_frequencies);
+   //    }
 
-   fb::Vector<rank_stats> GetDocumentsToRank( )
-      {
-      return std::move(documents_to_rank);
-      }
+   // fb::Vector<rank_stats> GetDocumentsToRank( )
+   //    {
+   //    return std::move(documents_to_rank);
+   //    }
 
 
    fb::Vector<QueryResult> results;
@@ -71,13 +71,13 @@ private:
    fb::Vector<fb::UniquePtr<WordISR>> wordIsrs;
    uint32_t page_store_num;
    // fb::Vector<fb::SizeT> doc_frequencies;
-   static constexpr TOTAL_DOCUMENTS = 10000;
-   static constexpr MAX_SNIP_WINDOW = 100;
+   static constexpr double TOTAL_DOCUMENTS = 10000;
+   static constexpr fb::SizeT MAX_SNIP_WINDOW = 100;
 
    fb::Vector<double> doc_frequencies;
    fb::Vector<rank_stats> documents_to_rank;
 
-   void saveMatch( )
+   void saveMatch( fb::String dirname )
       {
       Location docEnd = docIsr->Seek( mainIsr->GetCurrentInfo( )->GetStartLocation( ) )->GetEndLocation( );
       uint32_t docLength = docIsr->GetDocumentLength( );
@@ -98,7 +98,7 @@ private:
 
       // tfidf
       double current_rank = 0;
-      for(size_t i = 0; i < document.occurrences.size(); ++i){
+      for(size_t i = 0; i < occurencesPerWordIsrs.size(); ++i){
          current_rank += (occurencesPerWordIsrs[i] / double(docLength)) * doc_frequencies[i];
       }
 

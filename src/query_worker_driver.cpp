@@ -57,7 +57,7 @@ void* RankPages( void *info ) {
     delete (IndexInfoArg *) info;
 
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
-    cSolver.solve( );
+    cSolver.solve( dirname );
     // Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     // Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
     // tfidf_rank(docsToRank, docFreqs); //tf_idf the pages

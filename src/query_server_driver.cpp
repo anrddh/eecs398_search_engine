@@ -39,7 +39,7 @@ using namespace fb;
 constexpr int MAX_NUM_PAGES = 100; // Number of pages sent back to front end server per query
 static_assert( MAX_NUM_PAGES > 0 );
 
-constexpr int TCP_TIMEOUT_LIMIT = 60; // Number of seconds before timeout (only applies to talking to workers)
+constexpr int TCP_TIMEOUT_LIMIT = 30; // Number of seconds before timeout (only applies to talking to workers)
 
 // The value we scale the ranking based on url
 constexpr double urlWeight = 0.00005; 
@@ -115,6 +115,8 @@ void handle_new_worker( FileDesc&& sock ) {
         return;
     }
 
+    std::cout << "got new worker!" << std::endl;
+
     int set = 1;
     setsockopt(sock, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
     struct timeval timeout;
@@ -174,28 +176,36 @@ void* ask_workers( void* worker_query ) {
             pr.Snippet = recv_str( *arg.sock );
             pr.rank = recv_double( *arg.sock );
 
-            double url_title_rank = 0;
+            double dynamic_title_rank = 0;
+            double dynamic_url_rank = 0;
             fb::String lower_title = lower_string( pr.Title );
             fb::String lower_url = lower_string( pr.Url );
-            std::cout << "title: " << lower_title << " "  << " url: " << lower_url << std::endl;
             for (auto& word : words) {
                 if ( lower_url.find(word) != fb::String::npos ) {
-                    url_title_rank += title_match;
+                    dynamic_url_rank += title_match;
                 }
                 if ( lower_title.find(word) != fb::String::npos ) {
-                    url_title_rank += title_match;
+                    dynamic_title_rank += title_match;
                 }
             }
 
-            pr.rank += urlWeight * RankUrl( pr.Url );
-            pr.rank += url_title_rank;
+            if (lower_url.size() != 0) {
+                dynamic_url_rank /= lower_url.size() * 60;
+            }
 
-            /*
+            if (lower_title.size() != 0) {
+                dynamic_title_rank /= lower_title.size() * 15;
+            }
+
+
+            // TODO delete
             std::cout <<  pr.Url << std::endl; // TODO delete this
             std::cout << "\ttitle " << pr.Title  << std::endl; // TODO delete this
-            std::cout << "\tsnippet " << pr.Snippet << std::endl; // TODO delete this
-            std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << urlWeight * RankUrl( pr.Url ) << " url_title rank " << url_title_rank << std::endl; // TODO delete this
-            */
+            std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << dynamic_url_rank << " title rank " << dynamic_title_rank << std::endl; // TODO delete this
+
+            pr.rank += urlWeight * RankUrl( pr.Url );
+            pr.rank += dynamic_title_rank;
+            pr.rank += dynamic_url_rank;
 
             arg.topPages->push( std::move( pr ) );
         }

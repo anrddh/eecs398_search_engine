@@ -40,7 +40,7 @@ constexpr int TCP_TIMEOUT_LIMIT = 60; // Number of seconds before timeout (only 
 
 // The value we scale the ranking based on url
 constexpr double urlWeight = 0.00005; 
-constexpr double title_match = 0.007;
+constexpr double title_match = 0.01;
 
 // Server when accepting:
 // verfication code (int)
@@ -219,19 +219,24 @@ void* ask_workers( void* worker_query ) {
             pr.Snippet = recv_str( *arg.sock );
             pr.rank = recv_double( *arg.sock );
 
-            /*
+
+            double url_title_rank = 0;
+            for (auto& word : words) {
+                if ( pr.Url.find(word) != fb::String::npos ) {
+                    url_title_rank += title_match;
+                }
+                if ( pr.Title.find(word) != fb::String::npos ) {
+                    url_title_rank += title_match;
+                }
+            }
+
+            pr.rank += urlWeight * RankUrl( pr.Url );
+            pr.rank += url_title_rank;
+
             std::cout <<  pr.Url << std::endl; // TODO delete this
             std::cout << "\ttitle " << pr.Title  << std::endl; // TODO delete this
             std::cout << "\tsnippet " << pr.Snippet << std::endl; // TODO delete this
-            std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << urlWeight * RankUrl( pr.Url ) << std::endl; // TODO delete this
-            */
-
-            pr.rank += urlWeight * RankUrl( pr.Url );
-            for (auto& word : words) {
-                if ( pr.Url.find(word) != fb::String::npos ) {
-                    pr.rank += title_match;
-                }
-            }
+            std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << urlWeight * RankUrl( pr.Url ) << " url_title rank " << url_title_rank << std::endl; // TODO delete this
 
             arg.topPages->push( std::move( pr ) );
         }

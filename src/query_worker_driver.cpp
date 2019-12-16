@@ -37,7 +37,6 @@ constexpr int NUM_QUERY_RESULTS = 100;
 // master to worker: query (string)
 // worker to master: num (int)
 //    [ urlOffset (SizeT), rank (double), snippet (string)] x num
-// TODO    WARNING TO ANI - sending int and sizet are different tcp function calls
 using namespace fb;
 
 Vector<Thread> threads;

@@ -5,6 +5,8 @@
 #include <query/query_result.hpp>
 #include <query/page_result.hpp>
 
+#include <parse/query_parser.hpp>
+
 #include <disk/page_store.hpp>
 #include <disk/url_store.hpp>
 #include <disk/UrlInfo.hpp>
@@ -129,9 +131,16 @@ void handle_connections( FileDesc&& sock ) {
 
 void handle_query( FileDesc&& sock ) {
     String query = recv_str( sock );
+    QueryParser qp( query );
+    if (qp.Parse().get() == nullptr) {
+        // We got invalid query!
+        send_int( sock, 0 );
+        return;
+    }
+
     Vector<Thread> threads;
     TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
-    std::cout << "got new query!" << std::endl;
+    std::cout << "got new query! " << query << std::endl;
 
     // TODO handle exceptions
 

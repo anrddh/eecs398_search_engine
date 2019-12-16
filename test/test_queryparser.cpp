@@ -21,7 +21,7 @@ TEST_CASE( "QueryQueryParser Test 2" ) {
 }
 
 TEST_CASE( "QueryQueryParser Test 3" ) {
-    fb::String stream = "cats \\ \"Alex\"";
+    fb::String stream = "cats \\ `Alex'";
     QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
@@ -112,7 +112,7 @@ TEST_CASE( "QueryQueryParser Test 12" ) {
 }
 
 TEST_CASE( "QueryQueryParser Test 13" ) {
-    fb::String stream = "\"a\"";
+    fb::String stream = "`a'";
     QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
@@ -121,7 +121,7 @@ TEST_CASE( "QueryQueryParser Test 13" ) {
 }
 
 TEST_CASE( "QueryQueryParser Test 14" ) {
-    fb::String stream = "\"nicole hamilton\"";
+    fb::String stream = "`nicole hamilton'";
     QueryParser p(stream);
     auto expr = p.Parse();
     CHECK(static_cast<bool>(expr));
@@ -179,7 +179,7 @@ TEST_CASE( "QueryQueryParser Test 19" ) {
 }
 
 TEST_CASE( "QueryQueryParser Test 20" ) {
-    fb::String stream = "(Nicole | Hamilton) & \"Human Parts\"";
+    fb::String stream = "(Nicole | Hamilton) & `Human Parts'";
     QueryParser p(stream);
     std::cout << "NEW QUERY: " << p.stream.input << '\n';
     auto expr = p.Parse();

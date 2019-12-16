@@ -26,7 +26,7 @@ public:
                 return orExpr;
             } else
                 return nullptr;
-        } else if (stream.Match('"')) {
+        } else if (stream.Match('`')) {
             auto expr = fb::makeUnique<PhraseExpression>();
             while (true) {
                 bool gotQuote = false;
@@ -34,7 +34,7 @@ public:
                     if (c == ' ')
                         return true;
 
-                    if (c == '"') {
+                    if (c == '\'') {
                         gotQuote = true;
                         return true;
                     }
@@ -51,7 +51,7 @@ public:
                 if (gotQuote)
                     break;
             }
-            if (!stream.Match('"'))
+            if (!stream.Match('\''))
                 return nullptr;
             return expr;
         }

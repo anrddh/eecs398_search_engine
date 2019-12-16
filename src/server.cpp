@@ -215,7 +215,7 @@ HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
     resultOptions = formOptions;
     if( formOptions["query"].empty() )
         return pageNotFound( "You should type something!" );
-    queryResult = ask_query( formOptions["query"] );
+    queryResult = ask_query( cleanedQuery(formOptions["query"]) );
     return kthResults();
 }
 

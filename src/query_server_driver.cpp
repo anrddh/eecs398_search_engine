@@ -24,6 +24,8 @@
 #include <fstream>
 
 #include <getopt.h>
+#include <cctype>
+#include <sstream>
 
 using std::cout;
 using std::cerr;
@@ -38,6 +40,7 @@ constexpr int TCP_TIMEOUT_LIMIT = 60; // Number of seconds before timeout (only 
 
 // The value we scale the ranking based on url
 constexpr double urlWeight = 0.00005; 
+constexpr double title_match = 0.007;
 
 // Server when accepting:
 // verfication code (int)
@@ -189,6 +192,21 @@ void send_page_result( int sock, const PageResult& pr ) {
 void* ask_workers( void* worker_query ) {
     WorkerArg arg = * ( WorkerArg* ) worker_query; // copy
     delete (WorkerArg*) worker_query;
+    fb::String new_string;
+    for(auto c : arg.query)
+    {
+        if( isalnum(c) )
+            new_string += c;
+        else
+            new_string += " ";
+    }
+    std::stringstream ss( new_string.data() );
+    fb::String word;
+    fb::Vector<fb::String> words;
+    while (ss >> word) {
+        words.pushBack(word);
+    }
+
 
     try {
         send_str( *arg.sock, arg.query );
@@ -209,6 +227,12 @@ void* ask_workers( void* worker_query ) {
             */
 
             pr.rank += urlWeight * RankUrl( pr.Url );
+            for (auto& word : words) {
+                if ( pr.Url.find(word) != fb::String::npos ) {
+                    pr.rank += title_match;
+                }
+            }
+
             arg.topPages->push( std::move( pr ) );
         }
 

@@ -26,8 +26,9 @@ public:
      page_store_num( page_store_number ),
      doc_frequencies(wordIsrs.size( ), 0) { }
 
-   void solve( fb::String dirname )
+   void solve( fb::String dirname_in )
       {
+      dirname = dirname_in;
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
          {
          doc_frequencies[i] = log2(TOTAL_DOCUMENTS/double(wordIsrs[i]->GetDocumentCount( )));
@@ -53,17 +54,6 @@ public:
       return words;
       }
 
-   // fb::Vector<fb::SizeT> GetDocFrequencies( )
-   //    {
-   //    return std::move(doc_frequencies);
-   //    }
-
-   // fb::Vector<rank_stats> GetDocumentsToRank( )
-   //    {
-   //    return std::move(documents_to_rank);
-   //    }
-
-
    fb::Vector<QueryResult> results;
 
 private:
@@ -71,14 +61,13 @@ private:
    fb::UniquePtr<DocumentISR> docIsr;
    fb::Vector<fb::UniquePtr<WordISR>> wordIsrs;
    uint32_t page_store_num;
-   // fb::Vector<fb::SizeT> doc_frequencies;
    static constexpr double TOTAL_DOCUMENTS = 10000;
    static constexpr fb::SizeT MAX_SNIP_WINDOW = 100;
 
    fb::Vector<double> doc_frequencies;
-   fb::Vector<rank_stats> documents_to_rank;
+   fb::String dirname;
 
-   void saveMatch( fb::String dirname )
+   void saveMatch(  )
       {
       Location docEnd = docIsr->Seek( mainIsr->GetCurrentInfo( )->GetStartLocation( ) )->GetEndLocation( );
       uint32_t docLength = docIsr->GetDocumentLength( );
@@ -88,35 +77,38 @@ private:
 
       for(fb::SizeT i = 0; i < occurencesPerWordIsrs.size( ); ++i)
          {
+         fb::Vector<fb::SizeT> currentOccurences;
          fb::UniquePtr<IndexInfo> wordInfo = wordIsrs[i]->Seek( docStart );
          while( wordInfo && wordInfo->GetEndLocation( ) < docEnd )
             {
             ++occurencesPerWordIsrs[i];
-            occurrences.pushBack(wordInfo->GetStartLocation( ) - docStart );
+            currentOccurences.pushBack(wordInfo->GetStartLocation( ) - docStart );
             wordInfo = wordIsrs[i]->Next( );
             }
+
+         // merge instead of sort
+         fb::Vector<fb::SizeT> mergedOccurences;
+         mergedOccurences.reserve(currentOccurences.size() + occurrences.size());
+         merge(currentOccurences.begin(), currentOccurences.end(), occurrences.begin(), occurrences.end(), mergedOccurences.begin());
+         occurrences = std::move(mergedOccurences);
          }
 
       // tfidf
       double current_rank = 0;
+      double docLengthD = double(docLength);
       for(size_t i = 0; i < occurencesPerWordIsrs.size(); ++i){
-         current_rank += (occurencesPerWordIsrs[i] / double(docLength)) * doc_frequencies[i];
+         current_rank += (occurencesPerWordIsrs[i] / docLengthD) * doc_frequencies[i];
       }
 
       // sort for now
-      if(wordIsrs.size() > 1)
-         std::sort(occurrences.begin(), occurrences.end());
+      // if(wordIsrs.size() > 1)
+      //    std::sort(occurrences.begin(), occurrences.end());
 
       snip_window window = snippet_window_rank(occurrences, docLength, MAX_SNIP_WINDOW);
       SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)page_store_num), mainIsr->GetDocumentId( ), window };
-
       fb::SizeT doc_UrlId;
       fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc_UrlId);
-      // QueryResult result = { doc_UrlId, SnipTit.second, SnipTit.first, current_rank };
-      // Results.add(std::move(result));
       results.emplaceBack(QueryResult{doc_UrlId, std::move(SnipTit.second), std::move(SnipTit.first), current_rank});
-
-      // documents_to_rank.emplaceBack( rank_stats{ page_store_num, mainIsr->GetDocumentId( ), docLength, 0, std::move( occurrences ) } );
       }
 
    };

@@ -40,7 +40,7 @@ constexpr int TCP_TIMEOUT_LIMIT = 60; // Number of seconds before timeout (only 
 
 // The value we scale the ranking based on url
 constexpr double urlWeight = 0.00005; 
-constexpr double title_match = 0.01;
+constexpr double title_match = 0.05;
 
 // Server when accepting:
 // verfication code (int)
@@ -189,6 +189,16 @@ void send_page_result( int sock, const PageResult& pr ) {
     send_double( sock, pr.rank );
 }
 
+fb::String lower_string(const fb::String& str) {
+    fb::String new_str;
+
+    for(auto c : str)
+    {
+        new_str += tolower( c );
+    }
+    return new_str;
+}
+
 void* ask_workers( void* worker_query ) {
     WorkerArg arg = * ( WorkerArg* ) worker_query; // copy
     delete (WorkerArg*) worker_query;
@@ -196,15 +206,17 @@ void* ask_workers( void* worker_query ) {
     for(auto c : arg.query)
     {
         if( isalnum(c) )
-            new_string += c;
+            new_string += tolower(c);
         else
             new_string += " ";
     }
+    std::cout << "new string: " << new_string << std::endl;
     std::stringstream ss( new_string.data() );
-    fb::String word;
+    std::string word;
     fb::Vector<fb::String> words;
     while (ss >> word) {
-        words.pushBack(word);
+        std::cout << "word: " << word << std::endl;
+        words.pushBack(word.c_str());
     }
 
 
@@ -221,11 +233,14 @@ void* ask_workers( void* worker_query ) {
 
 
             double url_title_rank = 0;
+            fb::String lower_title = lower_string( pr.Title );
+            fb::String lower_url = lower_string( pr.Url );
+            std::cout << "title: " << lower_title << " "  << " url: " << lower_url << std::endl;
             for (auto& word : words) {
-                if ( pr.Url.find(word) != fb::String::npos ) {
+                if ( lower_url.find(word) != fb::String::npos ) {
                     url_title_rank += title_match;
                 }
-                if ( pr.Title.find(word) != fb::String::npos ) {
+                if ( lower_title.find(word) != fb::String::npos ) {
                     url_title_rank += title_match;
                 }
             }

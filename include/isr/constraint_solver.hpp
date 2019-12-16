@@ -57,12 +57,12 @@ public:
 
    fb::Vector<fb::SizeT> GetDocFrequencies( )
       {
-      return doc_frequencies;
+      return std::move(doc_frequencies);
       }
 
    fb::Vector<rank_stats> GetDocumentsToRank( )
       {
-      return documents_to_rank;
+      return std::move(documents_to_rank);
       }
 
 

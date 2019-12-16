@@ -1,4 +1,4 @@
-u#include <isr/index_reader.hpp>
+#include <isr/index_reader.hpp>
 #include <isr/word_impl_isr.hpp>
 #include <isr/document_isr.hpp>
 #include <stdint.h>

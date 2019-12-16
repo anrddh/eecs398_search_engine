@@ -38,7 +38,7 @@ public:
 
       while( info )
          {
-         saveMatch( dirname );
+         saveMatch( );
          info = mainIsr->NextDocument( );
          }
       }
@@ -89,7 +89,7 @@ private:
          // merge instead of sort
          fb::Vector<fb::SizeT> mergedOccurences;
          mergedOccurences.reserve(currentOccurences.size() + occurrences.size());
-         merge(currentOccurences.begin(), currentOccurences.end(), occurrences.begin(), occurrences.end(), mergedOccurences.begin());
+	 std::merge(currentOccurences.begin(), currentOccurences.end(), occurrences.begin(), occurrences.end(), mergedOccurences.begin());
          occurrences = std::move(mergedOccurences);
          }
 

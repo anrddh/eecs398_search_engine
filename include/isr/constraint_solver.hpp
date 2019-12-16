@@ -26,7 +26,7 @@ public:
      page_store_num( page_store_number ),
      doc_frequencies(wordIsrs.size( ), 0) { }
 
-   void solve( fb::String dirname_in, TopPages &Results_in )
+   void solve( fb::String dirname_in, TopPages &Results )
       {
       dirname = dirname_in;
       Results = Results_in;
@@ -40,7 +40,7 @@ public:
 
       while( info )
          {
-         saveMatch( );
+         saveMatch( Results );
          info = mainIsr->NextDocument( );
          }
       }
@@ -66,9 +66,8 @@ private:
 
    fb::Vector<double> doc_frequencies;
    fb::String dirname;
-   TopPages &Results;
 
-   void saveMatch(  )
+   void saveMatch( TopPages &Results )
       {
       Location docEnd = docIsr->Seek( mainIsr->GetCurrentInfo( )->GetStartLocation( ) )->GetEndLocation( );
       uint32_t docLength = docIsr->GetDocumentLength( );

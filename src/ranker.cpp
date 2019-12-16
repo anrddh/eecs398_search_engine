@@ -40,7 +40,6 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occur
 //im getting rid of weights for now
 snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT doc_length, const fb::SizeT max_window_size){
 	snip_window result;
-    std::cout << "VECTOR BEGIN! " << std::endl;
     for (auto i : positions_weights) std::cout << i << " " << std::endl;
 	// if(positions_weights.size() < 2){
 	// 	result.start_word_index = positions_weights[0];

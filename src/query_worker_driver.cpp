@@ -58,13 +58,9 @@ void* RankPages( void *info ) {
 
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     cSolver.solve( );
-    std::cout << "GetWords size: " << cSolver.GetWords().size() << std::endl;
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
-    std::cout << "docsFreqs " << docFreqs.size() << std::endl;
-    std::cout << "docsToRank " << docsToRank.size() << std::endl;
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
-    std::cout << "Will loop in rank pages" << std::endl;
     for( rank_stats& doc : docsToRank ){
         snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), doc.total_term_count, MAX_SNIP_WINDOW); //setting max_snip_window to 150
         SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
@@ -72,7 +68,6 @@ void* RankPages( void *info ) {
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
         Results.add(std::move(result));
     }
-    std::cout << "Finished loop in rank pages" << std::endl;
 
     return nullptr;
 }
@@ -192,9 +187,7 @@ int main( int argc, char **argv ) {
             }
         else {
             try {
-                std::cout << "sending " << Results.size() << std::endl;
                 Results.send_and_reset( sock );
-                std::cout << "sent" << std::endl;
             } catch( SocketException& se ) {
                 std::cerr << "Got exception " << se.what() << std::endl;
                 sock = open_socket_to_master();

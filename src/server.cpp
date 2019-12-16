@@ -149,6 +149,10 @@ fb::String specialCharacter(fb::String encoding)
 	    return ")";
     else if(encoding == "%22")
 	    return "\"";
+    else if(encoding == "%60")
+        return "`";
+    else if(encoding == "%27")
+        return "\'";
     else
 	    return "";
 }

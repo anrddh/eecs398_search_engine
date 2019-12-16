@@ -29,7 +29,6 @@ public:
    void solve( fb::String dirname_in, TopPages &Results )
       {
       dirname = dirname_in;
-      Results = Results_in;
 
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
          {

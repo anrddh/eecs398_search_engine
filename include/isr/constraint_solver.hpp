@@ -7,6 +7,8 @@
 
 #include <ranker/ranker.hpp>
 
+#include <query/query_result.hpp>
+
 #include <cmath>
 #include <algorithm>
 
@@ -101,7 +103,8 @@ private:
       }
 
       // sort for now
-      std::sort(occurrences.begin(), occurrences.end());
+      if(wordIsrs.size() > 1)
+         std::sort(occurrences.begin(), occurrences.end());
 
       snip_window window = snippet_window_rank(occurrences, docLength, MAX_SNIP_WINDOW);
       SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)page_store_num), mainIsr->GetDocumentId( ), window };

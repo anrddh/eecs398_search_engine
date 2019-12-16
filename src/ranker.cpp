@@ -102,7 +102,7 @@ snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, 
 	return result;
 }
 
-fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, fb::SizeT &doc_UrlId ){
+fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( const SnippetStats &stat, fb::SizeT &doc_UrlId ){
 
     FILE *fptr = fopen(stat.FileName.data(), "rb");
     if (fptr == NULL){

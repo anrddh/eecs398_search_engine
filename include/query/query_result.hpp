@@ -9,9 +9,7 @@
 #include <iostream>
 
 struct QueryResult {
-    fb::SizeT UrlId;
-    fb::String Title;
-    fb::String Snippet;
+    SnippetStats stats;
     double rank;
 
     // We need to flip the order because priority queue has max at top
@@ -91,9 +89,6 @@ public:
         try {
             send_int( sock, top.size() );
             while ( !top.empty() ) {
-                std::cout << top.top().UrlId << std::endl;
-                std::cout << top.top().Title<< std::endl;
-                std::cout << top.top().Snippet << std::endl;
                 send_query_result( sock, top.top() );
                 top.pop();
             }
@@ -124,9 +119,11 @@ public:
 private:
    // Destructor helper
    inline void send_query_result( int sock, const QueryResult& qr ) {
-      send_uint64_t( sock, qr.UrlId );
-      send_str( sock, qr.Title );
-      send_str( sock, qr.Snippet );
+      fb::SizeT doc_UrlId;
+      fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(qr.stats, doc_UrlId);
+      send_uint64_t( sock, doc_UrlId );
+      send_str( sock, SnipTit.second );
+      send_str( sock, SnipTit.first );
       send_double( sock, qr.rank );
    }
 

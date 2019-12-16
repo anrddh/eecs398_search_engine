@@ -182,7 +182,7 @@ int main( int argc, char **argv ) {
             std::cout << "\n=====================\n||     results     || \n====================="<< std::endl;
             for(QueryResult &res : pages)
                 {
-                std::cout << "Title: " << res.Title << std::endl << "UrlID: " << res.UrlId << std::endl << "Snippet: " << res.Snippet << std::endl << std::endl;
+                //std::cout << "Title: " << res.Title << std::endl << "UrlID: " << res.UrlId << std::endl << "Snippet: " << res.Snippet << std::endl << std::endl;
                 }
             }
         else {

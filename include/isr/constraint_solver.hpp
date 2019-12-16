@@ -105,8 +105,8 @@ private:
       snip_window window = snippet_window_rank(occurrences, docLength, MAX_SNIP_WINDOW);
       SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)page_store_num), mainIsr->GetDocumentId( ), window };
       fb::SizeT doc_UrlId;
-      fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc_UrlId);
-      Results.add(QueryResult{doc_UrlId, std::move(SnipTit.second), std::move(SnipTit.first), current_rank});
+      // TODO add snippet rank
+      Results.add(QueryResult{std::move( stats ), current_rank} );
       }
 
    };

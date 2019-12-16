@@ -38,7 +38,7 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occur
 //positions_weights is a fb::Vector of indices corresponding to the words in the our query
 //and their tfidf
 //im getting rid of weights for now
-snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT max_window_size){
+snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT doc_length, const fb::SizeT max_window_size){
 	snip_window result;
     std::cout << "VECTOR BEGIN! " << std::endl;
     for (auto i : positions_weights) std::cout << i << " " << std::endl;
@@ -76,7 +76,23 @@ snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, 
 	}
 	result.start_word_index = positions_weights[best_left] - 1; //Note: off by one error in index
 	result.end_word_index = positions_weights[best_right]; //one past the end, by Chandler's request
-	result.value_captured = max_value;
+
+    delta = result.end_word_index - result.start_word_index;
+    bool keep_going = true;
+    while (delta < max_window_size && keep_going){
+        keep_going = false;
+        if (result.start_word_index > 0){
+            result.start_word_index--;
+            keep_going = true;
+        }
+        if (result.end_word_index < doc_length){
+            result.end_word_index++;
+            keep_going = true;
+        }
+        delta = result.end_word_index - result.start_word_index;
+    }
+
+    result.value_captured = max_value;
     std::cout << "result left: " << result.start_word_index << " result right: " << result.end_word_index << std::endl;
 	return result;
 }

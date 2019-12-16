@@ -58,16 +58,18 @@ void* RankPages( void *info ) {
 
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     cSolver.solve( );
-    Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
-    Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
-    tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
-    for( rank_stats& doc : docsToRank ){
-        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), doc.total_term_count, MAX_SNIP_WINDOW); //setting max_snip_window to 150
-        SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
-        fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
-        QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
+    // Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
+    // Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
+    // tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
+    // for( rank_stats& doc : docsToRank ){
+    //     snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), doc.total_term_count, MAX_SNIP_WINDOW); //setting max_snip_window to 150
+    //     SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
+    //     fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
+    //     QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
+    //     Results.add(std::move(result));
+    // }
+    for(auto &result : cSolver.results)
         Results.add(std::move(result));
-    }
 
     return nullptr;
 }

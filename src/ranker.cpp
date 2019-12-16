@@ -5,7 +5,6 @@
 #include <fb/utility.hpp>
 #include <cmath>
 #include <algorithm> //std::sort
-#include <isr/constraint_solver.hpp>
 #include <parse/parser.hpp>
 #include <ranker/ranker.hpp>
 
@@ -19,6 +18,14 @@ void tfidf_rank(fb::Vector<rank_stats> &documents_to_rank, const fb::Vector<fb::
 		}
 		document.rank = current_rank;
 	}
+}
+
+void tfidf_rank_one_doc(rank_stats &document, const fb::Vector<fb::SizeT> &doc_freq) {
+    double current_rank = 0;
+    for(size_t i = 0; i < document.occurrences.size(); ++i){
+        current_rank += (double(document.occurrences[i].size( ))/double(document.total_term_count))*log2(TOTAL_DOCUMENTS/double(doc_freq[i]));
+    }
+    document.rank = current_rank;
 }
 
 // Merges all the occurence vectors together for snippet rank
@@ -95,7 +102,7 @@ snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, 
 	return result;
 }
 
-fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, rank_stats &doc ){
+fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, fb::String &doc_UrlId ){
 
     FILE *fptr = fopen(stat.FileName.data(), "rb");
     if (fptr == NULL){
@@ -117,7 +124,7 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, r
     if (stat.DocIndex == (NumPageStoreDocs - 1)){
         NextPageOffset = VectorOffset + 100;
     }
-    doc.UrlId = UrlId; //set the UrlID in the rank_stats
+    doc_UrlId = UrlId; //set the UrlID in the rank_stats
 
     //this is the snippet code
     fb::String snippet;

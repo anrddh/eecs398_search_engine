@@ -7,8 +7,18 @@
 #include <fb/stddef.hpp>
 #include <fb/utility.hpp>
 #include <cmath>
-#include <isr/constraint_solver.hpp>
 #include <parse/parser.hpp>
+
+struct rank_stats
+   {
+   uint32_t page_store_number;
+   uint32_t page_store_index;
+   unsigned int total_term_count; // doc length
+   fb::SizeT UrlId; //to be set during snippets
+   fb::Vector<fb::Vector<uint32_t>> occurrences;
+   double rank = -1;
+   };
+
 
 //OBSERVATION: In calculating the inverse document frequency,
 //the total number of documents does not change. Need only calculate once.
@@ -53,6 +63,6 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occur
 //im getting rid of weights for now
 snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT doc_length, const fb::SizeT max_window_size);
 
-fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, rank_stats &doc );
+fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, fb::String &doc_UrlId );
 
 #endif

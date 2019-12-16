@@ -114,7 +114,7 @@ private:
       fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc_UrlId);
       // QueryResult result = { doc_UrlId, SnipTit.second, SnipTit.first, current_rank };
       // Results.add(std::move(result));
-      results.emplaceBack(QueryResults{doc_UrlId, std::move(SnipTit.second), std::move(SnipTit.first), current_rank});
+      results.emplaceBack(QueryResult{doc_UrlId, std::move(SnipTit.second), std::move(SnipTit.first), current_rank});
 
       // documents_to_rank.emplaceBack( rank_stats{ page_store_num, mainIsr->GetDocumentId( ), docLength, 0, std::move( occurrences ) } );
       }

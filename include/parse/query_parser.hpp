@@ -37,6 +37,7 @@ public:
                     if (c == '\'') {
                         gotQuote = true;
                         return true;
+                    }
 
                     return false;
                 });

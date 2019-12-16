@@ -63,6 +63,6 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occur
 //im getting rid of weights for now
 snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT doc_length, const fb::SizeT max_window_size);
 
-fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, fb::String &doc_UrlId );
+fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( SnippetStats &stat, fb::SizeT &doc_UrlId );
 
 #endif

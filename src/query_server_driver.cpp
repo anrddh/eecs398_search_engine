@@ -28,6 +28,7 @@
 #include <sstream>
 
 using std::cout;
+using std::cin;
 using std::cerr;
 using std::endl;
 
@@ -86,6 +87,21 @@ void* ask_workers(void* );
 QueryResult recv_query_result( int sock );
 void handle_new_worker( FileDesc&& sock );
 
+void* get_commands(void*) {
+    while (true) {
+        fb::String str;
+        cout << "enter command: ";
+        cin >> str;
+        if (str == "status") {
+            AutoLock l( socketsMtx );
+            std::cout << "Number of workers: " << socketsToWorkers.size() << "\n";
+        } else {
+            std::cout << "commands: status" << std::endl;
+        }
+    }
+
+}
+
 int main( int argc, char **argv ) {
     FileDesc server_fd = parseArguments( argc, argv );
 
@@ -93,6 +109,8 @@ int main( int argc, char **argv ) {
         perror("listen");
         exit(EXIT_FAILURE);
     }
+
+    Thread commands(get_commands, nullptr);
 
     while ( true ) {
         // Do not use FileDesc!
@@ -108,8 +126,10 @@ int main( int argc, char **argv ) {
             cout << "failed in accept!" << endl;
             throw;
         }
-
     }
+
+    commands.join();
+
 }
 
 void handle_connections( FileDesc&& sock ) {
@@ -156,23 +176,6 @@ void handle_query( FileDesc&& sock ) {
     for ( Thread& t : threads ) {
         t.join();
     }
-
-    // testing code. TODO delete below
-    /*
-
-    String urlStr = "https://test_url";
-    String titleStr = "Some good title ";
-    String snippetStr = "blah blah blah ";
-    for (int i = 0; i < 100; ++i ) {
-        PageResult pr;
-        String val = toString( ++n );
-        pr.Url = urlStr + val;
-        pr.Title = titleStr + val;
-        pr.Snippet = snippetStr + val;
-        pr.rank = n;
-        topPages.push( std::move( pr ) );
-    }
-    */
 
     std::cout << "sending " << topPages.size() << " pages" << std::endl;
     send_int( sock, topPages.size() );
@@ -248,10 +251,12 @@ void* ask_workers( void* worker_query ) {
             pr.rank += urlWeight * RankUrl( pr.Url );
             pr.rank += url_title_rank;
 
+            /*
             std::cout <<  pr.Url << std::endl; // TODO delete this
             std::cout << "\ttitle " << pr.Title  << std::endl; // TODO delete this
             std::cout << "\tsnippet " << pr.Snippet << std::endl; // TODO delete this
             std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << urlWeight * RankUrl( pr.Url ) << " url_title rank " << url_title_rank << std::endl; // TODO delete this
+            */
 
             arg.topPages->push( std::move( pr ) );
         }

@@ -87,11 +87,9 @@ private:
             }
 
          // merge instead of sort
-         std::cout << currentOccurences.size() << std::endl;
          fb::Vector<fb::SizeT> mergedOccurences(currentOccurences.size() + occurrences.size());
 	      std::merge(currentOccurences.begin(), currentOccurences.end(), occurrences.begin(), occurrences.end(), mergedOccurences.begin());
          occurrences = std::move(mergedOccurences);
-         std::cout << occurrences.size() << std::endl;
          }
 
       // tfidf

@@ -8,7 +8,8 @@ struct PageResult {
     fb::String Snippet;
     double rank;
 
+    // We need to flip the order because priority queue has max at top
     inline bool operator< ( const PageResult& other ) const {
-      return rank < other.rank;
+      return rank > other.rank;
     }
 };

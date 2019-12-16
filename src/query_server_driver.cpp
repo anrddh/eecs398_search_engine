@@ -35,7 +35,7 @@ static_assert( MAX_NUM_PAGES > 0 );
 constexpr int TCP_TIMEOUT_LIMIT = 5; // Number of seconds before timeout (only applies to talking to workers)
 
 // The value we scale the ranking based on url
-constexpr double urlWeight = 0.01; 
+constexpr double urlWeight = 0.00005; 
 
 // Server when accepting:
 // verfication code (int)
@@ -190,12 +190,15 @@ void* ask_workers( void* worker_query ) {
             pr.Title = recv_str( *arg.sock );
             pr.Snippet = recv_str( *arg.sock );
             pr.rank = recv_double( *arg.sock );
-            arg.topPages->push( std::move( pr ) );
-            std::cout <<  pr.Url << " length " << std::endl; // TODO delete this
-            std::cout << "\ttitle " << pr.Title << " length " << pr.Title.size() << std::endl; // TODO delete this
-            std::cout << "\tsnippet " << pr.Snippet << " length " << pr.Snippet.size() << std::endl; // TODO delete this
-            std::cout << "\ttfidf ranking: " << pr.Url << " url ranking " << urlWeight * RankUrl( pr.Url ) << std::endl; // TODO delete this
+
+            // TODO delete this
+            std::cout <<  pr.Url << std::endl; // TODO delete this
+            std::cout << "\ttitle " << pr.Title  << std::endl; // TODO delete this
+            std::cout << "\tsnippet " << pr.Snippet << std::endl; // TODO delete this
+            std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << urlWeight * RankUrl( pr.Url ) << std::endl; // TODO delete this
+
             pr.rank += urlWeight * RankUrl( pr.Url );
+            arg.topPages->push( std::move( pr ) );
         }
 
     } catch ( SocketException& se ) {

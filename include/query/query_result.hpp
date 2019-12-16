@@ -14,6 +14,9 @@ struct QueryResult {
     fb::String Snippet;
     double rank;
 
+    QueryResult(const fb::SizeT UrlId, const fb::String Title, const fb::String Snippet, double rank):
+      UrlId(UrlId), Title(Title), Snippet(Snippet), rank(rank) {}
+
     // We need to flip the order because priority queue has max at top
     inline bool operator< ( const QueryResult& other ) const {
       return rank > other.rank;

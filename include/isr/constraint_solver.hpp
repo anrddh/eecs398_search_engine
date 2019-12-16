@@ -4,6 +4,7 @@
 
 #include <isr/isr.hpp>
 #include <isr/document_isr.hpp>
+#include <disk/constants.hpp>
 
 #include <ranker/ranker.hpp>
 

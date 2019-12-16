@@ -29,7 +29,7 @@
 
 #include <query/query_result.hpp>
 
-#define MAX_SNIP_WINDOW 150
+#define MAX_SNIP_WINDOW 100
 constexpr int NUM_QUERY_RESULTS = 100;
 
 // TCP protocol
@@ -67,7 +67,7 @@ void* RankPages( void *info ) {
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
     std::cout << "Will loop in rank pages" << std::endl;
     for( rank_stats& doc : docsToRank ){
-        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), MAX_SNIP_WINDOW); //setting max_snip_window to 150
+        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), doc.total_term_count, MAX_SNIP_WINDOW); //setting max_snip_window to 150
         SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
         fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
@@ -121,7 +121,7 @@ int main( int argc, char **argv ) {
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
     fb::String server_name, server_port;
-    
+
     for (int i = 0; i < num_index_files; ++i) {
         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
         int f = open(filename.data(), O_RDWR);
@@ -138,7 +138,7 @@ int main( int argc, char **argv ) {
         Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 
-    
+
     fb::FileDesc sock;
     if(!local_mode)
         {

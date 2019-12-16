@@ -18,6 +18,8 @@
 #include <fb/shared_mutex.hpp>
 #include <fb/unordered_set.hpp>
 
+#include <bolt/bolt.hpp>
+
 #include <debug.hpp>
 
 #include <iostream>
@@ -77,9 +79,7 @@ struct ArgError : std::exception
 
 // If this is a querry, we do not return until the query is completed
 // Closes sockets if necessary
-void handle_connections( FileDesc&& sock );
-void handle_query( FileDesc&& sock );
-void send_page_result( int sock, const PageResult& );
+//
 // Takes a dynamically allocated Worker arg
 // this function deletes the pointer
 // returns nullptr
@@ -87,109 +87,51 @@ void* ask_workers(void* );
 QueryResult recv_query_result( int sock );
 void handle_new_worker( FileDesc&& sock );
 
-void* get_commands(void*) {
-    while (true) {
-        fb::String str;
-        cout << "enter command: ";
-        cin >> str;
-        if (str == "status") {
-            AutoLock l( socketsMtx );
-            std::cout << "Number of workers: " << socketsToWorkers.size() << "\n";
-        } else {
-            std::cout << "commands: status" << std::endl;
-        }
-    }
-
-}
-
-int main( int argc, char **argv ) {
-    FileDesc server_fd = parseArguments( argc, argv );
-
-    if (listen(server_fd, 3) < 0) {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-
-    Thread commands(get_commands, nullptr);
-
+void* accept_workers(void* ptr) {
+    FileDesc* server_fd = (FileDesc*) ptr;
     while ( true ) {
         // Do not use FileDesc!
         // handle_connection will close sockets
         try {
-            int sock = accept(server_fd, nullptr, nullptr);
-            std::cout << "got new socket!" << std::endl;
-            handle_connections( std::move( sock ) );
+            FileDesc sock = accept(*server_fd, nullptr, nullptr);
+            handle_new_worker( std::move( sock ) );
         } catch (SocketException& se) {
             cout << se.what() << endl;
 
         } catch (...) {
-            cout << "failed in accept!" << endl;
+            perror("failed in accept"); 
             throw;
         }
     }
-
-    commands.join();
-
 }
 
-void handle_connections( FileDesc&& sock ) {
+void handle_new_worker( FileDesc&& sock ) {
     if (recv_int(sock) != VERFICATION_CODE) {
         // We just ignore it!
         return;
     }
 
-    char messageType = recv_char( sock );
-
-    switch ( messageType ) {
-        case queryMessageType:
-            handle_query( std::move( sock ) );
-            return;
-        case workerMessageType:
-            handle_new_worker( std::move( sock ) );
-            return;
-        default:
-            return;
-    }
-}
-
-void handle_query( FileDesc&& sock ) {
-    String query = recv_str( sock );
-    QueryParser qp( query );
-    if (qp.Parse().get() == nullptr) {
-        // We got invalid query!
-        send_int( sock, 0 );
+    if (recv_char( sock ) != 'W') {
         return;
     }
 
-    Vector<Thread> threads;
-    TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
-    std::cout << "got new query! " << query << std::endl;
+    int set = 1;
+    setsockopt(sock, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
+    struct timeval timeout;
+    timeout.tv_sec = TCP_TIMEOUT_LIMIT;
+    timeout.tv_usec = 0;
 
-    // TODO handle exceptions
+    if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+            sizeof(timeout)) < 0)
+        std::cerr << "failed at setsockopt recv" << std::endl;
 
-    socketsMtx.lock();
-    for ( auto it = socketsToWorkers.begin(); it != socketsToWorkers.end(); ++it ) {
-        threads.emplaceBack( ask_workers, new WorkerArg{ &*it, query, &topPages } );
-    }
-    socketsMtx.unlock();
+    if (setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+            sizeof(timeout)) < 0)
+        std::cerr << "failed at setsockopt send" << std::endl;
 
-    for ( Thread& t : threads ) {
-        t.join();
-    }
-
-    std::cout << "sending " << topPages.size() << " pages" << std::endl;
-    send_int( sock, topPages.size() );
-    while ( !topPages.empty() ) {
-        send_page_result( sock, topPages.top() );
-        topPages.pop();
-    }
-}
-
-void send_page_result( int sock, const PageResult& pr ) {
-    send_str( sock, pr.Url );
-    send_str( sock, pr.Title );
-    send_str( sock, pr.Snippet );
-    send_double( sock, pr.rank );
+    AutoLock l( socketsMtx );
+    bool success = socketsToWorkers.insert( std::move( sock ) );
+    assert( success );
 }
 
 fb::String lower_string(const fb::String& str) {
@@ -213,12 +155,10 @@ void* ask_workers( void* worker_query ) {
         else
             new_string += " ";
     }
-    std::cout << "new string: " << new_string << std::endl;
     std::stringstream ss( new_string.data() );
     std::string word;
     fb::Vector<fb::String> words;
     while (ss >> word) {
-        std::cout << "word: " << word << std::endl;
         words.pushBack(word.c_str());
     }
 
@@ -233,7 +173,6 @@ void* ask_workers( void* worker_query ) {
             pr.Title = recv_str( *arg.sock );
             pr.Snippet = recv_str( *arg.sock );
             pr.rank = recv_double( *arg.sock );
-
 
             double url_title_rank = 0;
             fb::String lower_title = lower_string( pr.Title );
@@ -271,26 +210,6 @@ void* ask_workers( void* worker_query ) {
     return nullptr;
 }
 
-void handle_new_worker( FileDesc&& sock ) {
-    int set = 1;
-    setsockopt(sock, SOL_SOCKET, MSG_NOSIGNAL, (void *)&set, sizeof(int));
-    struct timeval timeout;
-    timeout.tv_sec = TCP_TIMEOUT_LIMIT;
-    timeout.tv_usec = 0;
-
-    if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
-            sizeof(timeout)) < 0)
-        std::cerr << "failed at setsockopt recv" << std::endl;
-
-    if (setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
-            sizeof(timeout)) < 0)
-        std::cerr << "failed at setsockopt send" << std::endl;
-
-    AutoLock l( socketsMtx );
-    bool success = socketsToWorkers.insert( std::move( sock ) );
-    assert( success );
-}
-
 FileDesc parseArguments( int argc, char **argv ) {
     try {
         option long_opts[] = {
@@ -323,10 +242,187 @@ FileDesc parseArguments( int argc, char **argv ) {
 
         AddrInfo info(nullptr, port.empty() ? DefaultPort : port.data());
         return info.getBoundSocket();
-    } catch( const SocketException& ) {
+    } catch( const SocketException& se) {
+        cerr << se.what() << '\n';
         throw ArgError();
     } catch ( const FileDesc::ConstructionError &e ) {
         cerr << e.what() << '\n';
         throw ArgError();
     }
+}
+
+// Written by Jaeyoon Kim
+fb::Vector<PageResult> ask_query( fb::String query ) {
+    QueryParser qp( query );
+    if (qp.Parse().get() == nullptr) {
+        return {};
+    }
+
+    Vector<Thread> threads;
+    TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
+    std::cout << "got new query! " << query << std::endl;
+
+    // TODO handle exceptions
+
+    socketsMtx.lock();
+    for ( auto it = socketsToWorkers.begin(); it != socketsToWorkers.end(); ++it ) {
+        threads.emplaceBack( ask_workers, new WorkerArg{ &*it, query, &topPages } );
+    }
+    socketsMtx.unlock();
+
+    for ( Thread& t : threads ) {
+        t.join();
+    }
+    cout << "joined all workers" << endl;
+
+    fb::Vector<PageResult> results;
+    while ( !topPages.empty() ) {
+        results.pushBack( topPages.top() );
+        topPages.pop();
+    }
+
+    return results;
+}
+
+// below written by Jinsoo Ihm
+
+HtmlPage home( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+    HtmlPage page;
+    page.loadFromFile("frontend/title.html");
+    return page;
+}
+
+int resultCounter = -1;
+fb::UnorderedMap<fb::String, fb::String> resultOptions;
+fb::Vector<PageResult> queryResult;
+HtmlPage pageNotFound( fb::String msg );
+
+fb::String specialCharacter(fb::String encoding)
+{
+    if(encoding == "%26")
+	    return " ";
+    else if(encoding == "%7C")
+	    return "|";
+    else if(encoding == "%5C")
+	    return "\\";
+    else if(encoding == "%28")
+	    return "(";
+    else if(encoding == "%29")
+	    return ")";
+    else if(encoding == "%22")
+	    return "\"";
+    else if(encoding == "%60")
+        return "`";
+    else if(encoding == "%27")
+        return "\'";
+    else
+	    return "";
+}
+
+fb::String cleanedQuery( fb::String q )
+{
+    fb::String result;
+    for (int i = 0; i < q.size(); ++i) {
+	if (q[i] == '%')
+	{
+	    result += specialCharacter(q.substr(i, 3));
+	    i += 2;
+	}
+	else if (CharIsIrrelevant(q[i]))
+           result += ' ';
+	else
+	    result += q[i];
+    }
+    return result;
+}
+
+HtmlPage kthResults() {
+    HtmlPage page;
+    page.loadFromFile("frontend/search_results.html");
+
+    page.setValue("query", cleanedQuery(resultOptions["query"]));
+
+    fb::SizeT numResults = 10;
+    fb::SizeT numShow = 0;
+    if ( queryResult.size() > resultCounter * numResults )
+        numShow = fb::min(numResults, queryResult.size() - resultCounter * numResults);
+    else
+        return pageNotFound("No more results to show.");
+
+    for ( int i = 0; i < numShow; ++i )
+    {
+        int index = queryResult.size( ) - resultCounter * numResults - i - 1;
+        page.setValue("title" + fb::toString(i),
+                      fb::String(queryResult[index].Title.data(), queryResult[index].Title.size()));
+        page.setValue("url" + fb::toString(i),
+                      fb::String(queryResult[index].Url.data(), queryResult[index].Url.size()));
+        page.setValue("snippet" + fb::toString(i),
+                      fb::String(queryResult[index].Snippet.data(), queryResult[index].Snippet.size()));
+    }
+    return page;
+}
+
+HtmlPage defaultPath() {
+    HtmlPage page;
+    page.loadFromString("<h1>Page not found.</h1>");
+    return page;
+}
+
+HtmlPage pageNotFound( fb::String msg ) {
+    HtmlPage page;
+    page.loadFromFile("frontend/page_not_found.html");
+    page.setValue("msg", msg);
+    page.setValue("query", cleanedQuery(resultOptions["query"])); 
+    return page;
+}
+
+
+HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+	std::cout << "Results start" << std::endl;
+    resultCounter = 0;
+    std::cout << "here" << std::endl;
+    
+    resultOptions = formOptions;
+    std::cout << "hereee" << std::endl;
+    if( formOptions["query"].empty() )
+        return pageNotFound( "You should type something!" );
+    std::cout << "hereeeee" << std::endl;
+    std::cout << formOptions["query"] << std::endl;
+    auto s = cleanedQuery(formOptions["query"]);
+    std::cout << formOptions["query"] << std::endl;
+    std::cout << s << std::endl;
+    queryResult = ask_query( s );
+    return kthResults();
+}
+
+HtmlPage next( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+    if( resultCounter == -1 )
+        return pageNotFound( "This should not happen..." );
+    ++resultCounter;
+    return kthResults();
+}
+
+HtmlPage previous( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+    if( resultCounter <= 0 )
+        return pageNotFound("You cannot press previous there!");
+    --resultCounter;
+    return kthResults();
+}
+
+int main( int argc, char **argv ) {
+    FileDesc server_fd = parseArguments( argc, argv );
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    Thread worker_getter( accept_workers, &server_fd );
+    worker_getter.detach();
+
+    Bolt bolt;
+    bolt.registerHandler("/", home);
+    bolt.registerHandler("/results", results);
+    bolt.registerHandler("/next", next);
+    bolt.registerHandler("/previous", previous);
+
+    bolt.run();
 }

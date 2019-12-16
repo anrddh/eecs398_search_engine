@@ -82,7 +82,7 @@ public:
                || (input.back() == ')' && (!CharIsControl(word.front())
                                            || word.front() == '`'))
                || (word.front() == '`' && !CharIsControl(input.back()))
-               || (input.back() == '\'' && !CharIsControl(input.front())))
+               || (input.back() == '\'' && !CharIsControl(word.front())))
                input += ' ';
            input += word.c_str();
        }

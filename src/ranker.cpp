@@ -157,6 +157,8 @@ fb::Pair<fb::String, fb::String> GenerateSnippetsAndTitle( const SnippetStats &s
         }
     }
 
+    ++title_end;
+
     fb::String title;
     if (!title_began){
         title += " ";

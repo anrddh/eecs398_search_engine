@@ -27,7 +27,6 @@ class TopNQueue {
 public:
     TopNQueue( fb::SizeT n_ ) : n( n_ ) {}
     void push( T&& v ) {
-        std::cout << "adding object with ranking " << v.rank << std::endl;
         if ( v.rank < min_allowed_rank )
             return;
 
@@ -90,12 +89,8 @@ public:
 
     void send_and_reset( int sock ) {
         try {
-            std::cout << "sending int of size " << top.size() << 
-                " in send and reset" << std::endl; // TODO delete
             send_int( sock, top.size() );
-            std::cout << "sent int in send and reset" << std::endl; // TODO delete
             while ( !top.empty() ) {
-                std::cout << "popping" << std::endl;
                 std::cout << top.top().UrlId << std::endl;
                 std::cout << top.top().Title<< std::endl;
                 std::cout << top.top().Snippet << std::endl;

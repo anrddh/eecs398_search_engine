@@ -200,11 +200,12 @@ void* ask_workers( void* worker_query ) {
             pr.Snippet = recv_str( *arg.sock );
             pr.rank = recv_double( *arg.sock );
 
-            // TODO delete this
+            /*
             std::cout <<  pr.Url << std::endl; // TODO delete this
             std::cout << "\ttitle " << pr.Title  << std::endl; // TODO delete this
             std::cout << "\tsnippet " << pr.Snippet << std::endl; // TODO delete this
             std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << urlWeight * RankUrl( pr.Url ) << std::endl; // TODO delete this
+            */
 
             pr.rank += urlWeight * RankUrl( pr.Url );
             arg.topPages->push( std::move( pr ) );

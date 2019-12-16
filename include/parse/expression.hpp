@@ -31,7 +31,7 @@ public:
             Eval(reader),
             reader.OpenDocumentISR(),
             Words(reader),
-            reader.getIndex()
+            static_cast<uint32_t>(reader.getIndex())
         };
     }
     virtual fb::Vector<fb::UniquePtr<WordISR>> Words(IndexReader &) const = 0;

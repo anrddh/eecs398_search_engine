@@ -28,7 +28,7 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occur
     fb::Vector<fb::SizeT> merged;
     for (auto& v : occurrences){
         for (auto slot : v){
-            merged.pushBack(slot);
+            merged.pushBack(slot - 1);
         }
     }
     std::sort(merged.begin(), merged.end());
@@ -38,24 +38,25 @@ fb::Vector<fb::SizeT> MergeVectors(const fb::Vector<fb::Vector<uint32_t>>& occur
 //positions_weights is a fb::Vector of indices corresponding to the words in the our query
 //and their tfidf
 //im getting rid of weights for now
-snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT max_window_size){
+snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, const fb::SizeT doc_length, const fb::SizeT max_window_size){
 	snip_window result;
-	if(positions_weights.size() < 2){
-		result.start_word_index = positions_weights[0];
-		result.end_word_index = positions_weights[0] + 1;
-		result.value_captured = 1;
-		return result;
-	}
-	size_t left = 0;
-	size_t right = 0;
-	size_t best_left = 0;
-	size_t best_right = 0;
-	size_t delta = 0;
+    // for (auto i : positions_weights) std::cout << i << " " << std::endl;
+	// if(positions_weights.size() < 2){
+	// 	result.start_word_index = positions_weights[0];
+	// 	result.end_word_index = positions_weights[0] + 1;
+	// 	result.value_captured = 1;
+	// 	return result;
+	// }
+	fb::SizeT left = 0;
+	fb::SizeT right = 0;
+	fb::SizeT best_left = 0;
+	fb::SizeT best_right = 0;
+	fb::SizeT delta = 0;
+    fb::SizeT best_delta = 0;
 	// double current_value = positions_weights[left].second;
-    double current_value = 1;
+    double current_value = 0;
 	double max_value = current_value;
-	while(right < positions_weights.size() - 1){
-		++right;
+	while(right < positions_weights.size()){
 		delta = positions_weights[right] - positions_weights[left];
 		current_value += 1;
 		while(delta > max_window_size){
@@ -64,15 +65,33 @@ snip_window snippet_window_rank(const fb::Vector<fb::SizeT> &positions_weights, 
 			delta = positions_weights[right] - positions_weights[left];
 		}
 
-		if(current_value > max_value){
+		if(current_value >= max_value && delta > best_delta){
 			max_value = current_value;
 			best_left = left;
 			best_right = right;
+            best_delta = delta;
 		}
+        ++right;
 	}
-	result.start_word_index = positions_weights[best_left];
-	result.end_word_index = positions_weights[best_right] + 1; //one past the end, by Chandler's request
-	result.value_captured = max_value;
+	result.start_word_index = positions_weights[best_left] - 1; //Note: off by one error in index
+	result.end_word_index = positions_weights[best_right]; //one past the end, by Chandler's request
+
+    delta = result.end_word_index - result.start_word_index;
+    bool keep_going = true;
+    while (delta < max_window_size && keep_going){
+        keep_going = false;
+        if (result.start_word_index > 0){
+            result.start_word_index--;
+            keep_going = true;
+        }
+        if (result.end_word_index < doc_length){
+            result.end_word_index++;
+            keep_going = true;
+        }
+        delta = result.end_word_index - result.start_word_index;
+    }
+
+    result.value_captured = max_value;
 	return result;
 }
 

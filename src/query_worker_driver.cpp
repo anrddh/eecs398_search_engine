@@ -1,3 +1,5 @@
+// Written by Jaeyoon Kim and Chandler
+
 #include <parse/parser.hpp>
 #include <parse/query_parser.hpp>
 #include <http/download_html.hpp>
@@ -27,7 +29,7 @@
 
 #include <query/query_result.hpp>
 
-#define MAX_SNIP_WINDOW 150
+#define MAX_SNIP_WINDOW 100
 constexpr int NUM_QUERY_RESULTS = 100;
 
 // TCP protocol
@@ -35,7 +37,6 @@ constexpr int NUM_QUERY_RESULTS = 100;
 // master to worker: query (string)
 // worker to master: num (int)
 //    [ urlOffset (SizeT), rank (double), snippet (string)] x num
-// TODO    WARNING TO ANI - sending int and sizet are different tcp function calls
 using namespace fb;
 
 Vector<Thread> threads;
@@ -57,21 +58,16 @@ void* RankPages( void *info ) {
 
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
     cSolver.solve( );
-    std::cout << "GetWords size: " << cSolver.GetWords().size() << std::endl;
     Vector<rank_stats> docsToRank = cSolver.GetDocumentsToRank(); //get the docs to rank
     Vector<SizeT> docFreqs = cSolver.GetDocFrequencies(); //get the doc frequencies
-    std::cout << "docsFreqs " << docFreqs.size() << std::endl;
-    std::cout << "docsToRank " << docsToRank.size() << std::endl;
     tfidf_rank(docsToRank, docFreqs); //tf_idf the pages
-    std::cout << "Will loop in rank pages" << std::endl;
     for( rank_stats& doc : docsToRank ){
-        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), MAX_SNIP_WINDOW); //setting max_snip_window to 150
+        snip_window window = snippet_window_rank(MergeVectors(doc.occurrences), doc.total_term_count, MAX_SNIP_WINDOW); //setting max_snip_window to 150
         SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)doc.page_store_number), doc.page_store_index, window };
         fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc);
         QueryResult result = { doc.UrlId, SnipTit.second, SnipTit.first, doc.rank };
         Results.add(std::move(result));
     }
-    std::cout << "Finished loop in rank pages" << std::endl;
 
     return nullptr;
 }
@@ -119,7 +115,7 @@ int main( int argc, char **argv ) {
     fb::String Prefix(argv[2]);
     int num_index_files = atoi(argv[3]);
     fb::String server_name, server_port;
-    
+
     for (int i = 0; i < num_index_files; ++i) {
         fb::String filename = dirname + "/" + Prefix + fb::toString(i);
         int f = open(filename.data(), O_RDWR);
@@ -136,7 +132,7 @@ int main( int argc, char **argv ) {
         Readers.pushBack(fb::makeUnique<IndexReader>(IndexPtr, i));
     }
 
-    
+
     fb::FileDesc sock;
     if(!local_mode)
         {
@@ -191,9 +187,7 @@ int main( int argc, char **argv ) {
             }
         else {
             try {
-                std::cout << "sending " << Results.size() << std::endl;
                 Results.send_and_reset( sock );
-                std::cout << "sent" << std::endl;
             } catch( SocketException& se ) {
                 std::cerr << "Got exception " << se.what() << std::endl;
                 sock = open_socket_to_master();

@@ -98,18 +98,12 @@ fb::FileDesc open_socket_to_master() {
 fb::Vector<PageResult> ask_query( fb::String query ) {
     fb::AutoLock l( sockMtx );
     try {
-        cout << 1 << endl;
         fb::FileDesc sock = open_socket_to_master();
-        cout << 2 << endl;
         send_char( sock, 'Q' ); // indicate its a query
-        cout << 3 << endl;
         send_str( sock, query );
-        cout << 4 << endl;
         
         int num = recv_int( sock );
-        cout << 5 << endl;
         fb::Vector<PageResult> results;
-        cout << 6 << endl;
         for ( int i = 0; i < num; ++i ) {
             PageResult pr;
             pr.Url = recv_str( sock );
@@ -118,7 +112,6 @@ fb::Vector<PageResult> ask_query( fb::String query ) {
             pr.rank = recv_double( sock );
             results.pushBack( std::move( pr ) );
         }
-        cout << 7 << endl;
         cout << "Got " << results.size() << endl;
 
         return results;
@@ -150,6 +143,14 @@ fb::String specialCharacter(fb::String encoding)
 	    return "|";
     else if(encoding == "%5C")
 	    return "\\";
+    else if(encoding == "%28")
+	    return "(";
+    else if(encoding == "%29")
+	    return ")";
+    else if(encoding == "%22")
+	    return "\"";
+    else
+	    return "";
 }
 
 fb::String cleanedQuery( fb::String q )
@@ -211,11 +212,20 @@ HtmlPage pageNotFound( fb::String msg ) {
 
 
 HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
+	std::cout << "Results start" << std::endl;
     resultCounter = 0;
+    std::cout << "here" << std::endl;
+    
     resultOptions = formOptions;
+    std::cout << "hereee" << std::endl;
     if( formOptions["query"].empty() )
         return pageNotFound( "You should type something!" );
-    queryResult = ask_query( formOptions["query"] );
+    std::cout << "hereeeee" << std::endl;
+    std::cout << formOptions["query"] << std::endl;
+    auto s = cleanedQuery(formOptions["query"]);
+    std::cout << formOptions["query"] << std::endl;
+    std::cout << s << std::endl;
+    queryResult = ask_query( s );
     return kthResults();
 }
 

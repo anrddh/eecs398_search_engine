@@ -22,9 +22,9 @@ public:
     fb::UniquePtr<Expression> FindFactor() {
         if (stream.Match('(')) {
             auto orExpr = FindOr();
-            if (orExpr && stream.Match(')'))
+            if (orExpr && stream.Match(')')) {
                 return orExpr;
-            else
+            } else
                 return nullptr;
         } else if (stream.Match('"')) {
             auto expr = fb::makeUnique<PhraseExpression>();
@@ -46,6 +46,7 @@ public:
                     return nullptr;
 
                 expr->terms.pushBack(fb::makeUnique<WordExpression>(phrase));
+                stream.Match(' ');
 
                 if (gotQuote)
                     break;

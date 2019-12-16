@@ -5,6 +5,8 @@
 #include <query/query_result.hpp>
 #include <query/page_result.hpp>
 
+#include <parse/query_parser.hpp>
+
 #include <disk/page_store.hpp>
 #include <disk/url_store.hpp>
 #include <disk/UrlInfo.hpp>
@@ -32,10 +34,10 @@ using namespace fb;
 constexpr int MAX_NUM_PAGES = 100; // Number of pages sent back to front end server per query
 static_assert( MAX_NUM_PAGES > 0 );
 
-constexpr int TCP_TIMEOUT_LIMIT = 5; // Number of seconds before timeout (only applies to talking to workers)
+constexpr int TCP_TIMEOUT_LIMIT = 60; // Number of seconds before timeout (only applies to talking to workers)
 
 // The value we scale the ranking based on url
-constexpr double urlWeight = 0.01; 
+constexpr double urlWeight = 0.00005; 
 
 // Server when accepting:
 // verfication code (int)
@@ -129,9 +131,16 @@ void handle_connections( FileDesc&& sock ) {
 
 void handle_query( FileDesc&& sock ) {
     String query = recv_str( sock );
+    QueryParser qp( query );
+    if (qp.Parse().get() == nullptr) {
+        // We got invalid query!
+        send_int( sock, 0 );
+        return;
+    }
+
     Vector<Thread> threads;
     TopNQueue<PageResult> topPages( MAX_NUM_PAGES );
-    std::cout << "got new query!" << std::endl;
+    std::cout << "got new query! " << query << std::endl;
 
     // TODO handle exceptions
 
@@ -187,12 +196,17 @@ void* ask_workers( void* worker_query ) {
             std::cout << "adding" << i << std::endl;
             PageResult pr;
             pr.Url += UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) );
-            std::cout << "got url " << pr.Url << " length " << pr.Url.size() << std::endl; // TODO delete this
             pr.Title = recv_str( *arg.sock );
-            std::cout << "got title " << pr.Title << " length " << pr.Title.size() << std::endl; // TODO delete this
             pr.Snippet = recv_str( *arg.sock );
-            std::cout << "got snippet " << pr.Snippet << " length " << pr.Snippet.size() << std::endl; // TODO delete this
             pr.rank = recv_double( *arg.sock );
+
+            /*
+            std::cout <<  pr.Url << std::endl; // TODO delete this
+            std::cout << "\ttitle " << pr.Title  << std::endl; // TODO delete this
+            std::cout << "\tsnippet " << pr.Snippet << std::endl; // TODO delete this
+            std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << urlWeight * RankUrl( pr.Url ) << std::endl; // TODO delete this
+            */
+
             pr.rank += urlWeight * RankUrl( pr.Url );
             arg.topPages->push( std::move( pr ) );
         }

@@ -53,7 +53,10 @@ query_worker_driver = files('query_worker_driver.cpp', 'ranker.cpp', 'document_i
         'index_reader.cpp', 'empty_isr.cpp', 'word_impl_isr.cpp', 'url_tcp.cpp')
 
 query_server_driver = files('query_server_driver.cpp', 'url_tcp.cpp', 'url_store.cpp',
-        'document_isr.cpp', 'word_impl_isr.cpp', 'index_reader.cpp', 'empty_isr.cpp')
+        'document_isr.cpp', 'word_impl_isr.cpp', 'index_reader.cpp', 'empty_isr.cpp',
+        'bolt/bolt.cpp', 'bolt/buffered_reader.cpp', 'bolt/html_page.cpp', 
+        'bolt/http/http_connection_handler_factory.cpp', 'bolt/http/http_request.cpp',
+        'bolt/http/socket_http_connection_handler.cpp', 'empty_isr.cpp', 'document_isr.cpp')
 
 page_store_merge_files += files('page_store.cpp')
 

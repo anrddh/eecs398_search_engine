@@ -57,10 +57,10 @@ void* RankPages( void *info ) {
     delete (IndexInfoArg *) info;
 
     ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
-    cSolver.solve( dirname );
+    cSolver.solve( dirname, Results );
 
-    for(auto &result : cSolver.results)
-        Results.add(std::move(result));
+    // for(auto &result : cSolver.results)
+    //     Results.add(std::move(result));
 
     return nullptr;
 }

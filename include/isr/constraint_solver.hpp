@@ -26,9 +26,11 @@ public:
      page_store_num( page_store_number ),
      doc_frequencies(wordIsrs.size( ), 0) { }
 
-   void solve( fb::String dirname_in )
+   void solve( fb::String dirname_in, TopPages &Results_in )
       {
       dirname = dirname_in;
+      Results = Results_in;
+
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
          {
          doc_frequencies[i] = log2(TOTAL_DOCUMENTS/double(wordIsrs[i]->GetDocumentCount( )));
@@ -54,8 +56,6 @@ public:
       return words;
       }
 
-   fb::Vector<QueryResult> results;
-
 private:
    fb::UniquePtr<ISR> mainIsr;
    fb::UniquePtr<DocumentISR> docIsr;
@@ -66,6 +66,7 @@ private:
 
    fb::Vector<double> doc_frequencies;
    fb::String dirname;
+   TopPages &Results;
 
    void saveMatch(  )
       {
@@ -107,7 +108,7 @@ private:
       SnippetStats stats = { dirname + fb::String(PageStoreFile.data()) + fb::toString((int)page_store_num), mainIsr->GetDocumentId( ), window };
       fb::SizeT doc_UrlId;
       fb::Pair<fb::String, fb::String> SnipTit = GenerateSnippetsAndTitle(stats, doc_UrlId);
-      results.emplaceBack(QueryResult{doc_UrlId, std::move(SnipTit.second), std::move(SnipTit.first), current_rank});
+      Results.add(QueryResult{doc_UrlId, std::move(SnipTit.second), std::move(SnipTit.first), current_rank});
       }
 
    };

@@ -1,7 +1,7 @@
 bazel-*
 **/build/
 .vscode/
-crawler_files
+crawler_files*
 master
 build
 .DS_Store

@@ -187,14 +187,15 @@ void* ask_workers( void* worker_query ) {
             std::cout << "adding" << i << std::endl;
             PageResult pr;
             pr.Url += UrlStore::getStore().getUrl( recv_uint64_t( *arg.sock ) );
-            std::cout << "got url " << pr.Url << " length " << pr.Url.size() << std::endl; // TODO delete this
             pr.Title = recv_str( *arg.sock );
-            std::cout << "got title " << pr.Title << " length " << pr.Title.size() << std::endl; // TODO delete this
             pr.Snippet = recv_str( *arg.sock );
-            std::cout << "got snippet " << pr.Snippet << " length " << pr.Snippet.size() << std::endl; // TODO delete this
             pr.rank = recv_double( *arg.sock );
-            pr.rank += urlWeight * RankUrl( pr.Url );
             arg.topPages->push( std::move( pr ) );
+            std::cout <<  pr.Url << " length " << std::endl; // TODO delete this
+            std::cout << "\ttitle " << pr.Title << " length " << pr.Title.size() << std::endl; // TODO delete this
+            std::cout << "\tsnippet " << pr.Snippet << " length " << pr.Snippet.size() << std::endl; // TODO delete this
+            std::cout << "\ttfidf ranking: " << pr.Url << " url ranking " << urlWeight * RankUrl( pr.Url ) << std::endl; // TODO delete this
+            pr.rank += urlWeight * RankUrl( pr.Url );
         }
 
     } catch ( SocketException& se ) {

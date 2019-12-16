@@ -31,9 +31,7 @@ public:
       dirname = dirname_in;
 
       for( fb::SizeT i = 0; i < doc_frequencies.size( ); ++i )
-         {
-         doc_frequencies[i] = log2(TOTAL_DOCUMENTS/double(wordIsrs[i]->GetDocumentCount( )));
-         }
+         doc_frequencies[i] = log2(docIsr->GetDocumentCount()/double(wordIsrs[i]->GetDocumentCount( )));
 
       fb::UniquePtr<IndexInfo> info = mainIsr->GetCurrentInfo( );
 
@@ -48,9 +46,7 @@ public:
       {
       fb::Vector<fb::String> words;
       for(fb::UniquePtr<WordISR> &wordIsr : wordIsrs)
-         {
-         words.pushBack(wordIsr->GetWord( ) );
-         }
+         words.pushBack(wordIsr->GetWord());
 
       return words;
       }
@@ -60,7 +56,6 @@ private:
    fb::UniquePtr<DocumentISR> docIsr;
    fb::Vector<fb::UniquePtr<WordISR>> wordIsrs;
    uint32_t page_store_num;
-   static constexpr double TOTAL_DOCUMENTS = 10000;
    static constexpr fb::SizeT MAX_SNIP_WINDOW = 100;
 
    fb::Vector<double> doc_frequencies;

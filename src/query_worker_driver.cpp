@@ -39,10 +39,15 @@ constexpr int NUM_QUERY_RESULTS = 100;
 //    [ urlOffset (SizeT), rank (double), snippet (string)] x num
 using namespace fb;
 
+const int NUM_THREADS = 16;
+
 Vector<Thread> threads;
 Vector<fb::UniquePtr<IndexReader>> Readers;
+std::atomic<int> counter = 0; // counter on which readers we are on
 TopPages Results(NUM_QUERY_RESULTS);
 fb::String dirname;
+
+fb::String query;
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
@@ -51,16 +56,18 @@ struct IndexInfoArg {
 };
 
 // gets an index info
-void* RankPages( void *info ) {
+void* RankPages( void *ptr ) {
     // Just keep calling add to top pages
-    IndexInfoArg arg = *(IndexInfoArg *) info; //get the args
-    delete (IndexInfoArg *) info;
+    Expression* e = (Expression*) ptr;
+    while ( true ) {
+        int local_counter = counter++; // post increment
+        if (local_counter >= Readers.size()) {
+            return nullptr;
+        }
 
-    ConstraintSolver cSolver = arg.e->Constraints(*arg.reader); //make the constraint solver
-    cSolver.solve( dirname, Results );
-
-    // for(auto &result : cSolver.results)
-    //     Results.add(std::move(result));
+        ConstraintSolver cSolver = e->Constraints( *Readers[ local_counter ] ); //make the constraint solver
+        cSolver.solve( dirname, Results );
+    }
 
     return nullptr;
 }
@@ -137,7 +144,6 @@ int main( int argc, char **argv ) {
     }
 
     while(true) {
-        fb::String query;
         if(local_mode)
             {
             std::cout << "Search: ";
@@ -159,14 +165,15 @@ int main( int argc, char **argv ) {
         auto e = QuePasa.Parse();
         //now we spawn a thread for each index, and give it e
         Vector<Thread> threads;
-        for ( auto& reader : Readers ) {
-            IndexInfoArg* info = new IndexInfoArg( {e.get(), reader.get()} );
-            threads.emplaceBack(RankPages, info);
+        for ( int i = 0; i < NUM_THREADS; ++i ) {
+            threads.emplaceBack(RankPages, e.get());
         }
 
         for ( auto& thread : threads ) {
             thread.join();
         }
+
+        counter = 0; // reset
         std::cout << "attached" << std::endl;
 
         if(local_mode)

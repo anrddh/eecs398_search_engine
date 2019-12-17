@@ -1,4 +1,6 @@
 // Written by Jaeyoon Kim and Chandler
+#include <numeric>
+#include <chrono>
 
 #include <parse/parser.hpp>
 #include <parse/query_parser.hpp>
@@ -39,6 +41,8 @@ constexpr int NUM_QUERY_RESULTS = 100;
 //    [ urlOffset (SizeT), rank (double), snippet (string)] x num
 using namespace fb;
 
+const int TIMEOUT = 25; // time out after 30 seconds
+
 const int NUM_THREADS = 16;
 
 Vector<Thread> threads;
@@ -48,6 +52,8 @@ TopPages Results(NUM_QUERY_RESULTS);
 fb::String dirname;
 
 fb::String query;
+
+std::chrono::time_point<std::chrono::system_clock> time_start;
 
 // to be used as arguments to a thread
 struct IndexInfoArg {
@@ -64,6 +70,13 @@ void* RankPages( void *ptr ) {
         if (local_counter >= Readers.size()) {
             return nullptr;
         }
+	
+	auto end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end - time_start;
+	if (elapsed_seconds.count() > TIMEOUT) {
+	    std::cout << "timing out!" << std::endl;
+	    return nullptr;
+	}
 
         ConstraintSolver cSolver = e->Constraints( *Readers[ local_counter ] ); //make the constraint solver
         cSolver.solve( dirname, Results );
@@ -165,6 +178,8 @@ int main( int argc, char **argv ) {
         auto e = QuePasa.Parse();
         //now we spawn a thread for each index, and give it e
         Vector<Thread> threads;
+	time_start = std::chrono::system_clock::now();
+
         for ( int i = 0; i < NUM_THREADS; ++i ) {
             threads.emplaceBack(RankPages, e.get());
         }

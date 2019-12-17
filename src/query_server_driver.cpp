@@ -39,7 +39,7 @@ using namespace fb;
 constexpr int MAX_NUM_PAGES = 100; // Number of pages sent back to front end server per query
 static_assert( MAX_NUM_PAGES > 0 );
 
-constexpr int TCP_TIMEOUT_LIMIT = 30; // Number of seconds before timeout (only applies to talking to workers)
+constexpr int TCP_TIMEOUT_LIMIT = 120; // Number of seconds before timeout (only applies to talking to workers)
 
 // The value we scale the ranking based on url
 constexpr double urlWeight = 0.0001; // STATIC

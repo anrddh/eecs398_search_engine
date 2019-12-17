@@ -42,8 +42,9 @@ static_assert( MAX_NUM_PAGES > 0 );
 constexpr int TCP_TIMEOUT_LIMIT = 30; // Number of seconds before timeout (only applies to talking to workers)
 
 // The value we scale the ranking based on url
-constexpr double urlWeight = 0.00005; 
-constexpr double title_match = 0.05;
+constexpr double urlWeight = 0.0001; // STATIC
+constexpr double title_match = 0.1;
+constexpr double url_match = 0.25;
 
 // Server when accepting:
 // verfication code (int)
@@ -182,26 +183,26 @@ void* ask_workers( void* worker_query ) {
             fb::String lower_url = lower_string( pr.Url );
             for (auto& word : words) {
                 if ( lower_url.find(word) != fb::String::npos ) {
-                    dynamic_url_rank += title_match;
+                    dynamic_url_rank += url_match;
                 }
                 if ( lower_title.find(word) != fb::String::npos ) {
                     dynamic_title_rank += title_match;
                 }
             }
 
-            if (lower_url.size() != 0) {
-                dynamic_url_rank /= lower_url.size() * 60;
-            }
-
             if (lower_title.size() != 0) {
-                dynamic_title_rank /= lower_title.size() * 15;
+		dynamic_title_rank *= 100;
+                dynamic_title_rank /= lower_title.size();
             }
 
 
+	    /*
             // TODO delete
             std::cout <<  pr.Url << std::endl; // TODO delete this
             std::cout << "\ttitle " << pr.Title  << std::endl; // TODO delete this
-            std::cout << "\ttfidf ranking: " << pr.rank << " url ranking " << dynamic_url_rank << " title rank " << dynamic_title_rank << std::endl; // TODO delete this
+            std::cout << "\ttfidf ranking: " << pr.rank << " dynamic url ranking " << dynamic_url_rank << " static url " << urlWeight * RankUrl( pr.Url ) 
+		    << " title rank " << dynamic_title_rank << std::endl; // TODO delete this
+		*/
 
             pr.rank += urlWeight * RankUrl( pr.Url );
             pr.rank += dynamic_title_rank;
@@ -265,6 +266,7 @@ FileDesc parseArguments( int argc, char **argv ) {
 fb::Vector<PageResult> ask_query( fb::String query ) {
     QueryParser qp( query );
     if (qp.Parse().get() == nullptr) {
+	cout << query << " is an invalid query " << endl;
         return {};
     }
 

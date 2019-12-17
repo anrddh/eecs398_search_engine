@@ -42,8 +42,10 @@ public:
                         file_size_, PROT_WRITE | PROT_READ | PROT_EXEC,
                         MAP_SHARED, fd, 0);
 
-        if (ptr == (void *) -1)
+        if (ptr == (void *) -1) {
+	    perror("error in disk vec");
             throw fb::Exception("SavedObj: Failed to mmap.");
+	}
 
         cursor = new (ptr)
             std::atomic<fb::SizeT>(*static_cast<fb::SizeT *>(ptr));

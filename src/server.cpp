@@ -216,19 +216,13 @@ HtmlPage pageNotFound( fb::String msg ) {
 
 
 HtmlPage results( fb::UnorderedMap<fb::String, fb::String> formOptions ) {
-	std::cout << "Results start" << std::endl;
     resultCounter = 0;
-    std::cout << "here" << std::endl;
     
     resultOptions = formOptions;
-    std::cout << "hereee" << std::endl;
     if( formOptions["query"].empty() )
         return pageNotFound( "You should type something!" );
-    std::cout << "hereeeee" << std::endl;
     std::cout << formOptions["query"] << std::endl;
     auto s = cleanedQuery(formOptions["query"]);
-    std::cout << formOptions["query"] << std::endl;
-    std::cout << s << std::endl;
     queryResult = ask_query( s );
     return kthResults();
 }

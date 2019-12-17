@@ -93,7 +93,11 @@ public:
       {
       if ( !empty() )
          {
-         data.front( ) = data.back( );
+         if (size() == 1) {
+             data.popBack();
+             return;
+         }
+         data.front( ) = std::move( data.back( ) );
          data.popBack( );
          heapify(0);
          }

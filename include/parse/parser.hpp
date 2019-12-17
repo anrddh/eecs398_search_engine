@@ -78,8 +78,8 @@ public:
 				{
 				if ( content[ index ] == '<' )
 					{
-					index = handleTag( index );
 					addToResult( ' ' );
+					index = handleTag( index );
 					}
 				else
 					{

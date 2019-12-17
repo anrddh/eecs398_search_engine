@@ -50,5 +50,5 @@ All executable come with a helpful usage message when running without the proper
 
 ## Acknowledgments
 
-* Nicole Hamilton, the instructor for EECS39
+* Nicole Hamilton, the instructor for EECS398
 
